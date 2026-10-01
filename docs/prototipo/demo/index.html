@@ -1,0 +1,1482 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"></head><body><title>Demo Sistema de Préstamos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Aplicación de oficina: menú lateral morado, lienzo claro, verde solo para cobrar y confirmar. Aspecto único y claro (decisión de marca). */
+:root{
+  color-scheme: light;
+  --brand-900:#3E0647; --brand-800:#52085E; --brand-700:#6D087A; --brand-500:#9B3AA8; --brand-100:#F4E6F6; --brand-50:#FBF6FC;
+  --accent:#4E8F0A; --accent-btn:#3F7A08; --accent-btn-h:#346607; --accent-100:#E8F3DA; --accent-ink:#2F5C06;
+  --warn:#C2410C; --warn-ink:#9A3412; --warn-100:#FFF0E5;
+  --danger:#B91C1C; --danger-ink:#991B1B; --danger-100:#FDECEC;
+  --info:#0369A1; --info-100:#E4F1F9;
+  --canvas:#F6F5F9; --surface:#FFFFFF; --line:#E4DFE8; --line-2:#EFEBF2;
+  --text:#1C1622; --muted:#6B6475; --faint:#9A93A3;
+  --f-ui:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --r:10px; --r-sm:7px;
+  --sh:0 1px 2px rgba(62,6,71,.06),0 4px 16px rgba(62,6,71,.05);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--brand-700)}
+:focus-visible{outline:2px solid var(--brand-500);outline-offset:2px}
+.num,td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tab-nums{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.25}
+h1{font-size:22px;font-weight:600}
+h2{font-size:16px;font-weight:600}
+h3{font-size:14px;font-weight:600}
+.muted{color:var(--muted)} .small{font-size:12.5px} .xs{font-size:11.5px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.g-73{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.g-84{grid-template-columns:minmax(0,8fr) minmax(0,4fr)}
+@media (max-width:1100px){.g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}.g-73,.g-84,.g3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.g2,.g4,.g5{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Botones y campos ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--text);font-weight:500;font-size:13.5px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .12s,border-color .12s}
+.btn:hover{border-color:var(--brand-500);background:var(--brand-50)}
+.btn svg{width:16px;height:16px}
+.btn-p{background:var(--brand-700);border-color:var(--brand-700);color:#fff}
+.btn-p:hover{background:var(--brand-800);border-color:var(--brand-800)}
+.btn-g{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff}
+.btn-g:hover{background:var(--accent-btn-h);border-color:var(--accent-btn-h)}
+.btn-d{color:var(--danger-ink);border-color:#F1C7C7}
+.btn-d:hover{background:var(--danger-100);border-color:var(--danger)}
+.btn-q{border-color:transparent;background:transparent}
+.btn-sm{min-height:30px;padding:0 10px;font-size:12.5px}
+.btn-lg{min-height:48px;font-size:15px;padding:0 20px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label,.lbl{font-size:12.5px;font-weight:500;color:var(--muted)}
+.input,.select,.area{width:100%;min-height:38px;padding:7px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}
+.area{min-height:76px;resize:vertical}
+.input:focus,.select:focus,.area:focus{outline:none;border-color:var(--brand-500);box-shadow:0 0 0 3px var(--brand-100)}
+.input.big{min-height:52px;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--muted)}
+.err{font-size:12px;color:var(--danger-ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:500;cursor:pointer}
+.chip:hover{border-color:var(--brand-500)}
+.chip.on{background:var(--brand-700);border-color:var(--brand-700);color:#fff}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--brand-700)}
+
+/* ---------- Superficies ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card.flush{padding:0;gap:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card.flush .card-h{padding:14px 18px;border-bottom:1px solid var(--line)}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .k{font-size:12.5px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;overflow-wrap:anywhere}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.warn{border-left:4px solid var(--warn)} .kpi.danger{border-left:4px solid var(--danger)} .kpi.ok{border-left:4px solid var(--accent)} .kpi.k-brand{border-left:4px solid var(--brand-700)}
+.alert{border-radius:var(--r-sm);padding:10px 13px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.alert svg{width:17px;height:17px;flex:none;margin-top:2px}
+.a-w{background:var(--warn-100);color:var(--warn-ink)} .a-d{background:var(--danger-100);color:var(--danger-ink)} .a-ok{background:var(--accent-100);color:var(--accent-ink)} .a-i{background:var(--info-100);color:var(--info)} .a-b{background:var(--brand-100);color:var(--brand-900)}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap;line-height:1.6}
+.b-ok{background:var(--accent-100);color:var(--accent-ink)} .b-w{background:var(--warn-100);color:var(--warn-ink)} .b-d{background:var(--danger-100);color:var(--danger-ink)} .b-i{background:var(--info-100);color:var(--info)} .b-n{background:var(--line-2);color:var(--muted)} .b-b{background:var(--brand-100);color:var(--brand-900)}
+.dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;font-size:13.5px}
+.dl dt{color:var(--muted)} .dl dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.dl .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:600;color:var(--text)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px 20px}
+.kv div span{display:block;font-size:12px;color:var(--muted)} .kv div b{font-weight:500}
+hr.sep{border:0;border-top:1px solid var(--line);margin:0;width:100%}
+
+/* ---------- Tablas ---------- */
+.tw{overflow-x:auto;max-width:100%}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:#FCFBFD;white-space:nowrap}
+.t td{padding:10px 14px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.t tbody tr:hover{background:var(--brand-50)}
+.t tr.click{cursor:pointer}
+.t tfoot td{font-weight:600;background:#FCFBFD;border-top:1px solid var(--line);border-bottom:0}
+.t tr.hl td{background:#FFF8F1}
+.t tr.paid td{color:var(--muted)}
+.t a{text-decoration:none;font-weight:500}
+.t a:hover{text-decoration:underline}
+.scroll-y{max-height:420px;overflow:auto}
+.scroll-y thead th{position:sticky;top:0;z-index:1}
+
+/* ---------- Estructura de la app ---------- */
+#app{height:100%}
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);height:100%}
+.side{background:var(--brand-900);color:#EBDCEE;display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.brand{display:flex;gap:11px;align-items:center;padding:18px 18px 14px}
+.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(140deg,#8BCB4A,#4E8F0A);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em;flex:none}
+.brand b{display:block;color:#fff;font-size:14.5px;font-weight:600;line-height:1.2}
+.brand span{font-size:11.5px;color:#C9B3CE}
+.nav{padding:6px 10px 16px;display:flex;flex-direction:column;gap:1px}
+.nav .g{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#B596BB;padding:14px 10px 5px;font-weight:600}
+.nav a{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;color:#EBDCEE;text-decoration:none;font-size:13.5px;font-weight:500;cursor:pointer}
+.nav a svg{width:17px;height:17px;opacity:.85;flex:none}
+.nav a:hover{background:rgba(255,255,255,.08)}
+.nav a.on{background:#fff;color:var(--brand-900)}
+.nav a.on svg{opacity:1;color:var(--brand-700)}
+.nav a .cnt{margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;font-size:11px;padding:0 7px}
+.nav a.on .cnt{background:var(--brand-100)}
+.side-foot{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#C9B3CE;display:flex;flex-direction:column;gap:8px}
+.side-foot a{color:#fff;cursor:pointer;text-decoration:underline}
+.mainwrap{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:12px;padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--line);min-height:62px;flex-wrap:wrap}
+.searchbtn{flex:1;max-width:460px;min-width:180px;display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--canvas);border-radius:var(--r-sm);padding:8px 12px;color:var(--muted);cursor:pointer;font-size:13.5px}
+.searchbtn svg{width:16px;height:16px}
+.kbd{margin-left:auto;font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 6px;background:var(--surface)}
+.who{display:flex;align-items:center;gap:10px;margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--brand-100);color:var(--brand-900);display:grid;place-items:center;font-weight:600;font-size:12.5px;flex:none}
+.who b{display:block;font-size:13px;font-weight:600;line-height:1.2} .who span{font-size:11.5px;color:var(--muted)}
+.menu-btn{display:none}
+.demo-ribbon{background:var(--brand-50);border-bottom:1px solid var(--line);padding:6px 24px;font-size:12px;color:var(--brand-900);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.demo-ribbon a{cursor:pointer;font-weight:600}
+.page{flex:1;overflow-y:auto;padding:22px 24px 48px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.crumbs{font-size:12.5px;color:var(--muted);margin:0 0 3px}
+.crumbs a{cursor:pointer;text-decoration:none}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs a{padding:9px 14px;font-size:13.5px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs a:hover{color:var(--text)}
+.tabs a.on{color:var(--brand-700);border-bottom-color:var(--brand-700)}
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;inset:0 auto 0 0;width:270px;z-index:40;transform:translateX(-100%);transition:transform .2s}
+  .shell.nav-open .side{transform:none}
+  .shell.nav-open .scrim{display:block}
+  .menu-btn{display:inline-flex}
+  .top{padding:10px 16px}
+  .who div{display:none}
+  .page{padding:16px 16px 40px}
+  .demo-ribbon{padding:6px 16px}
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(28,22,34,.45);z-index:39}
+
+/* ---------- Modal, búsqueda y avisos ---------- */
+.overlay{position:fixed;inset:0;background:rgba(28,22,34,.5);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 16px;overflow-y:auto}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(28,22,34,.3);display:flex;flex-direction:column;max-height:88vh}
+.modal.wide{max-width:860px}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);gap:12px}
+.modal-b{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.x{border:0;background:transparent;cursor:pointer;padding:4px;border-radius:6px;color:var(--muted)}
+.x svg{width:20px;height:20px}
+.srch-in{display:flex;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.srch-in svg{width:18px;height:18px;color:var(--muted)}
+.srch-in input{flex:1;border:0;outline:0;font-size:16px;background:transparent}
+.srch-res{max-height:60vh;overflow-y:auto;padding:6px}
+.srch-it{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:8px;cursor:pointer}
+.srch-it:hover,.srch-it.sel{background:var(--brand-50)}
+.srch-g{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);padding:10px 12px 4px;font-weight:600}
+.toasts{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:80;width:min(460px,calc(100% - 32px))}
+.toast{background:var(--text);color:#fff;border-radius:10px;padding:11px 15px;font-size:13.5px;box-shadow:0 8px 30px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;animation:tin .18s ease-out}
+.toast svg{width:18px;height:18px;color:#A6E36A;flex:none}
+@keyframes tin{from{transform:translateY(8px);opacity:.3}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Pantalla de bienvenida ---------- */
+.welcome{min-height:100%;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.w-left{background:var(--brand-900);color:#EBDCEE;padding:48px 44px;display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.w-left::after{content:"";position:absolute;right:-120px;bottom:-120px;width:360px;height:360px;border-radius:50%;border:56px solid rgba(139,203,74,.14)}
+.w-left h1{color:#fff;font-size:34px;font-weight:600;line-height:1.15;max-width:15ch}
+.w-left p{margin:0;max-width:44ch;font-size:14.5px;color:#D9C6DD}
+.w-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;font-size:13.5px;position:relative;z-index:1}
+.w-list li{display:flex;gap:10px}
+.w-list svg{width:18px;height:18px;color:#8BCB4A;flex:none;margin-top:1px}
+.w-right{padding:48px 44px;display:flex;flex-direction:column;gap:18px;justify-content:center}
+.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.role{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px;display:flex;gap:14px;align-items:flex-start;cursor:pointer;text-align:left;transition:border-color .12s,box-shadow .12s}
+.role:hover{border-color:var(--brand-500);box-shadow:var(--sh)}
+.role .ic{width:42px;height:42px;border-radius:10px;background:var(--brand-100);color:var(--brand-700);display:grid;place-items:center;flex:none}
+.role .ic svg{width:21px;height:21px}
+.role b{display:block;font-size:14.5px;font-weight:600}
+.role span{display:block;font-size:12.5px;color:var(--muted)}
+.role.feat{border-color:var(--accent);background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box}
+.role.feat .ic{background:var(--accent-100);color:var(--accent-ink)}
+@media (max-width:900px){.welcome{grid-template-columns:minmax(0,1fr)}.w-left,.w-right{padding:32px 18px}.w-left h1{font-size:27px}.roles{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Teléfono (cobrador y portal) ---------- */
+.stage{min-height:100%;display:flex;gap:40px;align-items:center;justify-content:center;padding:28px 16px;background:radial-gradient(1200px 600px at 70% 10%,#EFE3F1,transparent),var(--canvas)}
+.stage-note{max-width:330px;display:flex;flex-direction:column;gap:14px}
+.stage-note h2{font-size:22px}
+.device{width:390px;height:800px;max-height:calc(100vh - 56px);border-radius:44px;background:#17111B;padding:12px;box-shadow:0 30px 80px rgba(62,6,71,.28);flex:none}
+.screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--canvas);display:flex;flex-direction:column;position:relative}
+.m-top{background:var(--brand-900);color:#fff;padding:26px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.m-top a{color:#E3CFE7;cursor:pointer;font-size:13px;text-decoration:none}
+.m-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.m-nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface)}
+.m-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 12px;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:none}
+.m-nav a svg{width:20px;height:20px}
+.m-nav a.on{color:var(--brand-700);font-weight:600}
+.stop{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:8px}
+.stop.cur{border:2px solid var(--brand-700)}
+.stop.done{opacity:.72}
+.bar{height:6px;border-radius:99px;background:var(--line-2);overflow:hidden}
+.bar>div{height:100%;background:var(--accent)}
+@media (max-width:760px){.stage + .tour-fab,.stage + .tour{display:none}.stage{padding:0;display:block}.stage-note{display:none}.device{width:100%;height:100%;max-height:none;border-radius:0;padding:0;box-shadow:none}.screen{border-radius:0}}
+
+/* ---------- Documentos ---------- */
+.paper{background:#fff;border:1px solid var(--line);border-radius:6px;padding:34px 38px;font-size:13px;line-height:1.7;position:relative;overflow:hidden;color:#231B27}
+.paper h3{text-align:center;font-size:15px;letter-spacing:.06em;margin-bottom:14px}
+.paper p{margin:0 0 10px}
+.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.wm span{transform:rotate(-24deg);font-size:26px;font-weight:700;color:rgba(185,28,28,.12);text-align:center;line-height:1.2;text-transform:uppercase}
+.thermal{width:302px;margin:0 auto;background:#fff;border:1px dashed #CFC8D4;padding:16px 14px;font-family:var(--f-mono);font-size:12px;line-height:1.55;color:#111}
+.thermal .c{text-align:center}
+.thermal .l{display:flex;justify-content:space-between;gap:8px}
+.thermal hr{border:0;border-top:1px dashed #999;margin:6px 0}
+.wa{background:#E7DDD3;border-radius:12px;padding:14px;display:flex;flex-direction:column}
+.wa .bub{align-self:flex-end;background:#D9FDD3;border-radius:10px 2px 10px 10px;padding:9px 11px;font-size:13px;max-width:92%;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08);color:#111}
+.wa .bub small{display:block;text-align:right;color:#667;font-size:10.5px}
+.map{position:relative;border-radius:var(--r);overflow:hidden;background:#EEF1EA;border:1px solid var(--line)}
+.map svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+/* ---------- Recorrido ---------- */
+.tour{position:fixed;right:18px;bottom:18px;z-index:50;width:min(360px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(62,6,71,.22);display:flex;flex-direction:column;max-height:calc(100vh - 36px)}
+.tour-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tour-b{overflow-y:auto;padding:6px}
+.tstep{display:flex;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;align-items:flex-start}
+.tstep:hover{background:var(--brand-50)}
+.tstep .n{width:24px;height:24px;border-radius:50%;background:var(--brand-100);color:var(--brand-900);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.tstep.done .n{background:var(--accent);color:#fff}
+.tstep b{display:block;font-size:13px;font-weight:600}
+.tstep span{display:block;font-size:12px;color:var(--muted)}
+.tour-fab{position:fixed;right:18px;bottom:18px;z-index:50}
+.tour-fab .btn{box-shadow:0 10px 30px rgba(62,6,71,.3);min-height:44px;border-radius:999px}
+.pipe{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bars .b{display:grid;grid-template-columns:92px minmax(0,1fr) 120px;gap:10px;align-items:center;font-size:13px;cursor:pointer;border-radius:6px;padding:2px 4px}
+.bars .b:hover{background:var(--brand-50)}
+.bars .track{height:12px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.bars .track div{height:100%;border-radius:99px}
+.gauge{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--accent) 0 35%,#E3A008 35% 50%,var(--danger) 50% 100%);position:relative}
+.gauge i{position:absolute;top:-5px;width:3px;height:20px;background:var(--text);border-radius:2px}
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+.steps span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--line-2);color:var(--muted);font-weight:500}
+.steps span.on{background:var(--brand-700);color:#fff}
+.steps span.ok{background:var(--accent-100);color:var(--accent-ink)}
+.empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+
+<div id="app"></div>
+<div id="ov"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   Demo del sistema de préstamos. Datos ficticios. Motor de cálculo según
+   docs/proyecto/03-reglas-de-negocio.md: mes comercial de 30 días, cuotas
+   redondeadas al peso, mora prorrateada diaria (5 % mensual, 3 días de
+   gracia, tope 10 %), orden de aplicación mora → interés → capital.
+   ===================================================================== */
+const DAY = 86400000;
+const pad = n => String(n).padStart(2, '0');
+const D = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+const iso = t => new Date(t).toISOString().slice(0, 10);
+const fd = t => { const d = new Date(t); return pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear(); };
+const fdShort = t => { const d = new Date(t); return pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1); };
+const DOW = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const r2 = x => Math.round((x + (x >= 0 ? 1e-9 : -1e-9)) * 100) / 100;
+const r0 = x => Math.round(x + 1e-9);
+const money = (n, sym = true) => (sym ? 'RD$ ' : '') + (n < -0.004 ? '−' : '') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const mk = n => 'RD$ ' + Math.round(n).toLocaleString('en-US');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sum = (a, f = x => x) => r2(a.reduce((s, x, i) => s + f(x, i), 0));
+const clean = v => String(v ?? '').replace(/[<>]/g, '');
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
+const initials = s => s.split(/\s+/).filter(w => w.length > 2 || /^[A-ZÁÉÍÓÚÑ]/.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+const TODAY = D('2026-09-30');
+const HOL = new Set(['2026-01-01','2026-01-05','2026-01-21','2026-01-26','2026-02-27','2026-04-03','2026-05-04','2026-06-04','2026-08-16','2026-09-24','2026-11-09','2026-12-25','2025-11-10','2025-12-25']);
+const HOL_NAMES = [['01/01','Año Nuevo'],['05/01','Día de Reyes (trasladado)'],['21/01','Día de la Altagracia'],['26/01','Día de Duarte'],['27/02','Independencia'],['03/04','Viernes Santo'],['04/05','Día del Trabajo (trasladado)'],['04/06','Corpus Christi'],['16/08','Restauración'],['24/09','Día de las Mercedes'],['09/11','Día de la Constitución (trasladado)'],['25/12','Navidad']];
+const isOff = t => new Date(t).getUTCDay() === 0 || HOL.has(iso(t));
+const nextBiz = t => { while (isOff(t)) t += DAY; return t; };
+const addMonths = (t, k) => { const d = new Date(t); const day = d.getUTCDate(); const y = d.getUTCFullYear(), m = d.getUTCMonth() + k; const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return Date.UTC(y, m, Math.min(day, last)); };
+const FREQ = { diaria: { d: 1, l: 'Diaria', u: 'días', pl: 'diarias' }, interdiaria: { d: 2, l: 'Interdiaria', u: 'pagos', pl: 'interdiarias' }, semanal: { d: 7, l: 'Semanal', u: 'semanas', pl: 'semanales' }, quincenal: { d: 15, l: 'Quincenal', u: 'quincenas', pl: 'quincenales' }, mensual: { d: 30, l: 'Mensual', u: 'meses', pl: 'mensuales' } };
+const METHOD = { fija: 'Cuota fija', plano: 'Interés fijo sobre el monto', capital: 'Capital fijo', interes: 'Solo interés', abierto: 'Abierto' };
+const PROD = { personal: 'Personal', vehiculo: 'Con garantía de vehículo', hipotecario: 'Hipotecario', micro: 'Microcrédito a negocio' };
+const POL = { grace: 3, rate: 5, cap: 10 };
+
+function dueDates(first, n, freq) {
+  const out = [];
+  if (freq === 'diaria') { let t = first; while (out.length < n) { if (!isOff(t)) out.push(t); t += DAY; } return out; }
+  for (let k = 0; k < n; k++) out.push(nextBiz(freq === 'mensual' ? addMonths(first, k) : first + k * FREQ[freq].d * DAY));
+  return out;
+}
+const periodRate = (m, freq) => m / 100 * FREQ[freq].d / 30;
+function schedule(p) {
+  const i = periodRate(p.m, p.freq), n = p.n, P = p.P, dates = dueDates(typeof p.first === 'number' ? p.first : D(p.first), n, p.freq);
+  const rows = []; let bal = P;
+  const push = (k, int, cap) => { rows.push({ n: k + 1, date: dates[k], int: r2(int), cap: r2(cap), total: r2(int + cap), paidI: 0, paidC: 0, moraPaid: 0 }); bal = r2(bal - cap); };
+  if (p.method === 'fija') {
+    const c = r0(i === 0 ? P / n : P * i / (1 - Math.pow(1 + i, -n)));
+    for (let k = 0; k < n; k++) { const int = r2(bal * i); const cap = k === n - 1 ? bal : r2(c - int); push(k, int, cap); }
+  } else if (p.method === 'plano') {
+    const int = r2(P * i); const c = r0(int + P / n);
+    for (let k = 0; k < n; k++) { const cap = k === n - 1 ? bal : r2(c - int); push(k, int, cap); }
+  } else if (p.method === 'capital') {
+    const cb = r2(P / n);
+    for (let k = 0; k < n; k++) { const cap = k === n - 1 ? bal : cb; push(k, r2(bal * i), cap); }
+  } else if (p.method === 'interes') {
+    for (let k = 0; k < n; k++) push(k, r2(P * i), k === n - 1 ? P : 0);
+  }
+  return rows;
+}
+function moraOf(r) {
+  if (r.pend <= 0.004) return 0;
+  const d = Math.round((TODAY - r.date) / DAY);
+  if (d <= POL.grace) return 0;
+  const m = Math.min(r0(r.pend * POL.rate / 100 / 30 * d), r0(r.pend * POL.cap / 100));
+  return Math.max(0, r2(m - r.moraPaid));
+}
+function st(L) {
+  let capPend = 0; const venc = [], hoy = []; let next = null, mora = 0;
+  for (const r of L.rows) {
+    r.pi = r2(r.int - r.paidI); r.pc = r2(r.cap - r.paidC); r.pend = r2(r.pi + r.pc); capPend += r.pc; r.mora = 0;
+    if (L.status === 'saldado' || L.status === 'castigado') continue;
+    if (r.pend > 0.004) {
+      if (r.date < TODAY) { venc.push(r); r.mora = moraOf(r); mora += r.mora; }
+      else if (r.date === TODAY) hoy.push(r);
+      else if (!next) next = r;
+    }
+  }
+  if (L.status === 'saldado') capPend = 0;
+  const dias = venc.length ? Math.round((TODAY - venc[0].date) / DAY) : 0;
+  const vencido = sum(venc, r => r.pend), hoyAmt = sum(hoy, r => r.pend);
+  let corrido = 0;
+  if (next) { const idx = L.rows.indexOf(next); const prev = idx > 0 ? L.rows[idx - 1].date : L.disb; const per = Math.max(1, (next.date - prev) / DAY); corrido = r2(next.pi * Math.min(1, Math.max(0, (TODAY - prev) / DAY) / per)); }
+  const payoff = r2(capPend + sum(venc.concat(hoy), r => r.pi) + mora + corrido);
+  const status = L.status === 'saldado' ? 'saldado' : L.status === 'legal' ? 'legal' : L.status === 'castigado' ? 'castigado' : dias > 0 ? 'atraso' : 'aldia';
+  const tramo = dias <= 0 ? 0 : dias <= 7 ? 1 : dias <= 30 ? 2 : dias <= 60 ? 3 : dias <= 90 ? 4 : 5;
+  const paidCount = L.rows.filter(r => r.pend <= 0.004).length;
+  return { capPend: r2(capPend), venc, hoy, next, mora: r2(mora), dias, vencido, hoyAmt, exig: r2(vencido + mora + hoyAmt), payoff, corrido, status, tramo, paidCount };
+}
+function allocate(L, amount) {
+  st(L); let a = r2(amount); const alloc = []; let tm = 0, ti = 0, tc = 0;
+  for (const r of L.rows) {
+    if (a <= 0.004) break;
+    if (r.pend <= 0.004) continue;
+    const x = { n: r.n, mora: 0, int: 0, cap: 0 };
+    const m = Math.min(a, r.mora || 0); x.mora = r2(m); a = r2(a - m); r.moraPaid = r2(r.moraPaid + m);
+    const i = Math.min(a, r.pi); x.int = r2(i); a = r2(a - i); r.paidI = r2(r.paidI + i);
+    const c = Math.min(a, r.pc); x.cap = r2(c); a = r2(a - c); r.paidC = r2(r.paidC + c);
+    if (x.mora || x.int || x.cap) { alloc.push(x); tm += x.mora; ti += x.int; tc += x.cap; }
+  }
+  st(L);
+  if (L.rows.every(r => r.pend <= 0.004)) L.status = 'saldado';
+  return { mora: r2(tm), int: r2(ti), cap: r2(tc), alloc, rest: a };
+}
+function settle(L) { // saldo total: vencido + mora + interés corrido + todo el capital; se condona el interés futuro
+  const s = st(L); const alloc = []; let tm = 0, ti = 0, tc = 0; let usedCorrido = false;
+  for (const r of L.rows) {
+    if (r.pend <= 0.004) continue;
+    const x = { n: r.n, mora: r.mora || 0, int: 0, cap: r.pc };
+    if (r.date <= TODAY) x.int = r.pi; else if (!usedCorrido) { x.int = s.corrido; usedCorrido = true; }
+    r.moraPaid = r2(r.moraPaid + x.mora); r.paidC = r.cap; r.paidI = r.int; r.condoned = r2(r.pi - x.int);
+    alloc.push(x); tm += x.mora; ti += x.int; tc += x.cap;
+  }
+  L.status = 'saldado'; st(L);
+  return { mora: r2(tm), int: r2(ti), cap: r2(tc), alloc, rest: 0, saldo: true };
+}
+
+/* ---------- Datos ficticios ---------- */
+const USERS = {
+  gerente: { name: 'Carlos Méndez', label: 'Gerente', suc: 'Todas las sucursales' },
+  cajera: { name: 'Ana Luisa Rosario', label: 'Cajera', suc: 'Santo Domingo Este' },
+  oficial: { name: 'Kelvin Soto', label: 'Oficial de crédito', suc: 'Santo Domingo Este' },
+  cobrador: { name: 'Pedro Santana', label: 'Cobrador', suc: 'Santo Domingo Este' },
+  cliente: { name: 'María Gómez Peña', label: 'Clienta', suc: '' },
+};
+const COB = { pedro: 'Pedro Santana', miguel: 'Miguel Tavárez' };
+const C = [
+  ['C01','María Gómez Peña','persona','000-0012345-1','809-555-0101','C/ Respaldo 3ra #12, Los Mina','Supermercado La Cadena · cajera','B'],
+  ['C02','José Ramírez Tavárez','persona','000-0023456-2','829-555-0102','Av. San Vicente de Paúl #88, SDE','Constructora Arco · maestro de obra','A'],
+  ['C03','Luis Féliz Mateo','persona','000-0034567-3','809-555-0103','C/ 8 #45, Los Mina','Taller de motores · mecánico','B'],
+  ['C04','Comercial Los Pinos, SRL','empresa','1-00-12345-6','809-555-0104','Av. Venezuela #210, SDE','Ferretería · 6 empleados','B'],
+  ['C05','Ramón Almánzar','persona','000-0045678-4','849-555-0105','Av. San Vicente #210, SDE','Motoconchista','C'],
+  ['C06','Carmen Lora','persona','000-0056789-5','809-555-0106','C/ Duarte #19, Invivienda','Salón de belleza · dueña','B'],
+  ['C07','Yudelka Cruz','persona','000-0067890-6','829-555-0107','C/ Duarte #9, Los Mina','Venta de ropa por catálogo','C'],
+  ['C08','Rafael Núñez','persona','000-0078901-7','809-555-0108','C/ Primera #4, Villa Faro','Chofer de guagua','B'],
+  ['C09','Ana Batista Rosario','persona','000-0089012-8','809-555-0109','Res. Los Frailes II, Edif. 4','Enfermera · Hospital Darío Contreras','A'],
+  ['C10','Julio César Paulino','persona','000-0090123-9','829-555-0110','C/ Hermanas Mirabal #77, Villa Mella','Comerciante','A'],
+  ['C11','Colmado La Esquina (Altagracia Pérez)','empresa','1-00-23456-7','809-555-0111','C/ 5 esq. 12, Los Mina','Colmado · 2 empleados','A'],
+  ['C12','Rosa Hernández','persona','000-0101234-0','809-555-0112','C/ Las Palmas #30, Alma Rosa','Profesora · Minerd','A'],
+  ['C13','Wendy Castillo','persona','000-0112345-1','849-555-0113','C/ Proyecto #2, Ensanche Ozama','Secretaria','A'],
+  ['C14','Francisco Javier Reyes','persona','000-0123456-2','809-555-0114','C/ Central #61, Villa Duarte','Electricista','A'],
+  ['C15','Héctor Guzmán','persona','000-0134567-3','829-555-0115','C/ 17 #3, Los Tres Brazos','Sin empleo verificado','C'],
+  ['C16','Manuel de Jesús Ortiz','persona','000-0145678-4','809-555-0116','C/ Libertad #8, San Isidro','Vendedor','C'],
+  ['C17','Yokasta Díaz','persona','000-0156789-5','829-555-0117','C/ Paraíso #14, Lucerna','Repostería en casa','B'],
+  ['C18','Leonel Guerrero','persona','000-0167890-6','809-555-0118','Av. Charles de Gaulle #45','Transporte escolar · dueño','A'],
+  ['C19','Nelson Pujols','persona','000-0178901-7','849-555-0119','C/ 3 #22, El Almirante','Guardia de seguridad','C'],
+  ['C20','Ivelisse Marte','persona','000-0189012-8','809-555-0120','C/ Sol #6, Los Mina','Venta de comida','B'],
+].map(([id, nombre, tipo, doc, tel, dir, trabajo, clas], k) => ({ id, nombre, tipo, doc, tel, dir, trabajo, clas, suc: 'Santo Domingo Este', alta: D('2024-01-10') + k * 23 * DAY, ingreso: [42000,45000,38000,380000,28000,55000,22000,32000,68000,120000,95000,52000,36000,40000,15000,26000,30000,85000,21000,27000][k] }));
+const CL = Object.fromEntries(C.map(c => [c.id, c]));
+const WHY = { A: ['Nunca ha pasado de 3 días de atraso', 'Ha saldado préstamos anteriores', 'Cuota menor al 30 % de su ingreso disponible'], B: ['Atrasos ocasionales de 1 a 15 días', 'Ha cumplido sus promesas de pago', 'Cuota entre 30 % y 40 % del disponible'], C: ['Atrasos de más de 30 días', 'Promesas incumplidas', 'Cuota mayor al 40 % del disponible o ingreso no verificado'] };
+
+const LSEED = [
+  ['SD-000125','C01','personal','fija',50000,5,12,'mensual','2026-07-17','pedro',2],
+  ['SD-000211','C03','personal','plano',15000,10,12,'semanal','2026-08-12','pedro',6],
+  ['SD-000077','C04','micro','fija',150000,4,18,'mensual','2026-03-14','miguel',5],
+  ['SD-000089','C05','personal','fija',40000,5,12,'quincenal','2026-07-06','pedro',4],
+  ['SD-000115','C06','personal','plano',25000,5,6,'mensual','2026-06-11',null,3],
+  ['SD-000142','C07','personal','capital',20000,8,16,'semanal','2026-08-01','miguel',7],
+  ['SD-000098','C08','personal','fija',30000,5,10,'mensual','2026-04-21','pedro',5],
+  ['SD-000150','C09','vehiculo','fija',350000,3.5,36,'mensual','2026-05-05','miguel',5],
+  ['SD-000060','C10','hipotecario','fija',1200000,2.5,60,'mensual','2025-11-10','miguel',11],
+  ['SD-000201','C11','micro','plano',30000,12,60,'diaria','2026-08-24','pedro',-1],
+  ['SD-000130','C12','personal','fija',60000,4.5,12,'mensual','2026-03-30','pedro',7],
+  ['SD-000180','C13','personal','fija',35000,5,12,'quincenal','2026-08-15','pedro',4],
+  ['SD-000045','C14','personal','fija',25000,5,6,'mensual','2026-01-20','pedro',6],
+  ['SD-000033','C15','personal','fija',80000,5,12,'mensual','2026-02-10','miguel',2],
+  ['SD-000158','C16','personal','fija',45000,5,12,'mensual','2026-03-25','miguel',4],
+  ['SD-000212','C20','personal','plano',20000,8,12,'semanal','2026-10-07','pedro',0],
+];
+const S = {
+  role: null, route: 'tablero', p: {}, navOpen: false, tour: false, tourDone: {}, modal: null,
+  loans: [], receipts: [], apps: [], gest: [], gastos: [], audit: [], caja: null, rcpt: 4380, clock: 10 * 60 + 32,
+  flt: {}, draft: null,
+};
+const now = () => { S.clock += 1 + (S.clock % 3); return pad(Math.floor(S.clock / 60)) + ':' + pad(S.clock % 60); };
+const LN = id => S.loans.find(l => l.id === id);
+
+function mkLoan([id, cid, prod, method, P, m, n, freq, first, cob]) {
+  const f = D(first);
+  const L = { id, cid, prod, method, P, m, n, freq, first: f, cob, suc: 'Santo Domingo Este', status: 'activo', cargos: r2(P * 0.05), hist: [] };
+  L.disb = freq === 'mensual' ? addMonths(f, -1) : f - FREQ[freq].d * DAY;
+  L.rows = schedule({ P, m, n, freq, method, first: f });
+  return L;
+}
+function seed() {
+  const hrs = ['08:47','09:05','09:22','10:10','10:41','11:15','11:52','14:08','14:36','15:20','16:02'];
+  let k = 0; const tmp = [];
+  for (const s of LSEED) {
+    const L = mkLoan(s); let paid = s[10];
+    if (paid === -1) paid = L.rows.filter(r => r.date <= TODAY).length;
+    for (let j = 0; j < paid; j++) {
+      const r = L.rows[j]; const late = [0, 0, 1, 0, 2, 0, 0, 3][(j + k) % 8];
+      let t = r.date + late * DAY; if (t >= TODAY || isOff(t)) t = r.date;
+      r.paidI = r.int; r.paidC = r.cap;
+      const ruta = L.cob && (L.freq === 'semanal' || L.freq === 'diaria' || L.cid === 'C01' || L.cid === 'C05');
+      let time = hrs[(j * 3 + k) % hrs.length];
+      if (t === TODAY) time = L.id === 'SD-000130' ? '09:15' : '09:40';
+      tmp.push({ t, time, loanId: L.id, cid: L.cid, mora: 0, int: r.int, cap: r.cap, total: r.total, medio: j % 5 === 3 && !ruta ? 'Transferencia' : 'Efectivo', canal: ruta ? 'ruta' : 'oficina', user: ruta ? COB[L.cob] : 'Ana Luisa Rosario', alloc: [{ n: r.n, mora: 0, int: r.int, cap: r.cap }], rev: false });
+    }
+    if (L.id === 'SD-000045') L.status = 'saldado';
+    if (L.id === 'SD-000033') L.status = 'legal';
+    if (L.id === 'SD-000212') L.disb = TODAY;
+    L.hist.push({ t: L.disb, txt: 'Desembolsado ' + money(L.P) + ' · ' + PROD[L.prod] }, { t: L.disb - 2 * DAY, txt: 'Solicitud aprobada por ' + (L.P > 50000 ? 'Carlos Méndez (Gerencia)' : 'Mercedes Vargas (Supervisora)') });
+    S.loans.push(L); k++;
+  }
+  tmp.sort((a, b) => a.t - b.t || a.time.localeCompare(b.time));
+  for (const r of tmp) { r.no = 'SD-R-' + pad6(S.rcpt++); S.receipts.push(r); }
+  S.apps = [
+    { id: 'SD-S-000342', cid: 'C02', prod: 'personal', P: 80000, m: 4.5, n: 12, freq: 'mensual', method: 'fija', first: D('2026-10-30'), estado: 'por_aprobar', oficial: 'Kelvin Soto', creada: TODAY - DAY, ing: 45000, gas: 12000, deu: 1000, docs: [1, 1, 1, 1, 0], nota: 'Cliente con historial A: saldó un préstamo de RD$ 40,000 en 2025 sin atrasos. Quiere ampliar su taller.' },
+    { id: 'SD-S-000341', cid: 'C18', prod: 'vehiculo', P: 420000, m: 3.5, n: 36, freq: 'mensual', method: 'fija', first: D('2026-11-05'), estado: 'por_aprobar', oficial: 'Kelvin Soto', creada: TODAY - 2 * DAY, ing: 85000, gas: 30000, deu: 5000, docs: [1, 1, 1, 1, 1], nota: 'Garantía: Honda CR-V 2018, tasada en RD$ 950,000. Cobertura 2.3 veces.', gar: 'Honda CR-V 2018 · placa G000123 · tasación RD$ 950,000' },
+    { id: 'SD-S-000343', cid: 'C17', prod: 'micro', P: 25000, m: 8, n: 16, freq: 'semanal', method: 'plano', first: D('2026-10-07'), estado: 'evaluacion', oficial: 'Kelvin Soto', creada: TODAY, ing: 30000, gas: 14000, deu: 0, docs: [1, 0, 1, 0, 0], nota: 'Falta visita al negocio y carta de referencia.' },
+    { id: 'SD-S-000340', cid: 'C19', prod: 'personal', P: 30000, m: 5, n: 6, freq: 'mensual', method: 'fija', first: D('2026-10-25'), estado: 'rechazada', oficial: 'Kelvin Soto', creada: TODAY - 4 * DAY, ing: 21000, gas: 11000, deu: 4000, docs: [1, 1, 1, 1, 1], motivo: 'Capacidad de pago insuficiente: la cuota sería el 98 % de su ingreso disponible.' },
+    { id: 'SD-S-000338', cid: 'C20', prod: 'personal', P: 20000, m: 8, n: 12, freq: 'semanal', method: 'plano', first: D('2026-10-07'), estado: 'desembolsada', oficial: 'Kelvin Soto', creada: TODAY - 3 * DAY, ing: 27000, gas: 12000, deu: 0, docs: [1, 1, 1, 1, 1], loan: 'SD-000212' },
+  ];
+  S.gest = [
+    { t: TODAY - 10 * DAY, loanId: 'SD-000125', tipo: 'Llamada', res: 'Promete pagar', prom: { t: TODAY, amt: 5763 }, user: 'Pedro Santana', nota: 'Dice que cobra el 30.' },
+    { t: TODAY - 8 * DAY, loanId: 'SD-000077', tipo: 'Llamada', res: 'Promete pagar', prom: { t: TODAY - 5 * DAY, amt: 12000, fail: true }, user: 'Miguel Tavárez', nota: 'El encargado dijo que pagaba el viernes.' },
+    { t: TODAY - 4 * DAY, loanId: 'SD-000089', tipo: 'Mensaje', res: 'Promete pagar', prom: { t: TODAY, amt: 3000 }, user: 'Pedro Santana', nota: 'Abonará 3,000 hoy.' },
+    { t: TODAY - 5 * DAY, loanId: 'SD-000098', tipo: 'Visita', res: 'No estaba', user: 'Pedro Santana', nota: 'Dejé aviso con la vecina.' },
+    { t: TODAY - 12 * DAY, loanId: 'SD-000158', tipo: 'Visita', res: 'Se niega a pagar', user: 'Miguel Tavárez', nota: 'Se envió intimación de pago.' },
+    { t: TODAY - 60 * DAY, loanId: 'SD-000033', tipo: 'Legal', res: 'Pasado a abogado', user: 'Carlos Méndez', nota: 'Expediente entregado al Lic. Ramón Estévez.' },
+  ];
+  S.gastos = [
+    { t: D('2026-09-01'), cat: 'Alquiler del local', desc: 'Alquiler de septiembre · sucursal SDE', amt: 35000, medio: 'Banreservas', comp: true },
+    { t: D('2026-09-05'), cat: 'Servicios', desc: 'Electricidad (Edeeste)', amt: 6840, medio: 'Banreservas', comp: true },
+    { t: D('2026-09-05'), cat: 'Servicios', desc: 'Internet y teléfono', amt: 2650, medio: 'Banreservas', comp: true },
+    { t: D('2026-09-15'), cat: 'Nómina', desc: 'Nómina 1ra quincena', amt: 96500, medio: 'Banco Popular', comp: true },
+    { t: D('2026-09-18'), cat: 'Papelería', desc: 'Resmas y tóner', amt: 1850, medio: 'Caja', comp: true },
+    { t: D('2026-09-22'), cat: 'Movimiento del dueño', desc: 'Retiro del dueño', amt: 20000, medio: 'Banco Popular', comp: false, owner: true },
+    { t: TODAY, cat: 'Transporte', desc: 'Combustible de cobradores', amt: 1500, medio: 'Caja', comp: true, time: '08:35' },
+  ];
+  const cajaMov = [{ time: '08:02', tipo: 'Apertura', ref: 'SD-C-000319', desc: 'Fondo inicial', in: 40000, out: 0, medio: 'Efectivo' }];
+  cajaMov.push({ time: '08:35', tipo: 'Gasto', ref: 'G-0912', desc: 'Combustible de cobradores', in: 0, out: 1500, medio: 'Efectivo' });
+  for (const r of S.receipts.filter(r => r.t === TODAY && r.canal === 'oficina')) cajaMov.push({ time: r.time, tipo: 'Cobro', ref: r.no, desc: CL[r.cid].nombre + ' · ' + r.loanId, in: r.total, out: 0, medio: r.medio });
+  const L212 = LN('SD-000212');
+  cajaMov.push({ time: '10:05', tipo: 'Desembolso', ref: 'SD-000212', desc: 'Ivelisse Marte · neto después de gastos de cierre', in: 0, out: r2(L212.P - L212.cargos), medio: 'Efectivo' });
+  cajaMov.sort((a, b) => a.time.localeCompare(b.time));
+  S.caja = { id: 'SD-C-000319', cajera: 'Ana Luisa Rosario', abierta: '08:02', fondo: 40000, movs: cajaMov, estado: 'abierta', rendido: false };
+  S.audit = [
+    { t: '10:05', user: 'Ana Luisa Rosario', acc: 'Desembolsó', ref: 'SD-000212 · ' + money(L212.P) },
+    { t: '09:40', user: 'Pedro Santana', acc: 'Cobró en ruta', ref: 'SD-000201 · ubicación registrada' },
+    { t: '09:15', user: 'Ana Luisa Rosario', acc: 'Cobró', ref: 'SD-000130' },
+    { t: '08:35', user: 'Ana Luisa Rosario', acc: 'Registró un gasto de caja', ref: 'RD$ 1,500.00' },
+    { t: '08:02', user: 'Ana Luisa Rosario', acc: 'Abrió caja', ref: 'SD-C-000319 · fondo RD$ 40,000.00' },
+    { t: '07:58', user: 'Ana Luisa Rosario', acc: 'Inició sesión con verificación en dos pasos', ref: 'Santo Domingo Este' },
+  ];
+}
+function pad6(n) { return String(n).padStart(6, '0'); }
+function log(acc, ref) { S.audit.unshift({ t: now(), user: USERS[S.role]?.name || '—', acc, ref }); }
+
+/* ---------- Íconos ---------- */
+const IC = {
+  home: '<path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/>',
+  users: '<circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M16 4a4 4 0 0 1 0 8M22 21c0-3-1.8-5.6-4.5-6.6"/>',
+  file: '<path d="M14 3H6v18h12V7zM14 3v4h4M9 13h6M9 17h6"/>',
+  wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>',
+  cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/>',
+  alert: '<path d="M12 3 2 20h20zM12 10v4M12 17h.01"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/>',
+  scale: '<path d="M12 3v18M6 21h12M4 7h16M4 7l-2.5 6a3 3 0 0 0 5 0zM20 7l-2.5 6a3 3 0 0 0 5 0z"/>',
+  box: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h3"/>',
+  receipt: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2zM9 8h6M9 12h6"/>',
+  bank: '<path d="M3 10 12 4l9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18"/>',
+  book: '<path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  msg: '<path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>',
+  print: '<path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/>',
+  down: '<path d="M12 4v12m-5-5 5 5 5-5M4 20h16"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  out: '<path d="M15 4h4v16h-4M10 17l5-5-5-5M15 12H3"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
+  pin: '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',
+  doc: '<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+  undo: '<path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/>',
+  store: '<path d="M4 9 5.5 4h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+};
+const ic = (n, cls = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${cls}" aria-hidden="true">${IC[n] || ''}</svg>`;
+
+/* ---------- Navegación ---------- */
+const MENU = [
+  ['Inicio', [['tablero', 'Tablero', 'home']]],
+  ['Operación', [['clientes', 'Clientes', 'users'], ['solicitudes', 'Solicitudes', 'file'], ['prestamos', 'Préstamos', 'wallet'], ['cobrar', 'Cobrar', 'cash']]],
+  ['Cobranza', [['atrasos', 'Atrasos', 'alert'], ['gestiones', 'Gestiones y promesas', 'phone'], ['rutas', 'Rutas', 'map'], ['legal', 'Legal', 'scale']]],
+  ['Finanzas', [['caja', 'Caja', 'box'], ['gastos', 'Gastos', 'receipt'], ['bancos', 'Cuentas y bancos', 'bank'], ['contabilidad', 'Contabilidad', 'book']]],
+  ['Reportes', [['reportes', 'Reportes', 'chart']]],
+  ['Ajustes', [['ajustes', 'Ajustes', 'gear']]],
+];
+const ACCESS = {
+  gerente: null,
+  cajera: ['tablero', 'clientes', 'prestamos', 'cobrar', 'caja', 'gastos'],
+  oficial: ['tablero', 'clientes', 'solicitudes', 'prestamos', 'atrasos', 'gestiones', 'reportes'],
+};
+const PARENT = { cliente: 'clientes', 'cliente-nuevo': 'clientes', 'solicitud-nueva': 'solicitudes', solicitud: 'solicitudes', desembolso: 'solicitudes', prestamo: 'prestamos', arqueo: 'caja', reporte: 'reportes' };
+const can = r => !ACCESS[S.role] || ACCESS[S.role].includes(PARENT[r] || r);
+
+function go(route, p = {}) {
+  S.route = route; S.p = p; S.navOpen = false; S.modal = null;
+  render();
+  const m = document.getElementById('main') || document.querySelector('.m-body'); if (m) m.scrollTop = 0;
+}
+function setRole(role, route, p) {
+  S.role = role;
+  const home = role === 'cobrador' ? 'ruta' : role === 'cliente' ? 'portal' : 'tablero';
+  go(route || home, p || {});
+}
+
+/* ---------- Estado visual ---------- */
+function statusBadge(s, L) {
+  const x = typeof s === 'string' ? s : st(L);
+  const o = typeof s === 'string' ? { status: s } : x;
+  switch (o.status) {
+    case 'aldia': return '<span class="badge b-ok">Al día</span>';
+    case 'atraso': return `<span class="badge ${o.dias > 30 ? 'b-d' : 'b-w'}">${o.dias} ${o.dias === 1 ? 'día' : 'días'} de atraso</span>`;
+    case 'legal': return '<span class="badge b-d">Vía legal</span>';
+    case 'saldado': return '<span class="badge b-n">Saldado</span>';
+    case 'castigado': return '<span class="badge b-n">Castigado</span>';
+  }
+  return '';
+}
+const TRAMOS = [null, ['1–7 días', 'b-i', '#0369A1'], ['8–30 días', 'b-w', '#E3A008'], ['31–60 días', 'b-w', '#C2410C'], ['61–90 días', 'b-d', '#B91C1C'], ['Más de 90', 'b-d', '#7F1D1D']];
+const APP_ST = { evaluacion: ['En evaluación', 'b-i'], por_aprobar: ['Por aprobar', 'b-w'], aprobada: ['Aprobada', 'b-ok'], desembolsada: ['Desembolsada', 'b-n'], rechazada: ['Rechazada', 'b-d'] };
+const approver = P => P <= 50000 ? 'Supervisora de sucursal (hasta RD$ 50,000)' : 'Gerencia (más de RD$ 50,000)';
+const cuotaOf = L => L.rows[0] ? L.rows[Math.min(1, L.rows.length - 1)].total : 0;
+
+/* ---------- Render principal ---------- */
+function render() {
+  const app = document.getElementById('app');
+  if (!S.role) { app.innerHTML = welcome(); renderOverlay(); return; }
+  if (S.role === 'cobrador' || S.role === 'cliente') { app.innerHTML = phoneStage(); renderOverlay(); return; }
+  if (!can(S.route)) S.route = 'tablero';
+  const v = (V[S.route] || V.tablero)(S.p);
+  app.innerHTML = `<div class="shell ${S.navOpen ? 'nav-open' : ''}">
+    <aside class="side" aria-label="Menú principal">${sidebar()}</aside>
+    <div class="scrim" data-act="nav"></div>
+    <div class="mainwrap">
+      <header class="top">
+        <button class="btn btn-q menu-btn" data-act="nav" aria-label="Abrir menú">${ic('menu')}</button>
+        <button class="searchbtn" data-act="search">${ic('search')}<span>Buscar cliente, cédula o préstamo</span><span class="kbd">Ctrl K</span></button>
+        <div class="who">
+          <select class="select" id="roleSel" data-change="role" aria-label="Ver la demo como" style="width:auto;min-height:34px;font-size:13px">
+            ${Object.entries(USERS).map(([k, u]) => `<option value="${k}" ${k === S.role ? 'selected' : ''}>Ver como: ${u.label}</option>`).join('')}
+          </select>
+          <span class="avatar">${initials(USERS[S.role].name)}</span>
+          <div><b>${USERS[S.role].name}</b><span>${USERS[S.role].label} · ${USERS[S.role].suc}</span></div>
+        </div>
+      </header>
+      <div class="demo-ribbon">${ic('info', '')}<span><b>Demostración</b> con datos ficticios. Hoy es miércoles 30/09/2026. Lo que haga aquí no se guarda: al recargar, todo vuelve al inicio.</span><a data-act="tour">Recorrido guiado</a></div>
+      <main class="page" id="main">${v}</main>
+    </div>
+  </div>${tourUI()}`;
+  document.querySelectorAll('.demo-ribbon svg').forEach(s => { s.style.width = '15px'; s.style.height = '15px'; });
+  renderOverlay();
+}
+function sidebar() {
+  const cur = PARENT[S.route] || S.route;
+  const counts = { solicitudes: S.apps.filter(a => a.estado === 'por_aprobar').length, atrasos: S.loans.filter(l => st(l).status === 'atraso').length };
+  let h = `<div class="brand"><span class="logo">FE</span><div><b>Financiera Ejemplo</b><span>Sistema de préstamos</span></div></div><nav class="nav">`;
+  for (const [g, items] of MENU) {
+    const vis = items.filter(([r]) => can(r)); if (!vis.length) continue;
+    h += `<div class="g">${g}</div>`;
+    for (const [r, l, i] of vis) h += `<a class="${cur === r ? 'on' : ''}" data-go="${r}">${ic(i)}<span>${r === 'caja' && S.role === 'cajera' ? 'Mi caja' : l}</span>${counts[r] ? `<span class="cnt">${counts[r]}</span>` : ''}</a>`;
+  }
+  h += `</nav><div class="side-foot"><span>El menú muestra solo lo que el rol <b>${USERS[S.role].label.toLowerCase()}</b> puede usar.</span><a data-act="exit">Cambiar de rol</a></div>`;
+  return h;
+}
+const hdr = (crumbs, title, sub, actions = '') => `<div class="hdr"><div style="min-width:0">${crumbs ? `<p class="crumbs">${crumbs}</p>` : ''}<h1>${title}</h1>${sub ? `<p class="muted" style="margin:4px 0 0">${sub}</p>` : ''}</div><div class="row">${actions}</div></div>`;
+const crumb = (r, l) => `<a data-go="${r}">${l}</a>`;
+const V = {};
+const kpi = (k, v, s = '', cls = '') => `<div class="kpi ${cls}"><span class="k">${k}</span><span class="v">${v}</span>${s ? `<span class="s">${s}</span>` : ''}</div>`;
+
+/* ---------- Bienvenida ---------- */
+function welcome() {
+  const roles = [
+    ['gerente', 'shield', 'Gerente', 'Carlos Méndez. Tablero del negocio, aprobaciones, atrasos, finanzas, reportes y ajustes.', true],
+    ['cajera', 'box', 'Cajera', 'Ana Luisa Rosario. Cobrar en segundos, imprimir el recibo y cuadrar la caja.'],
+    ['oficial', 'file', 'Oficial de crédito', 'Kelvin Soto. Registrar clientes, simular y enviar solicitudes a aprobación.'],
+    ['cobrador', 'map', 'Cobrador en la calle', 'Pedro Santana. Su ruta del día en el celular y el recibo por WhatsApp.'],
+    ['cliente', 'user', 'Cliente', 'María Gómez. Su saldo, sus cuotas y sus recibos desde el celular.'],
+  ];
+  return `<div class="welcome">
+    <section class="w-left">
+      <div class="brand" style="padding:0"><span class="logo">FE</span><div><b>Financiera Ejemplo</b><span>Aquí irán el nombre y el logo de su empresa</span></div></div>
+      <h1>Prestar, cobrar y cuadrar la caja en un solo lugar.</h1>
+      <p>Esta es una demostración navegable del sistema que construiremos para su compañía. Los cálculos son reales; los clientes y montos son ficticios.</p>
+      <ul class="w-list">
+        <li>${ic('check')}<span>Cobro en un paso, con el desglose y el cambio antes de confirmar.</span></li>
+        <li>${ic('check')}<span>Mora automática según su política, con días de gracia y tope.</span></li>
+        <li>${ic('check')}<span>Caja por cajero con arqueo por billetes y cierre aprobado.</span></li>
+        <li>${ic('check')}<span>Aprobación por montos, permisos por rol e historial de cada cambio.</span></li>
+        <li>${ic('check')}<span>Cobradores con su ruta en el celular y recibo por WhatsApp.</span></li>
+      </ul>
+      <p class="xs" style="color:#B596BB;margin-top:auto">Demostración con datos ficticios · no guarda información</p>
+    </section>
+    <section class="w-right">
+      <div><p class="crumbs">Paso 1 de 1</p><h2 style="font-size:22px">¿Con qué rol quiere entrar?</h2><p class="muted" style="margin:6px 0 0">Cada persona ve un sistema distinto según su trabajo. Puede cambiar de rol en cualquier momento.</p></div>
+      <div class="roles">${roles.map(([k, i, t, d, f]) => `<button class="role ${f ? 'feat' : ''}" data-act="role" data-v="${k}"><span class="ic">${ic(i)}</span><span><b>${t}</b><span>${d}</span></span></button>`).join('')}
+        <button class="role" data-act="startTour"><span class="ic" style="background:var(--accent-100);color:var(--accent-ink)">${ic('compass')}</span><span><b>Recorrido guiado</b><span>12 pasos que le muestran lo más importante en unos 10 minutos.</span></span></button>
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ---------- Recorrido guiado ---------- */
+const TOUR = [
+  ['El tablero del gerente', 'Lo que hay que cobrar hoy, los atrasos y las cajas.', 'gerente', 'tablero'],
+  ['Buscar y cobrar', 'La cajera cobra a María: desglose y cambio antes de confirmar.', 'cajera', 'cobrar', { id: 'SD-000125' }],
+  ['Cuadrar la caja', 'Conteo por billetes; una diferencia exige motivo y aprobación.', 'cajera', 'arqueo'],
+  ['Simular y solicitar', 'El oficial arma una solicitud con la tabla de cuotas al instante.', 'oficial', 'solicitud-nueva'],
+  ['Aprobar un préstamo', 'La gerencia revisa capacidad de pago y documentos, y aprueba.', 'gerente', 'solicitud', { id: 'SD-S-000342' }],
+  ['El expediente del préstamo', 'Calendario, pagos, contrato, pagaré y todo lo que pasó.', 'gerente', 'prestamo', { id: 'SD-000125' }],
+  ['Atrasos y gestiones', 'La cartera vencida por tramos y las promesas de pago.', 'gerente', 'atrasos'],
+  ['La ruta del cobrador', 'Pedro cobra en la calle desde su celular.', 'cobrador', 'ruta'],
+  ['El portal del cliente', 'María ve su saldo, sus cuotas y sus recibos.', 'cliente', 'portal'],
+  ['Finanzas y contabilidad', 'Gastos, bancos y el estado de resultados del mes.', 'gerente', 'contabilidad'],
+  ['Reportes', 'Cartera, antigüedad, cobros y clasificación de clientes.', 'gerente', 'reportes'],
+  ['Ajustes y seguridad', 'Productos, política de mora, permisos e historial.', 'gerente', 'ajustes', { tab: 'mora' }],
+];
+function tourUI() {
+  if (!S.tour) return `<div class="tour-fab"><button class="btn btn-p" data-act="tour">${ic('compass')} Recorrido guiado</button></div>`;
+  return `<aside class="tour" aria-label="Recorrido guiado"><div class="tour-h"><div><b>Recorrido guiado</b><div class="xs muted">${Object.keys(S.tourDone).length} de ${TOUR.length} vistos · cada paso cambia de rol solo</div></div><button class="x" data-act="tour" aria-label="Cerrar recorrido">${ic('x')}</button></div>
+  <div class="tour-b">${TOUR.map((t, k) => `<div class="tstep ${S.tourDone[k] ? 'done' : ''}" data-act="tstep" data-v="${k}"><span class="n">${S.tourDone[k] ? '✓' : k + 1}</span><span><b>${t[0]}</b><span>${t[1]}</span></span></div>`).join('')}</div></aside>`;
+}
+
+/* ---------- Tablero ---------- */
+function portfolio() {
+  const act = S.loans.filter(l => l.status !== 'saldado');
+  const ss = act.map(l => [l, st(l)]);
+  const cartera = sum(ss, ([, s]) => s.capPend);
+  const par30 = sum(ss.filter(([, s]) => s.dias > 30), ([, s]) => s.capPend);
+  const tr = [0, 0, 0, 0, 0, 0].map(() => ({ n: 0, amt: 0 }));
+  ss.forEach(([, s]) => { if (s.tramo) { tr[s.tramo].n++; tr[s.tramo].amt += s.vencido + s.mora; } });
+  const hoyRc = S.receipts.filter(r => r.t === TODAY && !r.rev);
+  return { act, ss, cartera, par30, tr, hoyRc, cobradoHoy: sum(hoyRc, r => r.total), venceHoy: sum(ss, ([, s]) => s.hoyAmt), vencido: sum(ss, ([, s]) => s.vencido + s.mora), nAtraso: ss.filter(([, s]) => s.dias > 0).length };
+}
+function chart14() {
+  const days = []; for (let k = 13; k >= 0; k--) { const t = TODAY - k * DAY; days.push({ t, v: sum(S.receipts.filter(r => r.t === t && !r.rev), r => r.total) }); }
+  const max = Math.max(...days.map(d => d.v), 1); const nice = Math.ceil(max / 10000) * 10000 || 10000;
+  const W = 640, H = 200, L = 52, B = 26, T = 10, bw = (W - L - 8) / days.length;
+  let g = '';
+  for (let k = 0; k <= 4; k++) { const y = T + (H - T - B) * (1 - k / 4); g += `<line x1="${L}" x2="${W - 4}" y1="${y}" y2="${y}" stroke="var(--line-2)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${(nice * k / 4 / 1000).toLocaleString('en-US')}k</text>`; }
+  days.forEach((d, k) => {
+    const h = (H - T - B) * d.v / nice, x = L + k * bw + 4, y = H - B - h, isT = d.t === TODAY, off = isOff(d.t);
+    g += `<rect x="${x}" y="${y}" width="${bw - 8}" height="${Math.max(h, d.v ? 2 : 0)}" rx="3" fill="${isT ? 'var(--accent)' : 'var(--brand-700)'}" opacity="${isT ? 1 : .82}"><title>${fd(d.t)}: ${money(d.v)}</title></rect>`;
+    g += `<text x="${x + (bw - 8) / 2}" y="${H - 8}" text-anchor="middle" font-size="10" fill="${isT ? 'var(--text)' : 'var(--muted)'}" font-weight="${isT ? 600 : 400}">${off && !d.v ? '·' : new Date(d.t).getUTCDate()}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cobros por día de los últimos 14 días" style="width:100%;height:auto">${g}</svg>`;
+}
+V.tablero = () => {
+  const P = portfolio();
+  if (S.role === 'cajera') return tableroCajera(P);
+  if (S.role === 'oficial') return tableroOficial(P);
+  const cajaEsp = cajaTotals().esperado;
+  const pend = S.apps.filter(a => a.estado === 'por_aprobar');
+  const proms = S.gest.filter(g => g.prom && g.prom.t === TODAY && !g.prom.kept);
+  const top = P.ss.filter(([, s]) => s.hoy.length || s.dias > 0).sort((a, b) => b[1].dias - a[1].dias).slice(0, 7);
+  const maxT = Math.max(...P.tr.slice(1).map(t => t.amt), 1);
+  return `${hdr('', 'Buenos días, Carlos', 'Miércoles 30 de septiembre · todas las sucursales', `<button class="btn" data-go="reportes">${ic('chart')} Reportes</button><button class="btn btn-p" data-go="solicitudes">${ic('file')} Solicitudes por aprobar · ${pend.length}</button>`)}
+  <div class="grid g5">
+    ${kpi('Cartera activa', mk(P.cartera), P.act.length + ' préstamos', 'k-brand')}
+    ${kpi('Cobrado hoy', mk(P.cobradoHoy), P.hoyRc.length + ' cobros en oficina y ruta', 'ok')}
+    ${kpi('Vence hoy', mk(P.venceHoy), 'Cuotas con fecha de hoy')}
+    ${kpi('En atraso', mk(P.vencido), P.nAtraso + ' préstamos, con mora', 'warn')}
+    ${kpi('Cartera en riesgo', (P.par30 / P.cartera * 100).toFixed(1) + ' %', 'Capital con más de 30 días de atraso', 'danger')}
+  </div>
+  <div class="grid g-73">
+    <section class="card"><div class="card-h"><h2>Cobros de los últimos 14 días</h2><span class="legend"><span><i style="background:var(--brand-700)"></i>Días anteriores</span><span><i style="background:var(--accent)"></i>Hoy</span></span></div>${chart14()}<p class="xs muted" style="margin:0">Suma de recibos por día. Los domingos y feriados aparecen con un punto.</p></section>
+    <section class="card"><div class="card-h"><h2>Atrasos por tramo</h2><a class="small" data-go="atrasos" style="cursor:pointer">Ver bandeja</a></div>
+      <div class="bars">${P.tr.slice(1).map((t, k) => `<div class="b" data-go="atrasos" data-p='{"tramo":${k + 1}}'><span class="badge ${TRAMOS[k + 1][1]}">${TRAMOS[k + 1][0]}</span><span class="track"><div style="width:${t.amt / maxT * 100}%;background:${TRAMOS[k + 1][2]}"></div></span><span class="num">${t.n} · ${mk(t.amt)}</span></div>`).join('')}</div>
+      <p class="xs muted" style="margin:0">Monto vencido más mora. Haga clic en un tramo para ver sus préstamos.</p>
+    </section>
+  </div>
+  <div class="grid g3">
+    <section class="card"><div class="card-h"><h2>Pendientes de su aprobación</h2><span class="badge b-w">${pend.length + (S.caja.estado === 'pendiente' ? 1 : 0)}</span></div>
+      ${pend.map(a => `<div class="row between"><div><a data-go="solicitud" data-p='{"id":"${a.id}"}' style="cursor:pointer;font-weight:500">${CL[a.cid].nombre}</a><div class="xs muted">${a.id} · ${PROD[a.prod]}</div></div><b class="tab-nums">${mk(a.P)}</b></div>`).join('')}
+      ${S.caja.estado === 'pendiente' ? `<div class="row between"><div><a data-go="caja" style="cursor:pointer;font-weight:500">Cierre de caja ${S.caja.id}</a><div class="xs muted">Diferencia ${money(S.caja.cierre.dif)}</div></div><button class="btn btn-sm btn-p" data-act="approveClose">Aprobar</button></div>` : ''}
+      ${!pend.length && S.caja.estado !== 'pendiente' ? '<p class="muted small" style="margin:0">No tiene nada pendiente.</p>' : ''}
+    </section>
+    <section class="card"><div class="card-h"><h2>Cajas abiertas</h2></div>
+      <div class="row between"><div><b style="font-weight:500">${S.caja.cajera}</b><div class="xs muted">${S.caja.id} · SDE · ${S.caja.estado === 'abierta' ? 'abierta desde ' + S.caja.abierta : S.caja.estado === 'pendiente' ? 'cerrada, por aprobar' : 'cerrada'}</div></div><b class="tab-nums">${money(cajaEsp)}</b></div>
+      <div class="row between"><div><b style="font-weight:500">Yahaira Peña</b><div class="xs muted">SD-C-000317 · Los Alcarrizos · desde 08:10</div></div><b class="tab-nums">RD$ 18,450.00</b></div>
+      <div class="row between"><div><b style="font-weight:500">Pedro Santana (en ruta)</b><div class="xs muted">Efectivo por entregar</div></div><b class="tab-nums">${money(rutaCash())}</b></div>
+    </section>
+    <section class="card"><div class="card-h"><h2>Promesas que vencen hoy</h2><span class="badge b-i">${proms.length}</span></div>
+      ${proms.map(g => { const L = LN(g.loanId); return `<div class="row between"><div><a data-go="prestamo" data-p='{"id":"${L.id}"}' style="cursor:pointer;font-weight:500">${CL[L.cid].nombre}</a><div class="xs muted">${L.id} · ${g.user}</div></div><b class="tab-nums">${mk(g.prom.amt)}</b></div>`; }).join('') || '<p class="muted small" style="margin:0">Todas las promesas de hoy se cumplieron.</p>'}
+    </section>
+  </div>
+  <section class="card flush"><div class="card-h"><h2>Para cobrar hoy</h2><span class="muted small">Cuotas que vencen hoy y préstamos en atraso</span></div>
+    <div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Cliente</th><th>Estado</th><th>Cobrador</th><th class="num">Exigible hoy</th><th></th></tr></thead><tbody>
+    ${top.map(([L, s]) => `<tr class="${s.dias > 30 ? 'hl' : ''}"><td><a data-go="prestamo" data-p='{"id":"${L.id}"}'>${L.id}</a></td><td>${CL[L.cid].nombre}</td><td>${s.dias ? statusBadge(null, L) : '<span class="badge b-i">Vence hoy</span>'}</td><td>${L.cob ? COB[L.cob] : '<span class="badge b-w">Sin asignar</span>'}</td><td class="num">${money(s.exig)}</td><td class="num"><button class="btn btn-sm btn-g" data-go="cobrar" data-p='{"id":"${L.id}"}'>Cobrar</button></td></tr>`).join('')}
+    </tbody></table></div></section>`;
+};
+function tableroCajera(P) {
+  const c = cajaTotals();
+  const mine = S.receipts.filter(r => r.t === TODAY && r.canal === 'oficina' && !r.rev);
+  const quick = P.ss.filter(([, s]) => s.exig > 0).slice(0, 6);
+  return `${hdr('', 'Buenos días, Ana Luisa', 'Caja ' + S.caja.id + ' · Santo Domingo Este', `<button class="btn" data-go="caja">${ic('box')} Mi caja</button><button class="btn btn-g" data-act="search">${ic('cash')} Cobrar</button>`)}
+  <div class="grid g4">${kpi('Efectivo esperado en caja', money(c.esperado), 'Fondo ' + money(S.caja.fondo), 'k-brand')}${kpi('Cobros de hoy', mine.length, money(sum(mine, r => r.total)), 'ok')}${kpi('Desembolsos de hoy', S.caja.movs.filter(m => m.tipo === 'Desembolso').length, money(sum(S.caja.movs.filter(m => m.tipo === 'Desembolso'), m => m.out)))}${kpi('Rendición pendiente', S.caja.rendido ? 'Recibida' : money(rutaCash()), 'Pedro Santana', S.caja.rendido ? 'ok' : 'warn')}</div>
+  <div class="grid g2">
+    <section class="card"><div class="card-h"><h2>Cobro rápido</h2><span class="muted small">o pulse Ctrl + K</span></div>
+      <button class="searchbtn" style="max-width:none" data-act="search">${ic('search')}<span>Nombre, cédula, teléfono o número de préstamo</span></button>
+      ${quick.map(([L, s]) => `<div class="row between"><div><b style="font-weight:500">${CL[L.cid].nombre}</b><div class="xs muted">${L.id} · ${s.dias ? s.dias + ' días de atraso' : 'vence hoy'}</div></div><div class="row"><b class="tab-nums">${money(s.exig)}</b><button class="btn btn-sm btn-g" data-go="cobrar" data-p='{"id":"${L.id}"}'>Cobrar</button></div></div>`).join('')}
+    </section>
+    <section class="card flush"><div class="card-h"><h2>Mis cobros de hoy</h2></div><div class="tw"><table class="t"><thead><tr><th>Hora</th><th>Recibo</th><th>Cliente</th><th class="num">Monto</th></tr></thead><tbody>
+      ${mine.map(r => `<tr class="click" data-act="showRcpt" data-v="${r.no}"><td>${r.time}</td><td>${r.no}</td><td>${CL[r.cid].nombre}</td><td class="num">${money(r.total)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Aún no hay cobros hoy.</td></tr>'}
+    </tbody></table></div></section>
+  </div>`;
+}
+function tableroOficial(P) {
+  const mine = S.apps;
+  const col = S.loans.filter(l => l.disb >= D('2026-09-01'));
+  return `${hdr('', 'Buenos días, Kelvin', 'Oficial de crédito · Santo Domingo Este', `<button class="btn" data-go="cliente-nuevo">${ic('plus')} Nuevo cliente</button><button class="btn btn-p" data-go="solicitud-nueva">${ic('file')} Nueva solicitud</button>`)}
+  <div class="grid g4">${kpi('Solicitudes en curso', mine.filter(a => ['evaluacion', 'por_aprobar'].includes(a.estado)).length, 'En evaluación o por aprobar', 'k-brand')}${kpi('Colocado en septiembre', mk(sum(col, l => l.P)), col.length + ' préstamos', 'ok')}${kpi('Rechazadas del mes', mine.filter(a => a.estado === 'rechazada').length, 'Con su motivo')}${kpi('Mis clientes en atraso', P.nAtraso, 'Para dar seguimiento', 'warn')}</div>
+  <section class="card"><div class="card-h"><h2>Mis solicitudes</h2><a class="small" data-go="solicitudes" style="cursor:pointer">Ver todas</a></div>
+    <div class="pipe">${Object.entries(APP_ST).map(([k, [l, b]]) => `<div class="kpi"><span class="badge ${b}" style="align-self:flex-start">${l}</span>${mine.filter(a => a.estado === k).map(a => `<a data-go="solicitud" data-p='{"id":"${a.id}"}' style="cursor:pointer;font-size:13px">${CL[a.cid].nombre}<br><span class="xs muted">${mk(a.P)}</span></a>`).join('') || '<span class="xs muted">—</span>'}</div>`).join('')}</div>
+  </section>`;
+}
+
+/* ---------- Búsqueda global ---------- */
+function searchModal(q = '') {
+  const t = q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const cs = t ? C.filter(c => norm(c.nombre + ' ' + c.doc + ' ' + c.tel).includes(t)).slice(0, 6) : C.slice(0, 4);
+  const ls = t ? S.loans.filter(l => norm(l.id + ' ' + CL[l.cid].nombre).includes(t)).slice(0, 6) : [];
+  return `<div class="srch-res" id="srchRes">
+    ${!t ? '<div class="srch-g">Sugerencias · pruebe con «gomez», «000-0012» o «SD-000211»</div>' : ''}
+    ${cs.length ? `<div class="srch-g">Clientes</div>` + cs.map(c => { const ln = S.loans.find(l => l.cid === c.id && l.status !== 'saldado'); return `<div class="srch-it" data-go="cliente" data-p='{"id":"${c.id}"}'><span class="avatar">${initials(c.nombre)}</span><div style="flex:1;min-width:0"><b style="font-weight:500">${c.nombre}</b><div class="xs muted">${c.doc} · ${c.tel}</div></div>${ln && can('cobrar') && st(ln).exig > 0 ? `<button class="btn btn-sm btn-g" data-go="cobrar" data-p='{"id":"${ln.id}"}'>Cobrar ${mk(st(ln).exig)}</button>` : ''}</div>`; }).join('') : ''}
+    ${ls.length ? `<div class="srch-g">Préstamos</div>` + ls.map(l => `<div class="srch-it" data-go="prestamo" data-p='{"id":"${l.id}"}'><span class="avatar" style="background:var(--accent-100);color:var(--accent-ink)">${ic('wallet')}</span><div style="flex:1"><b style="font-weight:500">${l.id} · ${CL[l.cid].nombre}</b><div class="xs muted">${PROD[l.prod]} · ${money(l.P)}</div></div>${statusBadge(null, l)}</div>`).join('') : ''}
+    ${t && !cs.length && !ls.length ? '<div class="empty">No hay resultados. Busque por nombre, cédula, RNC, teléfono o número de préstamo.</div>' : ''}
+  </div>`;
+}
+
+/* ---------- Clientes ---------- */
+V.clientes = () => {
+  const q = (S.flt.cq || '').toLowerCase(); const f = S.flt.cf || 'todos';
+  const rows = C.map(c => { const ls = S.loans.filter(l => l.cid === c.id); const act = ls.filter(l => l.status !== 'saldado'); const sts = act.map(st); return { c, act, saldo: sum(sts, s => s.capPend), dias: Math.max(0, ...sts.map(s => s.dias)) }; })
+    .filter(x => (!q || (x.c.nombre + x.c.doc + x.c.tel).toLowerCase().includes(q)) && (f === 'todos' || (f === 'atraso' ? x.dias > 0 : f === 'aldia' ? x.act.length && !x.dias : !x.act.length)));
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Operación', 'Clientes', C.length + ' clientes · personas y empresas', `<button class="btn btn-p" data-go="cliente-nuevo">${ic('plus')} Nuevo cliente</button>`)}
+  <div class="row"><div class="field" style="flex:1;min-width:220px"><input class="input" id="cq" data-live="cq" placeholder="Buscar por nombre, cédula, RNC o teléfono" value="${esc(S.flt.cq || '')}"></div>
+  <div class="chips">${[['todos', 'Todos'], ['aldia', 'Al día'], ['atraso', 'En atraso'], ['sin', 'Sin préstamo activo']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-act="flt" data-k="cf" data-v="${k}">${l}</button>`).join('')}</div></div>
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Cliente</th><th>Cédula / RNC</th><th>Teléfono</th><th>Clasificación</th><th class="num">Préstamos activos</th><th class="num">Saldo de capital</th><th>Estado</th></tr></thead><tbody>
+  ${rows.map(x => `<tr class="click" data-go="cliente" data-p='{"id":"${x.c.id}"}'><td><div class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar">${initials(x.c.nombre)}</span><div><b style="font-weight:500">${x.c.nombre}</b><div class="xs muted">${x.c.tipo === 'empresa' ? 'Empresa' : 'Persona'} · ${x.c.dir.split(',').pop().trim()}</div></div></div></td><td class="tab-nums">${x.c.doc}</td><td class="tab-nums">${x.c.tel}</td><td>${clasBadge(x.c.clas)}</td><td class="num">${x.act.length}</td><td class="num">${money(x.saldo)}</td><td>${!x.act.length ? '<span class="badge b-n">Sin préstamo</span>' : x.dias ? `<span class="badge ${x.dias > 30 ? 'b-d' : 'b-w'}">${x.dias} días</span>` : '<span class="badge b-ok">Al día</span>'}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Ningún cliente coincide con la búsqueda.</td></tr>'}
+  </tbody></table></div></section>`;
+};
+const clasBadge = k => `<span class="badge ${k === 'A' ? 'b-ok' : k === 'B' ? 'b-i' : 'b-d'}">${k}</span>`;
+V.cliente = p => {
+  const c = CL[p.id]; if (!c) return V.clientes();
+  const tab = p.tab || 'resumen'; const ls = S.loans.filter(l => l.cid === c.id);
+  const act = ls.find(l => l.status !== 'saldado'); const s = act && st(act);
+  const tabs = [['resumen', 'Resumen'], ['prestamos', 'Préstamos (' + ls.length + ')'], ['garantias', 'Garantías'], ['documentos', 'Documentos'], ['cronologia', 'Cronología']];
+  let body = '';
+  if (tab === 'resumen') body = `<div class="grid g-73"><section class="card"><h2>Datos</h2><div class="kv">
+    <div><span>${c.tipo === 'empresa' ? 'RNC' : 'Cédula'}</span><b class="tab-nums">${c.doc}</b></div><div><span>Teléfono</span><b class="tab-nums">${c.tel}</b></div><div><span>Dirección</span><b>${c.dir}</b></div>
+    <div><span>${c.tipo === 'empresa' ? 'Negocio' : 'Trabajo'}</span><b>${c.trabajo}</b></div><div><span>Ingreso mensual declarado</span><b class="tab-nums">${money(c.ingreso)}</b></div><div><span>Cliente desde</span><b>${fd(c.alta)}</b></div></div>
+    <hr class="sep"><h3>Garante</h3><div class="kv"><div><span>Nombre</span><b>${['Juana Peña', 'Manuel Gómez', 'Luisa Mateo'][c.id.charCodeAt(2) % 3]}</b></div><div><span>Relación</span><b>Familiar</b></div><div><span>Estado</span><b><span class="badge b-ok">Verificado</span></b></div></div>
+    <h3>Referencias</h3><div class="kv"><div><span>Personal</span><b>Rosa Almonte · 809-555-0190</b></div><div><span>Laboral</span><b>Recursos Humanos · 809-555-0191</b></div></div></section>
+    <section class="card"><div class="card-h"><h2>Clasificación ${clasBadge(c.clas)}</h2></div><p class="small muted" style="margin:0">Por qué tiene esta clasificación:</p><ul style="margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:4px">${WHY[c.clas].map(w => `<li>${w}</li>`).join('')}</ul>
+    ${act ? `<hr class="sep"><h3>Préstamo activo</h3><dl class="dl"><dt>${act.id}</dt><dd>${statusBadge(null, act)}</dd><dt>Saldo de capital</dt><dd>${money(s.capPend)}</dd><dt>Exigible hoy</dt><dd>${money(s.exig)}</dd><dt>Próxima cuota</dt><dd>${s.next ? fd(s.next.date) : '—'}</dd></dl>` : ''}</section></div>`;
+  if (tab === 'prestamos') body = `<section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Producto</th><th>Desembolso</th><th class="num">Monto</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>${ls.map(l => `<tr class="click" data-go="prestamo" data-p='{"id":"${l.id}"}'><td><a>${l.id}</a></td><td>${PROD[l.prod]}</td><td>${fd(l.disb)}</td><td class="num">${money(l.P)}</td><td class="num">${money(st(l).capPend)}</td><td>${statusBadge(null, l)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Este cliente no tiene préstamos. Cree una solicitud para empezar.</td></tr>'}</tbody></table></div></section>`;
+  if (tab === 'garantias') body = garantiaCard(c.id) || '<section class="card"><p class="muted" style="margin:0">Este cliente no tiene garantías registradas. Los préstamos de vehículo e hipotecarios exigen una.</p><div><button class="btn">' + ic('plus') + ' Registrar garantía</button></div></section>';
+  if (tab === 'documentos') body = `<section class="card flush"><div class="card-h"><h2>Documentos</h2><button class="btn btn-sm" data-act="demo" data-v="Aquí se suben archivos PDF o fotos. Se guardan de forma privada, no con enlaces públicos.">${ic('plus')} Subir archivo</button></div><div class="tw"><table class="t"><thead><tr><th>Documento</th><th>Tipo</th><th>Subido</th><th>Estado</th></tr></thead><tbody>
+    ${[['Cédula (ambos lados)', 'Imagen'], ['Carta de trabajo', 'PDF'], ['Recibo de luz', 'Imagen'], ['Reporte del buró de crédito', 'PDF'], ['Contrato firmado', 'PDF']].map(([d, t], k) => `<tr><td>${ic('doc').replace('class=""', 'style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"')}${d}</td><td>${t}</td><td>${fd(c.alta + k * DAY)}</td><td><span class="badge b-ok">Verificado</span></td></tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'cronologia') { const ev = timeline(c.id); body = `<section class="card">${ev.map(e => `<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><span class="badge b-n" style="min-width:86px;justify-content:center">${fd(e.t)}</span><span class="small">${e.txt}</span></div>`).join('')}</section>`; }
+  return `${hdr(crumb('clientes', 'Clientes') + ' › Ficha', `<span class="row" style="gap:12px"><span class="avatar" style="width:44px;height:44px;font-size:15px">${initials(c.nombre)}</span>${c.nombre}</span>`, `${c.tipo === 'empresa' ? 'Empresa' : 'Persona'} · ${c.doc} · ${c.suc}`,
+    `${can('gestiones') && act ? `<button class="btn" data-act="gest" data-v="${act.id}">${ic('phone')} Registrar gestión</button>` : ''}${can('solicitudes') ? `<button class="btn" data-go="solicitud-nueva" data-p='{"cid":"${c.id}"}'>${ic('file')} Nueva solicitud</button>` : ''}${act && can('cobrar') && s.exig > 0 ? `<button class="btn btn-g" data-go="cobrar" data-p='{"id":"${act.id}"}'>${ic('cash')} Cobrar ${mk(s.exig)}</button>` : ''}`)}
+  <div class="tabs">${tabs.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" data-go="cliente" data-p='{"id":"${c.id}","tab":"${k}"}'>${l}</a>`).join('')}</div>${body}`;
+};
+function timeline(cid) {
+  const ev = [{ t: CL[cid].alta, txt: 'Cliente registrado por Kelvin Soto' }];
+  S.loans.filter(l => l.cid === cid).forEach(l => l.hist.forEach(h => ev.push(h)));
+  S.receipts.filter(r => r.cid === cid).forEach(r => ev.push({ t: r.t, txt: `${r.rev ? '<s>' : ''}Pagó ${money(r.total)} · recibo ${r.no} · ${r.canal === 'ruta' ? 'en ruta con ' + r.user : 'en oficina'}${r.rev ? '</s> · corregido' : ''}` }));
+  S.gest.filter(g => LN(g.loanId).cid === cid).forEach(g => ev.push({ t: g.t, txt: `${g.tipo}: ${g.res}${g.prom ? ' · promesa ' + mk(g.prom.amt) + ' para el ' + fd(g.prom.t) : ''} · ${g.user}` }));
+  return ev.sort((a, b) => b.t - a.t);
+}
+function garantiaCard(cid) {
+  if (cid === 'C09') return `<section class="card"><div class="card-h"><h2>Vehículo · Toyota Corolla 2019</h2><span class="badge b-b">En garantía</span></div><div class="kv"><div><span>Placa</span><b>A000456</b></div><div><span>Chasis</span><b>JT2BF28K0X0000000</b></div><div><span>Color</span><b>Gris</b></div><div><span>Matrícula</span><b>Original en custodia</b></div><div><span>Tasación</span><b class="tab-nums">RD$ 850,000.00</b></div><div><span>Cobertura del préstamo</span><b>2.4 veces el monto</b></div><div><span>Seguro</span><b>Vigente hasta 03/2027</b></div><div><span>Préstamo</span><b>SD-000150</b></div></div></section>`;
+  if (cid === 'C10') return `<section class="card"><div class="card-h"><h2>Inmueble · casa en Villa Mella</h2><span class="badge b-b">En garantía</span></div><div class="kv"><div><span>Certificado de título</span><b>0000123456</b></div><div><span>Ubicación</span><b>C/ Hermanas Mirabal #77, Villa Mella</b></div><div><span>Área</span><b>240 m² de solar, 160 m² de construcción</b></div><div><span>Tasación</span><b class="tab-nums">RD$ 2,600,000.00</b></div><div><span>Cobertura del préstamo</span><b>2.2 veces el monto</b></div><div><span>Hipoteca inscrita</span><b>Registro de Títulos, 11/2025</b></div><div><span>Préstamo</span><b>SD-000060</b></div></div></section>`;
+  if (cid === 'C18') return `<section class="card"><div class="card-h"><h2>Vehículo · Honda CR-V 2018</h2><span class="badge b-i">En evaluación</span></div><div class="kv"><div><span>Placa</span><b>G000123</b></div><div><span>Tasación</span><b class="tab-nums">RD$ 950,000.00</b></div><div><span>Solicitud</span><b>SD-S-000341</b></div></div></section>`;
+  return '';
+}
+V['cliente-nuevo'] = () => `${hdr(crumb('clientes', 'Clientes') + ' › Nuevo', 'Nuevo cliente', 'Los campos con * son obligatorios. El sistema avisa si la persona ya existe.')}
+  <form class="grid g-73" data-submit="newClient" autocomplete="off">
+    <section class="card"><h2>Datos personales</h2>
+      <div class="chips">${['Persona', 'Empresa'].map((t, k) => `<button type="button" class="chip ${k === 0 ? 'on' : ''}" data-act="demo" data-v="Para empresas se pide RNC, razón social, representante y datos del negocio.">${t}</button>`).join('')}</div>
+      <div class="grid g2"><div class="field"><label for="nc-doc">Cédula *</label><input class="input" id="nc-doc" data-live="dup" placeholder="000-0000000-0" required><span id="dupMsg" class="hint">Pruebe con 000-0012345-1 para ver el aviso de duplicado.</span></div>
+      <div class="field"><label for="nc-name">Nombre completo *</label><input class="input" id="nc-name" required placeholder="Nombre y apellidos"></div>
+      <div class="field"><label for="nc-tel">Teléfono *</label><input class="input" id="nc-tel" required placeholder="809-000-0000"></div>
+      <div class="field"><label for="nc-city">Ciudad o sector *</label><select class="select" id="nc-city"><option>Santo Domingo Este</option><option>Santo Domingo Norte</option><option>Distrito Nacional</option><option>Los Alcarrizos</option></select></div>
+      <div class="field" style="grid-column:1/-1"><label for="nc-dir">Dirección</label><input class="input" id="nc-dir" placeholder="Calle, número y sector"></div></div>
+      <h2>Trabajo o negocio</h2>
+      <div class="grid g2"><div class="field"><label for="nc-job">Dónde trabaja</label><input class="input" id="nc-job" placeholder="Empresa y cargo"></div><div class="field"><label for="nc-inc">Ingreso mensual (RD$)</label><input class="input" id="nc-inc" inputmode="decimal" placeholder="0.00"></div></div>
+    </section>
+    <section class="card"><h2>Garante y referencias</h2><div class="field"><label for="nc-g">Garante</label><input class="input" id="nc-g" placeholder="Buscar un cliente o registrar uno nuevo"><span class="hint">El garante debe ser una persona registrada y verificada.</span></div>
+      <div class="field"><label for="nc-r1">Referencia personal</label><input class="input" id="nc-r1" placeholder="Nombre y teléfono"></div>
+      <h2>Documentos</h2><div class="stack small">${['Cédula (ambos lados)', 'Carta de trabajo o registro del negocio', 'Recibo de un servicio'].map((d, k) => `<label class="check"><input type="checkbox" id="nc-d${k}"> ${d}</label>`).join('')}</div>
+      <label class="check small"><input type="checkbox" id="nc-cons" checked> El cliente autorizó el uso de sus datos y la consulta al buró de crédito (Ley 172-13).</label>
+      <button class="btn btn-p btn-lg" type="submit">Guardar cliente</button></section>
+  </form>`;
+
+/* ---------- Solicitudes ---------- */
+V.solicitudes = () => {
+  const f = S.flt.sf || 'todas';
+  const rows = S.apps.filter(a => f === 'todas' || a.estado === f);
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Operación', 'Solicitudes', 'Cada solicitud la aprueba quien tiene el límite para ese monto.', can('solicitud-nueva') ? `<button class="btn btn-p" data-go="solicitud-nueva">${ic('plus')} Nueva solicitud</button>` : '')}
+  <div class="chips">${[['todas', 'Todas']].concat(Object.entries(APP_ST).map(([k, [l]]) => [k, l])).map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-act="flt" data-k="sf" data-v="${k}">${l} · ${k === 'todas' ? S.apps.length : S.apps.filter(a => a.estado === k).length}</button>`).join('')}</div>
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Solicitud</th><th>Cliente</th><th>Producto</th><th class="num">Monto</th><th>Plazo</th><th>Aprueba</th><th>Estado</th><th>Creada</th></tr></thead><tbody>
+  ${rows.map(a => `<tr class="click" data-go="solicitud" data-p='{"id":"${a.id}"}'><td><a>${a.id}</a></td><td>${CL[a.cid].nombre}</td><td>${PROD[a.prod]}</td><td class="num">${money(a.P)}</td><td>${a.n} ${FREQ[a.freq].u}</td><td class="small">${a.P <= 50000 ? 'Supervisora' : 'Gerencia'}</td><td><span class="badge ${APP_ST[a.estado][1]}">${APP_ST[a.estado][0]}</span></td><td>${fd(a.creada)}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No hay solicitudes en este estado.</td></tr>'}
+  </tbody></table></div></section>`;
+};
+function simFrom(d) { return { P: num(d.P), m: num(d.m), n: Math.max(1, Math.min(120, Math.round(num(d.n)))), freq: d.freq, method: d.method, first: /^\d{4}-\d{2}-\d{2}$/.test(d.first || '') ? D(d.first) : TODAY + 30 * DAY }; }
+function simResult(d) {
+  const p = simFrom(d);
+  if (p.P <= 0 || p.m < 0) return '<div class="alert a-w">Escriba un monto y una tasa.</div>';
+  if (p.method === 'abierto') { const i = periodRate(p.m, p.freq); return `<div class="alert a-i">${ic('info')}<span>El préstamo abierto no tiene calendario fijo: cada ${FREQ[p.freq].l.toLowerCase() === 'mensual' ? 'mes' : 'período'} el cliente paga el interés sobre el saldo (${money(r2(p.P * i))} con el saldo actual) y abona capital cuando quiera.</span></div>`; }
+  const rows = schedule(p); const tI = sum(rows, r => r.int); const cuota = rows[0].total; const cargos = r2(p.P * num(d.cargo) / 100);
+  const disp = num(d.ing) - num(d.gas) - num(d.deu); const ratio = disp > 0 ? cuota * (p.freq === 'mensual' ? 1 : 30 / FREQ[p.freq].d) / disp * 100 : 999;
+  const moved = rows.filter((r, k) => { const nominal = p.freq === 'mensual' ? addMonths(p.first, k) : p.first + k * FREQ[p.freq].d * DAY; return p.freq !== 'diaria' && r.date !== nominal; }).length;
+  return `<div class="grid g4">${kpi('Cuota ' + FREQ[p.freq].l.toLowerCase(), money(cuota), p.method === 'capital' ? 'La primera; luego baja' : p.method === 'interes' ? 'La última incluye el capital' : 'Redondeada al peso', 'k-brand')}${kpi('Total de intereses', money(tI))}${kpi('Total a pagar', money(r2(p.P + tI)))}${kpi('Neto a entregar', money(r2(p.P - (d.cargoMode === 'desc' ? cargos : 0))), 'Gastos de cierre ' + money(cargos) + (d.cargoMode === 'desc' ? ', descontados' : ', aparte'), 'ok')}</div>
+  <div class="card" style="padding:14px;gap:8px"><div class="row between"><b class="small">Capacidad de pago</b><span class="small tab-nums">Cuota mensual equivalente ÷ ingreso disponible = <b>${ratio > 900 ? '—' : ratio.toFixed(1) + ' %'}</b></span></div><div class="gauge"><i style="left:calc(${Math.min(ratio, 100)}% - 1px)"></i></div><div class="row between xs muted"><span>Hasta 35 %: recomendable</span><span>35–50 %: con cuidado</span><span>Más de 50 %: riesgoso</span></div></div>
+  ${moved ? `<div class="alert a-i">${ic('info')}<span>${moved} ${moved === 1 ? 'cuota cae' : 'cuotas caen'} en domingo o feriado y se ${moved === 1 ? 'mueve' : 'mueven'} al siguiente día laborable.</span></div>` : ''}
+  <div class="tw scroll-y" style="border:1px solid var(--line);border-radius:var(--r)"><table class="t"><thead><tr><th>#</th><th>Fecha</th><th class="num">Interés</th><th class="num">Capital</th><th class="num">Cuota</th><th class="num">Saldo</th></tr></thead><tbody>${(() => { let b = p.P; return rows.map(r => { b = r2(b - r.cap); return `<tr><td>${r.n}</td><td>${DOW[new Date(r.date).getUTCDay()].slice(0, 3)} ${fd(r.date)}</td><td class="num">${money(r.int, false)}</td><td class="num">${money(r.cap, false)}</td><td class="num"><b>${money(r.total, false)}</b></td><td class="num">${money(b, false)}</td></tr>`; }).join(''); })()}</tbody><tfoot><tr><td colspan="2">Totales</td><td class="num">${money(tI, false)}</td><td class="num">${money(p.P, false)}</td><td class="num">${money(r2(p.P + tI), false)}</td><td></td></tr></tfoot></table></div>`;
+}
+V['solicitud-nueva'] = p => {
+  if (!S.draft || p.reset) S.draft = { cid: p.cid || 'C17', prod: 'personal', P: '35000', m: '5', n: '12', freq: 'mensual', method: 'fija', first: '2026-10-30', cargo: '5', cargoMode: 'desc', ing: '30000', gas: '12000', deu: '2000' };
+  if (p.cid) S.draft.cid = p.cid;
+  const d = S.draft; const sel = (id, opts, v) => `<select class="select" id="${id}" data-live="sim">${opts.map(([k, l]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const inp = (id, v, extra = '') => `<input class="input" id="${id}" data-live="sim" value="${esc(v)}" ${extra}>`;
+  return `${hdr(crumb('solicitudes', 'Solicitudes') + ' › Nueva', 'Nueva solicitud', 'Cambie cualquier dato y la tabla de cuotas se recalcula al instante.')}
+  <div class="steps"><span class="ok">1 · Cliente</span><span class="on">2 · Condiciones</span><span class="on">3 · Capacidad de pago</span><span>4 · Documentos</span><span>5 · Aprobación</span></div>
+  <div class="grid g-84" style="align-items:start">
+    <div class="stack">
+      <section class="card"><h2>Condiciones del préstamo</h2>
+        <div class="grid g3">
+          <div class="field"><label for="cid">Cliente</label>${sel('cid', C.map(c => [c.id, c.nombre]), d.cid)}</div>
+          <div class="field"><label for="prod">Producto</label>${sel('prod', Object.entries(PROD), d.prod)}</div>
+          <div class="field"><label for="method">Forma de cálculo</label>${sel('method', Object.entries(METHOD), d.method)}</div>
+          <div class="field"><label for="P">Monto (RD$)</label>${inp('P', d.P, 'inputmode="decimal"')}</div>
+          <div class="field"><label for="m">Tasa de interés mensual (%)</label>${inp('m', d.m, 'inputmode="decimal"')}</div>
+          <div class="field"><label for="freq">Frecuencia de pago</label>${sel('freq', Object.entries(FREQ).map(([k, v]) => [k, v.l]), d.freq)}</div>
+          <div class="field"><label for="n">Cantidad de cuotas</label>${inp('n', d.n, 'inputmode="numeric"')}</div>
+          <div class="field"><label for="first">Primer pago</label>${inp('first', d.first, 'type="date"')}</div>
+          <div class="field"><label for="cargo">Gastos de cierre (%)</label><div class="row" style="flex-wrap:nowrap;gap:6px">${inp('cargo', d.cargo, 'inputmode="decimal" style="width:80px"')}${sel('cargoMode', [['desc', 'Descontados'], ['aparte', 'Cobrados aparte']], d.cargoMode)}</div></div>
+        </div>
+      </section>
+      <section class="card"><h2>Resultado</h2><div id="simOut" class="stack">${simResult(d)}</div></section>
+    </div>
+    <div class="stack">
+      <section class="card"><h2>Capacidad de pago</h2><p class="small muted" style="margin:0">Presupuesto mensual del cliente.</p>
+        <div class="field"><label for="ing">Ingresos (RD$)</label>${inp('ing', d.ing, 'inputmode="decimal"')}</div>
+        <div class="field"><label for="gas">Gastos del hogar o del negocio (RD$)</label>${inp('gas', d.gas, 'inputmode="decimal"')}</div>
+        <div class="field"><label for="deu">Otras deudas (RD$ al mes)</label>${inp('deu', d.deu, 'inputmode="decimal"')}</div>
+        <div id="dispOut" class="small">Ingreso disponible: <b>${money(num(d.ing) - num(d.gas) - num(d.deu))}</b></div></section>
+      <section class="card"><h2>Documentos recibidos</h2><div class="stack small">${['Cédula', 'Carta de trabajo o del negocio', 'Recibo de servicio', 'Reporte del buró', 'Garantía y su tasación (si aplica)'].map((x, k) => `<label class="check"><input type="checkbox" id="doc${k}" ${k < 3 ? 'checked' : ''}> ${x}</label>`).join('')}</div></section>
+      <section class="card"><div id="apprOut" class="alert a-b">${ic('shield')}<span>La aprueba: <b>${approver(num(d.P))}</b></span></div>
+        <div class="field"><label for="nota">Nota para quien aprueba</label><textarea class="area" id="nota" placeholder="Por qué recomienda este préstamo"></textarea></div>
+        <button class="btn btn-p btn-lg" data-act="submitApp">Enviar a aprobación</button>
+        <button class="btn btn-q btn-sm" data-act="demo" data-v="El borrador se guarda solo y se puede retomar después.">Guardar como borrador</button></section>
+    </div>
+  </div>`;
+};
+V.solicitud = p => {
+  const a = S.apps.find(x => x.id === p.id); if (!a) return V.solicitudes();
+  const c = CL[a.cid]; const rows = schedule(a); const cuota = rows[0].total; const disp = a.ing - a.gas - a.deu; const ratio = cuota * (a.freq === 'mensual' ? 1 : 30 / FREQ[a.freq].d) / disp * 100;
+  const canApprove = S.role === 'gerente' && a.estado === 'por_aprobar';
+  const docs = ['Cédula', 'Carta de trabajo o del negocio', 'Recibo de servicio', 'Reporte del buró', 'Garantía y su tasación'];
+  return `${hdr(crumb('solicitudes', 'Solicitudes') + ' › ' + a.id, `Solicitud ${a.id}`, `${c.nombre} · ${PROD[a.prod]} · creada por ${a.oficial} el ${fd(a.creada)}`, `<span class="badge ${APP_ST[a.estado][1]}" style="font-size:13px;padding:4px 12px">${APP_ST[a.estado][0]}</span>`)}
+  ${a.estado === 'rechazada' ? `<div class="alert a-d">${ic('alert')}<span><b>Rechazada.</b> ${a.motivo}</span></div>` : ''}
+  ${a.estado === 'aprobada' ? `<div class="alert a-ok">${ic('check')}<span><b>Aprobada por ${a.aprobo}.</b> Lista para desembolsar.</span><button class="btn btn-sm btn-g" style="margin-left:auto" data-go="desembolso" data-p='{"id":"${a.id}"}'>Desembolsar</button></div>` : ''}
+  ${a.estado === 'desembolsada' ? `<div class="alert a-ok">${ic('check')}<span>Desembolsada como <a data-go="prestamo" data-p='{"id":"${a.loan}"}' style="cursor:pointer">${a.loan}</a>.</span></div>` : ''}
+  <div class="grid g4">${kpi('Monto solicitado', money(a.P), a.n + ' ' + FREQ[a.freq].u + ' · ' + a.m + ' % mensual', 'k-brand')}${kpi('Cuota', money(cuota), METHOD[a.method])}${kpi('Relación cuota / disponible', ratio.toFixed(1) + ' %', ratio <= 35 ? 'Recomendable' : ratio <= 50 ? 'Con cuidado' : 'Riesgoso', ratio <= 35 ? 'ok' : ratio <= 50 ? 'warn' : 'danger')}${kpi('Clasificación del cliente', c.clas, WHY[c.clas][0])}</div>
+  <div class="grid g-84" style="align-items:start">
+    <div class="stack">
+      <section class="card"><h2>Evaluación del oficial</h2><p style="margin:0">${a.nota || '—'}</p>${a.gar ? `<div class="alert a-b">${ic('shield')}<span>${a.gar}</span></div>` : ''}
+        <dl class="dl"><dt>Ingresos</dt><dd>${money(a.ing)}</dd><dt>Gastos</dt><dd>− ${money(a.gas, false)}</dd><dt>Otras deudas</dt><dd>− ${money(a.deu, false)}</dd><dt class="tot">Disponible al mes</dt><dd class="tot">${money(disp)}</dd></dl></section>
+      <section class="card flush"><div class="card-h"><h2>Tabla de cuotas</h2><span class="small muted">Primer pago ${fd(rows[0].date)}</span></div><div class="tw scroll-y" style="max-height:300px"><table class="t"><thead><tr><th>#</th><th>Fecha</th><th class="num">Interés</th><th class="num">Capital</th><th class="num">Cuota</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.n}</td><td>${fd(r.date)}</td><td class="num">${money(r.int, false)}</td><td class="num">${money(r.cap, false)}</td><td class="num">${money(r.total, false)}</td></tr>`).join('')}</tbody></table></div></section>
+    </div>
+    <div class="stack">
+      <section class="card"><h2>Documentos</h2><div class="stack small">${docs.map((x, k) => `<div class="row between"><span>${x}</span>${a.docs[k] ? '<span class="badge b-ok">Recibido</span>' : '<span class="badge b-w">Falta</span>'}</div>`).join('')}</div></section>
+      <section class="card"><h2>Decisión</h2><div class="alert a-b">${ic('shield')}<span>Por el monto, la aprueba <b>${approver(a.P)}</b>. Nadie puede aprobar una solicitud que creó.</span></div>
+        ${canApprove ? `<div class="field"><label for="dec-m">Comentario o motivo</label><textarea class="area" id="dec-m" placeholder="Obligatorio si rechaza o pone condiciones"></textarea><span class="err" id="dec-err"></span></div>
+        <button class="btn btn-g btn-lg" data-act="approve" data-v="${a.id}">${ic('check')} Aprobar</button>
+        <div class="row" style="gap:8px"><button class="btn" style="flex:1" data-act="cond" data-v="${a.id}">Aprobar con condiciones</button><button class="btn btn-d" style="flex:1" data-act="reject" data-v="${a.id}">Rechazar</button></div>`
+        : a.estado === 'por_aprobar' ? `<p class="small muted" style="margin:0">Su rol no puede aprobar esta solicitud. ${S.role === 'oficial' ? 'Usted la creó.' : ''}</p><button class="btn" data-act="role" data-v="gerente" data-r="solicitud" data-p='{"id":"${a.id}"}'>Ver como gerente para aprobarla</button>` : '<p class="small muted" style="margin:0">Esta solicitud ya tiene una decisión.</p>'}
+      </section>
+    </div>
+  </div>`;
+};
+V.desembolso = p => {
+  const a = S.apps.find(x => x.id === p.id); const c = CL[a.cid]; const cargos = r2(a.P * 0.05);
+  return `${hdr(crumb('solicitudes', 'Solicitudes') + ' › ' + a.id + ' › Desembolso', 'Desembolsar ' + a.id, c.nombre + ' · aprobada por ' + a.aprobo)}
+  <div class="grid g2" style="align-items:start"><section class="card"><h2>Cómo se entrega</h2>
+    <div class="chips" id="dmedio">${['Efectivo por caja', 'Transferencia', 'Cheque'].map((m, k) => `<button class="chip ${k === 0 ? 'on' : ''}" data-act="chipOne" data-g="dmedio">${m}</button>`).join('')}</div>
+    <dl class="dl"><dt>Monto aprobado</dt><dd>${money(a.P)}</dd><dt>Gastos de cierre (5 %, descontados)</dt><dd>− ${money(cargos, false)}</dd><dt class="tot">Neto a entregar</dt><dd class="tot">${money(r2(a.P - cargos))}</dd></dl>
+    <div class="alert a-i">${ic('info')}<span>Si se entrega por caja, sale de la caja abierta de Ana Luisa Rosario y queda en su cuadre del día.</span></div>
+    <label class="check small"><input type="checkbox" id="dsig" checked> El cliente firmó el contrato y el pagaré.</label>
+    <button class="btn btn-g btn-lg" data-act="disburse" data-v="${a.id}">Desembolsar ${money(r2(a.P - cargos))}</button></section>
+    <section class="card"><h2>Documentos para imprimir</h2>${['contrato', 'pagare', 'tabla'].map(k => `<div class="row between"><span>${ic('doc').replace('class=""', 'style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"')}${{ contrato: 'Contrato de préstamo', pagare: 'Pagaré notarial', tabla: 'Tabla de amortización' }[k]}</span><button class="btn btn-sm" data-act="docPrev" data-v="${k}" data-app="${a.id}">${ic('eye')} Ver</button></div>`).join('')}<p class="xs muted" style="margin:0">Las plantillas las revisa su abogado antes de usarlas en la operación real.</p></section></div>`;
+};
+
+/* ---------- Préstamos ---------- */
+V.prestamos = () => {
+  const f = S.flt.pf || 'activos';
+  const rows = S.loans.filter(l => { const s = st(l); return f === 'todos' || (f === 'activos' ? s.status !== 'saldado' : f === 'atraso' ? s.status === 'atraso' || s.status === 'legal' : s.status === f); });
+  const ss = rows.map(st);
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Operación', 'Préstamos', 'Todos los montos cuadran con los recibos y la caja.', '')}
+  <div class="chips">${[['activos', 'Activos'], ['aldia', 'Al día'], ['atraso', 'En atraso o legal'], ['saldado', 'Saldados'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-act="flt" data-k="pf" data-v="${k}">${l}</button>`).join('')}</div>
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Cliente</th><th>Producto</th><th>Forma</th><th class="num">Monto</th><th class="num">Cuota</th><th class="num">Saldo de capital</th><th>Cobrador</th><th>Estado</th></tr></thead><tbody>
+  ${rows.map((l, k) => `<tr class="click" data-go="prestamo" data-p='{"id":"${l.id}"}'><td><a>${l.id}</a></td><td>${CL[l.cid].nombre}</td><td>${PROD[l.prod]}</td><td class="small">${FREQ[l.freq].l} · ${METHOD[l.method]}</td><td class="num">${money(l.P)}</td><td class="num">${money(cuotaOf(l), false)}</td><td class="num">${money(ss[k].capPend)}</td><td>${l.cob ? COB[l.cob] : '<span class="badge b-w">Sin asignar</span>'}</td><td>${statusBadge(null, l)}</td></tr>`).join('')}
+  </tbody><tfoot><tr><td colspan="4">${rows.length} préstamos</td><td class="num">${money(sum(rows, l => l.P))}</td><td></td><td class="num">${money(sum(ss, s => s.capPend))}</td><td colspan="2"></td></tr></tfoot></table></div></section>`;
+};
+V.prestamo = p => {
+  const L = LN(p.id); if (!L) return V.prestamos();
+  const s = st(L); const c = CL[L.cid]; const tab = p.tab || 'calendario';
+  const rc = S.receipts.filter(r => r.loanId === L.id);
+  const lastRc = rc.filter(r => !r.rev).slice(-1)[0];
+  const tabs = [['calendario', 'Calendario'], ['pagos', 'Pagos (' + rc.length + ')'], ['documentos', 'Documentos'], ['garantia', 'Garantía'], ['historial', 'Historial']];
+  let body = '';
+  if (tab === 'calendario') body = `<section class="card flush"><div class="tw scroll-y" style="max-height:520px"><table class="t"><thead><tr><th>#</th><th>Vence</th><th class="num">Interés</th><th class="num">Capital</th><th class="num">Cuota</th><th class="num">Pagado</th><th class="num">Mora</th><th>Estado</th></tr></thead><tbody>
+    ${L.rows.map(r => { const paid = r2(r.paidI + r.paidC); const done = r.pend <= 0.004; const dd = Math.round((TODAY - r.date) / DAY); const stt = r.condoned > 0 && done ? '<span class="badge b-n">Saldada</span>' : done ? '<span class="badge b-ok">Pagada</span>' : r.date < TODAY ? `<span class="badge ${dd > 30 ? 'b-d' : 'b-w'}">Vencida · ${dd} d</span>` : r.date === TODAY ? '<span class="badge b-i">Vence hoy</span>' : paid > 0 ? '<span class="badge b-i">Parcial</span>' : '<span class="badge b-n">Pendiente</span>'; return `<tr class="${done ? 'paid' : r.date < TODAY ? 'hl' : ''}"><td>${r.n}</td><td>${fd(r.date)}</td><td class="num">${money(r.int, false)}</td><td class="num">${money(r.cap, false)}</td><td class="num">${money(r.total, false)}</td><td class="num">${paid ? money(paid, false) : '—'}</td><td class="num">${r.mora ? money(r.mora, false) : '—'}</td><td>${stt}</td></tr>`; }).join('')}</tbody></table></div></section>`;
+  if (tab === 'pagos') body = `<section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Recibo</th><th>Fecha</th><th>Canal</th><th>Medio</th><th class="num">Mora</th><th class="num">Interés</th><th class="num">Capital</th><th class="num">Total</th><th></th></tr></thead><tbody>
+    ${rc.slice().reverse().map(r => `<tr class="${r.rev ? 'paid' : ''}"><td>${r.rev ? '<s>' + r.no + '</s>' : r.no}</td><td>${fd(r.t)} ${r.time}</td><td>${r.canal === 'ruta' ? 'Ruta · ' + r.user : 'Oficina'}</td><td>${r.medio}</td><td class="num">${money(r.mora, false)}</td><td class="num">${money(r.int, false)}</td><td class="num">${money(r.cap, false)}</td><td class="num"><b>${money(r.total, false)}</b></td><td class="num"><button class="btn btn-sm" data-act="showRcpt" data-v="${r.no}">Ver</button> ${r === lastRc && S.role === 'gerente' ? `<button class="btn btn-sm btn-d" data-act="reverse" data-v="${r.no}">${ic('undo')} Corregir</button>` : ''}${r.rev ? '<span class="badge b-n">Corregido</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">Todavía no hay pagos.</td></tr>'}
+    </tbody></table></div><p class="xs muted" style="margin:0;padding:10px 18px">Un pago nunca se borra: «Corregir» registra un movimiento contrario, pide motivo y queda en el historial. Solo se corrige el último pago.</p></section>`;
+  if (tab === 'documentos') body = `<section class="card">${['contrato', 'pagare', 'tabla', 'saldo'].map(k => `<div class="row between"><span>${ic('doc').replace('class=""', 'style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"')}${{ contrato: 'Contrato de préstamo', pagare: 'Pagaré notarial', tabla: 'Tabla de amortización', saldo: 'Carta de saldo' }[k]}</span><button class="btn btn-sm" data-act="docPrev" data-v="${k}" data-loan="${L.id}">${ic('eye')} Ver</button></div>`).join('')}<div class="alert a-w">${ic('alert')}<span>Plantillas marcadas «pendiente de validación legal» hasta que su abogado las apruebe.</span></div></section>`;
+  if (tab === 'garantia') body = garantiaCard(L.cid) || '<section class="card"><p class="muted" style="margin:0">Préstamo personal sin garantía real. Tiene garante verificado.</p></section>';
+  if (tab === 'historial') body = `<section class="card">${L.hist.concat(S.gest.filter(g => g.loanId === L.id).map(g => ({ t: g.t, txt: `${g.tipo}: ${g.res} · ${g.user}${g.nota ? ' · «' + esc(g.nota) + '»' : ''}` }))).concat(rc.map(r => ({ t: r.t, txt: `Pago ${r.no} · ${money(r.total)}${r.rev ? ' · corregido: ' + esc(r.revWhy) : ''}` }))).sort((a, b) => b.t - a.t).map(e => `<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><span class="badge b-n" style="min-width:86px;justify-content:center">${fd(e.t)}</span><span class="small">${e.txt}</span></div>`).join('')}</section>`;
+  const actions = s.status === 'saldado' ? `<button class="btn" data-act="docPrev" data-v="saldo" data-loan="${L.id}">${ic('doc')} Carta de saldo</button>`
+    : `${S.role === 'gerente' ? `<button class="btn" data-act="renew" data-v="${L.id}">${ic('refresh')} Renovar</button>` : ''}${can('gestiones') ? `<button class="btn" data-act="gest" data-v="${L.id}">${ic('phone')} Gestión</button>` : ''}${can('cobrar') ? `<button class="btn btn-g" data-go="cobrar" data-p='{"id":"${L.id}"}'>${ic('cash')} Cobrar</button>` : ''}`;
+  return `${hdr(crumb('prestamos', 'Préstamos') + ' › Expediente', `${L.id} ${statusBadge(null, L)}`, `<a data-go="cliente" data-p='{"id":"${c.id}"}' style="cursor:pointer">${c.nombre}</a> · ${PROD[L.prod]} · ${money(L.P)} al ${L.m} % mensual · ${L.n} cuotas ${FREQ[L.freq].pl} · ${METHOD[L.method].toLowerCase()} · cobrador ${L.cob ? COB[L.cob] : 'sin asignar'}`, actions)}
+  <div class="grid g5">${kpi('Saldo de capital', money(s.capPend), s.paidCount + ' de ' + L.n + ' cuotas pagadas', 'k-brand')}${kpi('Vencido', money(s.vencido), s.venc.length + ' cuotas', s.vencido ? 'warn' : '')}${kpi('Mora', money(s.mora), s.dias ? s.dias + ' días de atraso' : 'Sin atraso', s.mora ? 'danger' : '')}${kpi('Próxima cuota', s.next ? money(s.next.pend) : '—', s.next ? fd(s.next.date) : '')}${kpi('Saldo para cancelar hoy', money(s.payoff), 'Sin intereses futuros', 'ok')}</div>
+  <div class="tabs">${tabs.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" data-go="prestamo" data-p='{"id":"${L.id}","tab":"${k}"}'>${l}</a>`).join('')}</div>${body}`;
+};
+
+/* ---------- Cobrar ---------- */
+V.cobrar = p => {
+  if (!p.id) {
+    const list = S.loans.filter(l => { const s = st(l); return s.exig > 0; }).sort((a, b) => st(b).dias - st(a).dias);
+    return `${hdr(crumb('tablero', 'Inicio') + ' › Operación', 'Cobrar', 'Busque al cliente o elija un préstamo con pagos pendientes.')}
+    <button class="searchbtn" style="max-width:none;min-height:52px;font-size:15px" data-act="search">${ic('search')}<span>Nombre, cédula, teléfono o número de préstamo</span><span class="kbd">Ctrl K</span></button>
+    <section class="card flush"><div class="card-h"><h2>Pendientes de hoy</h2></div><div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Cliente</th><th>Estado</th><th class="num">Exigible</th><th></th></tr></thead><tbody>${list.map(l => `<tr><td>${l.id}</td><td>${CL[l.cid].nombre}</td><td>${st(l).dias ? statusBadge(null, l) : '<span class="badge b-i">Vence hoy</span>'}</td><td class="num">${money(st(l).exig)}</td><td class="num"><button class="btn btn-sm btn-g" data-go="cobrar" data-p='{"id":"${l.id}"}'>Cobrar</button></td></tr>`).join('')}</tbody></table></div></section>`;
+  }
+  const L = LN(p.id); const s = st(L); const c = CL[L.cid];
+  if (s.status === 'saldado') return `${hdr(crumb('cobrar', 'Cobrar'), 'Cobrar · ' + L.id)}<div class="alert a-ok">${ic('check')}<span>Este préstamo está saldado. No tiene nada pendiente.</span></div>`;
+  if (!S.pay || S.pay.id !== L.id) S.pay = { id: L.id, mode: s.exig > 0 ? 'vencido' : 'proxima', medio: 'Efectivo', rec: '' };
+  return `${hdr(crumb('cobrar', 'Cobrar') + ' › ' + L.id, 'Cobrar a ' + c.nombre, `${L.id} · ${PROD[L.prod]} · cuota ${money(cuotaOf(L))} ${FREQ[L.freq].l.toLowerCase()}`, `<button class="btn" data-go="prestamo" data-p='{"id":"${L.id}"}'>Ver expediente</button>`)}
+  ${s.dias > 0 ? `<div class="alert a-w">${ic('alert')}<span>Tiene <b>${s.venc.length} ${s.venc.length === 1 ? 'cuota vencida' : 'cuotas vencidas'}</b>; la más antigua venció el ${fd(s.venc[0].date)} (hace ${s.dias} días). La mora se calcula por día después de ${POL.grace} días de gracia, con tope del ${POL.cap} %.</span></div>` : ''}
+  ${S.gest.find(g => g.loanId === L.id && g.prom && g.prom.t === TODAY && !g.prom.kept) ? `<div class="alert a-i">${ic('info')}<span>Prometió pagar hoy ${mk(S.gest.find(g => g.loanId === L.id && g.prom && g.prom.t === TODAY).prom.amt)}. Al cobrar, la promesa se marca como cumplida.</span></div>` : ''}
+  <div class="grid g-73" style="align-items:start">
+    <div class="stack">
+      <section class="card"><h2>Qué va a pagar</h2>
+        <div class="chips" id="pmode">${[['vencido', 'Lo exigible · ' + mk(s.exig), s.exig > 0], ['proxima', 'Próxima cuota', true], ['saldar', 'Saldar el préstamo · ' + mk(s.payoff), true], ['libre', 'Monto libre', true]].filter(x => x[2]).map(([k, l]) => `<button class="chip ${S.pay.mode === k ? 'on' : ''}" data-act="pmode" data-v="${k}">${l}</button>`).join('')}</div>
+        <div class="grid g2">
+          <div class="field"><label for="pamt">Monto a aplicar (RD$)</label><input class="input big" id="pamt" data-live="pay" inputmode="decimal" value="${payDefault(L, s).toFixed(2)}" ${S.pay.mode !== 'libre' ? 'readonly' : ''}></div>
+          <div class="field"><label>Medio de pago</label><div class="chips" id="pmedio">${['Efectivo', 'Transferencia', 'Cheque', 'Depósito'].map(m => `<button class="chip ${S.pay.medio === m ? 'on' : ''}" data-act="pmedio" data-v="${m}">${m}</button>`).join('')}</div></div>
+        </div>
+        <div id="cashBox">${cashBox(L, s, payDefault(L, s))}</div>
+      </section>
+      <section class="card"><h2>Así se aplicará</h2><div id="payPrev">${payPreview(L, payDefault(L, s))}</div></section>
+    </div>
+    <section class="card"><h2>Resumen del préstamo</h2>
+      <dl class="dl"><dt>Saldo de capital</dt><dd>${money(s.capPend)}</dd><dt>Cuotas vencidas</dt><dd>${money(s.vencido)}</dd><dt>Mora acumulada</dt><dd>${money(s.mora)}</dd><dt>Vence hoy</dt><dd>${money(s.hoyAmt)}</dd><dt class="tot">Exigible hoy</dt><dd class="tot">${money(s.exig)}</dd></dl>
+      <hr class="sep"><h3>Cuotas pendientes</h3>
+      <div class="stack" style="gap:6px">${L.rows.filter(r => r.pend > 0.004).slice(0, 5).map(r => `<div class="row between small"><span>Cuota ${r.n} · ${fd(r.date)} ${r.date < TODAY ? `<span class="badge b-w">${Math.round((TODAY - r.date) / DAY)} d</span>` : r.date === TODAY ? '<span class="badge b-i">hoy</span>' : ''}</span><span class="tab-nums">${money(r.pend, false)}${r.mora ? ' + ' + money(r.mora, false) + ' mora' : ''}</span></div>`).join('')}</div>
+      <button class="btn btn-g btn-lg" id="payBtn" data-act="pay">${ic('check')} Confirmar cobro</button>
+      <p class="xs muted" style="margin:0">Al confirmar se genera el recibo, se registra en la caja y queda en el historial. Si se equivoca, se corrige con un reverso autorizado.</p>
+    </section>
+  </div>`;
+};
+function payDefault(L, s) { const m = S.pay.mode; if (m === 'vencido') return s.exig; if (m === 'saldar') return s.payoff; if (m === 'proxima') { const r = L.rows.find(r => r.pend > 0.004); return r ? r2(r.pend + (r.mora || 0)) : 0; } return num(S.pay.amt || 0); }
+function cashBox(L, s, amt) {
+  if (S.pay.medio !== 'Efectivo') return `<div class="field"><label for="pref">Referencia de la ${S.pay.medio.toLowerCase()}</label><input class="input" id="pref" placeholder="Número de confirmación o de cheque"></div>`;
+  const rec = num(S.pay.rec || 0); const cambio = r2(rec - amt);
+  const bills = [...new Set([Math.ceil(amt), Math.ceil(amt / 100) * 100, Math.ceil(amt / 500) * 500, Math.ceil(amt / 1000) * 1000])].filter(v => v >= amt).slice(0, 4);
+  return `<div class="grid g2"><div class="field"><label for="prec">Efectivo recibido (RD$)</label><input class="input big" id="prec" data-live="rec" inputmode="decimal" value="${esc(S.pay.rec)}" placeholder="0.00"><div class="chips">${bills.map(b => `<button class="chip" data-act="bill" data-v="${b}">${b === Math.ceil(amt) ? 'Exacto' : mk(b)}</button>`).join('')}</div></div>
+    <div id="chg" class="alert ${rec && cambio < 0 ? 'a-d' : 'a-ok'}" style="flex-direction:column;gap:2px;justify-content:center"><span class="small">Cambio a devolver</span><b style="font-size:24px" class="tab-nums">${rec ? (cambio < 0 ? 'Faltan ' + money(-cambio) : money(cambio)) : '—'}</b></div></div>`;
+}
+function currentPayAmt(L, s) { const el = document.getElementById('pamt'); return el ? num(el.value) : payDefault(L, s); }
+function payPreview(L, amt) {
+  if (amt <= 0) return '<p class="muted small" style="margin:0">Escriba un monto.</p>';
+  const Lc = structuredClone(L); const res = S.pay.mode === 'saldar' ? settle(Lc) : allocate(Lc, amt); const s2 = st(Lc);
+  const applied = r2(res.mora + res.int + res.cap);
+  return `<dl class="dl"><dt>Mora</dt><dd>${money(res.mora)}</dd><dt>Interés</dt><dd>${money(res.int)}</dd><dt>Capital</dt><dd>${money(res.cap)}</dd><dt class="tot">Total aplicado</dt><dd class="tot">${money(applied)}</dd></dl>
+  <div class="small muted">${res.alloc.map(a => `Cuota ${a.n}: ${money(r2(a.mora + a.int + a.cap), false)}`).join(' · ')}</div>
+  ${res.rest > 0.004 ? `<div class="alert a-w">${ic('alert')}<span>Sobran ${money(res.rest)}: el préstamo queda saldado y ese monto no se aplica.</span></div>` : ''}
+  <div class="alert ${s2.status === 'saldado' ? 'a-ok' : s2.dias ? 'a-w' : 'a-ok'}">${ic(s2.status === 'saldado' ? 'check' : 'info')}<span>Después del cobro: ${s2.status === 'saldado' ? '<b>préstamo saldado</b>' + (res.saldo ? '; se descuentan los intereses futuros' : '') + '.' : `saldo de capital <b>${money(s2.capPend)}</b>, ${s2.dias ? `queda con ${s2.dias} días de atraso` : '<b>queda al día</b>'}${s2.next ? `; próxima cuota el ${fd(s2.next.date)}` : ''}.`}</span></div>`;
+}
+function doPay(L, amt, medio, rec, canal, user) {
+  const before = structuredClone(L.rows); const bStatus = L.status;
+  const res = S.pay && S.pay.mode === 'saldar' ? settle(L) : allocate(L, amt);
+  const total = r2(res.mora + res.int + res.cap);
+  const r = { no: 'SD-R-' + pad6(S.rcpt++), t: TODAY, time: now(), loanId: L.id, cid: L.cid, mora: res.mora, int: res.int, cap: res.cap, total, medio, recibido: rec, cambio: rec ? r2(rec - total) : 0, canal, user, alloc: res.alloc, rev: false, before, bStatus };
+  S.receipts.push(r);
+  if (canal === 'oficina' && S.caja.estado === 'abierta') S.caja.movs.push({ time: r.time, tipo: 'Cobro', ref: r.no, desc: CL[L.cid].nombre + ' · ' + L.id, in: total, out: 0, medio });
+  S.gest.filter(g => g.loanId === L.id && g.prom && g.prom.t === TODAY).forEach(g => g.prom.kept = true);
+  L.hist.push({ t: TODAY, txt: (res.saldo ? 'Préstamo saldado · ' : '') + 'Cobro ' + r.no + ' por ' + money(total) });
+  log(canal === 'ruta' ? 'Cobró en ruta' : 'Cobró', L.id + ' · ' + r.no + ' · ' + money(total));
+  return r;
+}
+
+/* ---------- Recibo ---------- */
+function rcptModal(no, fresh) {
+  const r = S.receipts.find(x => x.no === no); const L = LN(r.loanId); const s = st(L); const c = CL[r.cid];
+  const v = S.rview || 'hoja';
+  const lines = [['Mora', r.mora], ['Interés', r.int], ['Capital', r.cap]];
+  const hoja = `<div class="paper" style="padding:24px 26px"><div class="row between" style="align-items:flex-start"><div class="row" style="gap:10px"><span class="logo" style="width:34px;height:34px;font-size:13px">FE</span><div><b>Financiera Ejemplo, SRL</b><div class="xs muted">RNC 1-00-00000-0 · Av. Venezuela #100, SDE</div></div></div><div style="text-align:right"><b>Recibo ${r.no}</b><div class="xs muted">${fd(r.t)} · ${r.time}</div></div></div>
+    <hr class="sep" style="margin:12px 0"><div class="kv" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div><span>Cliente</span><b>${c.nombre}</b></div><div><span>Préstamo</span><b>${L.id}</b></div><div><span>Medio de pago</span><b>${r.medio}</b></div><div><span>Atendió</span><b>${r.user}</b></div></div>
+    <dl class="dl" style="margin-top:12px">${lines.map(([k, x]) => `<dt>${k}</dt><dd>${money(x)}</dd>`).join('')}<dt class="tot">Total pagado</dt><dd class="tot">${money(r.total)}</dd>${r.recibido ? `<dt>Efectivo recibido</dt><dd>${money(r.recibido)}</dd><dt>Cambio</dt><dd>${money(r.cambio)}</dd>` : ''}</dl>
+    <p class="small" style="margin:12px 0 0">Cuotas: ${r.alloc.map(a => a.n).join(', ')} · Saldo de capital después del pago: <b>${money(s.capPend)}</b>${s.next ? ` · Próxima cuota: ${fd(s.next.date)} por ${money(s.next.pend)}` : ''}</p>
+    <div class="row between" style="margin-top:14px;align-items:flex-end"><span class="xs muted">Verifique este recibo en fe.do/v/${r.no.slice(-4)}</span>${qr()}</div></div>`;
+  const term = `<div class="thermal"><div class="c"><b>FINANCIERA EJEMPLO, SRL</b><br>RNC 1-00-00000-0<br>Av. Venezuela #100, SDE</div><hr><div class="l"><span>Recibo</span><span>${r.no}</span></div><div class="l"><span>Fecha</span><span>${fd(r.t)} ${r.time}</span></div><div class="l"><span>Préstamo</span><span>${L.id}</span></div><div>${c.nombre}</div><hr>${lines.map(([k, x]) => `<div class="l"><span>${k}</span><span>${money(x, false)}</span></div>`).join('')}<hr><div class="l"><b>TOTAL</b><b>${money(r.total, false)}</b></div>${r.recibido ? `<div class="l"><span>Recibido</span><span>${money(r.recibido, false)}</span></div><div class="l"><span>Cambio</span><span>${money(r.cambio, false)}</span></div>` : ''}<hr><div class="l"><span>Saldo capital</span><span>${money(s.capPend, false)}</span></div>${s.next ? `<div class="l"><span>Próx. cuota</span><span>${fdShort(s.next.date)}</span></div>` : ''}<hr><div class="c">Atendió: ${r.user}<br>¡Gracias por su pago!</div></div>`;
+  const wa = `<div class="wa"><div class="bub">*Financiera Ejemplo* · Recibo ${r.no}
+Hola, ${c.nombre.split(' ')[0]}. Recibimos su pago de *${money(r.total)}* del préstamo ${L.id}.
+Mora ${money(r.mora, false)} · Interés ${money(r.int, false)} · Capital ${money(r.cap, false)}
+Saldo de capital: ${money(s.capPend)}${s.next ? `\nPróxima cuota: ${fd(s.next.date)} por ${money(s.next.pend)}` : ''}
+Verifique su recibo: fe.do/v/${r.no.slice(-4)}<small>${r.time} ✓✓</small></div></div><p class="xs muted" style="margin:0">En el sistema real se abre WhatsApp con este mensaje listo para enviar al ${c.tel}.</p>`;
+  return {
+    title: (fresh ? '✓ Cobro registrado · ' : '') + 'Recibo ' + r.no, wide: true,
+    body: `${fresh ? `<div class="alert a-ok">${ic('check')}<span>Se aplicaron <b>${money(r.total)}</b>. ${s.status === 'saldado' ? 'El préstamo quedó saldado.' : s.dias ? `Quedan ${s.dias} días de atraso.` : 'El préstamo quedó al día.'}${r.canal === 'oficina' ? ' Ya aparece en su caja.' : ''}</span></div>` : ''}${r.rev ? `<div class="alert a-d">${ic('undo')}<span>Este pago fue corregido: ${esc(r.revWhy)}</span></div>` : ''}
+      <div class="chips">${[['hoja', 'Hoja carta'], ['termica', 'Impresora térmica 80 mm'], ['wa', 'WhatsApp']].map(([k, l]) => `<button class="chip ${v === k ? 'on' : ''}" data-act="rview" data-v="${k}" data-no="${r.no}" data-f="${fresh ? 1 : ''}">${l}</button>`).join('')}</div>
+      ${v === 'hoja' ? hoja : v === 'termica' ? term : wa}`,
+    foot: `<button class="btn" data-act="close">Cerrar</button>${v === 'wa' ? `<button class="btn btn-g" data-act="demo" data-v="En el sistema real se abriría WhatsApp con el mensaje. En esta demo no se envía nada.">${ic('msg')} Enviar por WhatsApp</button>` : `<button class="btn btn-p" data-act="demo" data-v="En el sistema real se abre la impresión ${v === 'termica' ? 'en la impresora térmica de la caja' : 'en PDF'}.">${ic('print')} Imprimir</button>`}`,
+  };
+}
+function qr() { let s = ''; const seed = [1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1]; for (let y = 0; y < 9; y++) for (let x = 0; x < 9; x++) { const corner = (x < 3 && y < 3) || (x > 5 && y < 3) || (x < 3 && y > 5); if (corner || seed[(x * 7 + y * 3) % 12]) s += `<rect x="${x * 5}" y="${y * 5}" width="5" height="5" fill="#231B27"/>`; } return `<svg width="54" height="54" viewBox="0 0 45 45" aria-label="Código QR de verificación">${s}</svg>`; }
+
+/* ---------- Caja ---------- */
+function cajaTotals() { const ef = S.caja.movs.filter(m => m.medio === 'Efectivo'); const inn = sum(ef, m => m.in), out = sum(ef, m => m.out); return { inn, out, esperado: r2(inn - out), otros: sum(S.caja.movs.filter(m => m.medio !== 'Efectivo'), m => m.in) }; }
+function rutaCash() { return S.caja.rendido ? 0 : sum(S.receipts.filter(r => r.t === TODAY && r.canal === 'ruta' && r.user === 'Pedro Santana' && !r.rev && r.medio === 'Efectivo'), r => r.total); }
+V.caja = () => {
+  const t = cajaTotals(); const cz = S.caja;
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Finanzas', (S.role === 'cajera' ? 'Mi caja · ' : 'Caja · ') + cz.id, `${cz.cajera} · Santo Domingo Este · ${cz.estado === 'abierta' ? 'abierta desde las ' + cz.abierta : cz.estado === 'pendiente' ? 'cerrada, pendiente de aprobación del supervisor' : 'cerrada y aprobada'}`,
+    cz.estado === 'abierta' ? `<button class="btn" data-act="gasto">${ic('receipt')} Gasto de caja</button><button class="btn" data-act="rendir" ${cz.rendido || !rutaCash() ? 'disabled' : ''}>${ic('map')} Recibir rendición</button><button class="btn btn-p" data-go="arqueo">${ic('box')} Arqueo y cierre</button>` : S.role === 'gerente' && cz.estado === 'pendiente' ? `<button class="btn btn-g" data-act="approveClose">${ic('check')} Aprobar cierre</button>` : '')}
+  ${cz.estado !== 'abierta' ? `<div class="alert ${cz.estado === 'pendiente' ? 'a-w' : 'a-ok'}">${ic(cz.estado === 'pendiente' ? 'clock' : 'check')}<span>Caja cerrada a las ${cz.cierre.time}. Contado ${money(cz.cierre.contado)}, diferencia ${money(cz.cierre.dif)}${cz.cierre.motivo ? ': «' + esc(cz.cierre.motivo) + '»' : ''}. ${cz.estado === 'pendiente' ? 'Espera la aprobación del supervisor.' : 'Aprobada por ' + cz.cierre.aprobo + '.'}</span></div>` : ''}
+  <div class="grid g4">${kpi('Efectivo esperado', money(t.esperado), 'Lo que debe haber en la gaveta', 'k-brand')}${kpi('Entradas en efectivo', money(t.inn), 'Incluye el fondo inicial', 'ok')}${kpi('Salidas en efectivo', money(t.out), 'Desembolsos y gastos')}${kpi('Por transferencia y otros', money(t.otros), 'No entran a la gaveta')}</div>
+  ${!cz.rendido && rutaCash() ? `<div class="alert a-i">${ic('map')}<span>Pedro Santana tiene <b>${money(rutaCash())}</b> cobrados en ruta por entregar.</span><button class="btn btn-sm" style="margin-left:auto" data-act="rendir">Recibir</button></div>` : ''}
+  <section class="card flush"><div class="card-h"><h2>Movimientos de hoy</h2><span class="small muted">${cz.movs.length} movimientos</span></div><div class="tw"><table class="t"><thead><tr><th>Hora</th><th>Tipo</th><th>Referencia</th><th>Detalle</th><th>Medio</th><th class="num">Entrada</th><th class="num">Salida</th></tr></thead><tbody>
+  ${cz.movs.slice().reverse().map(m => `<tr ${m.tipo === 'Cobro' ? `class="click" data-act="showRcpt" data-v="${m.ref}"` : ''}><td>${m.time}</td><td><span class="badge ${m.tipo === 'Cobro' || m.tipo === 'Rendición' ? 'b-ok' : m.tipo === 'Apertura' ? 'b-b' : m.tipo === 'Reverso' ? 'b-d' : 'b-w'}">${m.tipo}</span></td><td>${m.ref}</td><td>${m.desc}</td><td>${m.medio}</td><td class="num">${m.in ? money(m.in, false) : ''}</td><td class="num">${m.out ? money(m.out, false) : ''}</td></tr>`).join('')}
+  </tbody><tfoot><tr><td colspan="5">Efectivo esperado</td><td class="num">${money(t.inn, false)}</td><td class="num">${money(t.out, false)}</td></tr></tfoot></table></div></section>`;
+};
+const DEN = [[2000, 'Billete'], [1000, 'Billete'], [500, 'Billete'], [200, 'Billete'], [100, 'Billete'], [50, 'Billete'], [25, 'Moneda'], [10, 'Moneda'], [5, 'Moneda'], [1, 'Moneda']];
+V.arqueo = () => {
+  if (S.caja.estado !== 'abierta') return V.caja();
+  const esp = cajaTotals().esperado;
+  if (!S.count || S.count.esp !== esp) { let rest = Math.round(esp - 50); const cnt = DEN.map(([d]) => { let q = Math.floor(rest / d); if (d === 2000) q = Math.floor(q * 0.6); rest -= q * d; return q; }); S.count = { esp, cnt }; }
+  return `${hdr(crumb('caja', 'Mi caja') + ' › Arqueo', 'Arqueo y cierre · ' + S.caja.id, 'Cuente el efectivo por denominación. El sistema lo compara con lo esperado.')}
+  <div class="grid g2" style="align-items:start"><section class="card flush"><div class="card-h"><h2>Conteo</h2><span class="small muted">Escriba la cantidad de cada billete y moneda</span></div><div class="tw"><table class="t"><thead><tr><th>Denominación</th><th style="width:130px">Cantidad</th><th class="num">Subtotal</th></tr></thead><tbody>
+    ${DEN.map(([d, t], k) => `<tr><td>${t} de ${d.toLocaleString('en-US')}</td><td><input class="input" style="min-height:32px" id="den${k}" data-live="count" data-k="${k}" inputmode="numeric" value="${S.count.cnt[k]}" aria-label="${t}s de ${d}"></td><td class="num" id="sub${k}">${money(S.count.cnt[k] * d, false)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="2">Total contado</td><td class="num" id="cTot">${money(sum(DEN, ([d], k) => d * S.count.cnt[k]))}</td></tr></tfoot></table></div></section>
+  <section class="card"><h2>Resultado</h2><div id="arqRes">${arqRes()}</div>
+    <div class="field"><label for="amot">Motivo de la diferencia</label><textarea class="area" id="amot" placeholder="Obligatorio si hay faltante o sobrante"></textarea><span class="err" id="amotErr"></span></div>
+    <div class="grid g2"><div class="field"><label for="afondo">Queda como fondo para mañana</label><input class="input" id="afondo" value="10,000.00"></div><div class="field"><label>Pasa a la caja general</label><div class="input tab-nums" id="atras" style="display:flex;align-items:center">${money(Math.max(0, sum(DEN, ([d], k) => d * S.count.cnt[k]) - 10000))}</div></div></div>
+    <label class="check small"><input type="checkbox" id="aconf"> Confirmo que conté el efectivo y que el conteo es correcto.</label>
+    <button class="btn btn-p btn-lg" data-act="closeCaja">Cerrar caja</button>
+    <p class="xs muted" style="margin:0">No podrá abrir otra caja hasta que el supervisor apruebe este cierre. Se genera el acta en PDF.</p></section></div>`;
+};
+function arqRes() {
+  const esp = cajaTotals().esperado; const cont = sum(DEN, ([d], k) => d * S.count.cnt[k]); const dif = r2(cont - esp);
+  return `<dl class="dl"><dt>Esperado según los movimientos</dt><dd>${money(esp)}</dd><dt>Contado</dt><dd>${money(cont)}</dd><dt class="tot">Diferencia ${dif < 0 ? '<span class="badge b-d">Faltante</span>' : dif > 0 ? '<span class="badge b-w">Sobrante</span>' : '<span class="badge b-ok">Cuadra</span>'}</dt><dd class="tot" style="color:${dif < 0 ? 'var(--danger-ink)' : 'inherit'}">${money(dif)}</dd></dl>
+  ${dif ? `<div class="alert a-w" style="margin-top:10px">${ic('alert')}<span>La diferencia necesita motivo y la aprobación del supervisor${Math.abs(dif) <= 500 ? ' (está dentro de su límite de RD$ 500)' : ' y de gerencia (supera RD$ 500)'}.</span></div>` : `<div class="alert a-ok" style="margin-top:10px">${ic('check')}<span>La caja cuadra al centavo.</span></div>`}`;
+}
+
+/* ---------- Cobranza ---------- */
+V.atrasos = p => {
+  const P = portfolio(); const tr = S.flt.tramo ?? p.tramo ?? 0; const cob = S.flt.acob || 'todos';
+  let rows = P.ss.filter(([, s]) => s.dias > 0 && (!tr || s.tramo === tr)).filter(([L]) => cob === 'todos' || (cob === 'sin' ? !L.cob : L.cob === cob)).sort((a, b) => b[1].dias - a[1].dias);
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Cobranza', 'Atrasos', 'Se actualiza con cada cobro. Los totales respetan los filtros.', `<button class="btn" data-act="demo" data-v="Se genera un Excel con exactamente estas filas y estos totales.">${ic('down')} Exportar a Excel</button>`)}
+  <div class="grid g5">${P.tr.slice(1).map((t, k) => `<button class="kpi" style="cursor:pointer;text-align:left;${tr === k + 1 ? 'border-color:var(--brand-700);box-shadow:0 0 0 2px var(--brand-100)' : ''}" data-act="tramo" data-v="${tr === k + 1 ? 0 : k + 1}"><span class="badge ${TRAMOS[k + 1][1]}" style="align-self:flex-start">${TRAMOS[k + 1][0]}</span><span class="v" style="font-size:18px">${t.n} · ${mk(t.amt)}</span></button>`).join('')}</div>
+  <div class="row"><span class="lbl">Cobrador</span><div class="chips">${[['todos', 'Todos'], ['pedro', 'Pedro Santana'], ['miguel', 'Miguel Tavárez'], ['sin', 'Sin asignar']].map(([k, l]) => `<button class="chip ${cob === k ? 'on' : ''}" data-act="flt" data-k="acob" data-v="${k}">${l}</button>`).join('')}</div>${tr ? `<button class="btn btn-sm btn-q" data-act="tramo" data-v="0">Quitar filtro de tramo ×</button>` : ''}</div>
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Cliente</th><th class="num">Días</th><th class="num">Vencido</th><th class="num">Mora</th><th>Cobrador</th><th>Última gestión</th><th>Promesa</th><th></th></tr></thead><tbody>
+  ${rows.map(([L, s]) => { const g = S.gest.filter(x => x.loanId === L.id).sort((a, b) => b.t - a.t)[0]; return `<tr class="${s.dias > 60 ? 'hl' : ''}"><td><a data-go="prestamo" data-p='{"id":"${L.id}"}'>${L.id}</a></td><td>${CL[L.cid].nombre}</td><td class="num"><span class="badge ${TRAMOS[s.tramo][1]}">${s.dias}</span></td><td class="num">${money(s.vencido, false)}</td><td class="num">${money(s.mora, false)}</td><td>${L.cob ? COB[L.cob] : '<span class="badge b-w">Sin asignar</span>'}</td><td class="small">${g ? fdShort(g.t) + ' · ' + g.tipo + ': ' + g.res.toLowerCase() : '—'}</td><td>${g && g.prom ? `<span class="badge ${g.prom.kept ? 'b-ok' : g.prom.fail ? 'b-d' : g.prom.t === TODAY ? 'b-i' : 'b-n'}">${g.prom.kept ? 'Cumplida' : g.prom.fail ? 'Incumplida' : g.prom.t === TODAY ? 'Hoy · ' + mk(g.prom.amt) : fdShort(g.prom.t)}</span>` : L.status === 'legal' ? '<span class="badge b-d">Legal</span>' : '—'}</td><td class="num">${L.cob ? '' : `<button class="btn btn-sm" data-act="assign" data-v="${L.id}">Asignar</button> `}<button class="btn btn-sm" data-act="gest" data-v="${L.id}">Gestión</button></td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">No hay préstamos en atraso con estos filtros.</td></tr>'}
+  </tbody><tfoot><tr><td colspan="3">${rows.length} préstamos</td><td class="num">${money(sum(rows, ([, s]) => s.vencido), false)}</td><td class="num">${money(sum(rows, ([, s]) => s.mora), false)}</td><td colspan="4"></td></tr></tfoot></table></div></section>`;
+};
+V.gestiones = () => {
+  const today = S.gest.filter(g => g.prom && g.prom.t === TODAY); const fail = S.gest.filter(g => g.prom && g.prom.fail);
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Cobranza', 'Gestiones y promesas', 'Cada llamada, visita y promesa queda registrada con su resultado.')}
+  <div class="grid g3">${kpi('Promesas para hoy', today.length, mk(sum(today, g => g.prom.amt)), 'k-brand')}${kpi('Cumplidas hoy', today.filter(g => g.prom.kept).length, 'Se marcan solas al cobrar', 'ok')}${kpi('Incumplidas', fail.length, 'Requieren nueva gestión', 'danger')}</div>
+  <section class="card flush"><div class="card-h"><h2>Registro de gestiones</h2></div><div class="tw"><table class="t"><thead><tr><th>Fecha</th><th>Préstamo</th><th>Cliente</th><th>Tipo</th><th>Resultado</th><th>Promesa</th><th>Gestor</th><th>Nota</th></tr></thead><tbody>
+  ${S.gest.slice().sort((a, b) => b.t - a.t).map(g => { const L = LN(g.loanId); return `<tr><td>${fd(g.t)}</td><td><a data-go="prestamo" data-p='{"id":"${L.id}"}'>${L.id}</a></td><td>${CL[L.cid].nombre}</td><td>${g.tipo}</td><td>${g.res}</td><td>${g.prom ? `<span class="badge ${g.prom.kept ? 'b-ok' : g.prom.fail ? 'b-d' : 'b-i'}">${mk(g.prom.amt)} · ${fdShort(g.prom.t)}${g.prom.kept ? ' ✓' : ''}</span>` : '—'}</td><td>${g.user}</td><td class="small">${esc(g.nota || '')}</td></tr>`; }).join('')}
+  </tbody></table></div></section>`;
+};
+V.rutas = () => {
+  const stops = rutaStops();
+  const pts = [[70, 150], [150, 90], [240, 130], [320, 70], [410, 150], [500, 110], [560, 190]];
+  const done = stops.filter(x => x.done).length;
+  const path = pts.slice(0, stops.length).map((p, k) => (k ? 'L' : 'M') + p.join(' ')).join(' ');
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Cobranza', 'Rutas de hoy', 'Avance de cada cobrador y su última ubicación registrada.')}
+  <div class="grid g-73"><section class="card"><div class="card-h"><h2>Mapa · Los Mina y alrededores</h2><span class="legend"><span><i style="background:var(--accent)"></i>Cobrado</span><span><i style="background:var(--brand-700)"></i>Pendiente</span><span><i style="background:#E3A008"></i>Pedro ahora</span></span></div>
+    <div class="map"><svg viewBox="0 0 640 260" role="img" aria-label="Mapa ilustrativo de la ruta">
+      <rect width="640" height="260" fill="#EEF1EA"/><path d="M0 40 Q200 20 640 60" stroke="#fff" stroke-width="14" fill="none"/><path d="M0 220 Q300 200 640 235" stroke="#fff" stroke-width="18" fill="none"/><path d="M120 0 L180 260" stroke="#fff" stroke-width="10"/><path d="M380 0 Q360 130 420 260" stroke="#fff" stroke-width="10"/><path d="M0 120 L640 150" stroke="#F8F8F2" stroke-width="7"/>
+      <rect x="455" y="10" width="120" height="40" rx="6" fill="#D8E6CC"/><text x="515" y="35" text-anchor="middle" font-size="11" fill="#5B6B50">Parque</text>
+      <path d="${path}" stroke="var(--brand-700)" stroke-width="2.5" stroke-dasharray="6 5" fill="none"/>
+      ${stops.map((s, k) => { const [x, y] = pts[k]; return `<g><circle cx="${x}" cy="${y}" r="13" fill="${s.done ? '#4E8F0A' : '#6D087A'}"/><text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">${k + 1}</text><text x="${x}" y="${y + 28}" text-anchor="middle" font-size="10.5" fill="#3A3340">${CL[s.L.cid].nombre.split(' ')[0]}</text></g>`; }).join('')}
+      <circle cx="${pts[done][0] - 30}" cy="${pts[done][1] - 22}" r="8" fill="#E3A008" stroke="#fff" stroke-width="3"/>
+    </svg></div><p class="xs muted" style="margin:0">Mapa ilustrativo. En el sistema real se usa un mapa de calles; la ubicación se registra con cada cobro y mientras la ruta está abierta.</p></section>
+    <section class="card"><h2>Cobradores</h2>${[['Pedro Santana', done, stops.length, rutaCash() + (S.caja.rendido ? 0 : 0)], ['Miguel Tavárez', 3, 7, 4850]].map(([n, d, t, amt]) => `<div class="stack" style="gap:6px"><div class="row between"><b style="font-weight:500">${n}</b><span class="small tab-nums">${d} de ${t} visitas</span></div><div class="bar"><div style="width:${d / t * 100}%"></div></div><span class="xs muted">${money(amt)} cobrados en efectivo · última ubicación hace ${n.startsWith('P') ? 4 : 11} min</span></div>`).join('<hr class="sep">')}</section></div>`;
+};
+V.legal = () => {
+  const cases = [['SD-000033', 'Demanda en cobro de pesos', 'Lic. Ramón Estévez', 'Juan Brito (alguacil)', 12500, 'Audiencia el 14/10/2026'], ['SD-000158', 'Intimación de pago notificada', 'Lic. Ramón Estévez', 'Juan Brito (alguacil)', 3500, 'Plazo vence el 05/10/2026']];
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Cobranza', 'Legal', 'Casos en vía legal, con su abogado, costas y documentos.')}
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Préstamo</th><th>Cliente</th><th class="num">Días</th><th class="num">Deuda total</th><th>Etapa</th><th>Abogado</th><th>Alguacil</th><th class="num">Costas</th><th>Próximo paso</th></tr></thead><tbody>
+  ${cases.map(([id, et, ab, al, co, nx]) => { const L = LN(id), s = st(L); return `<tr><td><a data-go="prestamo" data-p='{"id":"${id}"}'>${id}</a></td><td>${CL[L.cid].nombre}</td><td class="num">${s.dias}</td><td class="num">${money(r2(s.payoff + co), false)}</td><td><span class="badge b-d">${et}</span></td><td>${ab}</td><td>${al}</td><td class="num">${money(co, false)}</td><td class="small">${nx}</td></tr>`; }).join('')}
+  </tbody></table></div></section>
+  <section class="card"><h2>Documentos legales</h2><div class="row">${['Intimación de pago', 'Pagaré notarial', 'Contrato de préstamo', 'Carta de saldo'].map((d, k) => `<button class="btn" data-act="docPrev" data-v="${['intimacion', 'pagare', 'contrato', 'saldo'][k]}" data-loan="SD-000033">${ic('doc')} ${d}</button>`).join('')}</div></section>`;
+};
+
+/* ---------- Finanzas ---------- */
+V.gastos = () => {
+  const biz = S.gastos.filter(g => !g.owner);
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Finanzas', 'Gastos', 'Septiembre 2026 · los movimientos del dueño se separan de los gastos del negocio.', `<button class="btn btn-p" data-act="gasto">${ic('plus')} Registrar gasto</button>`)}
+  <div class="grid g3">${kpi('Gastos del negocio', money(sum(biz, g => g.amt)), biz.length + ' registros', 'warn')}${kpi('Movimientos del dueño', money(sum(S.gastos.filter(g => g.owner), g => g.amt)), 'No afectan el resultado')}${kpi('Con comprobante', Math.round(S.gastos.filter(g => g.comp).length / S.gastos.length * 100) + ' %', 'Foto o PDF adjunto', 'ok')}</div>
+  <section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Fecha</th><th>Categoría</th><th>Detalle</th><th>Pagado desde</th><th>Comprobante</th><th class="num">Monto</th></tr></thead><tbody>
+  ${S.gastos.slice().sort((a, b) => b.t - a.t).map(g => `<tr><td>${fd(g.t)}</td><td>${g.owner ? '<span class="badge b-b">Movimiento del dueño</span>' : g.cat}</td><td>${esc(g.desc)}</td><td>${g.medio}</td><td>${g.comp ? '<span class="badge b-ok">Adjunto</span>' : '<span class="badge b-n">No aplica</span>'}</td><td class="num">${money(g.amt, false)}</td></tr>`).join('')}
+  </tbody><tfoot><tr><td colspan="5">Total del negocio</td><td class="num">${money(sum(biz, g => g.amt), false)}</td></tr></tfoot></table></div></section>`;
+};
+V.bancos = () => `${hdr(crumb('tablero', 'Inicio') + ' › Finanzas', 'Cuentas y bancos', 'Saldos al momento. Ninguna cuenta puede quedar en negativo.', `<button class="btn" data-act="demo" data-v="Las transferencias entre cuentas quedan registradas con su motivo.">Transferir entre cuentas</button>`)}
+  <div class="grid g4">${kpi('Banreservas · corriente', 'RD$ 1,845,300.00', 'Conciliada al 29/09', 'k-brand')}${kpi('Banco Popular · ahorro', 'RD$ 632,150.00', 'Conciliada al 29/09')}${kpi('Caja general', 'RD$ 85,000.00', 'Bóveda de la oficina')}${kpi('Cajas abiertas', money(cajaTotals().esperado + 18450), '2 cajeras', 'ok')}</div>
+  <section class="card flush"><div class="card-h"><h2>Conciliación bancaria · Banreservas</h2><span class="badge b-ok">98 % conciliado</span></div><div class="tw"><table class="t"><thead><tr><th>Fecha</th><th>Detalle del banco</th><th>Movimiento del sistema</th><th class="num">Monto</th><th>Estado</th></tr></thead><tbody>
+  ${[['29/09', 'TRANSF. RECIBIDA 000123', 'Cobro SD-000150 · Ana Batista', 13724.62, 1], ['28/09', 'DEP. EFECTIVO SUC. 45', 'Traslado desde caja general', 60000, 1], ['26/09', 'TRANSF. RECIBIDA 000118', 'Cobro SD-000060 · Julio César Paulino', 38863, 1], ['25/09', 'COMISION MANEJO', '—', -350, 0]].map(([f, b, s, a, ok]) => `<tr><td>${f}/2026</td><td class="small">${b}</td><td class="small">${s}</td><td class="num">${money(a, false)}</td><td>${ok ? '<span class="badge b-ok">Conciliado</span>' : '<button class="btn btn-sm" data-act="demo" data-v="Se registra el cargo bancario como gasto y queda conciliado.">Registrar gasto</button>'}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+V.contabilidad = () => {
+  const sep = S.receipts.filter(r => r.t >= D('2026-09-01') && !r.rev);
+  const iI = sum(sep, r => r.int), iM = sum(sep, r => r.mora), iC = sum(S.loans.filter(l => l.disb >= D('2026-09-01')), l => l.cargos);
+  const g = S.gastos.filter(x => !x.owner && x.t >= D('2026-09-01')); const tg = sum(g, x => x.amt);
+  const cats = {}; g.forEach(x => cats[x.cat] = (cats[x.cat] || 0) + x.amt);
+  const ing = r2(iI + iM + iC); const res = r2(ing - tg);
+  const todayR = S.receipts.filter(r => r.t === TODAY && !r.rev).slice(-3).reverse();
+  return `${hdr(crumb('tablero', 'Inicio') + ' › Finanzas', 'Contabilidad', 'Cada cobro, desembolso y gasto genera su asiento. Nadie los escribe a mano.', `<button class="btn" data-act="demo" data-v="Se exporta a Excel o PDF para su contador.">${ic('down')} Exportar</button>`)}
+  <div class="grid g2" style="align-items:start"><section class="card"><div class="card-h"><h2>Estado de resultados · septiembre 2026</h2><span class="badge b-i">Al 30/09</span></div>
+    <dl class="dl"><dt><b style="color:var(--text)">Ingresos</b></dt><dd></dd><dt>Intereses cobrados</dt><dd>${money(iI)}</dd><dt>Mora cobrada</dt><dd>${money(iM)}</dd><dt>Gastos de cierre</dt><dd>${money(iC)}</dd><dt class="tot">Total de ingresos</dt><dd class="tot">${money(ing)}</dd>
+    <dt style="padding-top:8px"><b style="color:var(--text)">Gastos</b></dt><dd></dd>${Object.entries(cats).map(([k, v]) => `<dt>${k}</dt><dd>− ${money(v, false)}</dd>`).join('')}<dt class="tot">Total de gastos</dt><dd class="tot">− ${money(tg, false)}</dd>
+    <dt class="tot" style="font-size:15px">Resultado del mes</dt><dd class="tot" style="font-size:15px;color:${res < 0 ? 'var(--danger-ink)' : 'var(--accent-ink)'}">${money(res)}</dd></dl>
+    <p class="xs muted" style="margin:0">El retiro del dueño (${money(20000)}) no es gasto del negocio y no resta al resultado.</p></section>
+    <section class="card flush"><div class="card-h"><h2>Libro diario · últimos asientos</h2></div><div class="tw"><table class="t"><thead><tr><th>Asiento</th><th>Cuenta</th><th class="num">Debe</th><th class="num">Haber</th></tr></thead><tbody>
+    ${todayR.map(r => `<tr><td rowspan="${r.mora ? 4 : 3}" class="small"><b>${r.no}</b><br>${fdShort(r.t)} ${r.time}</td><td>${r.medio === 'Efectivo' ? (r.canal === 'ruta' ? 'Efectivo en ruta' : 'Caja ' + S.caja.id) : 'Banco'}</td><td class="num">${money(r.total, false)}</td><td></td></tr><tr><td style="padding-left:28px">Cartera de préstamos</td><td></td><td class="num">${money(r.cap, false)}</td></tr><tr><td style="padding-left:28px">Ingresos por intereses</td><td></td><td class="num">${money(r.int, false)}</td></tr>${r.mora ? `<tr><td style="padding-left:28px">Ingresos por mora</td><td></td><td class="num">${money(r.mora, false)}</td></tr>` : ''}`).join('')}
+    </tbody></table></div><p class="xs muted" style="margin:0;padding:10px 18px">Los asientos no se editan ni se borran. Un error se corrige con un asiento contrario.</p></section></div>`;
+};
+
+/* ---------- Reportes ---------- */
+const REPS = [['cartera', 'Cartera por cobrador', 'Saldos, cuotas y atraso por cobrador.'], ['antig', 'Antigüedad de la cartera', 'Capital por tramo de días de atraso.'], ['cobros', 'Cobros del día', 'Recibos por cajera y cobrador.'], ['clas', 'Clasificación de clientes', 'A, B y C, con sus razones.'], ['coloc', 'Colocación del mes', 'Préstamos desembolsados por oficial y producto.'], ['comis', 'Comisiones', 'De cobradores por lo cobrado y de oficiales por lo colocado.'], ['cierres', 'Cierres de caja', 'Arqueos, diferencias y aprobaciones.'], ['par', 'Cartera en riesgo', 'Capital con más de 30 días de atraso, por producto.']];
+V.reportes = () => `${hdr(crumb('tablero', 'Inicio'), 'Reportes', 'Cada reporte se exporta a Excel y PDF con los mismos totales de la pantalla.')}
+  <div class="grid g4">${REPS.map(([k, t, d]) => `<button class="card" style="cursor:pointer;text-align:left;gap:6px" data-go="reporte" data-p='{"id":"${k}"}'><span style="color:var(--brand-700)">${ic('chart').replace('class=""', 'style="width:22px;height:22px"')}</span><b>${t}</b><span class="small muted">${d}</span></button>`).join('')}</div>`;
+V.reporte = p => {
+  const r = REPS.find(x => x[0] === p.id) || REPS[0]; const P = portfolio(); let tbl = '';
+  if (r[0] === 'cartera') { const g = {}; P.ss.forEach(([L, s]) => { const k = L.cob ? COB[L.cob] : 'Sin asignar'; g[k] = g[k] || { n: 0, cap: 0, ven: 0, mora: 0 }; g[k].n++; g[k].cap += s.capPend; g[k].ven += s.vencido; g[k].mora += s.mora; }); tbl = `<thead><tr><th>Cobrador</th><th class="num">Préstamos</th><th class="num">Saldo de capital</th><th class="num">Vencido</th><th class="num">Mora</th><th class="num">% vencido</th></tr></thead><tbody>${Object.entries(g).map(([k, v]) => `<tr><td>${k}</td><td class="num">${v.n}</td><td class="num">${money(v.cap, false)}</td><td class="num">${money(v.ven, false)}</td><td class="num">${money(v.mora, false)}</td><td class="num">${(v.ven / v.cap * 100 || 0).toFixed(1)} %</td></tr>`).join('')}</tbody><tfoot><tr><td>Total</td><td class="num">${P.ss.length}</td><td class="num">${money(P.cartera, false)}</td><td class="num">${money(sum(P.ss, ([, s]) => s.vencido), false)}</td><td class="num">${money(sum(P.ss, ([, s]) => s.mora), false)}</td><td></td></tr></tfoot>`; }
+  else if (r[0] === 'antig' || r[0] === 'par') { const t = [0, 0, 0, 0, 0, 0].map(() => ({ n: 0, cap: 0 })); P.ss.forEach(([, s]) => { t[s.tramo].n++; t[s.tramo].cap += s.capPend; }); tbl = `<thead><tr><th>Tramo</th><th class="num">Préstamos</th><th class="num">Capital</th><th class="num">% de la cartera</th></tr></thead><tbody>${t.map((x, k) => `<tr><td>${k ? `<span class="badge ${TRAMOS[k][1]}">${TRAMOS[k][0]}</span>` : '<span class="badge b-ok">Al día</span>'}</td><td class="num">${x.n}</td><td class="num">${money(x.cap, false)}</td><td class="num">${(x.cap / P.cartera * 100).toFixed(1)} %</td></tr>`).join('')}</tbody><tfoot><tr><td>Cartera en riesgo (más de 30 días)</td><td class="num">${t.slice(3).reduce((a, x) => a + x.n, 0)}</td><td class="num">${money(P.par30, false)}</td><td class="num">${(P.par30 / P.cartera * 100).toFixed(1)} %</td></tr></tfoot>`; }
+  else if (r[0] === 'cobros' || r[0] === 'comis') { const rc = S.receipts.filter(x => x.t === TODAY && !x.rev); tbl = `<thead><tr><th>Recibo</th><th>Hora</th><th>Cliente</th><th>Canal</th><th>Atendió</th><th class="num">Monto</th>${r[0] === 'comis' ? '<th class="num">Comisión 2 %</th>' : ''}</tr></thead><tbody>${rc.map(x => `<tr><td>${x.no}</td><td>${x.time}</td><td>${CL[x.cid].nombre}</td><td>${x.canal}</td><td>${x.user}</td><td class="num">${money(x.total, false)}</td>${r[0] === 'comis' ? `<td class="num">${x.canal === 'ruta' ? money(x.total * 0.02, false) : '—'}</td>` : ''}</tr>`).join('')}</tbody><tfoot><tr><td colspan="5">Total del día</td><td class="num">${money(sum(rc, x => x.total), false)}</td>${r[0] === 'comis' ? `<td class="num">${money(sum(rc.filter(x => x.canal === 'ruta'), x => x.total * 0.02), false)}</td>` : ''}</tr></tfoot>`; }
+  else if (r[0] === 'clas') tbl = `<thead><tr><th>Cliente</th><th>Clasificación</th><th>Por qué</th></tr></thead><tbody>${C.map(c => `<tr><td>${c.nombre}</td><td>${clasBadge(c.clas)}</td><td class="small">${WHY[c.clas].join(' · ')}</td></tr>`).join('')}</tbody>`;
+  else if (r[0] === 'coloc') { const ls = S.loans.filter(l => l.disb >= D('2026-03-01')); tbl = `<thead><tr><th>Préstamo</th><th>Desembolso</th><th>Cliente</th><th>Producto</th><th>Oficial</th><th class="num">Monto</th></tr></thead><tbody>${ls.map(l => `<tr><td>${l.id}</td><td>${fd(l.disb)}</td><td>${CL[l.cid].nombre}</td><td>${PROD[l.prod]}</td><td>Kelvin Soto</td><td class="num">${money(l.P, false)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="5">Total colocado desde marzo</td><td class="num">${money(sum(ls, l => l.P), false)}</td></tr></tfoot>`; }
+  else tbl = `<thead><tr><th>Caja</th><th>Cajera</th><th>Fecha</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th><th>Aprobó</th></tr></thead><tbody><tr><td>SD-C-000318</td><td>Ana Luisa Rosario</td><td>29/09/2026</td><td class="num">54,970.00</td><td class="num">54,920.00</td><td class="num">−50.00</td><td>Mercedes Vargas</td></tr><tr><td>SD-C-000316</td><td>Ana Luisa Rosario</td><td>28/09/2026</td><td class="num">61,305.00</td><td class="num">61,305.00</td><td class="num">0.00</td><td>Mercedes Vargas</td></tr>${S.caja.cierre ? `<tr><td>${S.caja.id}</td><td>${S.caja.cajera}</td><td>30/09/2026</td><td class="num">${money(S.caja.cierre.esp, false)}</td><td class="num">${money(S.caja.cierre.contado, false)}</td><td class="num">${money(S.caja.cierre.dif, false)}</td><td>${S.caja.cierre.aprobo || 'Pendiente'}</td></tr>` : ''}</tbody>`;
+  return `${hdr(crumb('reportes', 'Reportes') + ' › ' + r[1], r[1], r[2] + ' · datos al 30/09/2026', `<button class="btn" data-act="demo" data-v="Se genera en segundo plano y le avisa cuando está listo. El Excel trae los mismos totales.">${ic('down')} Excel</button><button class="btn" data-act="demo" data-v="Se genera el PDF con el logo de la empresa.">${ic('down')} PDF</button>`)}
+  <section class="card flush"><div class="tw"><table class="t">${tbl}</table></div></section>`;
+};
+
+/* ---------- Ajustes ---------- */
+V.ajustes = p => {
+  const tab = p.tab || 'productos';
+  const tabs = [['productos', 'Productos'], ['mora', 'Política de mora'], ['usuarios', 'Usuarios'], ['permisos', 'Roles y permisos'], ['feriados', 'Feriados'], ['plantillas', 'Plantillas'], ['auditoria', 'Historial de cambios'], ['empresa', 'Empresa']];
+  let b = '';
+  if (tab === 'productos') b = `<section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Producto</th><th>Formas de cálculo</th><th>Frecuencias</th><th class="num">Monto</th><th class="num">Tasa mensual</th><th>Garantía</th><th>Gastos de cierre</th></tr></thead><tbody>
+    ${[['Personal', 'Cuota fija, interés fijo, capital fijo', 'Diaria a mensual', '5,000 – 150,000', '4 % – 10 %', 'Garante', '5 % descontado'], ['Con garantía de vehículo', 'Cuota fija', 'Quincenal, mensual', '100,000 – 1,500,000', '3 % – 4.5 %', 'Vehículo (hasta 60 % de la tasación)', '3 % + traspaso'], ['Hipotecario', 'Cuota fija, solo interés', 'Mensual', '300,000 – 5,000,000', '2 % – 3 %', 'Inmueble (hasta 50 % de la tasación)', '3 % + inscripción'], ['Microcrédito a negocio', 'Interés fijo, cuota fija, abierto', 'Diaria, semanal', '10,000 – 300,000', '6 % – 12 %', 'Garante o inventario', '5 % descontado']].map(r => `<tr>${r.map((x, k) => `<td class="${k === 3 || k === 4 ? 'num' : ''}">${k === 0 ? '<b style="font-weight:500">' + x + '</b>' : x}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'mora') b = `<div class="grid g2" style="align-items:start"><section class="card"><h2>Política de mora</h2><div class="grid g3"><div class="field"><label for="pg">Días de gracia</label><input class="input" id="pg" data-live="pol" value="${POL.grace}"></div><div class="field"><label for="pr">Tasa mensual (%)</label><input class="input" id="pr" data-live="pol" value="${POL.rate}"></div><div class="field"><label for="pc">Tope (% de lo vencido)</label><input class="input" id="pc" data-live="pol" value="${POL.cap}"></div></div>
+    <p class="small muted" style="margin:0">La mora se calcula por día sobre el monto vencido, después de los días de gracia, y nunca supera el tope. Los cambios aplican a los préstamos nuevos.</p><div class="alert a-w">${ic('alert')}<span>Las tasas máximas las confirma su abogado.</span></div></section>
+    <section class="card"><h2>Vista previa</h2><div class="grid g2"><div class="field"><label for="pv-a">Monto vencido (RD$)</label><input class="input" id="pv-a" data-live="pol" value="5641"></div><div class="field"><label for="pv-d">Días de atraso</label><input class="input" id="pv-d" data-live="pol" value="13"></div></div><div id="polOut">${polOut(5641, 13)}</div></section></div>`;
+  if (tab === 'usuarios') b = `<section class="card flush"><div class="card-h"><h2>Usuarios</h2><button class="btn btn-sm btn-p" data-act="demo" data-v="Se envía una invitación; la persona crea su propia contraseña y activa la verificación en dos pasos.">${ic('plus')} Invitar usuario</button></div><div class="tw"><table class="t"><thead><tr><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Dos pasos</th><th>Horario</th><th>Último acceso</th></tr></thead><tbody>
+    ${[['Carlos Méndez', 'Gerente', 'Todas', 'Sí', 'Libre', 'Hoy 07:45'], ['Mercedes Vargas', 'Supervisora', 'Santo Domingo Este', 'Sí', 'Libre', 'Hoy 08:00'], ['Ana Luisa Rosario', 'Cajera', 'Santo Domingo Este', 'Sí', 'Lun–sáb 7:30–18:00', 'Hoy 07:58'], ['Kelvin Soto', 'Oficial de crédito', 'Santo Domingo Este', 'Sí', 'Libre', 'Hoy 08:20'], ['Pedro Santana', 'Cobrador', 'Santo Domingo Este', 'Sí', 'Lun–sáb 7:00–19:00', 'Hoy 09:40'], ['Miguel Tavárez', 'Cobrador', 'Santo Domingo Este', 'Sí', 'Lun–sáb 7:00–19:00', 'Hoy 09:12'], ['Yahaira Peña', 'Cajera', 'Los Alcarrizos', 'Sí', 'Lun–sáb 7:30–18:00', 'Hoy 08:10'], ['Sandra Polanco', 'Contabilidad', 'Todas', 'Sí', 'Libre', 'Ayer 17:30']].map(r => `<tr>${r.map((x, k) => `<td>${k === 3 ? '<span class="badge b-ok">Activa</span>' : x}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'permisos') { const R = ['Gerente', 'Administrador', 'Oficial', 'Supervisor', 'Cajero', 'Cobrador', 'Contabilidad', 'Consulta']; const Pm = [['Ver clientes', 'SSSSSSSS'], ['Crear y editar clientes', 'SSS—————'], ['Crear solicitudes', 'S—S—————'], ['Aprobar solicitudes', 'S——L————'], ['Desembolsar', 'S———S———'], ['Cobrar en oficina', 'S———S———'], ['Cobrar en ruta', '—————S——'], ['Corregir pagos', 'S——L————'], ['Condonar mora', 'S——LL———'], ['Abrir y cerrar caja', '————S———'], ['Aprobar cierres de caja', 'S——S————'], ['Registrar gastos', 'S———S—S—'], ['Ver contabilidad', 'S—————SS'], ['Usuarios y permisos', 'SS——————'], ['Ver historial de cambios', 'SS————SS']]; b = `<section class="card flush"><div class="card-h"><h2>Roles y permisos</h2><span class="small muted">L = hasta su límite por monto</span></div><div class="tw"><table class="t"><thead><tr><th>Permiso</th>${R.map(x => `<th style="text-align:center">${x}</th>`).join('')}</tr></thead><tbody>${Pm.map(([n, s]) => `<tr><td>${n}</td>${[...s].map(ch => `<td style="text-align:center">${ch === 'S' ? '<span style="color:var(--accent)">✓</span>' : ch === 'L' ? '<span class="badge b-i">L</span>' : '<span class="muted">—</span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="xs muted" style="margin:0;padding:10px 18px">Nadie aprueba lo que creó ni cambia sus propios permisos. Cada cambio de permisos avisa al gerente.</p></section>`; }
+  if (tab === 'feriados') b = `<section class="card flush"><div class="card-h"><h2>Feriados 2026</h2><span class="small muted">Las cuotas que caen en feriado o domingo pasan al siguiente día laborable</span></div><div class="tw"><table class="t"><thead><tr><th>Fecha</th><th>Feriado</th></tr></thead><tbody>${HOL_NAMES.map(([f, n]) => `<tr><td>${f}/2026</td><td>${n}</td></tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'plantillas') b = `<section class="card flush"><div class="tw"><table class="t"><thead><tr><th>Plantilla</th><th>Se usa en</th><th>Estado</th><th></th></tr></thead><tbody>${[['Contrato de préstamo', 'Desembolso', 'contrato'], ['Pagaré notarial', 'Desembolso', 'pagare'], ['Contrato con garantía de vehículo', 'Préstamos de vehículo', 'contrato'], ['Contrato hipotecario', 'Préstamos hipotecarios', 'contrato'], ['Intimación de pago', 'Legal', 'intimacion'], ['Carta de saldo', 'Préstamo saldado', 'saldo'], ['Recibo de pago', 'Cobros', null]].map(([n, u, k]) => `<tr><td>${n}</td><td>${u}</td><td>${k ? '<span class="badge b-w">Pendiente de validación legal</span>' : '<span class="badge b-ok">Aprobada</span>'}</td><td class="num">${k ? `<button class="btn btn-sm" data-act="docPrev" data-v="${k}" data-loan="SD-000125">${ic('eye')} Ver</button>` : ''}</td></tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'auditoria') b = `<section class="card flush"><div class="card-h"><h2>Historial de cambios de hoy</h2><span class="small muted">Incluye lo que usted haga en esta demo</span></div><div class="tw"><table class="t"><thead><tr><th>Hora</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>${S.audit.map(a => `<tr><td>${a.t}</td><td>${a.user}</td><td>${a.acc}</td><td class="small">${esc(a.ref)}</td></tr>`).join('')}</tbody></table></div></section>`;
+  if (tab === 'empresa') b = `<section class="card"><h2>Datos de la empresa</h2><div class="kv"><div><span>Razón social</span><b>Financiera Ejemplo, SRL</b></div><div><span>RNC</span><b>1-00-00000-0</b></div><div><span>Sucursales</span><b>Santo Domingo Este (principal), Los Alcarrizos</b></div><div><span>Numeración de préstamos</span><b>SD-000000</b></div><div><span>Numeración de recibos</span><b>SD-R-000000</b></div><div><span>Moneda</span><b>Peso dominicano (preparado para dólares)</b></div></div><p class="small muted" style="margin:0">El logo y los datos aparecen en recibos, contratos y reportes.</p></section>`;
+  return `${hdr(crumb('tablero', 'Inicio'), 'Ajustes', 'Solo el gerente y el administrador pueden cambiarlos. Cada cambio queda en el historial.')}<div class="tabs">${tabs.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" data-go="ajustes" data-p='{"tab":"${k}"}'>${l}</a>`).join('')}</div>${b}`;
+};
+function polOut(a, d) { const g = num(document.getElementById('pg')?.value ?? POL.grace), rt = num(document.getElementById('pr')?.value ?? POL.rate), cp = num(document.getElementById('pc')?.value ?? POL.cap); const raw = d > g ? a * rt / 100 / 30 * d : 0; const cap = a * cp / 100; const m = r0(Math.min(raw, cap)); return `<dl class="dl"><dt>Cálculo</dt><dd class="small">${d > g ? `${money(a, false)} × ${rt} % ÷ 30 × ${d} días` : 'Dentro de los días de gracia'}</dd><dt>Tope</dt><dd>${money(cap)}</dd><dt class="tot">Mora a cobrar</dt><dd class="tot">${money(m)}${raw > cap ? ' <span class="badge b-w">Tope</span>' : ''}</dd></dl>`; }
+
+/* ---------- Documentos ---------- */
+function docHTML(kind, L, a) {
+  const src = L || { cid: a.cid, P: a.P, m: a.m, n: a.n, freq: a.freq, method: a.method, id: 'por asignar', rows: schedule(a) };
+  const c = CL[src.cid]; const cuota = src.rows[0].total; const tot = sum(src.rows, r => r.total);
+  const wm = kind === 'tabla' ? '' : '<div class="wm"><span>Plantilla pendiente<br>de validación legal</span></div>';
+  if (kind === 'tabla') return `<div class="paper"><h3>TABLA DE AMORTIZACIÓN · ${src.id}</h3><p>${c.nombre} · ${money(src.P)} al ${src.m} % mensual · ${src.n} cuotas ${FREQ[src.freq].pl}</p><div class="tw"><table class="t"><thead><tr><th>#</th><th>Fecha</th><th class="num">Interés</th><th class="num">Capital</th><th class="num">Cuota</th></tr></thead><tbody>${src.rows.slice(0, 14).map(r => `<tr><td>${r.n}</td><td>${fd(r.date)}</td><td class="num">${money(r.int, false)}</td><td class="num">${money(r.cap, false)}</td><td class="num">${money(r.total, false)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if (kind === 'saldo') return `<div class="paper">${wm}<h3>CARTA DE SALDO</h3><p>Santo Domingo Este, ${fd(TODAY)}</p><p>A quien pueda interesar:</p><p>Por medio de la presente, <b>Financiera Ejemplo, SRL</b>, RNC 1-00-00000-0, hace constar que el señor(a) <b>${c.nombre}</b>, portador(a) de la cédula ${c.doc}, ${L && st(L).status === 'saldado' ? `<b>saldó en su totalidad</b> el préstamo ${src.id}, por lo que no mantiene deuda alguna con esta entidad por dicho concepto` : `mantiene con esta entidad el préstamo ${src.id}, con un saldo para cancelar al día de hoy de <b>${money(st(L).payoff)}</b>`}.</p><p>Se expide a solicitud de la parte interesada.</p><p style="margin-top:28px">_____________________________<br>Carlos Méndez · Gerente</p><div class="row between"><span class="xs muted">Verifique esta carta en fe.do/v/${src.id.slice(-4)}</span>${qr()}</div></div>`;
+  if (kind === 'intimacion') return `<div class="paper">${wm}<h3>INTIMACIÓN DE PAGO</h3><p>En Santo Domingo Este, a los ${new Date(TODAY).getUTCDate()} días del mes de septiembre del año 2026, a requerimiento de <b>Financiera Ejemplo, SRL</b>, se intima al señor(a) <b>${c.nombre}</b>, cédula ${c.doc}, para que en un plazo de <b>[plazo legal]</b> pague la suma de <b>${L ? money(st(L).payoff) : '—'}</b> adeudada por el préstamo ${src.id}, más los intereses y accesorios que se generen, bajo advertencia de proceder por las vías legales correspondientes.</p><p style="margin-top:28px">_____________________________<br>Ministerial actuante</p></div>`;
+  if (kind === 'pagare') return `<div class="paper">${wm}<h3>PAGARÉ NOTARIAL</h3><p>Yo, <b>${c.nombre}</b>, dominicano(a), mayor de edad, portador(a) de la cédula de identidad y electoral No. ${c.doc}, domiciliado(a) en ${c.dir}, <b>DEBO Y PAGARÉ</b> a la orden de <b>Financiera Ejemplo, SRL</b>, RNC 1-00-00000-0, la suma de <b>${money(src.P)}</b>, más intereses a razón de ${src.m} % mensual, pagaderos en ${src.n} cuotas ${FREQ[src.freq].pl} de ${money(cuota)}, para un total de ${money(tot)}, según la tabla de amortización anexa.</p><p>En caso de atraso, pagaré una mora de ${POL.rate} % mensual sobre el monto vencido, después de ${POL.grace} días de gracia y sin exceder el ${POL.cap} % de lo vencido. [Cláusulas adicionales a definir por el abogado.]</p><p style="margin-top:28px">_____________________________ &nbsp;&nbsp; _____________________________<br>El deudor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Notario público</p></div>`;
+  return `<div class="paper">${wm}<h3>CONTRATO DE PRÉSTAMO</h3><p>Entre <b>Financiera Ejemplo, SRL</b>, RNC 1-00-00000-0, representada por su gerente Carlos Méndez, en lo adelante <b>EL ACREEDOR</b>; y <b>${c.nombre}</b>, cédula ${c.doc}, domiciliado(a) en ${c.dir}, en lo adelante <b>EL DEUDOR</b>, se ha convenido lo siguiente:</p><p><b>PRIMERO · Monto.</b> EL ACREEDOR entrega a EL DEUDOR la suma de ${money(src.P)}, que EL DEUDOR declara recibir a su entera satisfacción.</p><p><b>SEGUNDO · Interés y forma de pago.</b> El préstamo devenga un interés de ${src.m} % mensual (${METHOD[src.method].toLowerCase()}) y se paga en ${src.n} cuotas ${FREQ[src.freq].pl} de ${money(cuota)}, según la tabla anexa.</p><p><b>TERCERO · Mora.</b> Las cuotas vencidas generan una mora de ${POL.rate} % mensual prorrateada por día, después de ${POL.grace} días de gracia, con tope de ${POL.cap} % del monto vencido.</p><p><b>CUARTO · Pago anticipado.</b> EL DEUDOR puede saldar el préstamo en cualquier momento pagando el capital pendiente y los intereses vencidos, sin intereses futuros.</p><p>[Cláusulas de garantía, jurisdicción y datos personales a definir por el abogado.]</p></div>`;
+}
+
+/* ---------- Teléfono: cobrador y cliente ---------- */
+function rutaStops() {
+  const order = ['SD-000201', 'SD-000130', 'SD-000125', 'SD-000211', 'SD-000098', 'SD-000089'];
+  return order.map(id => { const L = LN(id); const s = st(L); const rc = S.receipts.filter(r => r.loanId === id && r.t === TODAY && !r.rev).slice(-1)[0]; return { L, s, rc, done: !!rc && s.exig <= 0.004 }; });
+}
+function phoneStage() {
+  const isC = S.role === 'cliente';
+  const note = isC ? `<p class="crumbs">Portal del cliente</p><h2>Así ve María su préstamo</h2><p class="muted" style="margin:0">Entra desde el celular con un código que le llega por mensaje. Ve su saldo, sus cuotas y sus recibos, sin llamar a la oficina.</p>`
+    : `<p class="crumbs">Cobrador en la calle</p><h2>La ruta de Pedro en su celular</h2><p class="muted" style="margin:0">Es la misma web, adaptada al celular: no hay que instalar nada. Pedro ve a quién visitar, cobra con el desglose a la vista y envía el recibo por WhatsApp. Al volver, entrega el efectivo a la cajera y todo cuadra.</p>`;
+  const v = (isC ? PV.portal : PV[S.route] || PV.ruta)(S.p);
+  return `<div class="stage"><div class="stage-note">${note}<div class="alert a-b">${ic('info')}<span>Demostración con datos ficticios. Toque los botones del celular.</span></div><div class="row"><button class="btn" data-act="exit">${ic('out')} Cambiar de rol</button><button class="btn btn-p" data-act="role" data-v="gerente">Ver como gerente</button></div></div>
+    <div class="device"><div class="screen">${v}</div></div></div>${tourUI()}`;
+}
+const PV = {};
+const mnav = on => `<nav class="m-nav" aria-label="Navegación del celular">${[['ruta', 'Mi ruta', 'map'], ['rbuscar', 'Buscar', 'search'], ['rcobros', 'Cobros', 'cash'], ['rmas', 'Rendir', 'box']].map(([r, l, i]) => `<a class="${on === r ? 'on' : ''}" data-go="${r}">${ic(i)}<span>${l}</span></a>`).join('')}</nav>`;
+PV.ruta = () => {
+  const stops = rutaStops(); const done = stops.filter(x => x.done).length; const cash = rutaCash(); const cur = stops.find(x => !x.done);
+  return `<header class="m-top"><div class="row between"><div><strong style="font-size:18px">Mi ruta</strong><br><span class="xs" style="opacity:.85">Pedro Santana · miércoles 30/09</span></div><span class="badge" style="background:rgba(255,255,255,.16);color:#fff">${ic('pin').replace('class=""', 'style="width:12px;height:12px"')} Ubicación activa</span></div>
+    <div class="row between small"><span>${done} de ${stops.length} visitas</span><span class="tab-nums">${money(cash)} en mano</span></div><div class="bar" style="background:rgba(255,255,255,.2)"><div style="width:${done / stops.length * 100}%;background:#8BCB4A"></div></div></header>
+  <div class="m-body">${stops.map((x, k) => { const c = CL[x.L.cid]; if (x.done) return `<article class="stop done"><div class="row between"><b>${k + 1} · ${c.nombre}</b><span class="badge b-ok">${x.rc.canal === 'ruta' ? 'Cobrado ' + x.rc.time : 'Pagó en oficina'}</span></div><span class="xs muted">${x.L.id} · recibo ${x.rc.no} · ${money(x.rc.total)}</span></article>`;
+    return `<article class="stop ${x === cur ? 'cur' : ''}"><div class="row between"><b>${k + 1} · ${c.nombre}</b>${x.s.dias ? `<span class="badge ${x.s.dias > 30 ? 'b-d' : 'b-w'}">${x.s.dias} días</span>` : '<span class="badge b-i">Hoy</span>'}</div><span class="xs muted">${x.L.id} · ${c.dir}</span>${S.gest.find(g => g.loanId === x.L.id && g.prom && g.prom.t === TODAY && !g.prom.kept) ? '<span class="badge b-i" style="align-self:flex-start">Prometió pagar hoy</span>' : ''}<div class="row between"><span class="small">${x.s.mora ? 'Vencido con mora' : 'Cuota de hoy'}</span><b class="tab-nums">${money(x.s.exig)}</b></div>
+    <div class="grid g3" style="gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))"><button class="btn btn-g" data-go="rcobrar" data-p='{"id":"${x.L.id}"}'>Cobrar</button><button class="btn" data-act="gest" data-v="${x.L.id}">Gestión</button><button class="btn" data-act="demo" data-v="Abre la dirección en el mapa del celular.">Llegar</button></div></article>`; }).join('')}
+  <p class="xs muted" style="margin:0;text-align:center">La ubicación se registra con cada cobro y mientras esta pantalla está abierta.</p></div>${mnav('ruta')}`;
+};
+PV.rcobrar = p => {
+  const L = LN(p.id); const s = st(L); const c = CL[L.cid];
+  if (!S.pay || S.pay.id !== L.id) S.pay = { id: L.id, mode: s.exig > 0 ? 'vencido' : 'proxima', medio: 'Efectivo', rec: '' };
+  const amt = payDefault(L, s);
+  return `<header class="m-top"><a data-go="ruta">‹ Mi ruta</a><div><strong style="font-size:18px">Cobrar · ${L.id}</strong><br><span class="xs" style="opacity:.85">${c.nombre} · ${FREQ[L.freq].l.toLowerCase()}</span></div></header>
+  <div class="m-body"><section class="stop"><h3>Exigible hoy</h3>${s.venc.concat(s.hoy).map(r => `<div class="row between small"><span>Cuota ${r.n} · ${fdShort(r.date)} ${r.date < TODAY ? `<span class="badge b-w">${Math.round((TODAY - r.date) / DAY)} d</span>` : '<span class="badge b-i">hoy</span>'}</span><span class="tab-nums">${money(r.pend, false)}</span></div>`).join('')}${s.mora ? `<div class="row between small"><span>Mora</span><span class="tab-nums">${money(s.mora, false)}</span></div>` : ''}<div class="row between" style="font-weight:600"><span>Total</span><span class="tab-nums">${money(s.exig)}</span></div></section>
+    <div class="chips">${[['vencido', 'Todo lo exigible'], ['proxima', 'Una cuota'], ['libre', 'Monto libre']].map(([k, l]) => `<button class="chip ${S.pay.mode === k ? 'on' : ''}" data-act="pmode" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="field"><label for="pamt">Monto a aplicar</label><input class="input big" id="pamt" data-live="pay" inputmode="decimal" value="${amt.toFixed(2)}" ${S.pay.mode !== 'libre' ? 'readonly' : ''}></div>
+    <div id="cashBox">${cashBox(L, s, amt)}</div>
+    <section class="stop" id="payPrev" style="gap:4px">${payPreview(L, amt)}</section>
+    <button class="btn btn-g btn-lg" data-act="pay">Confirmar cobro</button>
+    <p class="xs muted" style="margin:0;text-align:center">El cobro guarda su ubicación. Después puede enviar el recibo por WhatsApp.</p></div>${mnav('rcobros')}`;
+};
+PV.rrecibo = p => {
+  const r = S.receipts.find(x => x.no === p.no); const L = LN(r.loanId); const s = st(L); const c = CL[r.cid];
+  return `<header class="m-top"><a data-go="ruta">‹ Mi ruta</a><div><strong style="font-size:18px">✓ Cobro registrado</strong><br><span class="xs" style="opacity:.85">Recibo ${r.no} · ${r.time}</span></div></header>
+  <div class="m-body"><div class="alert a-ok">${ic('check')}<span>${money(r.total)} aplicados a ${L.id}. ${s.dias ? `Quedan ${s.dias} días de atraso.` : 'El préstamo quedó al día.'}${r.cambio > 0 ? ` Devuelva ${money(r.cambio)} de cambio.` : ''}</span></div>
+  <div class="wa"><div class="bub">*Financiera Ejemplo* · Recibo ${r.no}
+Hola, ${c.nombre.split(' ')[0]}. Recibimos su pago de *${money(r.total)}* del préstamo ${L.id}.
+Saldo de capital: ${money(s.capPend)}${s.next ? `\nPróxima cuota: ${fd(s.next.date)}` : ''}
+Cobrado por Pedro Santana.
+Verifique su recibo: fe.do/v/${r.no.slice(-4)}<small>${r.time} ✓✓</small></div></div>
+  <button class="btn btn-g btn-lg" data-act="demo" data-v="En el sistema real se abre WhatsApp con el mensaje listo para el ${c.tel}. En esta demo no se envía nada.">${ic('msg')} Enviar por WhatsApp</button>
+  <button class="btn" data-go="ruta">Siguiente visita</button></div>${mnav('rcobros')}`;
+};
+PV.rbuscar = () => `<header class="m-top"><strong style="font-size:18px">Buscar</strong><input class="input" id="mq" data-live="mq" placeholder="Nombre, cédula o préstamo" style="color:var(--text)"></header><div class="m-body" id="mqRes">${mSearch('')}</div>${mnav('rbuscar')}`;
+function mSearch(q) { const t = q.toLowerCase(); const ls = S.loans.filter(l => l.cob === 'pedro' && l.status !== 'saldado' && (!t || (l.id + CL[l.cid].nombre).toLowerCase().includes(t))); return ls.map(l => `<article class="stop" data-go="rcobrar" data-p='{"id":"${l.id}"}' style="cursor:pointer"><div class="row between"><b>${CL[l.cid].nombre}</b>${statusBadge(null, l)}</div><span class="xs muted">${l.id} · exigible ${money(st(l).exig)}</span></article>`).join('') || '<div class="empty">Sin resultados en su cartera.</div>'; }
+PV.rcobros = () => { const rc = S.receipts.filter(r => r.t === TODAY && r.canal === 'ruta' && r.user === 'Pedro Santana'); return `<header class="m-top"><strong style="font-size:18px">Mis cobros de hoy</strong><span class="small">${rc.length} cobros · ${money(sum(rc.filter(r => !r.rev), r => r.total))}</span></header><div class="m-body">${rc.slice().reverse().map(r => `<article class="stop" data-go="rrecibo" data-p='{"no":"${r.no}"}' style="cursor:pointer"><div class="row between"><b>${CL[r.cid].nombre}</b><b class="tab-nums">${money(r.total)}</b></div><span class="xs muted">${r.no} · ${r.time} · ${r.medio}</span></article>`).join('')}</div>${mnav('rcobros')}`; };
+PV.rmas = () => { const cash = rutaCash(); return `<header class="m-top"><strong style="font-size:18px">Cerrar ruta y rendir</strong><span class="small">Entregue el efectivo a la cajera</span></header><div class="m-body"><section class="stop"><dl class="dl"><dt>Cobros en efectivo</dt><dd>${money(cash)}</dd><dt>Transferencias (no se entregan)</dt><dd>${money(0)}</dd><dt class="tot">Efectivo a entregar</dt><dd class="tot">${money(cash)}</dd></dl></section>${S.caja.rendido ? `<div class="alert a-ok">${ic('check')}<span>La cajera recibió su rendición.</span></div>` : `<div class="alert a-i">${ic('info')}<span>La cajera cuenta el efectivo y confirma en su caja. Si hay diferencia, queda registrada.</span></div><button class="btn btn-p btn-lg" data-act="demo" data-v="La rendición queda pendiente hasta que la cajera la confirme. Pruebe «Recibir rendición» como cajera.">Solicitar rendición</button>`}</div>${mnav('rmas')}`; };
+PV.portal = () => {
+  const L = LN('SD-000125'); const s = st(L); const tab = S.p.tab || 'inicio';
+  const rc = S.receipts.filter(r => r.loanId === L.id && !r.rev);
+  let b = '';
+  if (tab === 'inicio') b = `${s.dias ? `<div class="alert a-w">${ic('alert')}<span>Tiene ${s.venc.length} ${s.venc.length === 1 ? 'cuota vencida' : 'cuotas vencidas'} desde el ${fd(s.venc[0].date)}. Pague ${money(s.exig)} para ponerse al día.</span></div>` : `<div class="alert a-ok">${ic('check')}<span>Su préstamo está al día. ¡Gracias!</span></div>`}
+    <section class="stop"><span class="xs muted">Préstamo ${L.id} · ${PROD[L.prod]}</span><div class="row between"><span>Saldo de capital</span><b class="tab-nums" style="font-size:20px">${money(s.capPend)}</b></div><div class="bar"><div style="width:${s.paidCount / L.n * 100}%"></div></div><span class="xs muted">${s.paidCount} de ${L.n} cuotas pagadas</span></section>
+    <section class="stop"><div class="row between"><span>Para ponerse al día hoy</span><b class="tab-nums">${money(s.exig)}</b></div><div class="row between small muted"><span>Próxima cuota</span><span>${s.next ? fd(s.next.date) + ' · ' + money(s.next.pend) : '—'}</span></div><div class="row between small muted"><span>Para saldar hoy</span><span>${money(s.payoff)}</span></div></section>
+    <section class="stop"><h3>Cómo pagar</h3><span class="small">En la oficina, con su cobrador o por transferencia a:</span><span class="small"><b>Banreservas · cuenta corriente 000-000000-0</b><br>A nombre de Financiera Ejemplo, SRL</span><button class="btn btn-sm" data-act="demo" data-v="El cliente sube la foto del comprobante y la cajera la confirma.">Avisar que transferí</button></section>`;
+  if (tab === 'cuotas') b = L.rows.map(r => `<div class="row between small" style="padding:8px 4px;border-bottom:1px solid var(--line-2)"><span>${r.n} · ${fd(r.date)}</span><span class="tab-nums">${money(r.total, false)}</span>${r.pend <= 0.004 ? '<span class="badge b-ok">Pagada</span>' : r.date < TODAY ? '<span class="badge b-w">Vencida</span>' : '<span class="badge b-n">Pendiente</span>'}</div>`).join('');
+  if (tab === 'recibos') b = rc.slice().reverse().map(r => `<article class="stop"><div class="row between"><b>${r.no}</b><b class="tab-nums">${money(r.total)}</b></div><span class="xs muted">${fd(r.t)} · ${r.canal === 'ruta' ? 'con ' + r.user : 'en oficina'}</span></article>`).join('');
+  return `<header class="m-top"><div class="row" style="gap:10px"><span class="logo" style="width:32px;height:32px;font-size:12px">FE</span><div><strong>Hola, María</strong><br><span class="xs" style="opacity:.85">Financiera Ejemplo · su portal</span></div></div></header>
+  <div class="m-body">${b}</div><nav class="m-nav" style="grid-template-columns:repeat(3,1fr)">${[['inicio', 'Inicio', 'home'], ['cuotas', 'Cuotas', 'wallet'], ['recibos', 'Recibos', 'receipt']].map(([k, l, i]) => `<a class="${tab === k ? 'on' : ''}" data-go="portal" data-p='{"tab":"${k}"}'>${ic(i)}<span>${l}</span></a>`).join('')}</nav>`;
+};
+
+/* ---------- Modales ---------- */
+function openModal(m) { S.modal = m; renderOverlay(); }
+function renderOverlay() {
+  const ov = document.getElementById('ov');
+  if (!S.modal) { ov.innerHTML = ''; return; }
+  const m = S.modal;
+  if (m.search) { ov.innerHTML = `<div class="overlay" data-act="bg"><div class="modal" role="dialog" aria-label="Búsqueda" style="max-width:620px"><div class="srch-in">${ic('search')}<input id="sq" data-live="sq" placeholder="Nombre, cédula, teléfono o número de préstamo" autocomplete="off"><span class="kbd">Esc</span></div>${searchModal('')}</div></div>`; setTimeout(() => document.getElementById('sq')?.focus(), 0); return; }
+  ov.innerHTML = `<div class="overlay" data-act="bg"><div class="modal ${m.wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(m.title)}"><div class="modal-h"><h2>${m.title}</h2><button class="x" data-act="close" aria-label="Cerrar">${ic('x')}</button></div><div class="modal-b">${m.body}</div>${m.foot ? `<div class="modal-f">${m.foot}</div>` : ''}</div></div>`;
+}
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = ic('check') + '<span>' + msg + '</span>'; document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 3800); }
+function gestModal(id) {
+  const L = LN(id);
+  return { title: 'Registrar gestión · ' + id, body: `<p class="small muted" style="margin:0">${CL[L.cid].nombre} · exigible ${money(st(L).exig)}</p>
+    <div class="field"><label>Tipo</label><div class="chips" id="gtipo">${['Llamada', 'Visita', 'Mensaje'].map((t, k) => `<button class="chip ${k === 0 ? 'on' : ''}" data-act="chipOne" data-g="gtipo">${t}</button>`).join('')}</div></div>
+    <div class="field"><label>Resultado</label><div class="chips" id="gres">${['Promete pagar', 'No contesta', 'No estaba', 'Se niega a pagar'].map((t, k) => `<button class="chip ${k === 0 ? 'on' : ''}" data-act="chipOne" data-g="gres">${t}</button>`).join('')}</div></div>
+    <div class="grid g2"><div class="field"><label for="gpd">Fecha de la promesa</label><input class="input" type="date" id="gpd" value="2026-10-02"></div><div class="field"><label for="gpa">Monto prometido (RD$)</label><input class="input" id="gpa" inputmode="decimal" value="${st(L).exig.toFixed(2)}"></div></div>
+    <div class="field"><label for="gnota">Nota</label><textarea class="area" id="gnota" placeholder="Qué dijo el cliente"></textarea></div>`,
+    foot: `<button class="btn" data-act="close">Cancelar</button><button class="btn btn-p" data-act="saveGest" data-v="${id}">Guardar gestión</button>` };
+}
+
+/* ---------- Eventos ---------- */
+const ACT = {
+  nav() { S.navOpen = !S.navOpen; render(); },
+  search() { openModal({ search: true }); },
+  role(el) { const p = el.dataset.p ? JSON.parse(el.dataset.p) : undefined; setRole(el.dataset.v, el.dataset.r, p); },
+  exit() { S.role = null; S.modal = null; render(); },
+  startTour() { S.tour = true; ACT.tstep({ dataset: { v: 0 } }); },
+  tour() { S.tour = !S.tour; render(); },
+  tstep(el) { const k = +el.dataset.v; const t = TOUR[k]; S.tourDone[k] = 1; S.pay = null; if (t[3] === 'solicitud-nueva') S.draft = null; S.flt = {}; setRole(t[2], t[3], t[4] || {}); },
+  close() { S.modal = null; renderOverlay(); },
+  bg(el, ev) { if (ev.target === el) ACT.close(); },
+  demo(el) { toast(el.dataset.v); },
+  flt(el) { S.flt[el.dataset.k] = el.dataset.v; render(); },
+  tramo(el) { S.flt.tramo = +el.dataset.v; render(); },
+  chipOne(el) { document.querySelectorAll('#' + el.dataset.g + ' .chip').forEach(c => c.classList.toggle('on', c === el)); },
+  pmode(el) { S.pay.mode = el.dataset.v; S.pay.rec = ''; render(); },
+  pmedio(el) { S.pay.medio = el.dataset.v; render(); },
+  bill(el) { S.pay.rec = el.dataset.v; const i = document.getElementById('prec'); if (i) i.value = el.dataset.v; LIVE.rec(); },
+  pay() {
+    const L = LN(S.pay.id); const s = st(L); const amt = currentPayAmt(L, s);
+    if (amt <= 0) return toast('Escriba el monto a cobrar.');
+    const rec = S.pay.medio === 'Efectivo' ? num(S.pay.rec || 0) : 0;
+    if (S.pay.medio === 'Efectivo' && rec && rec < amt - 0.004) return toast('El efectivo recibido es menor que el monto a cobrar.');
+    const ruta = S.role === 'cobrador';
+    const r = doPay(L, amt, S.pay.medio, rec || (S.pay.medio === 'Efectivo' ? amt : 0), ruta ? 'ruta' : 'oficina', ruta ? 'Pedro Santana' : USERS[S.role].name);
+    S.pay = null;
+    if (ruta) return go('rrecibo', { no: r.no });
+    go('prestamo', { id: L.id, tab: 'pagos' }); S.rview = 'hoja'; openModal(rcptModal(r.no, true));
+  },
+  showRcpt(el) { S.rview = 'hoja'; openModal(rcptModal(el.dataset.v, false)); },
+  rview(el) { S.rview = el.dataset.v; openModal(rcptModal(el.dataset.no, !!el.dataset.f)); },
+  reverse(el) {
+    const r = S.receipts.find(x => x.no === el.dataset.v);
+    openModal({ title: 'Corregir el pago ' + r.no, body: `<div class="alert a-w">${ic('undo')}<span>Se registra un movimiento contrario por ${money(r.total)}. El recibo original queda marcado como corregido; nada se borra.</span></div><div class="field"><label for="rvw">Motivo (obligatorio)</label><textarea class="area" id="rvw" placeholder="Ej.: se aplicó al préstamo equivocado"></textarea><span class="err" id="rvErr"></span></div><p class="small muted" style="margin:0">Como gerente, usted puede autorizarlo sin límite. Un supervisor puede hasta RD$ 20,000.</p>`, foot: `<button class="btn" data-act="close">Cancelar</button><button class="btn btn-d" data-act="doReverse" data-v="${r.no}">Corregir pago</button>` });
+  },
+  doReverse(el) {
+    const why = clean(document.getElementById('rvw').value.trim()); if (why.length < 5) { document.getElementById('rvErr').textContent = 'Escriba el motivo para poder corregir el pago.'; return; }
+    const r = S.receipts.find(x => x.no === el.dataset.v); const L = LN(r.loanId);
+    if (r.before) { L.rows = r.before; L.status = r.bStatus; } else { r.alloc.forEach(a => { const row = L.rows[a.n - 1]; row.paidI = r2(row.paidI - a.int); row.paidC = r2(row.paidC - a.cap); row.moraPaid = r2(row.moraPaid - a.mora); }); if (L.status === 'saldado') L.status = 'activo'; }
+    r.rev = true; r.revWhy = why;
+    if (r.canal === 'oficina' && r.medio === 'Efectivo' && S.caja.estado === 'abierta' && r.t === TODAY) S.caja.movs.push({ time: now(), tipo: 'Reverso', ref: r.no, desc: 'Corrección: ' + why, in: 0, out: r.total, medio: 'Efectivo' });
+    L.hist.push({ t: TODAY, txt: 'Pago ' + r.no + ' corregido por ' + USERS[S.role].name + ': ' + esc(why) });
+    log('Corrigió un pago', r.no + ' · ' + why); S.modal = null; render(); toast('Pago corregido. El saldo del préstamo se recalculó.');
+  },
+  gest(el) { openModal(gestModal(el.dataset.v)); },
+  saveGest(el) {
+    const on = g => document.querySelector('#' + g + ' .chip.on')?.textContent;
+    const res = on('gres'); const g = { t: TODAY, loanId: el.dataset.v, tipo: on('gtipo'), res, user: USERS[S.role].name, nota: clean(document.getElementById('gnota').value) };
+    if (res === 'Promete pagar') g.prom = { t: D(document.getElementById('gpd').value || '2026-10-02'), amt: num(document.getElementById('gpa').value) };
+    S.gest.push(g); log('Registró una gestión', g.loanId + ' · ' + g.tipo + ': ' + res); S.modal = null; render(); toast('Gestión registrada' + (g.prom ? '. Le recordaremos la promesa el ' + fd(g.prom.t) + '.' : '.'));
+  },
+  assign(el) { const L = LN(el.dataset.v); L.cob = 'miguel'; log('Asignó cobrador', L.id + ' · Miguel Tavárez'); render(); toast(L.id + ' asignado a Miguel Tavárez. Aparecerá en su ruta de mañana.'); },
+  submitApp() {
+    const d = S.draft; const c = CL[d.cid]; const id = 'SD-S-000' + (344 + S.apps.filter(a => a.nueva).length);
+    const a = { id, cid: d.cid, prod: d.prod, P: num(d.P), m: num(d.m), n: Math.round(num(d.n)), freq: d.freq, method: d.method === 'abierto' ? 'interes' : d.method, first: D(d.first), estado: 'por_aprobar', oficial: USERS[S.role].name, creada: TODAY, ing: num(d.ing), gas: num(d.gas), deu: num(d.deu), docs: [0, 1, 2, 3, 4].map(k => document.getElementById('doc' + k)?.checked ? 1 : 0), nota: clean(document.getElementById('nota').value) || 'Sin nota.', nueva: true };
+    S.apps.unshift(a); S.draft = null; log('Envió una solicitud a aprobación', id + ' · ' + money(a.P)); go('solicitud', { id }); toast('Solicitud ' + id + ' enviada. La aprueba ' + (a.P <= 50000 ? 'la supervisora' : 'la gerencia') + '.');
+  },
+  approve(el) { const a = S.apps.find(x => x.id === el.dataset.v); a.estado = 'aprobada'; a.aprobo = 'Carlos Méndez (Gerencia)'; log('Aprobó una solicitud', a.id + ' · ' + money(a.P)); render(); toast('Solicitud aprobada. Ya se puede desembolsar.'); },
+  cond(el) { const m = document.getElementById('dec-m').value.trim(); if (!m) { document.getElementById('dec-err').textContent = 'Escriba la condición, por ejemplo: «Aprobar RD$ 60,000 en vez de 80,000».'; return; } ACT.approve(el); },
+  reject(el) { const m = clean(document.getElementById('dec-m').value.trim()); if (!m) { document.getElementById('dec-err').textContent = 'Para rechazar, escriba el motivo. El oficial y el historial lo verán.'; return; } const a = S.apps.find(x => x.id === el.dataset.v); a.estado = 'rechazada'; a.motivo = m; log('Rechazó una solicitud', a.id + ' · ' + m); render(); toast('Solicitud rechazada con su motivo.'); },
+  disburse(el) {
+    const a = S.apps.find(x => x.id === el.dataset.v); const num6 = 213 + S.loans.filter(l => l.nuevo).length; const id = 'SD-000' + num6;
+    const L = mkLoan([id, a.cid, a.prod, a.method, a.P, a.m, a.n, a.freq, iso(a.first), a.cid === 'C02' ? 'pedro' : 'miguel']); L.nuevo = true; L.disb = TODAY;
+    L.hist.push({ t: TODAY, txt: 'Desembolsado ' + money(a.P) + ' por ' + USERS[S.role].name }, { t: TODAY, txt: 'Aprobado por ' + a.aprobo });
+    S.loans.push(L); a.estado = 'desembolsada'; a.loan = id;
+    const medio = document.querySelector('#dmedio .chip.on')?.textContent || 'Efectivo por caja';
+    if (medio.startsWith('Efectivo') && S.caja.estado === 'abierta') S.caja.movs.push({ time: now(), tipo: 'Desembolso', ref: id, desc: CL[a.cid].nombre + ' · neto después de gastos de cierre', in: 0, out: r2(a.P - L.cargos), medio: 'Efectivo' });
+    log('Desembolsó', id + ' · ' + money(a.P)); go('prestamo', { id }); toast('Préstamo ' + id + ' desembolsado. El calendario ya está activo.');
+  },
+  docPrev(el) { const L = el.dataset.loan ? LN(el.dataset.loan) : null; const a = el.dataset.app ? S.apps.find(x => x.id === el.dataset.app) : null; const t = { contrato: 'Contrato de préstamo', pagare: 'Pagaré notarial', tabla: 'Tabla de amortización', saldo: 'Carta de saldo', intimacion: 'Intimación de pago' }[el.dataset.v]; openModal({ title: t, wide: true, body: docHTML(el.dataset.v, L, a), foot: `<button class="btn" data-act="close">Cerrar</button><button class="btn btn-p" data-act="demo" data-v="Se genera el PDF con los datos del préstamo y el logo de la empresa.">${ic('down')} Descargar PDF</button>` }); },
+  renew(el) {
+    const L = LN(el.dataset.v); const s = st(L); const nuevo = Math.max(r2(Math.ceil(L.P * 1.2 / 1000) * 1000), 1000);
+    openModal({ title: 'Renovar ' + L.id, body: `<p class="small muted" style="margin:0">El préstamo actual se salda con el nuevo; el cliente recibe la diferencia.</p><div class="field"><label for="rnP">Monto del nuevo préstamo (RD$)</label><input class="input" id="rnP" data-live="renew" data-id="${L.id}" value="${nuevo}"></div><div id="rnOut">${renewOut(L, nuevo)}</div>`, foot: `<button class="btn" data-act="close">Cancelar</button><button class="btn btn-p" data-act="doRenew" data-v="${L.id}">Crear solicitud de renovación</button>` });
+  },
+  doRenew(el) { const L = LN(el.dataset.v); const P = num(document.getElementById('rnP').value); const id = 'SD-S-000' + (344 + S.apps.filter(a => a.nueva).length); S.apps.unshift({ id, cid: L.cid, prod: L.prod, P, m: L.m, n: L.n, freq: L.freq, method: L.method, first: L.freq === 'mensual' ? addMonths(TODAY, 1) : TODAY + FREQ[L.freq].d * DAY, estado: 'por_aprobar', oficial: USERS[S.role].name, creada: TODAY, ing: CL[L.cid].ingreso, gas: CL[L.cid].ingreso * 0.35, deu: 0, docs: [1, 1, 1, 1, 0], nota: 'Renovación de ' + L.id + '. Saldo para cancelar hoy: ' + money(st(L).payoff) + '.', nueva: true }); log('Creó una renovación', id); go('solicitud', { id }); toast('Solicitud de renovación ' + id + ' creada.'); },
+  gasto() { openModal({ title: 'Registrar gasto', body: `<div class="grid g2"><div class="field"><label for="gcat">Categoría</label><select class="select" id="gcat"><option>Transporte</option><option>Papelería</option><option>Servicios</option><option>Mantenimiento</option><option>Movimiento del dueño</option></select></div><div class="field"><label for="gamt">Monto (RD$)</label><input class="input" id="gamt" inputmode="decimal" value="850.00"></div></div><div class="field"><label for="gdesc">Detalle</label><input class="input" id="gdesc" value="Botellones de agua"></div><div class="field"><label for="gmed">Pagado desde</label><select class="select" id="gmed"><option>Caja</option><option>Banreservas</option><option>Banco Popular</option></select></div><label class="check small"><input type="checkbox" checked id="gcomp"> Tengo el comprobante (foto o PDF)</label>`, foot: `<button class="btn" data-act="close">Cancelar</button><button class="btn btn-p" data-act="saveGasto">Guardar gasto</button>` }); },
+  saveGasto() { const g = { t: TODAY, cat: document.getElementById('gcat').value, desc: clean(document.getElementById('gdesc').value) || 'Gasto', amt: num(document.getElementById('gamt').value), medio: document.getElementById('gmed').value, comp: document.getElementById('gcomp').checked }; g.owner = g.cat === 'Movimiento del dueño'; if (g.amt <= 0) return toast('Escriba un monto mayor que cero.'); S.gastos.push(g); if (g.medio === 'Caja' && S.caja.estado === 'abierta') S.caja.movs.push({ time: now(), tipo: 'Gasto', ref: 'G-' + (913 + S.gastos.length), desc: g.desc, in: 0, out: g.amt, medio: 'Efectivo' }); log('Registró un gasto', g.desc + ' · ' + money(g.amt)); S.modal = null; render(); toast('Gasto registrado' + (g.medio === 'Caja' ? ' y descontado de la caja.' : '.')); },
+  rendir() { const amt = rutaCash(); openModal({ title: 'Recibir rendición de Pedro Santana', body: `<dl class="dl"><dt>Cobros en efectivo según los recibos</dt><dd>${money(amt)}</dd></dl><div class="field"><label for="rcnt">Efectivo contado (RD$)</label><input class="input big" id="rcnt" value="${amt.toFixed(2)}"></div><p class="small muted" style="margin:0">Si el conteo no coincide, la diferencia queda registrada a nombre del cobrador.</p>`, foot: `<button class="btn" data-act="close">Cancelar</button><button class="btn btn-p" data-act="doRendir">Confirmar recepción</button>` }); },
+  doRendir() { const amt = num(document.getElementById('rcnt').value); S.caja.movs.push({ time: now(), tipo: 'Rendición', ref: 'RR-0087', desc: 'Pedro Santana · cobros de ruta', in: amt, out: 0, medio: 'Efectivo' }); S.caja.rendido = true; log('Recibió rendición', 'Pedro Santana · ' + money(amt)); S.modal = null; render(); toast('Rendición recibida: ' + money(amt) + ' entran a la caja.'); },
+  closeCaja() {
+    const esp = cajaTotals().esperado; const cont = sum(DEN, ([d], k) => d * S.count.cnt[k]); const dif = r2(cont - esp); const mot = clean(document.getElementById('amot').value.trim());
+    if (dif && mot.length < 5) { document.getElementById('amotErr').textContent = 'Hay una diferencia de ' + money(dif) + '. Escriba el motivo para cerrar.'; document.getElementById('amot').focus(); return; }
+    if (!document.getElementById('aconf').checked) { toast('Marque la confirmación del conteo para cerrar.'); return; }
+    S.caja.estado = 'pendiente'; S.caja.cierre = { time: now(), contado: cont, esp, dif, motivo: mot }; log('Cerró caja', S.caja.id + ' · diferencia ' + money(dif)); go('caja'); toast('Caja cerrada. El supervisor recibió el aviso para aprobar el cierre.');
+  },
+  approveClose() { S.caja.estado = 'cerrada'; S.caja.cierre.aprobo = USERS[S.role].name; log('Aprobó cierre de caja', S.caja.id); render(); toast('Cierre aprobado. La diferencia quedó registrada.'); },
+};
+function renewOut(L, P) { const s = st(L); const neto = r2(P - s.payoff - P * 0.05); return `<dl class="dl"><dt>Nuevo préstamo</dt><dd>${money(P)}</dd><dt>Saldo para cancelar ${L.id}</dt><dd>− ${money(s.payoff, false)}</dd><dt>Gastos de cierre (5 %)</dt><dd>− ${money(P * 0.05, false)}</dd><dt class="tot">El cliente recibe</dt><dd class="tot" style="color:${neto < 0 ? 'var(--danger-ink)' : 'inherit'}">${money(neto)}</dd></dl>${neto < 0 ? '<div class="alert a-d">El monto no alcanza para saldar el préstamo actual.</div>' : ''}`; }
+const LIVE = {
+  sq(el) { const r = document.getElementById('srchRes'); r.outerHTML = searchModal(el.value); },
+  mq(el) { document.getElementById('mqRes').innerHTML = mSearch(el.value); },
+  cq(el) { S.flt.cq = el.value; const pos = el.selectionStart; render(); const i = document.getElementById('cq'); i.focus(); i.setSelectionRange(pos, pos); },
+  sim(el) { S.draft[el.id] = el.value; document.getElementById('simOut').innerHTML = simResult(S.draft); document.getElementById('dispOut').innerHTML = 'Ingreso disponible: <b>' + money(num(S.draft.ing) - num(S.draft.gas) - num(S.draft.deu)) + '</b>'; document.getElementById('apprOut').innerHTML = ic('shield') + '<span>La aprueba: <b>' + approver(num(S.draft.P)) + '</b></span>'; },
+  pay() { const L = LN(S.pay.id); const amt = num(document.getElementById('pamt').value); S.pay.amt = amt; document.getElementById('payPrev').innerHTML = payPreview(L, amt); LIVE.rec(); },
+  rec() { const i = document.getElementById('prec'); if (i) S.pay.rec = i.value; const L = LN(S.pay.id); const s = st(L); const box = document.getElementById('chg'); if (!box) return; const amt = currentPayAmt(L, s); const rec = num(S.pay.rec); const c = r2(rec - amt); box.className = 'alert ' + (rec && c < 0 ? 'a-d' : 'a-ok'); box.querySelector('b').textContent = rec ? (c < 0 ? 'Faltan ' + money(-c) : money(c)) : '—'; },
+  count(el) { S.count.cnt[+el.dataset.k] = Math.max(0, Math.round(num(el.value))); DEN.forEach(([d], k) => document.getElementById('sub' + k).textContent = money(S.count.cnt[k] * d, false)); const tot = sum(DEN, ([d], k) => d * S.count.cnt[k]); document.getElementById('cTot').textContent = money(tot); document.getElementById('arqRes').innerHTML = arqRes(); document.getElementById('atras').textContent = money(Math.max(0, tot - 10000)); },
+  dup(el) { const v = el.value.replace(/\D/g, ''); const hit = C.find(c => c.doc.replace(/\D/g, '') === v); const m = document.getElementById('dupMsg'); m.className = hit ? 'err' : 'hint'; m.innerHTML = hit ? `Ya existe: <a data-go="cliente" data-p='{"id":"${hit.id}"}' style="cursor:pointer">${hit.nombre}</a>. Abra su ficha en vez de duplicarlo.` : v.length >= 11 ? '✓ No hay otro cliente con esta cédula.' : 'Pruebe con 000-0012345-1 para ver el aviso de duplicado.'; },
+  pol() { document.getElementById('polOut').innerHTML = polOut(num(document.getElementById('pv-a').value), Math.round(num(document.getElementById('pv-d').value))); },
+  renew(el) { document.getElementById('rnOut').innerHTML = renewOut(LN(el.dataset.id), num(el.value)); },
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-go],[data-act]'); if (!el) return;
+  if (el.dataset.act) { const f = ACT[el.dataset.act]; if (f) { if (el.tagName === 'A' || el.tagName === 'BUTTON') ev.preventDefault(); f(el, ev); } return; }
+  ev.preventDefault(); const p = el.dataset.p ? JSON.parse(el.dataset.p) : {}; if (el.dataset.go === 'cobrar' || el.dataset.go === 'rcobrar') S.pay = null; go(el.dataset.go, p);
+});
+document.addEventListener('input', ev => { const k = ev.target.dataset?.live; if (k && LIVE[k]) LIVE[k](ev.target); });
+document.addEventListener('change', ev => { if (ev.target.dataset?.change === 'role') setRole(ev.target.value); else { const k = ev.target.dataset?.live; if (k && ev.target.tagName === 'SELECT' && LIVE[k]) LIVE[k](ev.target); } });
+document.addEventListener('submit', ev => {
+  ev.preventDefault();
+  if (ev.target.dataset.submit === 'newClient') {
+    const doc = clean(document.getElementById('nc-doc').value); if (C.find(c => c.doc.replace(/\D/g, '') === doc.replace(/\D/g, ''))) return toast('Ese cliente ya existe. Abra su ficha.');
+    const id = 'C' + (C.length + 1); const c = { id, nombre: clean(document.getElementById('nc-name').value), tipo: 'persona', doc, tel: clean(document.getElementById('nc-tel').value), dir: clean(document.getElementById('nc-dir').value) || document.getElementById('nc-city').value, trabajo: clean(document.getElementById('nc-job').value) || '—', clas: 'B', suc: 'Santo Domingo Este', alta: TODAY, ingreso: num(document.getElementById('nc-inc').value) };
+    C.push(c); CL[id] = c; log('Registró un cliente', c.nombre); go('cliente', { id }); toast('Cliente registrado. Ya puede crearle una solicitud.');
+  }
+});
+document.addEventListener('keydown', ev => {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'k' && S.role && S.role !== 'cobrador' && S.role !== 'cliente') { ev.preventDefault(); ACT.search(); }
+  if (ev.key === 'Escape' && S.modal) ACT.close();
+  if (ev.key === 'Enter' && S.modal?.search) { const f = document.querySelector('#srchRes .srch-it'); if (f) f.click(); }
+});
+seed();
+render();
+</script>
+</body></html>

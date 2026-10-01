@@ -194,7 +194,9 @@ El prototipo muestra, con datos ficticios, el recorrido principal y las pantalla
 | P40 Mi ruta y P41 Cobro en ruta (celular) | El trabajo del cobrador |
 | P43 Atrasos | La cobranza |
 
-**Enlace:** [Prototipo · Sistema de préstamos](https://claude.ai/artifact/WkkGvktguVUGjMsXhrKREv). Es privado: para que el cliente lo vea, hay que compartirlo desde el menú Compartir de la página.
+**Demo para el cliente (30/09/2026):** enlace público [jonasjavier.github.io/demo-prestamos](https://jonasjavier.github.io/demo-prestamos/), publicado con GitHub Pages desde el repositorio público `JonasJavier/demo-prestamos`, que contiene solo la demo y no se indexa en buscadores. Hay una copia privada en Claude: [Demo Sistema de Préstamos](https://claude.ai/artifact/L2HA2JGDX4T2Spk3saYvWa). Es una aplicación web navegable que abre directamente en el sistema: el visitante elige un rol (gerente, cajera, oficial, cobrador o cliente) o sigue el recorrido guiado de 12 pasos. Usa el motor de cálculo de [03](03-reglas-de-negocio.md) con datos ficticios y no guarda nada. Copia independiente, para alojarla en cualquier servidor estático: [`docs/prototipo/demo/index.html`](../prototipo/demo/index.html).
+
+**Lienzo de diseño anterior:** [Prototipo · Sistema de préstamos](https://claude.ai/artifact/WkkGvktguVUGjMsXhrKREv), las 13 pantallas estáticas que sirvieron de base.
 
 **Qué contiene:**
 - 13 pantallas y 2 componentes compartidos (menú lateral y barra superior), con datos ficticios.
