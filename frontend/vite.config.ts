@@ -8,7 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       // The Django API during development; same-origin in production (Caddy).
-      '/api': 'http://localhost:8000',
+      // Port 8800: another local project already owns the classic 8000.
+      '/api': 'http://127.0.0.1:8800',
     },
   },
 })

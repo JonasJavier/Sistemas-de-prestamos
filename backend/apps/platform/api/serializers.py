@@ -11,9 +11,11 @@ class RegistrationSerializer(serializers.Serializer):
     """Public signup payload: the company plus its first administrator (F19)."""
 
     company_legal_name = serializers.CharField(max_length=200)
-    company_trade_name = serializers.CharField(max_length=200, required=False, default="")
-    rnc = serializers.CharField(max_length=11, required=False, default="")
-    phone = serializers.CharField(max_length=30, required=False, default="")
+    company_trade_name = serializers.CharField(
+        max_length=200, required=False, allow_blank=True, default=""
+    )
+    rnc = serializers.CharField(max_length=11, required=False, allow_blank=True, default="")
+    phone = serializers.CharField(max_length=30, required=False, allow_blank=True, default="")
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
     email = serializers.EmailField()

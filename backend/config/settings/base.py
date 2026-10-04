@@ -11,7 +11,9 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # backend/
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
+# overwrite=True: this machine carries global env vars from other projects
+# (EMAIL_HOST, DEFAULT_FROM_EMAIL, ...); our .env must always win locally.
+environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-insecure-key-change-me")
 DEBUG = False
