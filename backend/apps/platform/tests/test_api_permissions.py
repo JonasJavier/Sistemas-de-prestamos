@@ -57,6 +57,30 @@ def test_owner_can_suspend_and_reactivate(platform_owner: User, tenant_admin: Us
     assert response.json()["status"] == "active"
 
 
+def test_owner_records_payment_and_company_activates(
+    platform_owner: User, tenant_admin: User
+) -> None:
+    client = APIClient()
+    client.force_login(platform_owner)
+    company_id = str(tenant_admin.company_id)
+    response = client.post(
+        f"/api/v1/plataforma/empresas/{company_id}/registrar-pago/",
+        {
+            "period_start": "2026-10-04",
+            "period_end": "2026-11-04",
+            "amount": "3500.00",
+            "method": "transfer",
+            "reference": "BHD-123456",
+        },
+        format="json",
+    )
+    assert response.status_code == 200, response.content
+    data = response.json()
+    assert data["status"] == "active"
+    assert data["subscription"]["status"] == "active"
+    assert data["subscription"]["paid_until"] == "2026-11-04"
+
+
 def test_anonymous_cannot_access_platform_panel(db) -> None:
     response = APIClient().get("/api/v1/plataforma/empresas/")
     assert response.status_code == 403

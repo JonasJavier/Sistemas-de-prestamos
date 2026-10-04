@@ -1,8 +1,11 @@
 """Row-level security for account tables that carry a company.
 
-``accounts_user`` is intentionally NOT protected: login must look a user
-up by email before any company is known. User isolation is enforced in
-the API layer and covered by cross-company tests.
+Two tables are intentionally NOT protected, because they are reached
+before any company is known (their isolation lives in the API layer and
+is covered by cross-company tests):
+- ``accounts_user``: login looks a user up by email.
+- ``accounts_invitation``: the public acceptance endpoint looks the
+  invitation up by its secret token, which is itself the credential.
 """
 
 from django.db import migrations
@@ -13,7 +16,6 @@ TABLES = [
     "accounts_role",
     "accounts_membership",
     "accounts_approvallimit",
-    "accounts_invitation",
 ]
 
 

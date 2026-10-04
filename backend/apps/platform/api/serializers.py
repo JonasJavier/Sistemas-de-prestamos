@@ -80,6 +80,21 @@ class StatusChangeSerializer(serializers.Serializer):
     reason = serializers.CharField(max_length=300)
 
 
+class PaymentRecordSerializer(serializers.Serializer):
+    """Manual subscription payment (decision 045: no gateway yet)."""
+
+    period_start = serializers.DateField()
+    period_end = serializers.DateField()
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=0)
+    method = serializers.ChoiceField(choices=["transfer", "deposit", "other"])
+    reference = serializers.CharField(max_length=100, required=False, default="")
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if attrs["period_end"] <= attrs["period_start"]:
+            raise serializers.ValidationError("El período pagado debe terminar después de empezar.")
+        return attrs
+
+
 class MyCompanySerializer(serializers.ModelSerializer):
     """What a company sees about itself in Ajustes - Suscripción (P83)."""
 

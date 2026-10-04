@@ -142,6 +142,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
+        # Suspended companies keep read access only (F19 step 3).
+        "apps.core.api.permissions.CompanyNotSuspendedOrReadOnly",
     ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -152,6 +154,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "registration": "5/hour",  # F19: public signup, per IP
+        "invitation": "30/hour",  # F17: public invitation lookup/accept, per IP
     },
 }
 

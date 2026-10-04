@@ -14,9 +14,11 @@ from apps.platform.api.permissions import IsPlatformAdmin
 from apps.platform.api.serializers import (
     CompanySerializer,
     MyCompanySerializer,
+    PaymentRecordSerializer,
     RegistrationSerializer,
     StatusChangeSerializer,
 )
+from apps.platform.models import Subscription, SubscriptionPayment
 
 
 class RegistrationView(APIView):
@@ -70,6 +72,31 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
         company = self.get_object()
         company.status = Company.Status.SUSPENDED
         company.status_reason = serializer.validated_data["reason"]
+        company.save(update_fields=["status", "status_reason", "updated_at"])
+        return Response(CompanySerializer(company).data)
+
+    @action(detail=True, methods=["post"], url_path="registrar-pago")
+    def record_payment(self, request: Request, pk: str | None = None) -> Response:
+        """F19 step 4: a recorded payment activates the company."""
+        serializer = PaymentRecordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        company = self.get_object()
+        subscription = company.subscription
+        SubscriptionPayment.objects.create(
+            subscription=subscription,
+            period_start=data["period_start"],
+            period_end=data["period_end"],
+            amount=data["amount"],
+            method=data["method"],
+            reference=data["reference"],
+            recorded_by=request.user,
+        )
+        subscription.status = Subscription.Status.ACTIVE
+        subscription.paid_until = data["period_end"]
+        subscription.save(update_fields=["status", "paid_until", "updated_at"])
+        company.status = Company.Status.ACTIVE
+        company.status_reason = ""
         company.save(update_fields=["status", "status_reason", "updated_at"])
         return Response(CompanySerializer(company).data)
 
