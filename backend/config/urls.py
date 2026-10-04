@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/v1/csrf/", csrf, name="csrf"),
     path("api/v1/", include("apps.platform.api.urls")),
     path("api/v1/", include("apps.accounts.api.urls")),
+    path("api/v1/", include("apps.core.api.urls")),
     path("api/v1/auth/", include("allauth.headless.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

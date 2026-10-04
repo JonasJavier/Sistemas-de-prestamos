@@ -1,5 +1,7 @@
-from rest_framework import status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from django.utils import timezone
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -7,30 +9,104 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.accounts import services
+from apps.accounts.api.permissions import IsCompanyManager, is_company_manager
 from apps.accounts.api.serializers import (
+    CompanyUserSerializer,
     InvitationAcceptSerializer,
     InvitationCreateSerializer,
     InvitationDetailSerializer,
+    PendingInvitationSerializer,
+    RoleSerializer,
 )
-from apps.accounts.models import Invitation, Membership
+from apps.accounts.models import Invitation, Role, User
+from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.core.tenancy import company_context
 
-# Until the full permission matrix lands, inviting is restricted to the
-# company's management roles (doc 06 - section 3: Usuarios -> G, A).
-INVITING_ROLES = {"Gerente", "Administrador"}
+
+class MeView(APIView):
+    """Who am I: the SPA decides tenant vs platform navigation with this."""
+
+    def get(self, request: Request) -> Response:
+        user = request.user
+        return Response(
+            {
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_platform_admin": user.is_platform_admin,
+                "is_manager": is_company_manager(request) if user.company_id else False,
+                "company_id": str(user.company_id) if user.company_id else None,
+            }
+        )
 
 
-def _require_company_admin(request: Request) -> None:
-    is_admin = Membership.objects.filter(
-        user=request.user, role__name__in=INVITING_ROLES
-    ).exists()
-    if not is_admin:
-        raise PermissionDenied("Solo el gerente o el administrador pueden invitar usuarios.")
+class RoleListView(APIView):
+    """Roles of the caller's company, for the invitation form (RLS scopes it)."""
+
+    def get(self, request: Request) -> Response:
+        roles = Role.objects.order_by("name")
+        return Response(RoleSerializer(roles, many=True).data)
+
+
+class CompanyUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Users of the caller's company (P72). Managers only."""
+
+    permission_classes = [IsCompanyManager, CompanyNotSuspendedOrReadOnly]
+    serializer_class = CompanyUserSerializer
+
+    def get_queryset(self):
+        return (
+            User.objects.filter(company_id=self.request.user.company_id)
+            .prefetch_related("memberships__branch", "memberships__role")
+            .order_by("email")
+        )
+
+    def _set_active(self, request: Request, pk: str, active: bool) -> Response:
+        user = self.get_queryset().get(pk=pk)
+        if user == request.user:
+            raise ValidationError({"detail": "No puedes desactivar tu propia cuenta."})
+        user.is_active = active
+        user.save(update_fields=["is_active"])
+        return Response(CompanyUserSerializer(user).data)
+
+    @action(detail=True, methods=["post"])
+    def deactivate(self, request: Request, pk: str) -> Response:
+        return self._set_active(request, pk, active=False)
+
+    @action(detail=True, methods=["post"])
+    def activate(self, request: Request, pk: str) -> Response:
+        return self._set_active(request, pk, active=True)
+
+
+class PendingInvitationsView(APIView):
+    """Open invitations of the company, with revocation (F17)."""
+
+    permission_classes = [IsCompanyManager, CompanyNotSuspendedOrReadOnly]
+
+    def get(self, request: Request, pk: str | None = None) -> Response:
+        pending = (
+            Invitation.objects.filter(
+                company_id=request.user.company_id,
+                accepted_at__isnull=True,
+                expires_at__gt=timezone.now(),
+            )
+            .select_related("branch", "role", "invited_by")
+            .order_by("-created_at")
+        )
+        return Response(PendingInvitationSerializer(pending, many=True).data)
+
+    def delete(self, request: Request, pk: str) -> Response:
+        Invitation.objects.filter(
+            company_id=request.user.company_id, pk=pk, accepted_at__isnull=True
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InvitationCreateView(APIView):
+    permission_classes = [IsCompanyManager, CompanyNotSuspendedOrReadOnly]
+
     def post(self, request: Request) -> Response:
-        _require_company_admin(request)
         serializer = InvitationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data

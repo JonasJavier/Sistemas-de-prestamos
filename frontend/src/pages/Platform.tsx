@@ -1,0 +1,188 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+
+import {
+  listCompanies,
+  reactivateCompany,
+  recordPayment,
+  suspendCompany,
+  type PaymentPayload,
+  type PlatformCompany,
+} from '../api/platform'
+import { Alert, Button, Card, Field, Input } from '../components/ui'
+import { STATUS_BADGES } from './Dashboard'
+
+export function PlatformPage() {
+  const queryClient = useQueryClient()
+  const [paying, setPaying] = useState<PlatformCompany | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const companies = useQuery({ queryKey: ['platform-companies'], queryFn: listCompanies })
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['platform-companies'] })
+
+  const suspend = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => suspendCompany(id, reason),
+    onSuccess: refresh,
+  })
+  const reactivate = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      reactivateCompany(id, reason),
+    onSuccess: refresh,
+  })
+  const pay = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PaymentPayload }) => recordPayment(id, data),
+    onSuccess: () => {
+      setPaying(null)
+      setMessage('Pago registrado: la empresa quedó activa.')
+      refresh()
+    },
+    onError: () => setMessage('No se pudo registrar el pago. Revisa las fechas y el monto.'),
+  })
+
+  return (
+    <>
+      <h1 className="text-xl font-semibold">Empresas de la plataforma</h1>
+      {message ? <Alert tone="info">{message}</Alert> : null}
+
+      <Card>
+        {companies.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
+        {companies.data ? (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-edge text-left text-[12.5px] text-muted">
+                <th className="py-2 pr-3">Empresa</th>
+                <th className="py-2 pr-3">Estado</th>
+                <th className="py-2 pr-3">Prueba hasta</th>
+                <th className="py-2 pr-3">Pagada hasta</th>
+                <th className="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {companies.data.results.map((company) => {
+                const badge = STATUS_BADGES[company.status]
+                return (
+                  <tr key={company.id} className="border-b border-edge/60 last:border-0">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">
+                        {company.trade_name || company.legal_name}
+                      </div>
+                      <div className="text-muted">{company.rnc || 'Sin RNC'}</div>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${badge.classes}`}
+                      >
+                        {badge.text}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">{company.trial_ends_on ?? '—'}</td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {company.subscription?.paid_until ?? '—'}
+                    </td>
+                    <td className="py-2 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="secondary" onClick={() => setPaying(company)}>
+                          Registrar pago
+                        </Button>
+                        {company.status === 'suspended' ? (
+                          <Button
+                            variant="secondary"
+                            onClick={() =>
+                              reactivate.mutate({ id: company.id, reason: 'Reactivada por el dueño' })
+                            }
+                          >
+                            Reactivar
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              const reason = window.prompt('Motivo de la suspensión:')
+                              if (reason) suspend.mutate({ id: company.id, reason })
+                            }}
+                          >
+                            Suspender
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        ) : null}
+      </Card>
+
+      {paying ? <PaymentForm company={paying} onCancel={() => setPaying(null)} onSubmit={(data) => pay.mutate({ id: paying.id, data })} pending={pay.isPending} /> : null}
+    </>
+  )
+}
+
+function PaymentForm({
+  company,
+  onCancel,
+  onSubmit,
+  pending,
+}: {
+  company: PlatformCompany
+  onCancel: () => void
+  onSubmit: (data: PaymentPayload) => void
+  pending: boolean
+}) {
+  const [data, setData] = useState<PaymentPayload>({
+    period_start: new Date().toISOString().slice(0, 10),
+    period_end: '',
+    amount: '',
+    method: 'transfer',
+    reference: '',
+  })
+
+  return (
+    <Card>
+      <h2 className="mb-3 text-base font-semibold">
+        Registrar pago · {company.trade_name || company.legal_name}
+      </h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Inicio del período">
+          <Input
+            type="date"
+            value={data.period_start}
+            onChange={(e) => setData({ ...data, period_start: e.target.value })}
+          />
+        </Field>
+        <Field label="Fin del período">
+          <Input
+            type="date"
+            value={data.period_end}
+            onChange={(e) => setData({ ...data, period_end: e.target.value })}
+          />
+        </Field>
+        <Field label="Monto (RD$)">
+          <Input
+            inputMode="decimal"
+            value={data.amount}
+            onChange={(e) => setData({ ...data, amount: e.target.value })}
+          />
+        </Field>
+        <Field label="Referencia (opcional)">
+          <Input
+            value={data.reference}
+            onChange={(e) => setData({ ...data, reference: e.target.value })}
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Button
+          onClick={() => onSubmit(data)}
+          disabled={pending || !data.period_end || !data.amount}
+        >
+          {pending ? 'Registrando…' : 'Registrar y activar'}
+        </Button>
+        <Button variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </Card>
+  )
+}

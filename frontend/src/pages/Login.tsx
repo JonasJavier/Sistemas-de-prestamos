@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { login } from '../api/auth'
+import { login, mfaAuthenticate } from '../api/auth'
 import { ApiError } from '../api/client'
 import { Alert, Brand, Button, Card, Field, Input } from '../components/ui'
 
@@ -20,20 +20,29 @@ export function LoginPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [message, setMessage] = useState<string | null>(null)
+  const [totpStep, setTotpStep] = useState(false)
+  const [code, setCode] = useState('')
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
+
+  const finish = async () => {
+    await queryClient.invalidateQueries()
+    navigate({ to: '/' })
+  }
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => login(data.email, data.password),
     onSuccess: async (result) => {
       if (result.user) {
-        await queryClient.invalidateQueries({ queryKey: ['session'] })
-        navigate({ to: '/' })
+        await finish()
         return
       }
       if (result.pendingFlow === 'verify_email') {
         setMessage('Tu correo aún no está confirmado. Busca el enlace que te enviamos.')
+      } else if (result.pendingFlow === 'mfa_authenticate') {
+        setMessage(null)
+        setTotpStep(true)
       } else if (result.pendingFlow) {
-        setMessage('Falta un paso de verificación adicional (próximamente en esta pantalla).')
+        setMessage('Falta un paso de verificación adicional.')
       }
     },
     onError: (error) => {
@@ -44,6 +53,47 @@ export function LoginPage() {
       }
     },
   })
+
+  const totpMutation = useMutation({
+    mutationFn: () => mfaAuthenticate(code),
+    onSuccess: finish,
+    onError: () => setMessage('Código incorrecto. Intenta con el siguiente de tu app.'),
+  })
+
+  if (totpStep) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="text-center">
+            <Brand />
+            <p className="mt-1 text-sm text-muted">Verificación en dos pasos</p>
+          </div>
+          <Card>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                totpMutation.mutate()
+              }}
+            >
+              {message ? <Alert tone="danger">{message}</Alert> : null}
+              <Field label="Código de tu app autenticadora">
+                <Input
+                  inputMode="numeric"
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </Field>
+              <Button type="submit" className="w-full" disabled={totpMutation.isPending}>
+                {totpMutation.isPending ? 'Verificando…' : 'Verificar'}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">

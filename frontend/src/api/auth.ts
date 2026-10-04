@@ -56,6 +56,14 @@ export async function logout(): Promise<void> {
   }
 }
 
+export async function mfaAuthenticate(code: string): Promise<SessionUser | null> {
+  const response = await api<AllauthResponse>(`${BASE}/auth/2fa/authenticate`, {
+    method: 'POST',
+    body: { code },
+  })
+  return response.data?.user ?? null
+}
+
 export async function verifyEmail(key: string): Promise<void> {
   try {
     await api(`${BASE}/auth/email/verify`, { method: 'POST', body: { key } })
