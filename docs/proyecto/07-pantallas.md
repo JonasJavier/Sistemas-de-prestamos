@@ -1,6 +1,6 @@
 # 07 · Mapa de pantallas y wireframes
 
-**Estado:** en curso · 28/09/2026. Las decisiones 037 y 038 (§1) están aprobadas.
+**Estado:** aprobado el 04/10/2026 (decisiones 037–039) · ese mismo día se actualizó al alcance multitenant de Cobradía: se añaden el registro público, la pantalla de suscripción y el panel de plataforma del dueño (decisiones 041, 045 y 046).
 
 Este documento es el inventario de **todas** las pantallas del sistema: qué muestran, qué permiten hacer, quién las usa y en qué fase se construyen. Los permisos exactos están en el [paso 6](06-seguridad-y-permisos.md#3-matriz-de-permisos-por-rol). Las pantallas clave se dibujan en el prototipo navegable (§6).
 
@@ -15,7 +15,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 
 ```text
 ┌──────────────┬──────────────────────────────────────────────────────┐
-│ ◆ Marca      │ [🔍 Buscar cliente, cédula, préstamo…  Ctrl+K]  Sucursal ▾  🔔 3  ✓ 2  JE ▾ │
+│ ◆ Cobradía   │ [🔍 Buscar cliente, cédula, préstamo…  Ctrl+K]  Sucursal ▾  🔔 3  ✓ 2  JE ▾ │
 │              ├──────────────────────────────────────────────────────┤
 │ Inicio       │ Inicio › Clientes › María Gómez           [Acción principal] │
 │ Operación  ▾ │                                                      │
@@ -56,6 +56,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P02 | Aceptar invitación | `/invitacion/:codigo` | Crear contraseña, activar 2FA con QR, códigos de respaldo; el cobrador acepta el seguimiento de ubicación (031) | Invitados | 1 |
 | P03 | Recuperar contraseña | `/recuperar` | Enlace por correo | Todos | 1 |
 | P04 | Mi cuenta | `/cuenta` | Perfil, 2FA, códigos de respaldo, sesiones abiertas, tema | Todos | 1 |
+| P05 | Registro de empresa | `/registro` (pública) | Datos de la financiera y de quien se registra, verificación del correo con código, y creación de la empresa en prueba con su sucursal, su administrador y sus catálogos sembrados (F19) | Visitantes | 1 |
 
 ### Inicio
 
@@ -155,6 +156,18 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P80 | Mensajería | `/ajustes/mensajes` | Proveedor, plantillas y registro de envíos | G A | 9 |
 | P81 | Auditoría | `/ajustes/auditoria` | Visor con filtros por usuario, fecha, módulo y acción | G A Au | 1 |
 | P82 | Migración | `/ajustes/migracion` | Subir las plantillas de Excel, ver el reporte de errores, cuadre y confirmación | G A | 3 y 10 |
+| P83 | Suscripción | `/ajustes/suscripcion` | Estado de la prueba o del plan, días restantes, datos para pagar (transferencia o depósito), historial de pagos y avisos de modo soporte activo (F19, 045 y 046) | G A | 1 |
+
+### Plataforma (solo el dueño de Cobradía)
+
+Rutas bajo `/plataforma`, visibles únicamente para la cuenta de plataforma (`is_platform_admin`); ninguna empresa las ve.
+
+| # | Pantalla | Ruta | Contenido y acciones | Fase |
+| --- | --- | --- | --- | --- |
+| PT1 | Empresas | `/plataforma/empresas` | Tabla por estado (en prueba, activa, suspendida, cerrada) con días de prueba y último pago · Ficha: datos, sucursales y usuarios (conteos), *Registrar pago*, *Suspender* o *Reactivar* con motivo, *Modo soporte* | 1 |
+| PT2 | Tablero de la plataforma | `/plataforma` | Empresas activas y en prueba, conversión de la prueba, registros recientes, pagos por vencer y métricas agregadas de uso | 7 |
+| PT3 | Planes | `/plataforma/planes` | Planes con precio y límites (usuarios, sucursales, préstamos activos); asignación por empresa | 10 |
+| PT4 | Modo soporte | Desde la ficha de la empresa | Motivo y duración; acceso de solo lectura, visible para la empresa y auditado (046) | 7 |
 
 ## 4. Pantallas fuera del sistema interno
 
@@ -211,4 +224,5 @@ El resto de las pantallas siguen los mismos patrones y se dibujan durante la con
 | --- | --- | --- |
 | 037 | Wireframes como prototipo navegable en HTML, más este inventario | Aprobada |
 | 038 | Menú lateral plegable, barra superior con búsqueda, y barra inferior en el celular | Aprobada |
-| 039 | Inventario de pantallas, rutas en español y patrones de interfaz de este documento | Propuesta |
+| 039 | Inventario de pantallas, rutas en español y patrones de interfaz de este documento | Aprobada |
+| 045–046 | Pantallas nuevas del alcance SaaS: P05 Registro, P83 Suscripción y el panel de plataforma PT1–PT4 | Aprobada |

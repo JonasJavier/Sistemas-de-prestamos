@@ -1,10 +1,10 @@
 # 02 · Visión, alcance y módulos
 
-**Estado:** aprobado el 28/09/2026 (decisiones 012–020)
+**Estado:** aprobado el 28/09/2026 (decisiones 012–020) · **actualizado el 04/10/2026** al alcance SaaS multitenant de **Cobradía** (decisiones 041–046)
 
 ## 1. Visión
 
-> El sistema con el que una financiera dominicana mediana presta, cobra y controla su dinero sin hojas de cálculo: cada peso se explica, cada cobro toma segundos y cada decisión queda registrada.
+> **Cobradía** es la plataforma con la que las financieras dominicanas prestan, cobran y controlan su dinero sin hojas de cálculo: cada peso se explica, cada cobro toma segundos y cada decisión queda registrada. Cualquier financiera se registra en línea, prueba gratis y opera el mismo día.
 
 | Objetivo | Cómo se mide |
 | --- | --- |
@@ -12,20 +12,26 @@
 | **Cero descuadres** | Caja, recibos, cuentas y cartera coinciden al centavo; toda diferencia de caja queda justificada y aprobada |
 | **Control interno** | Roles con separación de funciones, aprobaciones por monto, cierre de caja y auditoría de cada cambio |
 | **Visibilidad diaria** | Un tablero que dice qué cobrar hoy, quién está en atraso y cuánto dinero hay en cada caja |
-| **Profesional** | Documentos correctos, diseño moderno en morado y verde, y uso cómodo en escritorio y celular |
+| **Profesional** | Documentos correctos, diseño moderno en verde profundo y ámbar (decisión 047), y uso cómodo en escritorio y celular |
+| **Comercializable** | Una financiera nueva se registra sola, queda operando en su prueba el mismo día, y sus datos están aislados de las demás; el dueño administra la plataforma sin ver los datos de nadie |
 
-## 2. Perfil de la compañía (aprobado)
+## 2. Perfil de cada empresa cliente (aprobado)
+
+Cobradía se diseña para la financiera que describe la decisión 012; cada empresa registrada (tenant) tiene su propia configuración, sucursales, usuarios y datos.
 
 | # | Definición | Qué implica para el diseño |
 | --- | --- | --- |
 | 012 | **Compañía mediana:** de 2 a 5 sucursales, de 5 a 30 usuarios y cobradores en ruta | Roles y permisos por sucursal, caja por cajero, rutas por cobrador, aprobaciones por monto y reportes por sucursal. También funciona para una compañía pequeña |
 | 013 | **Cuatro tipos de préstamo:** personales sin garantía, con garantía de vehículo, con garantía hipotecaria y microcrédito a negocios | Un motor de productos configurable, un módulo de **garantías** (bienes), clientes que pueden ser personas o empresas, y evaluación de la capacidad de pago de personas y de negocios |
 | 028 | **Solo aplicación web**, sin app móvil ni modo sin conexión (reemplaza a la 014) | Los cobradores usan la misma web, adaptada al celular, con internet y un acceso directo en la pantalla de inicio. «Mi ruta» se construye en la fase 4 |
-| 015 | **Documentos legales:** los redactamos nosotros y el cliente los valida con su abogado | Se construyen en la fase 8 como plantillas editables marcadas «pendiente de validación legal». No se lanza sin esa validación |
+| 015 | **Documentos legales:** los redactamos nosotros y el primer cliente los valida con su abogado | Se construyen en la fase 8 como plantillas editables marcadas «pendiente de validación legal». Cada empresa puede ajustar sus plantillas; las de fábrica no se lanzan sin esa validación |
+| 045 | **Registro público con prueba:** cualquier financiera se registra en línea y prueba gratis 30 días; al vencer, queda en solo lectura hasta activar su suscripción | Flujo F19, panel de plataforma para el dueño, y estructura de planes y límites preparada desde la fase 1 |
 
 ## 3. Usuarios y roles
 
 Estos roles son plantillas de partida; los permisos finos se definen en el paso 6. Una misma persona puede tener varios roles; en una compañía pequeña, el gerente suele ser también el administrador.
+
+Por encima de las empresas está el **dueño de la plataforma** (Jonas), que no es un rol de empresa: administra Cobradía desde su propio panel (empresas, prueba y suscripción, planes, métricas y modo soporte) y **no ve los datos de negocio de las empresas** (decisión 046).
 
 | Rol | Qué hace | Su pantalla principal |
 | --- | --- | --- |
@@ -129,6 +135,17 @@ La navegación tiene seis grupos: Inicio, Operación, Cobranza, Finanzas, Report
 | Plantillas de documentos | 3 las básicas, 8 las legales |
 | Abogados, notarios, alguaciles y testigos | 8 |
 
+### Plataforma (solo el dueño de Cobradía)
+
+Estas pantallas no las ve ninguna empresa; son la administración del negocio SaaS (decisiones 045 y 046).
+
+| Módulo | Qué hace | Fase |
+| --- | --- | --- |
+| **Empresas** | Lista y ficha de cada empresa: estado (en prueba, activa, suspendida, cerrada), días de prueba, sucursales y usuarios; suspender o reactivar con motivo; registrar el pago de la suscripción (manual al inicio) | 1 |
+| **Métricas** | Empresas activas y en prueba, conversión de la prueba, usuarios y volúmenes de uso agregados; sin datos de negocio de nadie | 7 |
+| **Planes y límites** | Definición de los planes (precio, usuarios, sucursales, préstamos activos) y asignación por empresa; los valores se deciden antes del lanzamiento | 10 |
+| **Modo soporte** | Acceso temporal de solo lectura a una empresa, con motivo, visible para ella y auditado | 7 |
+
 ### Comunicación (fase 9)
 
 - Recordatorios de pago y recibos por WhatsApp, SMS o correo.
@@ -155,6 +172,8 @@ La navegación tiene seis grupos: Inicio, Operación, Cobranza, Finanzas, Report
 | Plantillas legales editables, con estado de validación | Documentos correctos y fáciles de corregir | 8 |
 | Documentos con código QR de verificación | Evitar recibos y cartas falsificados | 9 |
 | WhatsApp y portal del cliente | Menos llamadas, menos atrasos | 9 |
+| Aislamiento real entre empresas (RLS en la base de datos) | La referencia dejaba elegir garantes de otra empresa (#27) | 1 |
+| Modo soporte auditado en lugar de acceso libre del proveedor | Confianza para entregarle los datos a la plataforma | 7 |
 
 ## 7. Principios de experiencia de uso
 
@@ -182,7 +201,7 @@ Las fases son etapas internas de construcción, ordenadas por dependencias: cada
 
 | Fase | Qué se construye |
 | --- | --- |
-| 1 · Cimientos | Repositorio, Docker, integración continua, inicio de sesión con 2FA, usuarios, roles, sucursales, ajustes de la empresa, auditoría y el esqueleto visual |
+| 1 · Cimientos | Repositorio, Docker, integración continua, multitenancy (empresas, RLS, registro público con prueba y panel de plataforma básico), inicio de sesión con 2FA, usuarios, roles, sucursales, ajustes de la empresa, auditoría y el esqueleto visual |
 | 2 · Clientes y garantías | Personas y empresas, garantes, referencias, archivos privados, garantías y búsqueda global |
 | 3 · Originación | Productos, motor financiero, simulador, solicitud → evaluación → aprobación, cuentas, desembolso, calendario y documentos básicos |
 | 4 · Cobros y caja | Pagos, recibos, reversos, mora, liquidación, caja por cajero, Mi ruta en la web y lista de atrasos |
@@ -194,7 +213,7 @@ Las fases son etapas internas de construcción, ordenadas por dependencias: cada
 | 10 · Aceptación y lanzamiento | Pruebas de aceptación con el cliente, migración de datos, validación legal, endurecimiento, respaldos, capacitación y salida a producción |
 
 **Cómo reducimos el riesgo de un solo lanzamiento:**
-- **Demostración al cierre de cada fase:** el cliente la ve en el entorno de pruebas y los ajustes se hacen en ese momento, no al final.
+- **Demostración al cierre de cada fase:** el primer cliente la ve en el entorno de pruebas y los ajustes se hacen en ese momento, no al final.
 - **Pruebas automáticas acumulativas:** cada fase deja pruebas que protegen a las anteriores.
 - **Migración ensayada:** la migración de datos se ensaya al menos dos veces antes del día real.
 - **Condiciones para lanzar:**
@@ -207,9 +226,10 @@ Las fases son etapas internas de construcción, ordenadas por dependencias: cada
 
 ## 9. Fuera de alcance y asesoría externa
 
-- **No se hará:**
-  - Multiempresa, registro de compañías, licencias y planes.
-  - Buró de crédito compartido.
+- **No se hará (por ahora):**
+  - Buró de crédito compartido entre las empresas de la plataforma (existe en la referencia; exige asesoría legal propia).
+  - Pasarela de pago para la suscripción (Azul, CardNet o similar): el cobro inicial es manual y la pasarela se integra después del lanzamiento (decisión 045).
+  - Subdominios por empresa y marca blanca (decisión 043: un solo dominio; queda como opción futura).
   - Aplicación móvil nativa o de tiendas y modo sin conexión: todo es web (decisión 028).
 - **Requiere asesoría antes del lanzamiento:**
   - Tasas y mora máximas permitidas.
@@ -217,7 +237,7 @@ Las fases son etapas internas de construcción, ordenadas por dependencias: cada
   - Comprobantes fiscales (NCF / e-CF) sobre intereses y cargos.
   - Contenido de los contratos.
 
-  El cliente lo consultará con su abogado y su contador. El sistema se diseña para poder configurarlos, sin asumir la respuesta.
+  El primer cliente lo consultará con su abogado y su contador; cada empresa que se registre es responsable de su propia configuración legal y fiscal, y Cobradía lo deja claro en sus términos de servicio. Además, operar la plataforma exige asesoría propia del dueño: términos de servicio, acuerdo de tratamiento de datos (Ley 172-13) y facturación de la suscripción (NCF). El sistema se diseña para poder configurarlos, sin asumir la respuesta.
 
 ## 10. Decisiones de este paso
 
@@ -233,3 +253,6 @@ Las fases son etapas internas de construcción, ordenadas por dependencias: cada
 | 018 | Ajustes en el menú principal, organizado en seis grupos | Aprobada |
 | 019 | Clientes personas y empresas | Aprobada |
 | 020 | Orden de fases por dependencias (§8), decidido por el responsable técnico | Aprobada |
+| 041 | Giro a SaaS multitenant bajo la marca Cobradía; Jonas es el dueño de la plataforma | Aprobada |
+| 045 | Registro público con prueba de 30 días; suspensión en solo lectura al vencer; cobro manual de la suscripción al inicio | Aprobada |
+| 046 | El dueño ve métricas agregadas, no datos de negocio; modo soporte temporal y auditado | Aprobada |

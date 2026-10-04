@@ -1,6 +1,6 @@
 # 05 · Modelo de datos y estados
 
-**Estado:** aprobado el 28/09/2026 (decisiones 029–032)
+**Estado:** aprobado el 28/09/2026 (decisiones 029–032) · **actualizado el 04/10/2026** al alcance multitenant (decisiones 041, 042, 045 y 046)
 
 Aquí se describe **qué se guarda y cómo se relaciona**. Los nombres de modelos y campos van en inglés (decisión 010) y la explicación, en español. Este documento es la guía de las migraciones de la Fase 1 en adelante: si algo cambia durante la construcción, se actualiza aquí primero.
 
@@ -11,6 +11,7 @@ Aquí se describe **qué se guarda y cómo se relaciona**. Los nombres de modelo
 | 029 | **Solo pesos, preparado para dólares** | Cada importe lleva su moneda (`currency`, `DOP` por defecto). Activar `USD` no obliga a migrar |
 | 030 | **Numeración por sucursal con prefijo** | Por ejemplo, préstamo `SD-000125` y recibo `SD-R-004512`: una secuencia sin saltos por sucursal y por tipo de documento |
 | 031 | **Seguimiento continuo del cobrador en horario laboral** | Mientras la sesión de ruta está abierta, el celular envía su ubicación cada pocos minutos, además de la ubicación de cada cobro y gestión. Ver §6 |
+| 041–042 | **Multiempresa con base compartida y RLS** | Todo registro operativo lleva `company`; PostgreSQL aplica Row-Level Security con la empresa de la sesión; numeraciones, catálogos y ajustes son por empresa |
 
 ## 2. Convenciones
 
@@ -25,7 +26,7 @@ Aquí se describe **qué se guarda y cómo se relaciona**. Los nombres de modelo
 | Borrado | **Nunca** se borra un registro financiero. Lo operativo se desactiva (`is_active`) o cambia de estado |
 | Versionado | Las condiciones del préstamo y su calendario se versionan; una versión nunca se modifica, solo se reemplaza por otra |
 | Sucursal | Todo registro operativo lleva `branch` |
-| Una sola compañía | `Company` tiene una única fila. No hay `company_id` en las tablas (decisión 000) |
+| Empresa (tenant) | Todo registro operativo lleva `company` además de `branch`. En cada petición, la API fija la empresa de la sesión en la conexión (`SET app.current_company`) y las políticas RLS de PostgreSQL solo dejan ver filas de esa empresa: el ORM filtra primero y RLS es la barrera si el código falla. Las tareas de Celery hacen lo mismo. Son globales (sin `company`) solo los catálogos de la plataforma: geografía, planes y las propias empresas |
 
 ## 3. Mapa general
 
@@ -64,23 +65,34 @@ flowchart LR
 
 ## 4. Entidades por módulo
 
-### 4.1 `core` · Empresa, sucursales y utilidades comunes
+### 4.0 `platform` · La plataforma Cobradía (solo el dueño)
 
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
-| `Company` | La compañía (una sola fila) | Razón social, nombre comercial, RNC, dirección, teléfonos, correo, logo | Alimenta el encabezado de los documentos |
+| `Plan` | Un plan comercial | Nombre, precio mensual, límites (usuarios, sucursales, préstamos activos), `is_active` | Los valores se definen antes del lanzamiento (045); la prueba usa un plan especial |
+| `Subscription` | La suscripción de una empresa | `company`, `plan`, estado, inicio, pagada hasta | Una vigente por empresa |
+| `SubscriptionPayment` | Un pago de suscripción | Suscripción, período cubierto, monto, medio, referencia, quién lo registró, comprobante | Manual al inicio; la pasarela se integra después (045) |
+| `SupportAccessGrant` | Modo soporte (046) | `company`, quién, motivo, desde, hasta, revocado | Solo lectura; visible para la empresa; 72 horas por defecto |
+
+Estas tablas no llevan RLS por empresa: solo las ve el dueño de la plataforma, salvo la suscripción propia, que cada empresa ve en «Ajustes › Suscripción».
+
+### 4.1 `core` · Empresas, sucursales y utilidades comunes
+
+| Modelo | Qué guarda | Campos clave | Reglas |
+| --- | --- | --- | --- |
+| `Company` | Una empresa (tenant) | Razón social, nombre comercial, RNC, dirección, teléfonos, correo, logo; `status` (en prueba, activa, suspendida, cerrada), `trial_ends_on` | La crea el registro público (F19) con su sucursal principal y sus catálogos sembrados; alimenta el encabezado de los documentos de esa empresa |
 | `Branch` | Sucursal | `code` (prefijo, p. ej. `SD`), nombre, dirección, teléfono, `is_active` | El código es único y no cambia |
-| `Holiday` | Feriado | Fecha, nombre, `is_confirmed` | Los de fecha fija se generan cada año; los trasladables se confirman |
-| `Sequence` | Numeración | `branch`, `doc_type` (préstamo, recibo, solicitud, caja, carta de saldo, gasto), `prefix`, `next_value`, relleno de ceros | Se toma con bloqueo de fila, dentro de la misma transacción que el documento: sin saltos ni duplicados |
+| `Holiday` | Feriado (por empresa) | Fecha, nombre, `is_confirmed` | Se siembran al crear la empresa; los de fecha fija se generan cada año y los trasladables los confirma cada empresa |
+| `Sequence` | Numeración | `company`, `branch`, `doc_type` (préstamo, recibo, solicitud, caja, carta de saldo, gasto), `prefix`, `next_value`, relleno de ceros | Se toma con bloqueo de fila, dentro de la misma transacción que el documento: sin saltos ni duplicados |
 | `ApprovalRequest` | Autorización en el momento | Tipo (condonar, reversar, descuento, castigo, anular, reestructurar, diferencia de caja), objeto, monto, motivo, solicitante, estado, quién decidió, cuándo, nota | Un mecanismo único para todas las autorizaciones |
-| `Province`, `Municipality`, `Sector` | Catálogo geográfico | Nombre y jerarquía | Corrige las ciudades en texto libre (#23) |
-| `Reason` | Catálogo de motivos | Tipo (rechazo, reverso, castigo, anulación, bloqueo…) y texto | Además del motivo de catálogo, siempre hay una nota libre |
+| `Province`, `Municipality`, `Sector` | Catálogo geográfico (global de la plataforma) | Nombre y jerarquía | Corrige las ciudades en texto libre (#23); lo mantiene la plataforma, no cada empresa |
+| `Reason` | Catálogo de motivos (por empresa) | Tipo (rechazo, reverso, castigo, anulación, bloqueo…) y texto | Se siembra al crear la empresa; además del motivo de catálogo, siempre hay una nota libre |
 
 ### 4.2 `accounts` · Usuarios y acceso
 
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
-| `User` | Persona que usa el sistema | Correo (para entrar), nombre, teléfono, `is_active` y el consentimiento de ubicación (§6) | Se desactiva, nunca se borra |
+| `User` | Persona que usa el sistema | `company` (su empresa), correo (para entrar), nombre, teléfono, `is_active`, `is_platform_admin` y el consentimiento de ubicación (§6) | Pertenece a una sola empresa; el dueño de la plataforma es el único sin empresa (`is_platform_admin`). El correo es único en toda la plataforma. Se desactiva, nunca se borra |
 | `Role` | Plantilla de permisos (paso 6) | Nombre y permisos | Basado en los grupos de Django |
 | `Membership` | Rol de un usuario en una sucursal | `user`, `branch`, `role` | Un usuario puede tener roles en varias sucursales |
 | `ApprovalLimit` | Hasta cuánto aprueba cada quien | `role` o `user`, operación, `max_amount` | Lo usan la aprobación de solicitudes (023) y las autorizaciones |
@@ -290,19 +302,20 @@ Estas reglas se aplican en PostgreSQL, además de en el código, para que ni un 
 3. La suma de las asignaciones de un pago es igual a su monto aplicado.
 4. Lo pagado de cada componente de una cuota nunca supera lo debido.
 5. Hay a lo sumo una sesión de caja abierta por cajero y una sesión de ruta abierta por cobrador (índices únicos parciales).
-6. Cada número de documento es único por sucursal y tipo, sin saltos.
-7. Cada cliente tiene un único número de documento.
+6. Cada número de documento es único por empresa, sucursal y tipo, sin saltos.
+7. Cada cliente tiene un único número de documento **dentro de su empresa** (la misma persona puede ser cliente de dos financieras distintas).
 8. Las claves de idempotencia de pagos y desembolsos son únicas.
 9. Ninguna cuenta con `allows_negative = false` queda en negativo (la verificación se hace con la fila del saldo bloqueada).
 10. Los importes llevan `CHECK >= 0` donde corresponde; el signo lo da el débito o el crédito, nunca un importe negativo.
+11. **Row-Level Security activo en toda tabla con `company`:** la política compara con la empresa de la sesión (`app.current_company`); una conexión sin empresa fijada no ve ninguna fila. Las relaciones entre tablas exigen además la misma empresa en ambos lados (claves compuestas o `CHECK` de coherencia en las uniones críticas).
 
 La **conciliación nocturna** compara las cachés con el libro: saldos de préstamos y de cuentas, y el esperado de cada caja. Cualquier diferencia genera una alerta al administrador.
 
 ## 8. Rendimiento y búsqueda
 
 - **Búsqueda de clientes:** índices de trigramas (`pg_trgm`) con `unaccent` sobre nombres, documento y teléfono; así «jose perez» encuentra «José Pérez».
-- **Índices frecuentes:** por sucursal, estado, fecha de vencimiento, cobrador, y préstamo más fecha en asientos y pagos.
-- **Volumen esperado:** una compañía mediana (decenas de miles de préstamos y cientos de miles de cuotas) es un volumen pequeño para PostgreSQL. No hace falta particionar.
+- **Índices frecuentes:** empiezan por `company` (y sucursal), más estado, fecha de vencimiento, cobrador, y préstamo más fecha en asientos y pagos.
+- **Volumen esperado:** una financiera mediana (decenas de miles de préstamos y cientos de miles de cuotas) es un volumen pequeño para PostgreSQL, y cientos de empresas así siguen siéndolo. No hace falta particionar; si algún día conviene, se particiona por empresa sin cambiar el modelo.
 
 ## 9. Decisiones de este paso
 
@@ -312,3 +325,4 @@ La **conciliación nocturna** compara las cachés con el libro: saldos de prést
 | 030 | Numeración por sucursal con prefijo y sin saltos | Aprobada |
 | 031 | Seguimiento continuo del cobrador con la ruta abierta, con consentimiento y 90 días de conservación | Aprobada |
 | 032 | Modelo de datos de este documento: UUID v7, libro inmutable como fuente de saldos, calendario versionado, cachés verificadas cada noche y reglas de integridad en la base | Aprobada |
+| 041–042 | `company` en todo registro operativo, RLS como segunda barrera, catálogos y numeraciones por empresa, y el módulo `platform` (planes, suscripciones, modo soporte) | Aprobada |

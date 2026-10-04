@@ -1,6 +1,6 @@
 # 04 · Flujos del sistema
 
-**Estado:** aprobado el 28/09/2026 (decisiones 023–028)
+**Estado:** aprobado el 28/09/2026 (decisiones 023–028) · **actualizado el 04/10/2026** al alcance multitenant: todos los flujos ocurren dentro de una empresa (tenant) y se añade el F19, el ciclo de vida de la empresa en la plataforma (decisiones 041, 045 y 046)
 
 **Cómo leer este documento:** cada flujo indica quién lo hace y cuándo, sus pasos, las validaciones, qué queda registrado y las excepciones. Los importes siguen las reglas del [paso 3](03-reglas-de-negocio.md) y los permisos finos se definen en el paso 6. Los números que aparecen como «por defecto» son configurables.
 
@@ -35,6 +35,7 @@
 | F16 | Migración inicial | Administrador, Claude | 3 y 10 |
 | F17 | Usuarios y acceso | Administrador, usuario | 1 |
 | F18 | Comunicación automática | Sistema | 9 |
+| F19 | Registro y ciclo de vida de una empresa | Visitante, dueño de la plataforma | 1 |
 
 **Un día típico:**
 - **Mañana:** el tablero muestra los cobros del día, las promesas que vencen hoy y las solicitudes por aprobar. Cada cobrador recibe su ruta.
@@ -371,6 +372,42 @@ Los pagos migrados no mueven la caja (paso 3, §11).
 - **Baja de mensajes:** el cliente puede pedir que no le escriban.
 - Requiere contratar un proveedor de WhatsApp Business o de SMS.
 
+## F19 · Registro y ciclo de vida de una empresa
+
+El único flujo que ocurre **fuera** de una empresa: es cómo una financiera entra a Cobradía y cómo el dueño administra la plataforma (decisiones 045 y 046).
+
+1. **Registro** (`/registro`, público).
+   - El visitante da el nombre de su financiera, su RNC (opcional durante la prueba), su nombre, correo y teléfono.
+   - Verifica el correo con un código.
+   - En una sola operación se crean: la **empresa** en estado **en prueba** (30 días por defecto), su **sucursal principal**, el usuario **administrador** (quien se registró, con el rol de gerente y administrador) y los catálogos sembrados: productos de ejemplo, política de mora por defecto, motivos, categorías y los feriados de RD.
+   - Protecciones del registro: límite por IP, verificación del correo y aviso al dueño de cada registro nuevo. Sin CAPTCHA de terceros al inicio; se añade si llega abuso.
+2. **Durante la prueba.**
+   - La empresa opera completa, con límites de prueba configurables (por defecto: 1 sucursal, 5 usuarios y 100 préstamos activos).
+   - Un banner permanente muestra los días restantes y el botón «Activar mi suscripción».
+3. **Vencimiento de la prueba.**
+   - La empresa pasa a **suspendida**: sus usuarios pueden entrar, ver y exportar sus datos, pero no registrar operaciones.
+   - Avisos automáticos 7, 3 y 1 día antes (correo; WhatsApp en la fase 9).
+4. **Activación.**
+   - La empresa paga por transferencia o depósito (los datos de pago aparecen en «Suscripción»).
+   - El dueño registra el pago en su panel y la empresa pasa a **activa**, con su plan y sus límites. La pasarela de pago se integra después del lanzamiento (045).
+5. **Suspensión y reactivación manuales.** El dueño puede suspender (falta de pago, abuso) o reactivar, siempre con motivo; la empresa ve el motivo al entrar.
+6. **Baja.**
+   - La empresa la solicita; se le entrega la exportación completa de sus datos.
+   - Los datos se conservan un plazo (90 días por defecto) por si se arrepiente, y luego se eliminan. **Validar con el abogado** (Ley 172-13 y plazos de conservación financieros).
+7. **Modo soporte (046).** Para ayudar a una empresa, el dueño activa un acceso temporal de **solo lectura**, con motivo y duración (72 horas por defecto); la empresa lo ve activo en su pantalla de Ajustes y todo queda auditado.
+
+```mermaid
+stateDiagram-v2
+    [*] --> EnPrueba: registro público
+    EnPrueba --> Activa: pago registrado
+    EnPrueba --> Suspendida: vence la prueba
+    Suspendida --> Activa: pago registrado
+    Activa --> Suspendida: falta de pago o abuso
+    Suspendida --> Cerrada: baja + plazo de conservación
+    Activa --> Cerrada: baja solicitada
+    Cerrada --> [*]
+```
+
 ## 3. Decisiones de este paso
 
 | # | Decisión | Estado |
@@ -380,3 +417,5 @@ Los pagos migrados no mueven la caja (paso 3, §11).
 | 025 | Cierre de caja y rendición de cobradores diarios y obligatorios | Aprobada |
 | 026 | Buró externo: reporte adjunto a la solicitud | Aprobada |
 | 027 | Los 18 flujos de este documento, con sus valores por defecto: vigencia de 15 días, alerta al 40 % de la capacidad de pago, escalamiento a 30, 60 y 90 días, castigo sugerido a los 180 días y bloqueo de período al cerrar el mes | Aprobada |
+| 045 | F19: registro público con prueba de 30 días, suspensión en solo lectura, activación con pago manual y baja con exportación | Aprobada |
+| 046 | Modo soporte de solo lectura, temporal, con motivo, visible para la empresa y auditado | Aprobada |

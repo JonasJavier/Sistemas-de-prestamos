@@ -1,9 +1,9 @@
 # 01 · Stack tecnológico y arquitectura base
 
-**Estado:** aprobado el 28/09/2026 (decisiones 001–011)
+**Estado:** aprobado el 28/09/2026 (decisiones 001–011) · **actualizado el 04/10/2026** al alcance SaaS multitenant de **Cobradía** (decisiones 041–046: base compartida con RLS, un solo dominio, registro público con prueba)
 **Versiones:** verificadas hoy en PyPI, npm y endoflife.date. Al iniciar la Fase 1 se fija el último parche de cada una en los archivos de bloqueo (`uv.lock`, `pnpm-lock.yaml`).
 
-**En una frase:** un monolito modular en Django que expone una API REST, una SPA en React que la consume, PostgreSQL como única fuente de verdad, y Redis con Celery para las tareas en segundo plano. Todo corre en Docker bajo un solo dominio.
+**En una frase:** un monolito modular en Django que expone una API REST, una SPA en React que la consume, PostgreSQL como única fuente de verdad (una sola base **compartida por todas las empresas**, con Row-Level Security), y Redis con Celery para las tareas en segundo plano. Todo corre en Docker bajo un solo dominio: la misma instalación sirve a todas las empresas de Cobradía.
 
 ## 1. Qué exige el sistema
 
@@ -20,7 +20,7 @@ El estudio de la referencia ([hallazgos](../referencia/10-hallazgos-y-mejoras.md
 | Pantallas densas en tablas y formularios | Cartera, atrasos, cobro de varias cuotas, simulador | SPA React con tablas y formularios tipados |
 | Cobro en la calle | Cobradores con celular (decisión 028: solo web, sin app móvil) | La misma SPA, diseñada primero para el celular, con acceso directo en la pantalla de inicio |
 | República Dominicana | Cédula, RNC, RD$ | `es-DO`, `DOP`, `America/Santo_Domingo`, feriados configurables |
-| Una sola compañía | Decisión del proyecto | Sin multiempresa: un único registro de empresa y varias sucursales |
+| Multiempresa (SaaS) | Decisión 041: Cobradía se vende a muchas financieras | `company` en cada tabla operativa, Row-Level Security en PostgreSQL y validación de alcance en cada consulta (decisión 042) |
 
 ## 2. Stack recomendado
 
@@ -59,7 +59,7 @@ El estudio de la referencia ([hallazgos](../referencia/10-hallazgos-y-mejoras.md
 | Cliente de la API | orval | 8.38 | Genera tipos y *hooks* desde el OpenAPI; el frontend nunca «adivina» la API |
 | Tablas | TanStack Table | 9.2 | Orden, columnas, selección y paginación de servidor |
 | Formularios | React Hook Form + Zod | 7.89 + 4.6 | Validación inmediata y clara |
-| Estilos | Tailwind CSS | **4.3** | Tokens de diseño (morado y verde) en un solo lugar |
+| Estilos | Tailwind CSS | **4.3** | Tokens de diseño (verde profundo y ámbar, decisión 047) en un solo lugar |
 | Componentes | shadcn/ui sobre Radix (CLI `shadcn`) | 4.21 | Accesibles por teclado y lector de pantalla; el código es nuestro y se adapta a la marca |
 | Íconos | lucide-react | 1.48 | Una sola familia (la referencia mezcla cinco) |
 | Avisos | sonner | 2.0 | Notificaciones breves |
@@ -103,7 +103,8 @@ Todo es de código abierto. El costo real es el servidor, el dominio y, más ade
   - Es una aplicación interna detrás de un inicio de sesión: no necesita SEO ni renderizado en servidor.
   - Next.js 16 añade un segundo servidor en Node, con su propia capa de lógica, que duplicaría a Django y complicaría las sesiones.
   - La SPA son archivos estáticos: una sola API, un solo dominio y cookies simples.
-- **Portal del cliente (fase 9):** vive en la misma SPA, con su propio acceso. Un sitio público de promoción, si algún día se quiere, sería otra aplicación aparte, en Next.js o Astro.
+- **Portal del cliente (fase 9):** vive en la misma SPA, con su propio acceso.
+- **Registro de empresas (decisión 045):** la página pública de registro (`/registro`) también vive en la SPA: son archivos estáticos y no necesita SEO. El **sitio de promoción** de `cobradia.com` (precios, funciones, contacto) sí necesita SEO y será una aplicación estática aparte (Astro), que enlaza al registro; se construye en la fase 9.
 - **Descartado también, Django con plantillas y HTMX:** es más simple, pero el simulador, el cobro de varias cuotas, los filtros de cartera y «Mi ruta» en el celular salen mejor en React.
 
 ### D3. TanStack Router, no React Router
@@ -126,7 +127,7 @@ Todo es de código abierto. El costo real es el servidor, el dominio y, más ade
 ### D6. Tailwind + shadcn/ui, no MUI ni Ant Design
 
 - **Recomendación:** Tailwind con shadcn/ui.
-- **Por qué:** los componentes son nuestros y conservan la identidad morada y verde sin pelear con un tema ajeno. Son accesibles gracias a Radix y generan un paquete liviano.
+- **Por qué:** los componentes son nuestros y conservan la identidad de Cobradía (verde profundo y ámbar) sin pelear con un tema ajeno. Son accesibles gracias a Radix y generan un paquete liviano.
 - **Lo que se descarta:** MUI y Ant Design arrancan más rápido, pero se ven genéricas y cuestan de adaptar.
 
 ### D7. django-pghistory, no django-simple-history
@@ -184,8 +185,8 @@ flowchart LR
    - Las transacciones bloquean las filas afectadas.
    - Cada pago y cada desembolso lleva una clave de idempotencia, para que un doble clic no cobre dos veces.
 6. **El alcance se valida en cada ID.**
-   - Aunque haya una sola compañía, cada ID recibido se comprueba contra la sucursal y los permisos del usuario (la lección del defecto #27).
-   - Las pruebas automáticas lo verifican por rol.
+   - Cada ID recibido se comprueba contra la empresa, la sucursal y los permisos del usuario (la lección del defecto #27: la referencia dejaba elegir garantes de otra empresa).
+   - Las pruebas automáticas lo verifican por rol, y además intentan leer datos de otra empresa con IDs válidos.
 7. **Dinero y fechas explícitos.**
    - Importes en `NUMERIC(14,2)` y tasas en `NUMERIC(9,6)`.
    - Redondeo definido por regla, con el residuo en la última cuota (defecto #35).
@@ -194,9 +195,12 @@ flowchart LR
    - La API vive en `/api/v1/`, con OpenAPI.
    - Paginación, filtros y totales se hacen en el servidor.
    - Las exportaciones y los PDF pesados se generan en segundo plano y avisan cuando están listos.
-9. **Una sola compañía.**
-   - Un único registro de empresa, sin selector de compañía, registro, licencias ni planes.
-   - Hay varias sucursales, y la sucursal es un límite de acceso.
+9. **Multitenant con una base compartida (decisiones 041–043).**
+   - Todo registro operativo lleva `company`; la sucursal sigue siendo un límite de acceso dentro de la empresa.
+   - Al iniciar sesión, la empresa queda fijada por la cuenta del usuario: no hay selector de compañía ni subdominios (decisión 043; quedan como opción futura).
+   - En cada petición, un middleware fija la empresa de la sesión en la conexión de PostgreSQL (`SET app.current_company`), y las políticas de **Row-Level Security** solo dejan ver filas de esa empresa. El ORM filtra primero; RLS es la barrera que queda si el código falla.
+   - Las tareas de Celery reciben la empresa como parámetro y fijan la misma variable antes de tocar datos.
+   - El dueño de la plataforma administra las empresas desde un panel aparte (módulo `platform`) y no toca los datos de negocio (decisión 046).
 
 ### Módulos del monolito (tentativo)
 
@@ -204,7 +208,8 @@ Se cierran en el paso de modelo de datos.
 
 | App | Contenido |
 | --- | --- |
-| `core` | Empresa, sucursales, ajustes, feriados, numeraciones |
+| `platform` | Lo que ve el dueño de Cobradía: registro de empresas, prueba y suscripción, planes y límites, métricas agregadas y modo soporte (decisiones 045 y 046) |
+| `core` | Empresas (tenants), sucursales, ajustes, feriados, numeraciones |
 | `accounts` | Usuarios, roles, permisos, 2FA, sesiones |
 | `customers` | Clientes, laborales, referencias, garantes, archivos |
 | `lending` | Productos, solicitudes, evaluación, préstamos y calendario; incluye el motor financiero |
@@ -245,6 +250,7 @@ docs/
 
 ## 5. Seguridad desde el día uno
 
+- **Aislamiento entre empresas:** Row-Level Security en todas las tablas con `company`, además del filtrado en el código; pruebas automáticas intentan cruzar de empresa en cada módulo.
 - **Transporte y navegador:** HTTPS obligatorio con HSTS, CSP nativa de Django y cookies seguras.
 - **Acceso:** límite de intentos de inicio de sesión, 2FA y política de contraseñas.
   - Nadie fija la contraseña de otro: se envía una invitación o un enlace de restablecimiento (defecto #7).
@@ -265,6 +271,7 @@ La Fase 1 empieza con una prueba técnica de medio día. Cada punto tiene un pla
 | ESLint, con reglas de tipos, funciona con TypeScript 7 | Fijar TypeScript 6 solo para el linter |
 | Los componentes de tabla de shadcn funcionan con TanStack Table 9 | TanStack Table 8 |
 | orval genera *hooks* de TanStack Query válidos desde el esquema de drf-spectacular | openapi-typescript + openapi-fetch |
+| Las políticas RLS por empresa funcionan con psycopg y el pool de conexiones de Django (la variable `app.current_company` se fija por petición y por tarea) | Filtrado solo en el ORM, con un *manager* obligatorio por empresa y pruebas de cruce exhaustivas |
 
 ## 7. Aprobación
 

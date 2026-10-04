@@ -1,8 +1,9 @@
 # 03 · Reglas de negocio y motor financiero
 
-**Estado:** aprobado como base el 28/09/2026 (decisiones 021 y 022); los valores por defecto quedan sujetos a la validación del cliente (§15)
+**Estado:** aprobado como base el 28/09/2026 (decisiones 021 y 022); los valores por defecto quedan sujetos a la validación del primer cliente (§15) · **actualizado el 04/10/2026** al alcance multitenant (decisión 041)
+- Las reglas del motor financiero son las mismas para todas las empresas de Cobradía; **cada empresa configura sus propios productos, cargos, políticas de mora, feriados y valores**, partiendo de los valores por defecto de este documento, que se siembran al crear la empresa.
 - Cada regla trae un **valor por defecto** que se puede configurar por producto.
-- Lo marcado con **Validar** debe confirmarlo el cliente; lo legal y lo contable, con su abogado y su contador.
+- Lo marcado con **Validar** debe confirmarlo el primer cliente; lo legal y lo contable, con su abogado y su contador. Cada empresa que se registre es responsable de ajustar su configuración a su práctica y a la ley.
 
 **Principios del motor:**
 - **Una sola fuente de cálculo:** el motor financiero es el único que calcula, en el servidor. La pantalla solo muestra sus resultados.

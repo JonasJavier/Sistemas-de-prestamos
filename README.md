@@ -1,6 +1,6 @@
 # Sistema de préstamos
 
-Proyecto en planificación para una sola compañía.
+Proyecto en planificación: **Cobradía**, plataforma SaaS multiempresa (multitenant) para administrar carteras de préstamos, comercializable en planes (decisiones 041 y 044). Dominio: `cobradia.com`.
 
 - [Bases del proyecto (Fase 0): stack, alcance, reglas, flujos, pantallas y plan](docs/proyecto/README.md)
 - [Registro de decisiones](docs/proyecto/decisiones.md)

@@ -1,6 +1,6 @@
 # 06 · Roles, permisos, seguridad y auditoría
 
-**Estado:** aprobado el 28/09/2026 (decisiones 033–036)
+**Estado:** aprobado el 28/09/2026 (decisiones 033–036) · **actualizado el 04/10/2026** al alcance multitenant (decisiones 041, 042 y 046)
 
 La referencia tiene 27 interruptores por usuario, sin roles ni límites, y dos fallas críticas de seguridad: el garante de otra empresa (#27) y los archivos públicos (#28). Aquí se define un modelo de permisos por rol, alcance y límite, y la seguridad del sistema de punta a punta.
 
@@ -11,11 +11,14 @@ La referencia tiene 27 interruptores por usuario, sin roles ni límites, y dos f
 | 033 | **Cada empleado ve solo su sucursal.**<br>- El gerente, contabilidad y auditoría ven todas.<br>- Para atender a un cliente de otra sucursal se necesita un permiso especial, y el acceso queda registrado. |
 | 034 | **Verificación en dos pasos (2FA) para todos los usuarios**, con un código de una app autenticadora |
 | 035 | **Horario laboral solo para cajeros y cobradores:**<br>- Operan en el horario de su sucursal, que es configurable.<br>- El resto entra a cualquier hora, con todo auditado. |
+| 041–042 | **Aislamiento absoluto entre empresas:** cada usuario pertenece a una empresa y jamás ve datos de otra; el código filtra por empresa en cada consulta y Row-Level Security en PostgreSQL lo garantiza aunque el código falle. |
+| 046 | **El dueño de la plataforma no ve los datos de negocio de las empresas:** administra la plataforma con métricas agregadas y un modo soporte temporal, de solo lectura y auditado (§10). |
 
 ## 2. Cómo funciona un permiso
 
-Una acción solo se permite si pasa las **tres capas**:
+Una acción solo se permite si pasa las **cuatro capas**:
 
+0. **Empresa:** toda petición corre amarrada a la empresa del usuario. El ORM filtra por ella y las políticas RLS de la base la vuelven a exigir; un ID de otra empresa simplemente no existe para esa sesión (041–042).
 1. **Permiso:** el rol del usuario incluye la acción, por ejemplo `loans.disburse`.
 2. **Alcance:** el registro pertenece a una sucursal del usuario (033) y, en el caso del cobrador, a su cartera asignada.
 3. **Límite y separación de funciones:**
@@ -41,7 +44,7 @@ Los roles son plantillas: el administrador puede crear roles nuevos o ajustar lo
 - P = solo lo propio o lo asignado.
 - — = no puede.
 
-Todo queda además limitado a la sucursal del usuario, salvo para G, Ct y Au (033).
+Todo queda además limitado a la sucursal del usuario, salvo para G, Ct y Au (033). La matriz aplica **dentro de cada empresa**; el dueño de la plataforma no aparece en ella porque no tiene permisos de negocio (046, §10).
 
 | Módulo | Permiso | G | A | Su | O | Ca | Co | Ct | Au |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -162,6 +165,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
   - Son revocables y tienen límite de consultas.
 - **Exportaciones con datos personales:** solo el gerente y auditoría pueden hacerlas, y cada una queda registrada.
 - **Ubicación de los cobradores (031):** la ven solo el supervisor y el gerente, y se borra a los 90 días.
+- **Datos de cada empresa:** aislados por RLS; al darse de baja, la empresa recibe la exportación completa de sus datos y estos se eliminan tras el plazo de conservación (F19). **Validar con el abogado.**
 - **Derechos del titular:**
   - El sistema puede generar todo lo que se guarda de un cliente.
   - Al terminar el plazo de conservación, puede anonimizar a un cliente sin deudas.
@@ -173,7 +177,8 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 
 ## 8. Seguridad de la aplicación
 
-- **Alcance en cada ID** (lección del defecto #27), con pruebas automáticas que intentan acceder a datos de otra sucursal.
+- **Alcance en cada ID** (lección del defecto #27), con pruebas automáticas que intentan acceder a datos de otra sucursal **y de otra empresa** con IDs válidos.
+- **Row-Level Security por empresa** en todas las tablas operativas: la aplicación fija `app.current_company` por petición y por tarea; una conexión sin empresa no ve filas. Es la red de seguridad del filtrado del ORM, no su reemplazo.
 - **Cabeceras de seguridad:**
   - CSRF.
   - CSP estricta, sin scripts en línea.
@@ -238,7 +243,20 @@ El gerente recibe un aviso cuando aparece un patrón inusual:
 
 Las reglas y sus umbrales son configurables.
 
-## 10. Decisiones de este paso
+## 10. Plataforma y modo soporte (decisión 046)
+
+El dueño de la plataforma administra Cobradía sin tocar la operación de las empresas:
+
+- **Lo que ve siempre:** la lista de empresas con su estado, prueba y suscripción, y métricas agregadas (usuarios activos, volúmenes de uso, conversión de la prueba). Nunca clientes, préstamos, montos ni documentos de una empresa.
+- **Modo soporte:** para ayudar a una empresa, activa un acceso temporal con estas reglas fijas:
+  - **Solo lectura:** puede ver pantallas y configuraciones, no registrar ni cambiar nada.
+  - **Con motivo y duración:** 72 horas por defecto; se puede revocar antes.
+  - **Visible:** la empresa ve un aviso «Soporte de Cobradía tiene acceso de lectura hasta …» en Ajustes, con el historial completo.
+  - **Auditado:** cada pantalla que el soporte abre queda en el registro de lecturas sensibles (§9).
+- **Separación técnica:** la cuenta del dueño (`is_platform_admin`) no tiene membresías en ninguna empresa; sus permisos de plataforma no incluyen ningún permiso de negocio de la §3. El modo soporte otorga un alcance temporal que pasa por las mismas cuatro capas de la §2, limitado a lectura.
+- **Los respaldos y la infraestructura** sí los opera la plataforma (es inevitable: el servidor es suyo); el compromiso de no acceso se refleja en los términos de servicio y en el acuerdo de tratamiento de datos. **Validar con el abogado.**
+
+## 11. Decisiones de este paso
 
 | # | Decisión | Estado |
 | --- | --- | --- |
@@ -246,3 +264,5 @@ Las reglas y sus umbrales son configurables.
 | 034 | 2FA obligatorio para todos los usuarios | Aprobada |
 | 035 | Horario laboral solo para cajeros y cobradores | Aprobada |
 | 036 | Matriz de permisos (§3), separación de funciones (§4), límites de ejemplo (§5), sesiones (§6), protección de datos (§7), seguridad (§8), auditoría y alertas antifraude (§9) | Aprobada |
+| 041–042 | Aislamiento absoluto entre empresas: filtrado por empresa en el código y RLS en la base | Aprobada |
+| 046 | Métricas agregadas para el dueño y modo soporte de solo lectura, temporal, visible y auditado (§10) | Aprobada |
