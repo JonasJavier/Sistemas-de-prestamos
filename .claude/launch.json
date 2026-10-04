@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "demo-prototipo",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "docs/prototipo/demo"],
-      "port": 8765
+      "name": "frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "frontend", "dev"],
+      "port": 5173
     }
   ]
 }

@@ -1,0 +1,68 @@
+[project]
+name = "cobradia-backend"
+version = "0.1.0"
+description = "Cobradia - multitenant loan management SaaS (backend API)"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.1,<6.2",
+    "djangorestframework>=3.18",
+    "drf-spectacular>=0.29",
+    "django-allauth[mfa]>=65.12",
+    "django-filter>=25.1",
+    "psycopg[binary]>=3.2",
+    "celery>=5.5",
+    "django-celery-beat>=2.8",
+    "redis>=5.2",
+    "django-pghistory>=3.5",
+    "weasyprint>=65",
+    "docxtpl>=0.19",
+    "openpyxl>=3.1",
+    "django-storages>=1.14",
+    "gunicorn>=23",
+    "sentry-sdk>=2.20",
+    "django-environ>=0.12",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.14",
+    "django-stubs[compatible-mypy]>=5.1",
+    "djangorestframework-stubs>=3.15",
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "factory-boy>=3.3",
+    "hypothesis>=6.120",
+]
+
+[tool.uv]
+# django-celery-beat 2.9 still pins django<6.1 in its metadata, which doc
+# 01 §6 anticipated as a stale label. Override it and validate at runtime;
+# plan B is Django 5.2 LTS.
+override-dependencies = ["django>=6.1,<6.2"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "S", "T20"]
+ignore = ["S101"]  # assert is fine in tests; pytest relies on it
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S105", "S106"]  # fake passwords in test factories
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+strict_optional = true
+warn_unused_ignores = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "engine"]

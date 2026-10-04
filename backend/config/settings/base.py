@@ -1,0 +1,184 @@
+"""Base settings shared by every environment.
+
+Environment-specific modules (local, test, production) import * from here
+and override what they need. Secrets always come from the environment.
+"""
+
+from pathlib import Path
+
+import environ
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # backend/
+
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / ".env")
+
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-insecure-key-change-me")
+DEBUG = False
+ALLOWED_HOSTS: list[str] = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Third party
+    "rest_framework",
+    "django_filters",
+    "drf_spectacular",
+    "allauth",
+    "allauth.account",
+    "allauth.mfa",
+    "allauth.headless",
+    "django_celery_beat",
+    "pgtrigger",
+    "pghistory",
+    # Cobradia
+    "apps.platform",
+    "apps.core",
+    "apps.accounts",
+    "apps.customers",
+    "apps.lending",
+    "apps.payments",
+    "apps.cash",
+    "apps.collections",
+    "apps.ledger",
+    "apps.expenses",
+    "apps.documents",
+    "apps.reports",
+    "apps.notifications",
+    "apps.audit",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "pghistory.middleware.HistoryMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+# Default ports point at infra/compose.yml, which maps to non-standard host
+# ports (54320/63790) so it never clashes with a locally installed service.
+DATABASES = {
+    "default": env.db(
+        "DATABASE_URL",
+        default="postgres://cobradia:cobradia@localhost:54320/cobradia",
+    ),
+}
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
+
+CACHES = {
+    "default": env.cache("REDIS_CACHE_URL", default="redis://localhost:63790/0"),
+}
+
+# Authentication -------------------------------------------------------------
+AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# allauth: email-only login, 2FA via authenticator app (decision 034)
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_UNIQUE_EMAIL = True
+HEADLESS_ONLY = True
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},  # decision 036 (06 - section 6)
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# API ------------------------------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Cobradía API",
+    "DESCRIPTION": "API del sistema de préstamos multiempresa Cobradía.",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+# Celery ---------------------------------------------------------------------
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:63790/1")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:63790/2")
+CELERY_TIMEZONE = "America/Santo_Domingo"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+# I18N / L10N (decision 010: code in English, product in Spanish) -------------
+LANGUAGE_CODE = "es-do"
+TIME_ZONE = "America/Santo_Domingo"
+USE_I18N = True
+USE_TZ = True
+
+# Static & media ---------------------------------------------------------------
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"  # private storage backend arrives in phase 2
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Django 6.1 MAILERS setting (EMAIL_HOST and friends are deprecated).
+MAILERS = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": env("EMAIL_HOST", default="localhost"),
+            "port": env.int("EMAIL_PORT", default=1025),  # Mailpit in development
+        },
+    },
+}
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Cobradía <no-responder@cobradia.com>")

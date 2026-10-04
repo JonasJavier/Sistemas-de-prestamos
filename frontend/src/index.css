@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/* Cobradía design tokens (docs/proyecto/08-sistema-de-diseno.md, decision 047-048).
+   Components always use these tokens, never loose colors. */
+@theme {
+  --color-brand-100: #dcfce7;
+  --color-brand-700: #166534;
+  --color-brand-800: #14532d;
+  --color-brand-950: #06281a;
+  --color-accent-500: #f59e0b;
+  --color-success-600: #16a34a;
+  --color-warning-700: #b45309;
+  --color-danger-600: #dc2626;
+  --color-info-700: #0369a1;
+  --color-canvas: #f5f7f4;
+  --color-surface: #ffffff;
+  --color-ink: #17201a;
+  --color-muted: #5b6660;
+  --color-edge: #d9dfda;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+/* Dark mode (decision 048: built from phase 1). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-brand-700: #4ade80;
+    --color-brand-100: #122a1c;
+    --color-accent-500: #fbbf24;
+    --color-canvas: #0c120e;
+    --color-surface: #151c17;
+    --color-ink: #e7ede8;
+    --color-muted: #9aa69e;
+    --color-edge: #2a332c;
+  }
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}

@@ -273,6 +273,14 @@ La Fase 1 empieza con una prueba técnica de medio día. Cada punto tiene un pla
 | orval genera *hooks* de TanStack Query válidos desde el esquema de drf-spectacular | openapi-typescript + openapi-fetch |
 | Las políticas RLS por empresa funcionan con psycopg y el pool de conexiones de Django (la variable `app.current_company` se fija por petición y por tarea) | Filtrado solo en el ORM, con un *manager* obligatorio por empresa y pruebas de cruce exhaustivas |
 
+**Resultado (04/10/2026, arranque de la Fase 1):**
+- Django 6.1.1 en Python 3.14.5 instala, pasa los chequeos y migra bien sobre PostgreSQL 18 en Docker.
+- `django-celery-beat` 2.9 todavía declara `django<6.1`; era la etiqueta desactualizada prevista. Se resolvió con `override-dependencies` de uv y sus migraciones aplican sin problema. Vigilar su próxima versión para quitar el *override*.
+- WeasyPrint 70 y psycopg 3.3.6 instalan sin problemas en Python 3.14; WeasyPrint se ejecutará en Docker/CI porque en Windows requiere Pango.
+- `EMAIL_HOST`/`EMAIL_PORT` están deprecados en Django 6.1: usamos ya el ajuste nuevo `MAILERS`.
+- La plantilla de Vite 8 trae TypeScript 6 + oxlint; la decisión fina del linter del frontend (y TS 7) se toma al montar el lint definitivo.
+- Pendientes de comprobar cuando toquen: shadcn con TanStack Table 9, orval con el primer endpoint real, y las políticas RLS (migración propia de la Fase 1).
+
 ## 7. Aprobación
 
 Jonas aprobó todas las recomendaciones el 28/09/2026: Django 6.1 con paso a 6.2 LTS, SPA con React + Vite, código en inglés con la interfaz en español, y las decisiones técnicas D3–D9. El proveedor de alojamiento se decide en la fase de salida a producción.
