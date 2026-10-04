@@ -61,6 +61,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.core.tenancy.TenantMiddleware",
     "pghistory.middleware.HistoryMiddleware",
 ]
 
@@ -111,6 +112,13 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
 HEADLESS_ONLY = True
+# Routes in the SPA that allauth links to from its emails (doc 07 routes).
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": "/verificar-correo/{key}",
+    "account_reset_password": "/recuperar",
+    "account_reset_password_from_key": "/recuperar/{key}",
+    "account_signup": "/registro",
+}
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -142,6 +150,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "registration": "5/hour",  # F19: public signup, per IP
+    },
 }
 
 SPECTACULAR_SETTINGS = {

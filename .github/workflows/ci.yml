@@ -15,13 +15,12 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_USER: cobradia
-          POSTGRES_PASSWORD: cobradia
-          POSTGRES_DB: cobradia
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U cobradia"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -41,6 +40,11 @@ jobs:
           python-version: "3.14"
       - name: Install dependencies
         run: uv sync --frozen
+      - name: Create non-superuser app role (RLS applies to it)
+        run: |
+          psql postgres://postgres:postgres@localhost:5432/postgres \
+            -c "CREATE ROLE cobradia LOGIN PASSWORD 'cobradia' CREATEDB;" \
+            -c "CREATE DATABASE cobradia OWNER cobradia;"
       - name: Lint
         run: uv run ruff check .
       - name: Check missing migrations

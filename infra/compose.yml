@@ -4,15 +4,17 @@ services:
   db:
     image: postgres:18
     environment:
-      POSTGRES_USER: cobradia
-      POSTGRES_PASSWORD: cobradia
-      POSTGRES_DB: cobradia
+      # Superuser kept aside; the app role "cobradia" (non-superuser, so
+      # row-level security applies to it) is created by init.sql.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "54320:5432" # non-standard host port: a locally installed Postgres owns 5432
     volumes:
       - pgdata:/var/lib/postgresql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cobradia -d cobradia"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 10
