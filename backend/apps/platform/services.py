@@ -8,6 +8,7 @@ Dominican holidays, reasons). Everything happens in one transaction.
 
 import datetime as dt
 from dataclasses import dataclass
+from decimal import Decimal
 
 from django.db import transaction
 from django.utils import timezone
@@ -15,6 +16,7 @@ from django.utils import timezone
 from apps.accounts.models import Membership, Role, User
 from apps.core.models import Branch, Company, Holiday, Reason
 from apps.core.tenancy import company_context
+from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
 from apps.platform.models import Plan, Subscription
 
 TRIAL_DAYS = 30  # F19 default; configurable per plan later.
@@ -121,6 +123,7 @@ def register_company(
             )
         _seed_holidays(company, today.year)
         _seed_reasons(company)
+        _seed_products(company)
 
     return RegistrationResult(company=company, admin=admin, branch=branch)
 
@@ -142,6 +145,50 @@ def _seed_holidays(company: Company, start_year: int) -> None:
                 )
             )
     Holiday.objects.bulk_create(holidays)
+
+
+def _seed_products(company: Company) -> None:
+    """Two editable example products (F19), with doc 03 default values."""
+    san = LoanProduct.objects.create(
+        company=company,
+        name="Personal San (semanal)",
+        type=LoanProduct.Type.PERSONAL,
+        method="flat",
+        allowed_frequencies=["daily", "interdaily", "weekly"],
+        rate_unit="per_period",
+        min_amount=Decimal("1000"),
+        max_amount=Decimal("200000"),
+        min_rate=Decimal("0.01"),
+        max_rate=Decimal("0.20"),
+        default_rate=Decimal("0.10"),
+        min_term=4,
+        max_term=52,
+    )
+    fija = LoanProduct.objects.create(
+        company=company,
+        name="Cuota Fija (mensual)",
+        type=LoanProduct.Type.PERSONAL,
+        method="fixed_payment",
+        allowed_frequencies=["biweekly", "monthly"],
+        rate_unit="monthly",
+        min_amount=Decimal("10000"),
+        max_amount=Decimal("1000000"),
+        min_rate=Decimal("0.01"),
+        max_rate=Decimal("0.10"),
+        default_rate=Decimal("0.05"),
+        min_term=3,
+        max_term=36,
+    )
+    for product in (san, fija):
+        LateFeePolicy.objects.create(company=company, product=product)
+    ProductCharge.objects.create(
+        company=company,
+        product=fija,
+        name="Gastos de cierre",
+        basis=ProductCharge.Basis.PERCENT,
+        value=Decimal("0.02"),
+        mode=ProductCharge.Mode.DISCOUNTED,
+    )
 
 
 def _seed_reasons(company: Company) -> None:

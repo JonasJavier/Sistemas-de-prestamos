@@ -36,6 +36,8 @@ interface NavItem {
   label: string
 }
 
+const SIMULATOR_ROLES = ['Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero']
+
 function navFor(me: Me): NavItem[] {
   const items: NavItem[] = me.is_platform_admin
     ? [{ to: '/plataforma', label: 'Empresas' }]
@@ -43,6 +45,9 @@ function navFor(me: Me): NavItem[] {
         { to: '/', label: 'Inicio' },
         { to: '/clientes', label: 'Clientes' },
       ]
+  if (!me.is_platform_admin && me.roles?.some((role) => SIMULATOR_ROLES.includes(role))) {
+    items.push({ to: '/simulador', label: 'Simulador' })
+  }
   if (!me.is_platform_admin && me.is_manager) {
     items.push(
       { to: '/ajustes/sucursales', label: 'Sucursales' },

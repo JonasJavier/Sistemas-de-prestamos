@@ -18,7 +18,7 @@ from apps.accounts.api.serializers import (
     PendingInvitationSerializer,
     RoleSerializer,
 )
-from apps.accounts.models import Invitation, Role, User
+from apps.accounts.models import Invitation, Membership, Role, User
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.core.tenancy import company_context
 
@@ -34,6 +34,13 @@ class MeView(APIView):
         mfa_enabled = Authenticator.objects.filter(
             user=user, type=Authenticator.Type.TOTP
         ).exists()
+        roles: list[str] = []
+        if user.company_id:
+            roles = sorted(
+                Membership.objects.filter(user=user)
+                .values_list("role__name", flat=True)
+                .distinct()
+            )
         return Response(
             {
                 "id": str(user.id),
@@ -42,6 +49,7 @@ class MeView(APIView):
                 "last_name": user.last_name,
                 "is_platform_admin": user.is_platform_admin,
                 "is_manager": is_company_manager(request) if user.company_id else False,
+                "roles": roles,
                 "company_id": str(user.company_id) if user.company_id else None,
                 "mfa_enabled": mfa_enabled,
                 "mfa_required": settings.REQUIRE_MFA,

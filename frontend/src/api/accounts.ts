@@ -7,6 +7,7 @@ export interface Me {
   last_name: string
   is_platform_admin: boolean
   is_manager: boolean
+  roles: string[]
   company_id: string | null
   mfa_enabled: boolean
   mfa_required: boolean

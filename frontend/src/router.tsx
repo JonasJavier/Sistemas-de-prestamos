@@ -20,6 +20,7 @@ import { InvitationAcceptPage } from './pages/InvitationAccept'
 import { LoginPage } from './pages/Login'
 import { PlatformPage } from './pages/Platform'
 import { RegisterPage } from './pages/Register'
+import { SimulatorPage } from './pages/Simulator'
 import { SubscriptionPage } from './pages/Subscription'
 import { UsersPage } from './pages/Users'
 import { VerifyEmailPage } from './pages/VerifyEmail'
@@ -104,6 +105,12 @@ const subscriptionRoute = createRoute({
   component: SubscriptionPage,
 })
 
+const simulatorRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/simulador',
+  component: SimulatorPage,
+})
+
 const customersRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/clientes',
@@ -172,6 +179,7 @@ const invitationRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
+    simulatorRoute,
     customersRoute,
     customerNewRoute,
     customerDetailRoute,
