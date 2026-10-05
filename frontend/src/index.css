@@ -1,41 +1,56 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/sora';
 @import 'tailwindcss';
 
-/* Cobradía design tokens (docs/proyecto/08-sistema-de-diseno.md, decision 047-048).
+/* Cobradía design tokens (docs/proyecto/08-sistema-de-diseno.md, decision 052).
+   Identity: white-dominant surfaces with emerald green as the single accent.
    Components always use these tokens, never loose colors. */
 @theme {
-  --color-brand-100: #dcfce7;
-  --color-brand-700: #15803d; /* livelier primary green (owner feedback 05/10/2026) */
-  --color-brand-800: #166534;
-  --color-brand-950: #06281a;
-  --color-accent-500: #f59e0b;
-  --color-success-600: #16a34a;
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-400: #34d399;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-950: #022c22;
+  /* Accent is the light emerald used for focus rings and small details. */
+  --color-accent-500: #10b981;
+  --color-success-600: #059669;
   --color-warning-700: #b45309;
   --color-danger-600: #dc2626;
   --color-info-700: #0369a1;
-  --color-canvas: #f6f8f5;
+  --color-canvas: #fafafa;
   --color-surface: #ffffff;
-  --color-ink: #1b241e;
-  --color-muted: #5b6660;
-  --color-edge: #dde3dd;
+  --color-ink: #111827;
+  --color-muted: #6b7280;
+  --color-edge: #e5e7eb;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-display: 'Sora Variable', 'Inter Variable', system-ui, sans-serif;
 }
 
-/* Dark mode is opt-in via the header toggle (decision 048, adjusted
-   05/10/2026: light is the default; surfaces lightened a step). */
+/* Dark mode is opt-in via the header toggle (light is the default). */
 :root.dark {
-  --color-brand-700: #4ade80;
-  --color-brand-100: #17301f;
-  --color-accent-500: #fbbf24;
-  --color-canvas: #141b16;
-  --color-surface: #1d2721;
-  --color-ink: #e9efe9;
-  --color-muted: #a3aea6;
-  --color-edge: #323d34;
+  --color-brand-100: #123b2a;
+  --color-brand-700: #34d399;
+  --color-brand-800: #6ee7b7;
+  --color-accent-500: #34d399;
+  --color-canvas: #131517;
+  --color-surface: #1b1e21;
+  --color-ink: #e8eaed;
+  --color-muted: #9aa1a9;
+  --color-edge: #32363b;
 }
 
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* Headings and the brand use the display face (doc 08 - section 3). */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
 }

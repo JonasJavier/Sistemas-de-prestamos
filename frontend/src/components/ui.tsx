@@ -77,8 +77,8 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 
 export function Brand({ className = 'text-3xl' }: { className?: string }) {
   return (
-    <span className={`font-semibold tracking-tight text-brand-700 ${className}`}>
-      Cobrad<span className="text-accent-500">í</span>a
+    <span className={`font-display font-semibold tracking-tight text-brand-700 ${className}`}>
+      Cobrad<span className="text-brand-400">í</span>a
     </span>
   )
 }

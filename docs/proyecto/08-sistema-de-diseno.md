@@ -1,8 +1,8 @@
 # 08 · Sistema de diseño de Cobradía
 
-**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **ajustado el 05/10/2026** a pedido del dueño: el verde primario sube un tono (`#15803D` en claro), el **tema claro es el predeterminado** y el oscuro queda opcional con un interruptor en la barra (persistido por usuario); las superficies del oscuro se aclararon un paso
+**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **identidad definitiva fijada el 05/10/2026 (decisión 052)** a pedido del dueño: **blanco dominante con verde esmeralda como único acento** (el ámbar sale de la identidad y queda solo como color semántico de advertencia), tema claro predeterminado con oscuro opcional por interruptor, y **dos tipografías**: Sora para títulos y marca, Inter para la interfaz.
 
-**En una frase:** una identidad propia en **verde profundo y ámbar** (decisión 047, distinta de la referencia Púrpura Datos), sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro y oscuro, y accesibilidad WCAG 2.2 AA.
+**En una frase:** una identidad limpia de **blanco dominante con esmeralda como acento** (decisiones 047 y 052, distinta de la referencia Púrpura Datos), sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
 
 Este documento define los *tokens* y patrones que la Fase 1 convierte en código (`@theme` de Tailwind y componentes shadcn ajustados). Lo que funciona de la referencia se conserva ([ficha 09](../referencia/09-sistema-de-diseno.md#93-lo-que-funciona-y-conviene-conservar)); sus problemas de UX ([9.4](../referencia/09-sistema-de-diseno.md#94-problemas-de-ux)) se corrigen aquí.
 
@@ -10,7 +10,7 @@ Este documento define los *tokens* y patrones que la Fase 1 convierte en código
 
 - **Marca:** Cobradía, siempre con su acento en la interfaz y los documentos; el dominio es `cobradia.com` (decisión 044).
 - **Personalidad:** seria y confiable (maneja dinero ajeno), pero cercana y en español llano. Nada de jerga técnica en la interfaz.
-- **Logotipo:** por ahora, un *wordmark* «Cobradía» en Inter SemiBold con el punto de la í en ámbar, como detalle distintivo. Un logotipo profesional se encarga antes del lanzamiento; el sistema solo necesita que quepa en un cuadrado (favicon, menú plegado) y en horizontal (encabezados).
+- **Logotipo:** por ahora, un *wordmark* «Cobradía» en **Sora SemiBold** con la í en esmeralda claro (`--brand-400`), como detalle distintivo. Un logotipo profesional se encarga antes del lanzamiento; el sistema solo necesita que quepa en un cuadrado (favicon, menú plegado) y en horizontal (encabezados).
 - **Sin marca de agua** en las pantallas de trabajo (problema #1 de la referencia). El logo vive en el menú lateral y en los documentos.
 - **El logo de cada empresa** (tenant) aparece en **sus** documentos y en su encabezado interno; la marca Cobradía queda en el pie de página de los documentos («Generado con Cobradía · cobradia.com») y en las pantallas públicas. Así el pagaré es de la financiera, no nuestro.
 
@@ -18,58 +18,60 @@ Este documento define los *tokens* y patrones que la Fase 1 convierte en código
 
 Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como tokens de Tailwind; los componentes nunca usan colores sueltos.
 
-### Claro
+**El blanco manda:** las superficies son blancas sobre un fondo gris neutro casi blanco; el esmeralda aparece solo en acentos pequeños (acción primaria, enlaces, ítem activo, insignias). Nada de bloques grandes de color.
+
+### Claro (predeterminado)
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-950` | `#06281A` | Menú lateral, texto sobre fondos de marca claros |
-| `--brand-800` | `#166534` | Texto de marca sobre blanco, hover de la acción primaria |
-| `--brand-700` | `#15803D` | **Acción primaria**, enlaces, ítem activo |
-| `--brand-100` | `#DCFCE7` | Selecciones, filas destacadas, fondos de insignia «al día» |
-| `--accent-500` | `#F59E0B` | Ámbar de marca: detalles, foco de atención, barra de la prueba |
-| `--success-600` | `#16A34A` | Pagado, cuadrado, confirmaciones |
-| `--warning-700` | `#B45309` | Vencido 1–30 días, atención (texto); fondo `#FEF3C7` |
+| `--brand-950` | `#022C22` | Texto sobre fondos de marca claros |
+| `--brand-800` | `#065F46` | Hover de la acción primaria |
+| `--brand-700` | `#047857` | **Acción primaria**, enlaces, ítem activo (AA sobre blanco) |
+| `--brand-400` | `#34D399` | Detalle de la marca (la í), micro-acentos |
+| `--brand-100` | `#D1FAE5` | Selecciones, fondos de insignia «al día» |
+| `--accent-500` | `#10B981` | Anillos de foco y acentos finos (esmeralda claro) |
+| `--success-600` | `#059669` | Pagado, cuadrado, confirmaciones |
+| `--warning-700` | `#B45309` | Vencido 1–30 días, atención — **semántico, no identidad** |
 | `--danger-600` | `#DC2626` | Errores, mora grave (31+ días), acciones destructivas |
 | `--info-700` | `#0369A1` | Información neutral |
-| `--canvas` | `#F6F8F5` | Fondo de la página (gris con un grado de verde) |
-| `--surface` | `#FFFFFF` | Tarjetas, tablas, barras |
-| `--text` | `#1B241E` | Texto principal |
-| `--muted` | `#5B6660` | Texto secundario |
-| `--border` | `#DDE3DD` | Bordes y separadores |
+| `--canvas` | `#FAFAFA` | Fondo de la página (gris neutro, sin tinte) |
+| `--surface` | `#FFFFFF` | Tarjetas, tablas, barras: **el color principal del producto** |
+| `--text` | `#111827` | Texto principal (gris neutro) |
+| `--muted` | `#6B7280` | Texto secundario |
+| `--border` | `#E5E7EB` | Bordes y separadores |
 
-### Oscuro
+### Oscuro (opcional)
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-700` | `#4ADE80` | Acción primaria y enlaces (con texto oscuro encima) |
-| `--brand-100` | `#17301F` | Selecciones |
-| `--accent-500` | `#FBBF24` | Ámbar |
-| `--canvas` | `#141B16` | Fondo |
-| `--surface` | `#1D2721` | Tarjetas |
-| `--text` | `#E9EFE9` | Texto |
-| `--muted` | `#A3AEA6` | Secundario |
-| `--border` | `#323D34` | Bordes |
-
-Éxito, aviso, peligro e información usan las variantes claras de cada familia (`#4ADE80`, `#FCD34D`, `#F87171`, `#38BDF8`) con fondos oscuros de su mismo tono.
+| `--brand-700` | `#34D399` | Acción primaria y enlaces (con texto oscuro encima) |
+| `--brand-100` | `#123B2A` | Selecciones |
+| `--canvas` | `#131517` | Fondo (neutro) |
+| `--surface` | `#1B1E21` | Tarjetas |
+| `--text` | `#E8EAED` | Texto |
+| `--muted` | `#9AA1A9` | Secundario |
+| `--border` | `#32363B` | Bordes |
 
 ### Reglas de uso
 
-1. **El verde de marca es acción e identidad; el dinero no se colorea por sí mismo.** Un importe es texto normal; el color lo da su **estado** (insignia), no el signo de pesos.
-2. **Estados de cuota y préstamo:** al día `brand-100`/`brand-800` · pagada `success` · parcial `info` · vencida 1–30 `warning` · vencida 31+ o legal `danger` · saldado gris. Siempre color **más texto**: nunca solo color (accesibilidad).
-3. **El ámbar es acento, no alarma:** barra de días de prueba, destellos del logo, resaltados. Las alertas usan `warning`/`danger`.
-4. **Un solo color primario por pantalla:** una acción principal verde; el resto, botones secundarios (borde) o fantasma. (Corrige los 11 botones púrpura iguales de la referencia.)
+1. **El blanco es el protagonista y el esmeralda, el acento.** Si una pantalla se ve «verde», sobra color: el esmeralda vive en botones, enlaces, el ítem activo y las insignias, nunca en fondos grandes.
+2. **El dinero no se colorea por sí mismo.** Un importe es texto normal; el color lo da su **estado** (insignia), no el signo de pesos.
+3. **Estados de cuota y préstamo:** al día `brand-100`/`brand-800` · pagada `success` · parcial `info` · vencida 1–30 `warning` · vencida 31+ o legal `danger` · saldado gris. Siempre color **más texto**: nunca solo color (accesibilidad).
+4. **El ámbar ya no es identidad:** queda únicamente como color semántico de advertencia (`warning`).
+5. **Un solo color primario por pantalla:** una acción principal verde; el resto, botones secundarios (borde) o fantasma. (Corrige los 11 botones púrpura iguales de la referencia.)
 
-## 3. Tipografía
+## 3. Tipografía (dos familias, decisión 052)
 
 | Elemento | Valor |
 | --- | --- |
-| Familia única | **Inter** (variable), autoalojada; `system-ui` de respaldo |
+| **Títulos y marca** | **Sora** (variable, 600/700), autoalojada: geométrica y moderna, con `letter-spacing -0.015em`. Se aplica a `h1–h3` y al *wordmark* |
+| **Interfaz y cifras** | **Inter** (variable), autoalojada; `system-ui` de respaldo. Todo el cuerpo, formularios, tablas y documentos |
 | Cuerpo | 14 px / 400 en escritorio; 16 px en móvil |
 | Secundario y etiquetas | 12.5 px / 500, `--muted` |
-| Títulos de pantalla | 20 px / 600 |
+| Títulos de pantalla | 20 px / 600 (Sora) |
 | Cifras de tablero (KPI) | 28 px / 700 |
 | **Importes** | `font-variant-numeric: tabular-nums` **siempre**: en tablas, totales, recibos y KPI. Alineados a la derecha en tablas |
-| Documentos PDF | La misma Inter (coherencia de marca); los legales pueden usar una serif si el abogado lo pide |
+| Documentos PDF | Inter para el cuerpo y Sora para encabezados (coherencia de marca); los legales pueden usar una serif si el abogado lo pide |
 
 Formato regional fijo (es-DO): `RD$ 1,250.00`, fechas `04/10/2026`, sin notaciones como `97'925.00` (defecto #41 de la referencia).
 
