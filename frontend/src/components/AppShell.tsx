@@ -12,17 +12,17 @@ interface NavItem {
 }
 
 function navFor(me: Me): NavItem[] {
-  if (me.is_platform_admin) {
-    return [{ to: '/plataforma', label: 'Empresas' }]
-  }
-  const items: NavItem[] = [{ to: '/', label: 'Inicio' }]
-  if (me.is_manager) {
+  const items: NavItem[] = me.is_platform_admin
+    ? [{ to: '/plataforma', label: 'Empresas' }]
+    : [{ to: '/', label: 'Inicio' }]
+  if (!me.is_platform_admin && me.is_manager) {
     items.push(
       { to: '/ajustes/sucursales', label: 'Sucursales' },
       { to: '/ajustes/usuarios', label: 'Usuarios' },
       { to: '/ajustes/suscripcion', label: 'Suscripción' },
     )
   }
+  items.push({ to: '/cuenta', label: 'Mi cuenta' })
   return items
 }
 

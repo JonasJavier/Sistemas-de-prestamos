@@ -56,6 +56,53 @@ export async function logout(): Promise<void> {
   }
 }
 
+export interface TotpConfig {
+  secret: string
+  totp_url: string
+}
+
+/** 404 means "not configured yet" and carries the fresh secret. */
+export async function getTotpConfig(): Promise<{ active: boolean; config: TotpConfig | null }> {
+  try {
+    await api(`${BASE}/account/authenticators/totp`)
+    return { active: true, config: null }
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      const data = error.data as { meta?: TotpConfig }
+      if (data?.meta?.secret) return { active: false, config: data.meta }
+    }
+    throw error
+  }
+}
+
+export async function activateTotp(code: string): Promise<void> {
+  await api(`${BASE}/account/authenticators/totp`, { method: 'POST', body: { code } })
+}
+
+interface RecoveryCodesData {
+  unused_codes?: string[]
+}
+
+export async function regenerateRecoveryCodes(): Promise<string[]> {
+  const response = await api<{ data?: RecoveryCodesData }>(
+    `${BASE}/account/authenticators/recovery-codes`,
+    { method: 'POST', body: {} },
+  )
+  return response.data?.unused_codes ?? []
+}
+
+export async function getRecoveryCodes(): Promise<string[] | null> {
+  try {
+    const response = await api<{ data?: RecoveryCodesData }>(
+      `${BASE}/account/authenticators/recovery-codes`,
+    )
+    return response.data?.unused_codes ?? null
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
 export async function mfaAuthenticate(code: string): Promise<SessionUser | null> {
   const response = await api<AllauthResponse>(`${BASE}/auth/2fa/authenticate`, {
     method: 'POST',

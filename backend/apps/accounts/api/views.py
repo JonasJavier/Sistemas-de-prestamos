@@ -27,7 +27,13 @@ class MeView(APIView):
     """Who am I: the SPA decides tenant vs platform navigation with this."""
 
     def get(self, request: Request) -> Response:
+        from allauth.mfa.models import Authenticator
+        from django.conf import settings
+
         user = request.user
+        mfa_enabled = Authenticator.objects.filter(
+            user=user, type=Authenticator.Type.TOTP
+        ).exists()
         return Response(
             {
                 "id": str(user.id),
@@ -37,6 +43,8 @@ class MeView(APIView):
                 "is_platform_admin": user.is_platform_admin,
                 "is_manager": is_company_manager(request) if user.company_id else False,
                 "company_id": str(user.company_id) if user.company_id else None,
+                "mfa_enabled": mfa_enabled,
+                "mfa_required": settings.REQUIRE_MFA,
             }
         )
 
@@ -111,12 +119,19 @@ class InvitationCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
+            from django.conf import settings
+
+            accept_url_base = (
+                f"{settings.FRONTEND_URL}/invitacion"
+                if settings.FRONTEND_URL
+                else request.build_absolute_uri("/invitacion")
+            )
             invitation = services.invite_user(
                 invited_by=request.user,
                 email=data["email"],
                 branch=data["branch"],
                 role=data["role"],
-                accept_url_base=request.build_absolute_uri("/invitacion"),
+                accept_url_base=accept_url_base,
             )
         except services.InvitationError as exc:
             raise ValidationError({"email": str(exc)}) from exc

@@ -64,6 +64,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "apps.core.tenancy.TenantMiddleware",
+    "apps.accounts.middleware.MFARequiredMiddleware",
     "pghistory.middleware.HistoryMiddleware",
 ]
 
@@ -114,14 +115,24 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
 HEADLESS_ONLY = True
+
+# Where the SPA lives. Empty means same origin (production behind Caddy);
+# in development it points at the Vite server so emailed links land there.
+FRONTEND_URL = env("FRONTEND_URL", default="").rstrip("/")
+
 # Routes in the SPA that allauth links to from its emails (doc 07 routes).
 HEADLESS_FRONTEND_URLS = {
-    "account_confirm_email": "/verificar-correo/{key}",
-    "account_reset_password": "/recuperar",
-    "account_reset_password_from_key": "/recuperar/{key}",
-    "account_signup": "/registro",
+    "account_confirm_email": f"{FRONTEND_URL}/verificar-correo/{{key}}",
+    "account_reset_password": f"{FRONTEND_URL}/recuperar",
+    "account_reset_password_from_key": f"{FRONTEND_URL}/recuperar/{{key}}",
+    "account_signup": f"{FRONTEND_URL}/registro",
 }
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+
+# Decision 034: 2FA is mandatory for every user. Enforced by
+# MFARequiredMiddleware; off by default in development so seeded test
+# accounts stay usable, and on in production.
+REQUIRE_MFA = env.bool("REQUIRE_MFA", default=False)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

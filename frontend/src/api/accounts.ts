@@ -8,6 +8,8 @@ export interface Me {
   is_platform_admin: boolean
   is_manager: boolean
   company_id: string | null
+  mfa_enabled: boolean
+  mfa_required: boolean
 }
 
 export function getMe(): Promise<Me> {

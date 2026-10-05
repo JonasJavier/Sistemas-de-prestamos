@@ -10,6 +10,7 @@ import {
 import { getMe, type Me } from './api/accounts'
 import { getSession, type SessionUser } from './api/auth'
 import { AppShell } from './components/AppShell'
+import { AccountPage } from './pages/Account'
 import { BranchesPage } from './pages/Branches'
 import { DashboardPage } from './pages/Dashboard'
 import { InvitationAcceptPage } from './pages/InvitationAccept'
@@ -44,10 +45,14 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 const appRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'app',
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(sessionQuery)
     if (!user) throw redirect({ to: '/entrar' })
     const me = await context.queryClient.ensureQueryData(meQuery)
+    // Decision 034: with mandatory 2FA pending, the only destination is Mi cuenta.
+    if (me.mfa_required && !me.mfa_enabled && location.pathname !== '/cuenta') {
+      throw redirect({ to: '/cuenta' })
+    }
     return { user, me }
   },
   component: function App() {
@@ -96,6 +101,15 @@ const subscriptionRoute = createRoute({
   component: SubscriptionPage,
 })
 
+const accountRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cuenta',
+  component: function Account() {
+    const { me } = appRoute.useRouteContext() as { me: Me }
+    return <AccountPage me={me} />
+  },
+})
+
 const platformRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/plataforma',
@@ -140,6 +154,7 @@ const routeTree = rootRoute.addChildren([
     branchesRoute,
     usersRoute,
     subscriptionRoute,
+    accountRoute,
     platformRoute,
   ]),
   loginRoute,

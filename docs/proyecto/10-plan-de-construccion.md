@@ -23,6 +23,8 @@ Las duraciones son estimaciones de trabajo para el responsable técnico; se afin
 
 **Dependencias:** 1 → 2 → 3 → 4 → (5, 6 en paralelo) → 7 → 8 → 9 → 10. La demo de cierre de cada fase se hace en el entorno de pruebas con datos ficticios.
 
+> **Fase 1 aceptada el 05/10/2026.** Criterios verificados: aislamiento entre empresas garantizado por RLS (pruebas de cruce en verde con rol de base de datos sin privilegios), registro → prueba → suspensión → activación de punta a punta en interfaz, invitaciones F17 completas, 2FA activable desde «Mi cuenta» y obligatorio mediante `REQUIRE_MFA` (encendido por defecto en producción, decisión 034). La matriz fina de permisos por módulo se va aplicando en la fase de cada módulo. CI en GitHub Actions en verde.
+
 ## 2. Estrategia de pruebas
 
 | Nivel | Qué prueba | Herramienta |
