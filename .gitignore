@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+backend/.pytest-media/
 *.py[cod]
 backend/.venv/
 backend/.env
