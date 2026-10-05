@@ -76,14 +76,14 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       {!me.is_platform_admin ? <CommandPalette /> : null}
-      <aside className="hidden w-56 flex-col border-r border-edge bg-surface p-4 sm:flex">
-        <Brand className="text-xl" />
+      <aside className="hidden w-56 flex-col bg-brand-950 p-4 sm:flex">
+        <Brand className="text-xl" tone="light" />
         <nav className="mt-6 flex flex-col gap-1">
           {navFor(me).map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-lg px-3 py-2 text-sm text-muted hover:bg-brand-100 hover:text-brand-800 [&.active]:bg-brand-100 [&.active]:font-semibold [&.active]:text-brand-800"
+              className="rounded-lg border-l-3 border-transparent px-3 py-2 text-sm text-brand-200 hover:bg-brand-900 hover:text-white [&.active]:border-gold-500 [&.active]:bg-brand-900 [&.active]:font-semibold [&.active]:text-white"
               activeOptions={{ exact: item.to === '/' }}
             >
               {item.label}

@@ -1,8 +1,8 @@
 # 08 · Sistema de diseño de Cobradía
 
-**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **identidad definitiva fijada el 05/10/2026 (decisión 052)** a pedido del dueño: **blanco dominante con verde esmeralda como único acento** (el ámbar sale de la identidad y queda solo como color semántico de advertencia), tema claro predeterminado con oscuro opcional por interruptor, y **dos tipografías**: Sora para títulos y marca, Inter para la interfaz.
+**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **paleta definitiva «Bosque y Arena» elegida el 05/10/2026 (decisión 053)** por el dueño entre cuatro opciones de un lienzo comparativo, tras descartar el «solo blanco» por simplón; tipografías **Sora** (títulos y marca) e **Inter** (interfaz y cifras) de la decisión 052; tema claro predeterminado con oscuro opcional por interruptor.
 
-**En una frase:** una identidad limpia de **blanco dominante con esmeralda como acento** (decisiones 047 y 052, distinta de la referencia Púrpura Datos), sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
+**En una frase:** la identidad **«Bosque y Arena»** (decisión 053, distinta de la referencia Púrpura Datos): menú lateral verde bosque, fondo arena cálido, tarjetas blancas, acciones esmeralda y un dorado discreto como firma, sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
 
 Este documento define los *tokens* y patrones que la Fase 1 convierte en código (`@theme` de Tailwind y componentes shadcn ajustados). Lo que funciona de la referencia se conserva ([ficha 09](../referencia/09-sistema-de-diseno.md#93-lo-que-funciona-y-conviene-conservar)); sus problemas de UX ([9.4](../referencia/09-sistema-de-diseno.md#94-problemas-de-ux)) se corrigen aquí.
 
@@ -18,43 +18,46 @@ Este documento define los *tokens* y patrones que la Fase 1 convierte en código
 
 Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como tokens de Tailwind; los componentes nunca usan colores sueltos.
 
-**El blanco manda:** las superficies son blancas sobre un fondo gris neutro casi blanco; el esmeralda aparece solo en acentos pequeños (acción primaria, enlaces, ítem activo, insignias). Nada de bloques grandes de color.
+**La fórmula «Bosque y Arena»:** un solo bloque de color fuerte —el menú lateral verde bosque— ancla la identidad; el resto respira: fondo arena cálido, tarjetas blancas donde se trabaja, esmeralda en las acciones y un **dorado discreto como firma** (la í de la marca, la barrita del ítem activo, el aviso de prueba).
 
 ### Claro (predeterminado)
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-950` | `#022C22` | Texto sobre fondos de marca claros |
-| `--brand-800` | `#065F46` | Hover de la acción primaria |
-| `--brand-700` | `#047857` | **Acción primaria**, enlaces, ítem activo (AA sobre blanco) |
-| `--brand-400` | `#34D399` | Detalle de la marca (la í), micro-acentos |
-| `--brand-100` | `#D1FAE5` | Selecciones, fondos de insignia «al día» |
-| `--accent-500` | `#10B981` | Anillos de foco y acentos finos (esmeralda claro) |
+| `--brand-950` | `#15402F` | **El menú lateral** (verde bosque) |
+| `--brand-900` | `#1E5540` | Ítem activo y hover dentro del menú |
+| `--brand-800` | `#0B5C43` | Hover de la acción primaria; texto de insignia «al día» |
+| `--brand-700` | `#0E6B4F` | **Acción primaria**, enlaces (AA sobre blanco) |
+| `--brand-200` | `#B9CDC1` | Texto de navegación sobre el bosque |
+| `--brand-100` | `#DCEFE4` | Selecciones, fondos de insignia «al día» |
+| `--gold-500` | `#C9A227` | **Firma dorada:** la í de la marca, marcador del ítem activo |
+| `--gold-100` / `--gold-800` | `#F6ECD4` / `#8A6A14` | Aviso de la prueba gratis (fondo / texto) |
+| `--accent-500` | `#0E8A64` | Anillos de foco |
 | `--success-600` | `#059669` | Pagado, cuadrado, confirmaciones |
-| `--warning-700` | `#B45309` | Vencido 1–30 días, atención — **semántico, no identidad** |
+| `--warning-700` | `#B45309` | Vencido 1–30 días — semántico, no identidad |
 | `--danger-600` | `#DC2626` | Errores, mora grave (31+ días), acciones destructivas |
 | `--info-700` | `#0369A1` | Información neutral |
-| `--canvas` | `#FAFAFA` | Fondo de la página (gris neutro, sin tinte) |
-| `--surface` | `#FFFFFF` | Tarjetas, tablas, barras: **el color principal del producto** |
-| `--text` | `#111827` | Texto principal (gris neutro) |
-| `--muted` | `#6B7280` | Texto secundario |
-| `--border` | `#E5E7EB` | Bordes y separadores |
+| `--canvas` | `#F3EEE3` | Fondo de la página (**arena cálido**) |
+| `--surface` | `#FFFFFF` | Tarjetas, tablas, barras: donde se trabaja |
+| `--surface-2` | `#FCFAF5` | Zonas de contenido sutiles |
+| `--text` | `#26302B` | Texto principal |
+| `--muted` | `#716B5E` | Texto secundario |
+| `--border` | `#E6DFD0` | Bordes y separadores |
 
 ### Oscuro (opcional)
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-700` | `#34D399` | Acción primaria y enlaces (con texto oscuro encima) |
-| `--brand-100` | `#123B2A` | Selecciones |
-| `--canvas` | `#131517` | Fondo (neutro) |
-| `--surface` | `#1B1E21` | Tarjetas |
-| `--text` | `#E8EAED` | Texto |
-| `--muted` | `#9AA1A9` | Secundario |
-| `--border` | `#32363B` | Bordes |
+| `--brand-950` / `--brand-900` | `#10251C` / `#1B3F2F` | Menú y su ítem activo |
+| `--brand-700` | `#35B585` | Acción primaria y enlaces |
+| `--brand-100` / `--brand-800` | `#1A3A2B` / `#9FE0C3` | Insignias (fondo / texto) |
+| `--gold-500` | `#D4AF37` | Firma dorada |
+| `--canvas` / `--surface` | `#151A16` / `#1D2420` | Fondo y tarjetas |
+| `--text` / `--muted` / `--border` | `#E8EDE8` / `#9FA89F` / `#333C35` | Texto y bordes |
 
 ### Reglas de uso
 
-1. **El blanco es el protagonista y el esmeralda, el acento.** Si una pantalla se ve «verde», sobra color: el esmeralda vive en botones, enlaces, el ítem activo y las insignias, nunca en fondos grandes.
+1. **Un solo bloque de color: el menú.** El bosque vive en el lateral; el área de trabajo es arena y blanco. Si aparece otro bloque grande de color, sobra. El dorado es firma, no botón: nunca para acciones.
 2. **El dinero no se colorea por sí mismo.** Un importe es texto normal; el color lo da su **estado** (insignia), no el signo de pesos.
 3. **Estados de cuota y préstamo:** al día `brand-100`/`brand-800` · pagada `success` · parcial `info` · vencida 1–30 `warning` · vencida 31+ o legal `danger` · saldado gris. Siempre color **más texto**: nunca solo color (accesibilidad).
 4. **El ámbar ya no es identidad:** queda únicamente como color semántico de advertencia (`warning`).

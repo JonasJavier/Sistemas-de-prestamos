@@ -5,24 +5,29 @@
 /* Cobradía design tokens (docs/proyecto/08-sistema-de-diseno.md, decision 052).
    Identity: white-dominant surfaces with emerald green as the single accent.
    Components always use these tokens, never loose colors. */
+/* Palette "Bosque y Arena" (decision 053): deep forest sidebar, warm
+   sand canvas, white cards, emerald actions and a discreet gold. */
 @theme {
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-400: #34d399;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-950: #022c22;
-  /* Accent is the light emerald used for focus rings and small details. */
-  --color-accent-500: #10b981;
+  --color-brand-950: #15402f; /* forest: the sidebar */
+  --color-brand-900: #1e5540; /* active/hover on forest */
+  --color-brand-800: #0b5c43; /* primary hover, badge text */
+  --color-brand-700: #0e6b4f; /* primary action, links */
+  --color-brand-200: #b9cdc1; /* nav text on forest */
+  --color-brand-100: #dcefe4; /* selections, "al día" badges */
+  --color-gold-500: #c9a227; /* identity detail: the í, active marker */
+  --color-gold-100: #f6ecd4; /* trial chip background */
+  --color-gold-800: #8a6a14; /* text on gold-100 */
+  --color-accent-500: #0e8a64; /* focus rings */
   --color-success-600: #059669;
   --color-warning-700: #b45309;
   --color-danger-600: #dc2626;
   --color-info-700: #0369a1;
-  --color-canvas: #fafafa;
+  --color-canvas: #f3eee3; /* sand */
   --color-surface: #ffffff;
-  --color-ink: #111827;
-  --color-muted: #6b7280;
-  --color-edge: #e5e7eb;
+  --color-surface-2: #fcfaf5; /* subtle content zones */
+  --color-ink: #26302b;
+  --color-muted: #716b5e;
+  --color-edge: #e6dfd0;
 
   --font-sans: 'Inter Variable', system-ui, sans-serif;
   --font-display: 'Sora Variable', 'Inter Variable', system-ui, sans-serif;
@@ -30,15 +35,22 @@
 
 /* Dark mode is opt-in via the header toggle (light is the default). */
 :root.dark {
-  --color-brand-100: #123b2a;
-  --color-brand-700: #34d399;
-  --color-brand-800: #6ee7b7;
-  --color-accent-500: #34d399;
-  --color-canvas: #131517;
-  --color-surface: #1b1e21;
-  --color-ink: #e8eaed;
-  --color-muted: #9aa1a9;
-  --color-edge: #32363b;
+  --color-brand-950: #10251c;
+  --color-brand-900: #1b3f2f;
+  --color-brand-800: #9fe0c3;
+  --color-brand-700: #35b585;
+  --color-brand-200: #8fae9d;
+  --color-brand-100: #1a3a2b;
+  --color-gold-500: #d4af37;
+  --color-gold-100: #3b3114;
+  --color-gold-800: #e3c86a;
+  --color-accent-500: #35b585;
+  --color-canvas: #151a16;
+  --color-surface: #1d2420;
+  --color-surface-2: #1a211d;
+  --color-ink: #e8ede8;
+  --color-muted: #9fa89f;
+  --color-edge: #333c35;
 }
 
 body {
