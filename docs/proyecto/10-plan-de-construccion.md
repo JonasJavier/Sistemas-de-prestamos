@@ -23,6 +23,8 @@ Las duraciones son estimaciones de trabajo para el responsable técnico; se afin
 
 **Dependencias:** 1 → 2 → 3 → 4 → (5, 6 en paralelo) → 7 → 8 → 9 → 10. La demo de cierre de cada fase se hace en el entorno de pruebas con datos ficticios.
 
+> **Fase 2 aceptada el 05/10/2026.** F1 y F2 completos: clientes persona/empresa con validación de cédula (Luhn) y flujo anti-duplicados, expediente (laborales/negocio, familiares, referencias verificadas), archivos privados con validación por contenido, descargas auditadas y enlaces de 5 minutos (clientes y garantías), garantías con detalle de vehículo/inmueble, y búsqueda global Ctrl+K. Pendientes trasladados: catálogo de municipios/sectores con la fuente oficial (ONE), interfaz de archivos de garantía (la API está), y pruebas Playwright de extremo a extremo (se montan con la demo de Fase 3).
+>
 > **Fase 1 aceptada el 05/10/2026.** Criterios verificados: aislamiento entre empresas garantizado por RLS (pruebas de cruce en verde con rol de base de datos sin privilegios), registro → prueba → suspensión → activación de punta a punta en interfaz, invitaciones F17 completas, 2FA activable desde «Mi cuenta» y obligatorio mediante `REQUIRE_MFA` (encendido por defecto en producción, decisión 034). La matriz fina de permisos por módulo se va aplicando en la fase de cada módulo. CI en GitHub Actions en verde.
 
 ## 2. Estrategia de pruebas

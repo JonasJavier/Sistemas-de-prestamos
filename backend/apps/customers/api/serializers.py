@@ -8,6 +8,7 @@ from apps.customers.files import inspect_private_file
 from apps.customers.models import (
     Business,
     Collateral,
+    CollateralFile,
     Customer,
     CustomerFile,
     Employment,
@@ -246,6 +247,39 @@ class CustomerFileSerializer(_CompanyFromCustomerMixin, serializers.ModelSeriali
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> CustomerFile:
+        validated_data["uploaded_by"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+class CollateralFileSerializer(_CompanyFromCustomerMixin, serializers.ModelSerializer):
+    collateral = serializers.PrimaryKeyRelatedField(queryset=Collateral.objects.all())
+    file = serializers.FileField(write_only=True)
+    uploaded_by_email = serializers.CharField(source="uploaded_by.email", read_only=True)
+
+    class Meta:
+        model = CollateralFile
+        fields = [
+            "id",
+            "collateral",
+            "kind",
+            "file",
+            "content_type",
+            "size",
+            "sha256",
+            "uploaded_by_email",
+            "created_at",
+        ]
+        read_only_fields = ["content_type", "size", "sha256", "created_at"]
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            content_type, size, sha256 = inspect_private_file(attrs["file"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"file": exc.messages[0]}) from exc
+        attrs.update(content_type=content_type, size=size, sha256=sha256)
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> CollateralFile:
         validated_data["uploaded_by"] = self.context["request"].user
         return super().create(validated_data)
 

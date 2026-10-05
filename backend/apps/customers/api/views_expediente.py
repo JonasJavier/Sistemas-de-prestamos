@@ -17,6 +17,7 @@ from apps.audit.models import SensitiveAccessLog
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.customers.api.serializers import (
     BusinessSerializer,
+    CollateralFileSerializer,
     CollateralSerializer,
     CustomerFileSerializer,
     EmploymentSerializer,
@@ -27,6 +28,7 @@ from apps.customers.api.serializers import (
 from apps.customers.models import (
     Business,
     Collateral,
+    CollateralFile,
     Customer,
     CustomerFile,
     Employment,
@@ -74,26 +76,29 @@ class ReferenceViewSet(_CustomerChildViewSet):
         return Response(ReferenceSerializer(reference).data)
 
 
-class CustomerFileViewSet(
+class _PrivateFileViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = CustomerFileSerializer
+    """Shared machinery for private uploads: audited reads, 5-minute links."""
+
     permission_classes = [CanEditCustomers, CompanyNotSuspendedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
-    filterset_fields = ["customer", "kind"]
-    queryset = CustomerFile.objects.select_related("uploaded_by").order_by("-created_at")
+    target_type = ""  # key in SIGNED_FILE_MODELS
 
-    def _log(self, request: Request, file: CustomerFile, action_kind: str) -> None:
+    def _detail(self, file) -> str:
+        raise NotImplementedError
+
+    def _log(self, request: Request, file, action_kind: str) -> None:
         SensitiveAccessLog.objects.create(
             company_id=request.user.company_id,
             user=request.user,
             action=action_kind,
-            target_type="customer_file",
+            target_type=self.target_type,
             target_id=file.id,
-            detail=f"{file.get_kind_display()} de {file.customer.display_name}",
+            detail=self._detail(file),
         )
 
     @action(detail=True, methods=["get"], permission_classes=[CanViewFiles])
@@ -109,7 +114,7 @@ class CustomerFileViewSet(
         """A share/download URL that expires in 5 minutes (doc 06 - section 7)."""
         file = self.get_object()
         self._log(request, file, SensitiveAccessLog.Action.FILE_LINK)
-        token = _signer.sign(str(file.id))
+        token = _signer.sign(f"{self.target_type}:{file.id}")
         return Response(
             {
                 "url": request.build_absolute_uri(f"/api/v1/archivos/descarga/{token}/"),
@@ -118,12 +123,42 @@ class CustomerFileViewSet(
         )
 
 
+class CustomerFileViewSet(_PrivateFileViewSet):
+    serializer_class = CustomerFileSerializer
+    filterset_fields = ["customer", "kind"]
+    queryset = CustomerFile.objects.select_related("uploaded_by", "customer").order_by(
+        "-created_at"
+    )
+    target_type = "customer_file"
+
+    def _detail(self, file: CustomerFile) -> str:
+        return f"{file.get_kind_display()} de {file.customer.display_name}"
+
+
+class CollateralFileViewSet(_PrivateFileViewSet):
+    serializer_class = CollateralFileSerializer
+    filterset_fields = ["collateral", "kind"]
+    queryset = CollateralFile.objects.select_related("uploaded_by", "collateral").order_by(
+        "-created_at"
+    )
+    target_type = "collateral_file"
+
+    def _detail(self, file: CollateralFile) -> str:
+        return f"{file.get_kind_display()} de {file.collateral.description}"
+
+
+SIGNED_FILE_MODELS = {
+    "customer_file": CustomerFile,
+    "collateral_file": CollateralFile,
+}
+
+
 class SignedFileDownloadView(APIView):
     """Session + signed token, both required: belt and suspenders."""
 
     def get(self, request: Request, token: str) -> Response:
         try:
-            file_id = _signer.unsign(token, max_age=FILE_LINK_MAX_AGE)
+            payload = _signer.unsign(token, max_age=FILE_LINK_MAX_AGE)
         except SignatureExpired:
             return Response(
                 {"detail": "El enlace venció (dura 5 minutos). Genera uno nuevo."},
@@ -131,9 +166,13 @@ class SignedFileDownloadView(APIView):
             )
         except BadSignature:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        target_type, _, file_id = payload.partition(":")
+        model = SIGNED_FILE_MODELS.get(target_type)
+        if model is None or not file_id:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         try:
-            file = CustomerFile.objects.get(pk=file_id)  # RLS scopes it
-        except CustomerFile.DoesNotExist:
+            file = model.objects.get(pk=file_id)  # RLS scopes it
+        except model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return FileResponse(
             file.file.open("rb"), content_type=file.content_type, as_attachment=True

@@ -186,6 +186,37 @@ def test_vehicle_collateral_requires_detail(client: APIClient, customer_id: str)
     assert created.json()["status"] == "registered"
 
 
+def test_collateral_file_upload_and_signed_link(client: APIClient, customer_id: str) -> None:
+    collateral = client.post(
+        "/api/v1/garantias/",
+        {
+            "owner": customer_id,
+            "type": "vehicle",
+            "description": "Honda CB190",
+            "vehicle": {"brand": "Honda", "model": "CB190"},
+        },
+        format="json",
+    ).json()
+    upload = client.post(
+        "/api/v1/archivos-garantia/",
+        {
+            "collateral": collateral["id"],
+            "kind": "appraisal",
+            "file": SimpleUploadedFile("tasacion.pdf", PDF_BYTES, content_type="application/pdf"),
+        },
+        format="multipart",
+    )
+    assert upload.status_code == 201, upload.content
+    file_id = upload.json()["id"]
+    listing = client.get("/api/v1/archivos-garantia/", {"collateral": collateral["id"]})
+    assert listing.json()["count"] == 1
+    link = client.post(f"/api/v1/archivos-garantia/{file_id}/link/")
+    assert link.status_code == 200
+    signed = client.get(link.json()["url"].replace("http://testserver", ""))
+    assert signed.status_code == 200
+    assert b"".join(signed.streaming_content) == PDF_BYTES
+
+
 def test_expediente_is_company_scoped(client: APIClient, customer_id: str, db) -> None:
     other = register_company(
         legal_name="Financiera Dos SRL",

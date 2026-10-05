@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.customers.api.views import CustomerViewSet
 from apps.customers.api.views_expediente import (
+    CollateralFileViewSet,
     CollateralViewSet,
     CustomerBusinessView,
     CustomerEmploymentView,
@@ -18,6 +19,7 @@ router.register("clientes", CustomerViewSet, basename="customer")
 router.register("familiares", RelativeViewSet, basename="relative")
 router.register("referencias", ReferenceViewSet, basename="reference")
 router.register("archivos", CustomerFileViewSet, basename="customer-file")
+router.register("archivos-garantia", CollateralFileViewSet, basename="collateral-file")
 router.register("garantias", CollateralViewSet, basename="collateral")
 
 urlpatterns = [
