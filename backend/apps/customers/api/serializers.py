@@ -4,7 +4,18 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from apps.core.models import Branch, Municipality, Province, Sector
-from apps.customers.models import Customer
+from apps.customers.files import inspect_private_file
+from apps.customers.models import (
+    Business,
+    Collateral,
+    Customer,
+    CustomerFile,
+    Employment,
+    PropertyDetail,
+    Reference,
+    Relative,
+    VehicleDetail,
+)
 from apps.customers.validators import clean_document, validate_cedula, validate_rnc
 
 
@@ -146,3 +157,179 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 class BlockSerializer(serializers.Serializer):
     reason = serializers.CharField(max_length=300)
+
+
+class _CompanyFromCustomerMixin:
+    """Create-time company assignment for records hanging off a customer."""
+
+    def create(self, validated_data: dict[str, Any]):  # type: ignore[override]
+        validated_data["company_id"] = self.context["request"].user.company_id
+        return super().create(validated_data)  # type: ignore[misc]
+
+
+class EmploymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employment
+        fields = [
+            "employer",
+            "position",
+            "since",
+            "monthly_salary",
+            "employer_phone",
+            "employer_address",
+        ]
+
+
+class BusinessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Business
+        fields = ["name", "activity", "address", "since", "monthly_sales", "monthly_expenses"]
+
+
+class RelativeSerializer(_CompanyFromCustomerMixin, serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+
+    class Meta:
+        model = Relative
+        fields = ["id", "customer", "name", "relationship", "phone", "address"]
+
+
+class ReferenceSerializer(_CompanyFromCustomerMixin, serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    verified_by_email = serializers.CharField(source="verified_by.email", read_only=True)
+
+    class Meta:
+        model = Reference
+        fields = [
+            "id",
+            "customer",
+            "name",
+            "phone",
+            "relationship",
+            "verified_by_email",
+            "verified_at",
+            "verification_result",
+        ]
+        read_only_fields = ["verified_at", "verification_result"]
+
+
+class ReferenceVerifySerializer(serializers.Serializer):
+    result = serializers.CharField(max_length=300)
+
+
+class CustomerFileSerializer(_CompanyFromCustomerMixin, serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    file = serializers.FileField(write_only=True)
+    uploaded_by_email = serializers.CharField(source="uploaded_by.email", read_only=True)
+
+    class Meta:
+        model = CustomerFile
+        fields = [
+            "id",
+            "customer",
+            "kind",
+            "file",
+            "content_type",
+            "size",
+            "sha256",
+            "uploaded_by_email",
+            "created_at",
+        ]
+        read_only_fields = ["content_type", "size", "sha256", "created_at"]
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            content_type, size, sha256 = inspect_private_file(attrs["file"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"file": exc.messages[0]}) from exc
+        attrs.update(content_type=content_type, size=size, sha256=sha256)
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> CustomerFile:
+        validated_data["uploaded_by"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+class VehicleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleDetail
+        fields = ["brand", "model", "year", "color", "plate", "chassis", "registration"]
+
+
+class PropertyDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyDetail
+        fields = ["title_number", "cadastral_designation", "location", "area_m2"]
+
+
+class CollateralSerializer(_CompanyFromCustomerMixin, serializers.ModelSerializer):
+    owner = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    owner_name = serializers.CharField(source="owner.display_name", read_only=True)
+    vehicle = VehicleDetailSerializer(required=False, allow_null=True)
+    property = PropertyDetailSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Collateral
+        fields = [
+            "id",
+            "owner",
+            "owner_name",
+            "type",
+            "description",
+            "status",
+            "appraised_value",
+            "currency",
+            "appraised_at",
+            "appraiser",
+            "vehicle",
+            "property",
+        ]
+        read_only_fields = ["status"]
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        collateral_type = attrs.get("type", getattr(self.instance, "type", None))
+        if collateral_type == Collateral.Type.VEHICLE and not (
+            attrs.get("vehicle") or getattr(self.instance, "vehicle", None)
+        ):
+            raise serializers.ValidationError(
+                {"vehicle": "Un vehículo necesita marca y modelo (defecto #16 de la referencia)."}
+            )
+        if collateral_type == Collateral.Type.PROPERTY and not (
+            attrs.get("property") or getattr(self.instance, "property", None)
+        ):
+            raise serializers.ValidationError(
+                {"property": "Un inmueble necesita sus datos de título o ubicación."}
+            )
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> Collateral:
+        vehicle_data = validated_data.pop("vehicle", None)
+        property_data = validated_data.pop("property", None)
+        company_id = self.context["request"].user.company_id
+        validated_data["company_id"] = company_id
+        collateral = Collateral.objects.create(**validated_data)
+        if vehicle_data:
+            VehicleDetail.objects.create(
+                company_id=company_id, collateral=collateral, **vehicle_data
+            )
+        if property_data:
+            PropertyDetail.objects.create(
+                company_id=company_id, collateral=collateral, **property_data
+            )
+        return collateral
+
+    def update(self, instance: Collateral, validated_data: dict[str, Any]) -> Collateral:
+        vehicle_data = validated_data.pop("vehicle", None)
+        property_data = validated_data.pop("property", None)
+        collateral = super().update(instance, validated_data)
+        if vehicle_data:
+            VehicleDetail.objects.update_or_create(
+                collateral=collateral,
+                defaults={**vehicle_data, "company_id": collateral.company_id},
+            )
+        if property_data:
+            PropertyDetail.objects.update_or_create(
+                collateral=collateral,
+                defaults={**property_data, "company_id": collateral.company_id},
+            )
+        return collateral

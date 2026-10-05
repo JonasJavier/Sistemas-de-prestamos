@@ -1,11 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
+import { useState } from 'react'
 
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { Alert, Button, Card } from '../components/ui'
+import { CollateralTab } from './customer/CollateralTab'
+import { FamilyTab } from './customer/FamilyTab'
+import { FilesTab } from './customer/FilesTab'
+import { IncomeTab } from './customer/IncomeTab'
+
+const TABS = [
+  ['resumen', 'Resumen'],
+  ['ingresos', 'Ingresos'],
+  ['familia', 'Familia y referencias'],
+  ['garantias', 'Garantías'],
+  ['archivos', 'Archivos'],
+] as const
+
+type TabKey = (typeof TABS)[number][0]
 
 export function CustomerDetailPage() {
   const { id } = useParams({ from: '/app/clientes/$id' })
+  const [tab, setTab] = useState<TabKey>('resumen')
   const queryClient = useQueryClient()
   const customer = useQuery({ queryKey: ['customer', id], queryFn: () => getCustomer(id) })
 
@@ -54,7 +70,11 @@ export function CustomerDetailPage() {
               Bloquear
             </Button>
           ) : (
-            <Button variant="secondary" onClick={() => unblock.mutate()} disabled={unblock.isPending}>
+            <Button
+              variant="secondary"
+              onClick={() => unblock.mutate()}
+              disabled={unblock.isPending}
+            >
               Desbloquear
             </Button>
           )}
@@ -62,34 +82,51 @@ export function CustomerDetailPage() {
       </div>
 
       {data.status === 'blocked' ? (
-        <Alert tone="danger">Cliente bloqueado: {data.block_reason || 'sin motivo registrado'}.</Alert>
+        <Alert tone="danger">
+          Cliente bloqueado: {data.block_reason || 'sin motivo registrado'}.
+        </Alert>
       ) : null}
 
-      <Card>
-        <h2 className="mb-2 text-base font-semibold">Datos de contacto</h2>
-        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-muted">Teléfono</dt>
-            <dd className="font-medium tabular-nums">{data.phone}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Correo</dt>
-            <dd className="font-medium">{data.email || '—'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Dirección</dt>
-            <dd className="font-medium">{data.address_line || '—'}</dd>
-          </div>
-        </dl>
-      </Card>
+      <nav className="flex gap-1 overflow-x-auto border-b border-edge">
+        {TABS.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${
+              tab === key
+                ? 'border-brand-700 text-brand-700'
+                : 'border-transparent text-muted hover:text-ink'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
-      <Card>
-        <h2 className="text-base font-semibold">Expediente</h2>
-        <p className="mt-1 text-sm text-muted">
-          Próximamente en esta fase: datos laborales o del negocio, familiares y referencias,
-          garantías y archivos privados.
-        </p>
-      </Card>
+      {tab === 'resumen' ? (
+        <Card>
+          <h2 className="mb-2 text-base font-semibold">Datos de contacto</h2>
+          <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-muted">Teléfono</dt>
+              <dd className="font-medium tabular-nums">{data.phone}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Correo</dt>
+              <dd className="font-medium">{data.email || '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Dirección</dt>
+              <dd className="font-medium">{data.address_line || '—'}</dd>
+            </div>
+          </dl>
+        </Card>
+      ) : null}
+      {tab === 'ingresos' ? <IncomeTab customerId={id} /> : null}
+      {tab === 'familia' ? <FamilyTab customerId={id} /> : null}
+      {tab === 'garantias' ? <CollateralTab customerId={id} /> : null}
+      {tab === 'archivos' ? <FilesTab customerId={id} /> : null}
     </>
   )
 }

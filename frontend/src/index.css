@@ -4,35 +4,34 @@
    Components always use these tokens, never loose colors. */
 @theme {
   --color-brand-100: #dcfce7;
-  --color-brand-700: #166534;
-  --color-brand-800: #14532d;
+  --color-brand-700: #15803d; /* livelier primary green (owner feedback 05/10/2026) */
+  --color-brand-800: #166534;
   --color-brand-950: #06281a;
   --color-accent-500: #f59e0b;
   --color-success-600: #16a34a;
   --color-warning-700: #b45309;
   --color-danger-600: #dc2626;
   --color-info-700: #0369a1;
-  --color-canvas: #f5f7f4;
+  --color-canvas: #f6f8f5;
   --color-surface: #ffffff;
-  --color-ink: #17201a;
+  --color-ink: #1b241e;
   --color-muted: #5b6660;
-  --color-edge: #d9dfda;
+  --color-edge: #dde3dd;
 
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
-/* Dark mode (decision 048: built from phase 1). */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-brand-700: #4ade80;
-    --color-brand-100: #122a1c;
-    --color-accent-500: #fbbf24;
-    --color-canvas: #0c120e;
-    --color-surface: #151c17;
-    --color-ink: #e7ede8;
-    --color-muted: #9aa69e;
-    --color-edge: #2a332c;
-  }
+/* Dark mode is opt-in via the header toggle (decision 048, adjusted
+   05/10/2026: light is the default; surfaces lightened a step). */
+:root.dark {
+  --color-brand-700: #4ade80;
+  --color-brand-100: #17301f;
+  --color-accent-500: #fbbf24;
+  --color-canvas: #141b16;
+  --color-surface: #1d2721;
+  --color-ink: #e9efe9;
+  --color-muted: #a3aea6;
+  --color-edge: #323d34;
 }
 
 body {

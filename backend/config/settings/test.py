@@ -18,3 +18,7 @@ MAILERS = {
 }
 
 CELERY_TASK_ALWAYS_EAGER = True
+
+from .base import BASE_DIR  # noqa: E402
+
+MEDIA_ROOT = BASE_DIR / ".pytest-media"

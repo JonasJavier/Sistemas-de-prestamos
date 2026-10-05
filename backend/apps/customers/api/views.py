@@ -14,7 +14,7 @@ from apps.customers.api.serializers import (
     CustomerSerializer,
 )
 from apps.customers.models import Customer
-from apps.customers.validators import clean_document
+from apps.customers.search import search_customers
 
 # Doc 06 matrix: create/edit customers -> G, Su, O; block -> G, Su.
 CanEditCustomers = role_required("Gerente", "Supervisor", "Oficial de crédito")
@@ -30,17 +30,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Customer]:
         queryset = Customer.objects.select_related("home_branch").order_by("-created_at")
-        q = self.request.query_params.get("q", "").strip()
-        if q:
-            queryset = queryset.annotate(
-                full_name=Concat(
-                    "first_name", Value(" "), "last_name", Value(" "), "legal_name"
-                )
-            ).filter(
-                Q(full_name__unaccent__icontains=q)
-                | Q(document_number__icontains=clean_document(q))
-                | Q(phone__icontains=q)
-            )
+        q = self.request.query_params.get("q", "")
+        if q.strip():
+            queryset = search_customers(q, queryset)
         return queryset
 
     def get_serializer_class(self):

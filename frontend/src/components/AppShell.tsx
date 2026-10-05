@@ -1,10 +1,35 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import type { Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
+import { CommandPalette } from './CommandPalette'
 import { Brand, Button } from './ui'
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const toggle = () => {
+    const next = !dark
+    document.documentElement.classList.toggle('dark', next)
+    try {
+      localStorage.setItem('theme', next ? 'dark' : 'light')
+    } catch {
+      // storage unavailable: the choice just won't persist
+    }
+    setDark(next)
+  }
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      title={dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+      className="rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-sm hover:bg-brand-100"
+    >
+      {dark ? '☀️' : '🌙'}
+    </button>
+  )
+}
 
 interface NavItem {
   to: string
@@ -50,6 +75,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen">
+      {!me.is_platform_admin ? <CommandPalette /> : null}
       <aside className="hidden w-56 flex-col border-r border-edge bg-surface p-4 sm:flex">
         <Brand className="text-xl" />
         <nav className="mt-6 flex flex-col gap-1">
@@ -73,6 +99,7 @@ export function AppShell({
           </span>
           <span className="hidden text-sm text-muted sm:block" />
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <span className="text-sm text-muted">{user.email}</span>
             <Button
               variant="secondary"

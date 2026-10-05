@@ -1,6 +1,6 @@
 # 08 · Sistema de diseño de Cobradía
 
-**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048)
+**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **ajustado el 05/10/2026** a pedido del dueño: el verde primario sube un tono (`#15803D` en claro), el **tema claro es el predeterminado** y el oscuro queda opcional con un interruptor en la barra (persistido por usuario); las superficies del oscuro se aclararon un paso
 
 **En una frase:** una identidad propia en **verde profundo y ámbar** (decisión 047, distinta de la referencia Púrpura Datos), sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro y oscuro, y accesibilidad WCAG 2.2 AA.
 
@@ -23,32 +23,32 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 | Token | Valor | Uso |
 | --- | --- | --- |
 | `--brand-950` | `#06281A` | Menú lateral, texto sobre fondos de marca claros |
-| `--brand-800` | `#14532D` | Texto de marca sobre blanco, hover de la acción primaria |
-| `--brand-700` | `#166534` | **Acción primaria**, enlaces, ítem activo |
+| `--brand-800` | `#166534` | Texto de marca sobre blanco, hover de la acción primaria |
+| `--brand-700` | `#15803D` | **Acción primaria**, enlaces, ítem activo |
 | `--brand-100` | `#DCFCE7` | Selecciones, filas destacadas, fondos de insignia «al día» |
 | `--accent-500` | `#F59E0B` | Ámbar de marca: detalles, foco de atención, barra de la prueba |
 | `--success-600` | `#16A34A` | Pagado, cuadrado, confirmaciones |
 | `--warning-700` | `#B45309` | Vencido 1–30 días, atención (texto); fondo `#FEF3C7` |
 | `--danger-600` | `#DC2626` | Errores, mora grave (31+ días), acciones destructivas |
 | `--info-700` | `#0369A1` | Información neutral |
-| `--canvas` | `#F5F7F4` | Fondo de la página (gris con un grado de verde) |
+| `--canvas` | `#F6F8F5` | Fondo de la página (gris con un grado de verde) |
 | `--surface` | `#FFFFFF` | Tarjetas, tablas, barras |
-| `--text` | `#17201A` | Texto principal |
+| `--text` | `#1B241E` | Texto principal |
 | `--muted` | `#5B6660` | Texto secundario |
-| `--border` | `#D9DFDA` | Bordes y separadores |
+| `--border` | `#DDE3DD` | Bordes y separadores |
 
 ### Oscuro
 
 | Token | Valor | Uso |
 | --- | --- | --- |
 | `--brand-700` | `#4ADE80` | Acción primaria y enlaces (con texto oscuro encima) |
-| `--brand-100` | `#122A1C` | Selecciones |
+| `--brand-100` | `#17301F` | Selecciones |
 | `--accent-500` | `#FBBF24` | Ámbar |
-| `--canvas` | `#0C120E` | Fondo |
-| `--surface` | `#151C17` | Tarjetas |
-| `--text` | `#E7EDE8` | Texto |
-| `--muted` | `#9AA69E` | Secundario |
-| `--border` | `#2A332C` | Bordes |
+| `--canvas` | `#141B16` | Fondo |
+| `--surface` | `#1D2721` | Tarjetas |
+| `--text` | `#E9EFE9` | Texto |
+| `--muted` | `#A3AEA6` | Secundario |
+| `--border` | `#323D34` | Bordes |
 
 Éxito, aviso, peligro e información usan las variantes claras de cada familia (`#4ADE80`, `#FCD34D`, `#F87171`, `#38BDF8`) con fondos oscuros de su mismo tono.
 
@@ -108,7 +108,7 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 ## 6. Modo oscuro
 
 - Se implementa desde la Fase 1 con los tokens de la §2 (es barato al inicio y carísimo después).
-- Sigue la preferencia del sistema; el usuario puede fijarlo en «Mi cuenta».
+- **El tema claro es el predeterminado** (ajuste del 05/10/2026, a pedido del dueño). El oscuro se activa con el interruptor de la barra superior y la elección se recuerda por usuario.
 - Los documentos PDF son siempre claros.
 
 ## 7. Accesibilidad (WCAG 2.2 AA)
