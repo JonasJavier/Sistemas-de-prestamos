@@ -42,3 +42,34 @@ class IsCompanyManagerOrReadOnly(IsCompanyManager):
         if request.method in SAFE_METHODS:
             return bool(request.user and request.user.is_authenticated)
         return super().has_permission(request, view)
+
+
+def role_required(*role_names: str, read_any: bool = True) -> type[BasePermission]:
+    """Permission class factory for the doc 06 matrix, one slice at a time.
+
+    With ``read_any`` (default), any authenticated company user may read
+    and only the named roles may write; without it, the roles gate reads
+    too. Membership lookups are cached per request and role set.
+    """
+    names = frozenset(role_names)
+
+    class RolePermission(BasePermission):
+        message = "Tu rol no permite esta acción."
+
+        def has_permission(self, request: Request, view: APIView) -> bool:
+            if not (request.user and request.user.is_authenticated):
+                return False
+            if read_any and request.method in SAFE_METHODS:
+                return True
+            cache = getattr(request, "_role_cache", None)
+            if cache is None:
+                cache = request._role_cache = {}  # noqa: SLF001 - request-local cache
+            allowed = cache.get(names)
+            if allowed is None:
+                allowed = Membership.objects.filter(
+                    user=request.user, role__name__in=names
+                ).exists()
+                cache[names] = allowed
+            return allowed
+
+    return RolePermission

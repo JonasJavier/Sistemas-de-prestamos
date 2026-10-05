@@ -14,7 +14,10 @@ interface NavItem {
 function navFor(me: Me): NavItem[] {
   const items: NavItem[] = me.is_platform_admin
     ? [{ to: '/plataforma', label: 'Empresas' }]
-    : [{ to: '/', label: 'Inicio' }]
+    : [
+        { to: '/', label: 'Inicio' },
+        { to: '/clientes', label: 'Clientes' },
+      ]
   if (!me.is_platform_admin && me.is_manager) {
     items.push(
       { to: '/ajustes/sucursales', label: 'Sucursales' },

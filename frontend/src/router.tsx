@@ -12,6 +12,9 @@ import { getSession, type SessionUser } from './api/auth'
 import { AppShell } from './components/AppShell'
 import { AccountPage } from './pages/Account'
 import { BranchesPage } from './pages/Branches'
+import { CustomerDetailPage } from './pages/CustomerDetail'
+import { CustomerNewPage } from './pages/CustomerNew'
+import { CustomersPage } from './pages/Customers'
 import { DashboardPage } from './pages/Dashboard'
 import { InvitationAcceptPage } from './pages/InvitationAccept'
 import { LoginPage } from './pages/Login'
@@ -101,6 +104,24 @@ const subscriptionRoute = createRoute({
   component: SubscriptionPage,
 })
 
+const customersRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/clientes',
+  component: CustomersPage,
+})
+
+const customerNewRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/clientes/nuevo',
+  component: CustomerNewPage,
+})
+
+const customerDetailRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/clientes/$id',
+  component: CustomerDetailPage,
+})
+
 const accountRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/cuenta',
@@ -151,6 +172,9 @@ const invitationRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
+    customersRoute,
+    customerNewRoute,
+    customerDetailRoute,
     branchesRoute,
     usersRoute,
     subscriptionRoute,
