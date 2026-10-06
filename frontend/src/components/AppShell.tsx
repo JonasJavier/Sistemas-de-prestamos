@@ -76,6 +76,8 @@ function navFor(me: Me): NavGroup[] {
       title: 'Ajustes',
       items: [
         { to: '/ajustes/productos', label: 'Productos' },
+        { to: '/ajustes/feriados', label: 'Feriados' },
+        { to: '/ajustes/numeraciones', label: 'Numeraciones' },
         { to: '/ajustes/sucursales', label: 'Sucursales' },
         { to: '/ajustes/usuarios', label: 'Usuarios' },
         { to: '/ajustes/suscripcion', label: 'Suscripción' },

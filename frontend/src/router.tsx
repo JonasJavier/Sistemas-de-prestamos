@@ -23,6 +23,7 @@ import { CustomersPage } from './pages/Customers'
 import { DashboardPage } from './pages/Dashboard'
 import { DisbursementDetailPage } from './pages/DisbursementDetail'
 import { DisbursementsPage } from './pages/Disbursements'
+import { HolidaysPage } from './pages/Holidays'
 import { InvitationAcceptPage } from './pages/InvitationAccept'
 import { LoanDetailPage } from './pages/LoanDetail'
 import { LoansPage } from './pages/Loans'
@@ -30,6 +31,7 @@ import { LoginPage } from './pages/Login'
 import { PlatformPage } from './pages/Platform'
 import { ProductsPage } from './pages/Products'
 import { RegisterPage } from './pages/Register'
+import { SequencesPage } from './pages/Sequences'
 import { SimulatorPage } from './pages/Simulator'
 import { SubscriptionPage } from './pages/Subscription'
 import { UsersPage } from './pages/Users'
@@ -214,6 +216,20 @@ const accountsRoute = createRoute({
   component: withMe(AccountsPage),
 })
 
+const holidaysRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/feriados',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: HolidaysPage,
+})
+
+const sequencesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/numeraciones',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: SequencesPage,
+})
+
 const productsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/ajustes/productos',
@@ -299,6 +315,8 @@ const routeTree = rootRoute.addChildren([
     loanDetailRoute,
     accountsRoute,
     productsRoute,
+    holidaysRoute,
+    sequencesRoute,
     customersRoute,
     customerNewRoute,
     customerDetailRoute,

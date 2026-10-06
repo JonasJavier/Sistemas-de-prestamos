@@ -16,7 +16,8 @@ from django.utils import timezone
 
 from apps.accounts.authz import DEFAULT_APPROVAL_LIMITS
 from apps.accounts.models import ApprovalLimit, Membership, Role, User
-from apps.core.models import Branch, Company, Holiday, Reason
+from apps.core.holidays import seed_year
+from apps.core.models import Branch, Company, Reason
 from apps.core.tenancy import company_context
 from apps.ledger.services import seed_chart
 from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
@@ -33,24 +34,6 @@ SYSTEM_ROLES = [
     "Cobrador",
     "Contabilidad",
     "Auditoría",
-]
-
-# Dominican holidays (doc 03 - section 4). Fixed dates arrive confirmed;
-# the ones Law 139-97 may move to Monday arrive unconfirmed, and the
-# religious movable ones (Viernes Santo, Corpus Christi) are added by
-# each company because they change date every year.
-FIXED_HOLIDAYS = [
-    ((1, 1), "Año Nuevo"),
-    ((1, 21), "Nuestra Señora de la Altagracia"),
-    ((2, 27), "Independencia Nacional"),
-    ((12, 25), "Navidad"),
-]
-MOVABLE_HOLIDAYS = [
-    ((1, 6), "Día de los Santos Reyes"),
-    ((1, 26), "Natalicio de Juan Pablo Duarte"),
-    ((5, 1), "Día del Trabajo"),
-    ((8, 16), "Restauración de la República"),
-    ((11, 6), "Día de la Constitución"),
 ]
 
 SEED_REASONS = {
@@ -142,20 +125,8 @@ def _seed_approval_limits(company: Company, roles: dict[str, Role]) -> None:
 
 
 def _seed_holidays(company: Company, start_year: int) -> None:
-    holidays = []
     for year in (start_year, start_year + 1):
-        for (month, day), name in FIXED_HOLIDAYS:
-            holidays.append(Holiday(company=company, date=dt.date(year, month, day), name=name))
-        for (month, day), name in MOVABLE_HOLIDAYS:
-            holidays.append(
-                Holiday(
-                    company=company,
-                    date=dt.date(year, month, day),
-                    name=name,
-                    is_confirmed=False,  # Law 139-97 may move it; the company confirms.
-                )
-            )
-    Holiday.objects.bulk_create(holidays)
+        seed_year(company.id, year)
 
 
 def _seed_products(company: Company) -> None:
