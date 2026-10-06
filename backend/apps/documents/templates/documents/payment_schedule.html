@@ -7,7 +7,7 @@
   <div>
     <table class="kv">
       <tr><td>Cliente</td><td>{{ customer.display_name }}</td></tr>
-      <tr><td>Documento</td><td>{{ customer.document_number }}</td></tr>
+      <tr><td>Documento</td><td>{{ customer.document_number|doc }}</td></tr>
       <tr><td>Desembolso</td><td>{{ loan.disbursed_on|dmy }}</td></tr>
     </table>
   </div>

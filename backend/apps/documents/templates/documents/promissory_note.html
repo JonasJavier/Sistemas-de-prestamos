@@ -5,7 +5,7 @@
 {% block content %}
 <p>
   Yo, <strong>{{ customer.display_name }}</strong>, {% if customer.kind == "company" %}sociedad con RNC{% else %}portador(a) de la {{ customer.get_document_type_display|lower }}{% endif %}
-  <strong>{{ customer.document_number }}</strong>{% if customer.address_line %}, con domicilio en {{ customer.address_line }}{% if customer.sector %}, {{ customer.sector.name }}{% endif %}{% if customer.municipality %}, {{ customer.municipality.name }}{% endif %}{% if customer.province %}, {{ customer.province.name }}{% endif %}{% endif %},
+  <strong>{{ customer.document_number|doc }}</strong>{% if customer.address_line %}, con domicilio en {{ customer.address_line }}{% if customer.sector %}, {{ customer.sector.name }}{% endif %}{% if customer.municipality %}, {{ customer.municipality.name }}{% endif %}{% if customer.province %}, {{ customer.province.name }}{% endif %}{% endif %},
   reconozco adeudar y me obligo a pagar incondicionalmente a la orden de <strong>{{ company.legal_name }}</strong>{% if company.rnc %}, RNC {{ company.rnc }}{% endif %},
   la suma de <strong>{{ principal_words }} ({{ terms.principal|rd }})</strong>, más los intereses pactados,
   en <strong>{{ terms.installments }} cuota{{ terms.installments|pluralize }} {% if terms.installments == 1 %}{{ frequency_singular }}{% else %}{{ frequency_plural }}{% endif %}</strong>
@@ -63,7 +63,7 @@
 <p>Los garantes que firman este pagaré se obligan solidariamente con el deudor al pago de todas las sumas adeudadas.</p>
 <table class="grid">
   <thead><tr><th>Nombre</th><th>Documento</th></tr></thead>
-  <tbody>{% for g in guarantors %}<tr><td>{{ g.display_name }}</td><td>{{ g.document_number }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for g in guarantors %}<tr><td>{{ g.display_name }}</td><td>{{ g.document_number|doc }}</td></tr>{% endfor %}</tbody>
 </table>
 {% endif %}
 
@@ -84,8 +84,8 @@
 <p class="muted">Hecho y firmado en {{ loan.branch.name }}, el {{ disbursed_words }}.</p>
 
 <div class="signatures">
-  <div class="signature">Deudor: {{ customer.display_name }}<br><span class="muted">{{ customer.document_number }}</span></div>
-  {% for g in guarantors %}<div class="signature">Garante: {{ g.display_name }}<br><span class="muted">{{ g.document_number }}</span></div>{% endfor %}
+  <div class="signature">Deudor: {{ customer.display_name }}<br><span class="muted">{{ customer.document_number|doc }}</span></div>
+  {% for g in guarantors %}<div class="signature">Garante: {{ g.display_name }}<br><span class="muted">{{ g.document_number|doc }}</span></div>{% endfor %}
   <div class="signature">Por {{ company.legal_name }}</div>
 </div>
 {% endblock %}

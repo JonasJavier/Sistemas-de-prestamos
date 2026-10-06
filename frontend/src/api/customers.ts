@@ -208,5 +208,14 @@ export const listCollaterals = (owner: string): Promise<{ results: Collateral[] 
 export const createCollateral = (data: Record<string, unknown>) =>
   api<Collateral>('/api/v1/garantias/', { method: 'POST', body: data })
 
-export const globalSearch = (q: string): Promise<{ customers: CustomerListItem[] }> =>
+export interface LoanHit {
+  number: string
+  customer_name: string
+  status: string
+  principal_outstanding: string
+}
+
+export const globalSearch = (
+  q: string,
+): Promise<{ customers: CustomerListItem[]; loans: LoanHit[] }> =>
   api(`/api/v1/buscar/?q=${encodeURIComponent(q)}`)

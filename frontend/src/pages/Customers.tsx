@@ -5,12 +5,6 @@ import { useState } from 'react'
 import { listCustomers } from '../api/customers'
 import { Button, Card, Input } from '../components/ui'
 
-function maskDocument(value: string): string {
-  // Doc 06 - section 7: masked in lists (001-•••••67-8 style, simplified).
-  if (value.length < 6) return value
-  return `${value.slice(0, 3)}•••••${value.slice(-3)}`
-}
-
 export function CustomersPage() {
   const [q, setQ] = useState('')
   const [submitted, setSubmitted] = useState('')
@@ -81,7 +75,7 @@ export function CustomersPage() {
                     </span>
                   </td>
                   <td className="py-2 pr-3 tabular-nums">
-                    {maskDocument(customer.document_number)}
+                    {customer.document_number /* masked by the API (doc 06 - 7) */}
                   </td>
                   <td className="py-2 pr-3 tabular-nums">{customer.phone}</td>
                   <td className="py-2 pr-3">{customer.branch_code}</td>

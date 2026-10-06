@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 import {
   createRootRouteWithContext,
   createRoute,
@@ -11,14 +12,23 @@ import { getMe, type Me } from './api/accounts'
 import { getSession, type SessionUser } from './api/auth'
 import { AppShell } from './components/AppShell'
 import { AccountPage } from './pages/Account'
+import { AccountsPage } from './pages/Accounts'
+import { ApplicationDetailPage } from './pages/ApplicationDetail'
+import { ApplicationNewPage, type NewApplicationSearch } from './pages/ApplicationNew'
+import { ApplicationsPage } from './pages/Applications'
 import { BranchesPage } from './pages/Branches'
 import { CustomerDetailPage } from './pages/CustomerDetail'
 import { CustomerNewPage } from './pages/CustomerNew'
 import { CustomersPage } from './pages/Customers'
 import { DashboardPage } from './pages/Dashboard'
+import { DisbursementDetailPage } from './pages/DisbursementDetail'
+import { DisbursementsPage } from './pages/Disbursements'
 import { InvitationAcceptPage } from './pages/InvitationAccept'
+import { LoanDetailPage } from './pages/LoanDetail'
+import { LoansPage } from './pages/Loans'
 import { LoginPage } from './pages/Login'
 import { PlatformPage } from './pages/Platform'
+import { ProductsPage } from './pages/Products'
 import { RegisterPage } from './pages/Register'
 import { SimulatorPage } from './pages/Simulator'
 import { SubscriptionPage } from './pages/Subscription'
@@ -76,13 +86,39 @@ const indexRoute = createRoute({
     const me = context.queryClient.getQueryData<Me>(['me'])
     if (me?.is_platform_admin) throw redirect({ to: '/plataforma' })
   },
-  component: DashboardPage,
+  component: withMe(DashboardPage),
 })
 
 function managerOnly(context: RouterContext) {
   const me = context.queryClient.getQueryData<Me>(['me'])
   if (!me?.is_manager) throw redirect({ to: '/' })
 }
+
+/** The screen hides what the role cannot use; the API still decides (doc 06 - 2). */
+function rolesOnly(context: RouterContext, roles: string[]) {
+  const me = context.queryClient.getQueryData<Me>(['me'])
+  if (!me?.roles?.some((role) => roles.includes(role))) throw redirect({ to: '/' })
+}
+
+/** Renders a page that needs the session's Me. */
+function withMe(Page: (props: { me: Me }) => ReactNode) {
+  return function WithMe() {
+    const { me } = appRoute.useRouteContext() as { me: Me }
+    return <Page me={me} />
+  }
+}
+
+const ORIGINATION = ['Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero', 'Contabilidad', 'Auditoría']
+const DISBURSERS = ['Gerente', 'Cajero', 'Contabilidad']
+const LOAN_READERS = [
+  'Gerente',
+  'Supervisor',
+  'Oficial de crédito',
+  'Cajero',
+  'Cobrador',
+  'Contabilidad',
+  'Auditoría',
+]
 
 const branchesRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -108,7 +144,81 @@ const subscriptionRoute = createRoute({
 const simulatorRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/simulador',
-  component: SimulatorPage,
+  component: withMe(SimulatorPage),
+})
+
+const applicationsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/solicitudes',
+  beforeLoad: ({ context }) => rolesOnly(context, ORIGINATION),
+  component: withMe(ApplicationsPage),
+})
+
+const applicationNewRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/solicitudes/nueva',
+  validateSearch: (search: Record<string, unknown>): NewApplicationSearch => {
+    const text = (key: string) => (typeof search[key] === 'string' ? (search[key] as string) : undefined)
+    return {
+      cliente: text('cliente'),
+      producto: text('producto'),
+      monto: text('monto'),
+      cuotas: search.cuotas !== undefined ? String(search.cuotas) : undefined,
+      frecuencia: text('frecuencia'),
+      tasa: search.tasa !== undefined ? String(search.tasa) : undefined,
+    }
+  },
+  beforeLoad: ({ context }) => rolesOnly(context, ['Gerente', 'Supervisor', 'Oficial de crédito']),
+  component: ApplicationNewPage,
+})
+
+const applicationDetailRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/solicitudes/$id',
+  beforeLoad: ({ context }) => rolesOnly(context, ORIGINATION),
+  component: withMe(ApplicationDetailPage),
+})
+
+const disbursementsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desembolsos',
+  beforeLoad: ({ context }) => rolesOnly(context, DISBURSERS),
+  component: DisbursementsPage,
+})
+
+const disbursementDetailRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desembolsos/$id',
+  beforeLoad: ({ context }) => rolesOnly(context, DISBURSERS),
+  component: DisbursementDetailPage,
+})
+
+const loansRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/prestamos',
+  beforeLoad: ({ context }) => rolesOnly(context, LOAN_READERS),
+  component: LoansPage,
+})
+
+const loanDetailRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/prestamos/$numero',
+  beforeLoad: ({ context }) => rolesOnly(context, LOAN_READERS),
+  component: withMe(LoanDetailPage),
+})
+
+const accountsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cuentas',
+  beforeLoad: ({ context }) => rolesOnly(context, ['Gerente', 'Contabilidad', 'Auditoría']),
+  component: withMe(AccountsPage),
+})
+
+const productsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/productos',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: ProductsPage,
 })
 
 const customersRoute = createRoute({
@@ -126,7 +236,7 @@ const customerNewRoute = createRoute({
 const customerDetailRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/clientes/$id',
-  component: CustomerDetailPage,
+  component: withMe(CustomerDetailPage),
 })
 
 const accountRoute = createRoute({
@@ -180,6 +290,15 @@ const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
     simulatorRoute,
+    applicationsRoute,
+    applicationNewRoute,
+    applicationDetailRoute,
+    disbursementsRoute,
+    disbursementDetailRoute,
+    loansRoute,
+    loanDetailRoute,
+    accountsRoute,
+    productsRoute,
     customersRoute,
     customerNewRoute,
     customerDetailRoute,

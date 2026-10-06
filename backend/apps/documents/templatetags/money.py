@@ -32,3 +32,12 @@ def pct(value, places: int = 2) -> str:
 @register.filter
 def dmy(value) -> str:
     return value.strftime("%d/%m/%Y") if value else "—"
+
+
+@register.filter
+def doc(value) -> str:
+    """A cédula reads 001-1234567-8; RNC and passports go as stored."""
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if len(digits) == 11:
+        return f"{digits[:3]}-{digits[3:10]}-{digits[10]}"
+    return str(value or "")

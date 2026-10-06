@@ -2,8 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
-import { Alert, Button, Card } from '../components/ui'
+import { listApplications, listLoans } from '../api/origination'
+import { Alert, Badge, Button, Card } from '../components/ui'
+import { APPLICATION_STATUS, day, LOAN_STATUS, rd } from '../lib/format'
+import { hasRole } from '../lib/hooks'
 import { CollateralTab } from './customer/CollateralTab'
 import { FamilyTab } from './customer/FamilyTab'
 import { FilesTab } from './customer/FilesTab'
@@ -15,11 +19,75 @@ const TABS = [
   ['familia', 'Familia y referencias'],
   ['garantias', 'Garantías'],
   ['archivos', 'Archivos'],
+  ['prestamos', 'Préstamos y solicitudes'],
 ] as const
 
 type TabKey = (typeof TABS)[number][0]
 
-export function CustomerDetailPage() {
+/** Every request stays in the customer's history (reference defect #22). */
+function LendingTab({ customerId }: { customerId: string }) {
+  const loans = useQuery({
+    queryKey: ['loans', 'customer', customerId],
+    queryFn: () => listLoans({ customer: customerId }),
+  })
+  const applications = useQuery({
+    queryKey: ['applications', 'customer', customerId],
+    queryFn: () => listApplications({ customer: customerId }),
+  })
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card>
+        <h2 className="mb-2 text-base font-semibold">Préstamos</h2>
+        {loans.data?.results.length ? (
+          <ul className="divide-y divide-edge text-sm">
+            {loans.data.results.map((loan) => (
+              <li key={loan.id} className="flex items-center justify-between gap-2 py-2">
+                <Link
+                  to="/prestamos/$numero"
+                  params={{ numero: loan.number }}
+                  className="font-medium tabular-nums text-brand-700 hover:underline"
+                >
+                  {loan.number}
+                </Link>
+                <Badge tone={LOAN_STATUS[loan.status]?.tone}>{LOAN_STATUS[loan.status]?.label}</Badge>
+                <span className="tabular-nums">{rd(loan.principal_outstanding)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">Sin préstamos.</p>
+        )}
+      </Card>
+      <Card>
+        <h2 className="mb-2 text-base font-semibold">Solicitudes</h2>
+        {applications.data?.results.length ? (
+          <ul className="divide-y divide-edge text-sm">
+            {applications.data.results.map((app) => (
+              <li key={app.id} className="flex items-center justify-between gap-2 py-2">
+                <Link
+                  to="/solicitudes/$id"
+                  params={{ id: app.id }}
+                  className="font-medium tabular-nums text-brand-700 hover:underline"
+                >
+                  {app.number}
+                </Link>
+                <Badge tone={APPLICATION_STATUS[app.status]?.tone}>
+                  {APPLICATION_STATUS[app.status]?.label}
+                </Badge>
+                <span className="text-muted">{day(app.created_at)}</span>
+                <span className="tabular-nums">{rd(app.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">Sin solicitudes.</p>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+export function CustomerDetailPage({ me }: { me: Me }) {
   const { id } = useParams({ from: '/app/clientes/$id' })
   const [tab, setTab] = useState<TabKey>('resumen')
   const queryClient = useQueryClient()
@@ -48,7 +116,16 @@ export function CustomerDetailPage() {
             {data.document_type === 'rnc' ? 'RNC' : 'Documento'}: {data.document_number}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {hasRole(me, 'Gerente', 'Supervisor', 'Oficial de crédito') ? (
+            <Link
+              to="/solicitudes/nueva"
+              search={{ cliente: id }}
+              className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
+            >
+              Nueva solicitud
+            </Link>
+          ) : null}
           <span
             className={`rounded-full px-3 py-1 text-[12.5px] font-medium ${
               data.status === 'active'
@@ -127,6 +204,7 @@ export function CustomerDetailPage() {
       {tab === 'familia' ? <FamilyTab customerId={id} /> : null}
       {tab === 'garantias' ? <CollateralTab customerId={id} /> : null}
       {tab === 'archivos' ? <FilesTab customerId={id} /> : null}
+      {tab === 'prestamos' ? <LendingTab customerId={id} /> : null}
     </>
   )
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { globalSearch } from '../api/customers'
 
-/** Ctrl+K global search (decision 017; P10). Customers now, loans in phase 3. */
+/** Ctrl+K global search (decision 017; P10): customers, loans and quick actions. */
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -63,12 +63,15 @@ export function CommandPalette() {
           ref={inputRef}
           value={q}
           onChange={(event) => setQ(event.target.value)}
-          placeholder="Buscar cliente por nombre, cédula o teléfono…"
+          placeholder="Buscar cliente, cédula, teléfono o número de préstamo…"
           className="w-full border-b border-edge bg-surface px-4 py-3 text-sm text-ink outline-none"
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
+              const loan = results.data?.loans[0]
               const first = results.data?.customers[0]
-              if (first) go('/clientes/$id', { id: first.id })
+              if (loan && loan.number.toLowerCase().includes(debounced.trim().toLowerCase()))
+                go('/prestamos/$numero', { numero: loan.number })
+              else if (first) go('/clientes/$id', { id: first.id })
             }
           }}
         />
@@ -86,7 +89,26 @@ export function CommandPalette() {
               </span>
             </button>
           ))}
-          {results.data && results.data.customers.length === 0 && debounced.length >= 2 ? (
+          {results.data?.loans.map((loan) => (
+            <button
+              key={loan.number}
+              type="button"
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-brand-100"
+              onClick={() => go('/prestamos/$numero', { numero: loan.number })}
+            >
+              <span>
+                <span className="font-medium tabular-nums">Préstamo {loan.number}</span>
+                <span className="ml-2 text-muted">{loan.customer_name}</span>
+              </span>
+              <span className="text-[12.5px] text-muted tabular-nums">
+                RD$ {Number(loan.principal_outstanding).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+              </span>
+            </button>
+          ))}
+          {results.data &&
+          results.data.customers.length === 0 &&
+          results.data.loans.length === 0 &&
+          debounced.length >= 2 ? (
             <p className="px-3 py-2 text-sm text-muted">Sin resultados.</p>
           ) : null}
           <button
@@ -95,6 +117,13 @@ export function CommandPalette() {
             onClick={() => go('/clientes/nuevo')}
           >
             + Nuevo cliente
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brand-700 hover:bg-brand-100"
+            onClick={() => go('/solicitudes/nueva')}
+          >
+            + Nueva solicitud
           </button>
         </div>
       </div>

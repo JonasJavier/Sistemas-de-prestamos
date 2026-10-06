@@ -81,6 +81,7 @@ class SimulateView(APIView):
                     {
                         "number": row.number,
                         "due_date": row.due_date.isoformat(),
+                        "original_due_date": row.original_due_date.isoformat(),
                         "principal": str(row.principal),
                         "interest": str(row.interest),
                         "total": str(row.total),

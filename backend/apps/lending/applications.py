@@ -151,6 +151,13 @@ def create_application(
 ) -> Application:
     # The application lives in the customer's branch (decision 033 scope).
     branch = customer.home_branch
+    if authz.has_any_role(user, *EDITOR_ROLES) and not authz.in_scope(user, branch.id):
+        raise ApplicationError(
+            f"El cliente pertenece a la sucursal {branch.code} ({branch.name}) y tu rol no "
+            "opera en ella. Pide a un usuario de esa sucursal o al gerente que origine la "
+            "solicitud.",
+            code="out_of_scope",
+        )
     _require_editor(user, branch.id)
     rate = rate if rate is not None else product.default_rate
     _validated_simulation(

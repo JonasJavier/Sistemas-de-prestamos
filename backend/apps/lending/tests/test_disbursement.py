@@ -360,3 +360,20 @@ def test_loans_are_isolated_and_collectors_see_only_theirs(tenant, other_tenant)
 )
 def test_amount_in_words(amount, words) -> None:
     assert amount_in_words(amount) == words
+
+
+def test_global_search_finds_loans_in_scope(tenant, other_tenant) -> None:
+    app_id = _approved(tenant)
+    number = _disburse(tenant, app_id).json()["loan"]
+    hits = tenant.client("cajero").get(f"/api/v1/buscar/?q={number}").json()
+    assert [hit["number"] for hit in hits["loans"]] == [number]
+    assert other_tenant.client("gerente").get(f"/api/v1/buscar/?q={number}").json()["loans"] == []
+    # Roles without loan access get customers only.
+    from rest_framework.test import APIClient
+
+    from apps.conftest import add_user
+
+    admin_only = add_user(tenant.reg, "admin@uno.do", "Administrador")
+    api = APIClient()
+    api.force_login(admin_only)
+    assert api.get(f"/api/v1/buscar/?q={number}").json()["loans"] == []

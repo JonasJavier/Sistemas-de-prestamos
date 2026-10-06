@@ -25,7 +25,10 @@ export function LoginPage() {
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
 
   const finish = async () => {
-    await queryClient.invalidateQueries()
+    // Drop the anonymous session cached when /entrar loaded: invalidating
+    // is not enough, because the route guard reads the cache (ensureQueryData)
+    // and would bounce back here with the stale «no session».
+    queryClient.clear()
     navigate({ to: '/' })
   }
 

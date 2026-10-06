@@ -17,5 +17,9 @@ Frontend: `pnpm -C ../frontend dev` (proxy `/api` → 127.0.0.1:8800). Correos e
 | `jonas@cobradia.test` | Dueño de la plataforma | `clave-dueno-larga-03` |
 | `demo@cobradia.test` | Gerente/Admin de «Financiera Demo SRL» | `clave-de-prueba-larga-01` |
 | `cajera@cobradia.test` | Cajera (sucursal SD) | `clave-cajera-larga-02` |
+| `oficial@cobradia.test` | Oficial de crédito (sucursal 01) | `clave-oficial-larga-04` |
+| `supervisor@cobradia.test` | Supervisor (sucursal 01) | `clave-supervisor-larga-05` |
 
-Son datos ficticios sembrados a mano durante la Fase 1; se pueden borrar recreando el volumen (`docker compose -f ../infra/compose.yml down -v`).
+Recorrido de la Fase 3: el oficial crea la solicitud, el supervisor (o el gerente) la aprueba y la cajera o el gerente la desembolsa; nadie aprueba lo que creó ni desembolsa lo que aprobó.
+
+Son datos ficticios sembrados a mano durante las fases 1 y 3; se pueden borrar recreando el volumen (`docker compose -f ../infra/compose.yml down -v`).
