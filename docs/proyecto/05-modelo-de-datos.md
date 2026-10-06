@@ -80,7 +80,7 @@ Estas tablas no llevan RLS por empresa: solo las ve el dueño de la plataforma, 
 
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
-| `Company` | Una empresa (tenant) | Razón social, nombre comercial, RNC, dirección, teléfonos, correo, logo; `status` (en prueba, activa, suspendida, cerrada), `trial_ends_on` | La crea el registro público (F19) con su sucursal principal y sus catálogos sembrados; alimenta el encabezado de los documentos de esa empresa |
+| `Company` | Una empresa (tenant) | Razón social, nombre comercial, RNC, dirección, teléfonos, correo, logo; `status` (en prueba, activa, suspendida, cerrada), `trial_ends_on`; ajustes de operación: `application_validity_days` (15) y `capacity_alert_ratio` (0.40) | La crea el registro público (F19) con su sucursal principal y sus catálogos sembrados; alimenta el encabezado de los documentos de esa empresa |
 | `Branch` | Sucursal | `code` (prefijo, p. ej. `SD`), nombre, dirección, teléfono, `is_active` | El código es único y no cambia |
 | `Holiday` | Feriado (por empresa) | Fecha, nombre, `is_confirmed` | Se siembran al crear la empresa; los de fecha fija se generan cada año y los trasladables los confirma cada empresa |
 | `Sequence` | Numeración | `company`, `branch`, `doc_type` (préstamo, recibo, solicitud, caja, carta de saldo, gasto), `prefix`, `next_value`, relleno de ceros | Se toma con bloqueo de fila, dentro de la misma transacción que el documento: sin saltos ni duplicados |
@@ -95,7 +95,7 @@ Estas tablas no llevan RLS por empresa: solo las ve el dueño de la plataforma, 
 | `User` | Persona que usa el sistema | `company` (su empresa), correo (para entrar), nombre, teléfono, `is_active`, `is_platform_admin` y el consentimiento de ubicación (§6) | Pertenece a una sola empresa; el dueño de la plataforma es el único sin empresa (`is_platform_admin`). El correo es único en toda la plataforma. Se desactiva, nunca se borra |
 | `Role` | Plantilla de permisos (paso 6) | Nombre y permisos | Basado en los grupos de Django |
 | `Membership` | Rol de un usuario en una sucursal | `user`, `branch`, `role` | Un usuario puede tener roles en varias sucursales |
-| `ApprovalLimit` | Hasta cuánto aprueba cada quien | `role` o `user`, operación, `max_amount` | Lo usan la aprobación de solicitudes (023) y las autorizaciones |
+| `ApprovalLimit` | Hasta cuánto aprueba cada quien | `role` o `user`, operación, `max_amount` (vacío = sin límite) | Lo usan la aprobación de solicitudes (023) y las autorizaciones. Sin fila para una operación, no se aprueba; la fila del usuario prevalece sobre las de sus roles. Los valores de ejemplo del paso 6 §5 se siembran al registrarse |
 | `Invitation` | Alta de usuario | Correo, rol, sucursal, código de un solo uso, vencimiento | Nadie fija la contraseña de otro (#7) |
 
 El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus propias tablas.
@@ -126,14 +126,16 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | `ApplicationBudgetItem` | Presupuesto | Tipo (ingreso, gasto o activo), categoría, descripción, monto | Reemplaza la «Calculadora» de la referencia |
 | `ApplicationGuarantor` | Garantes propuestos | `application`, `customer` | Solo clientes de nuestra base (#27) |
 | `ApplicationCollateral` | Bienes propuestos | `application`, `collateral`, valor considerado | Se calcula la cobertura |
-| `ApplicationDocument` | Documentos exigidos | Requisito, archivo, quién lo verificó | La lista sale del producto |
+| `ApplicationRequirement` | Documentos exigidos | Requisito, archivo (opcional), quién lo verificó y cuándo | La lista sale de `LoanProduct.required_documents`; todos verificados para aprobar |
+| `ApplicationFile` | Archivos de la solicitud | Tipo (reporte de buró, documento), descripción y los campos de `CustomerFile` | Privados, con enlace de 5 minutos y descarga auditada |
 | `Loan` | Préstamo | Número (`SD-000125`); sucursal, cliente, solicitud, producto; `status` (§5.2); capital, moneda; fecha de desembolso; cobrador y oficial; `current_terms`; `renewed_from`; marcas de reestructurado y migrado; fechas de cierre, castigo y anulación; pagaré firmado adjunto | Se crea al desembolsar |
 | `LoanTerms` | Condiciones congeladas (versionadas) | `loan`, `version`, vigencia, motivo; método, frecuencia, tasa, unidad, tasa por período, cuotas, redondeo, orden de aplicación, liquidación, copia de la política de mora; quién la creó y quién la aprobó | Inmutable. La versión 1 nace en el desembolso; las siguientes, por abono a capital, cambio de fecha o reestructuración |
 | `Installment` | Cuota | `loan`, `terms_version`, número; `due_date` y `original_due_date` (antes del corrimiento por feriado); lo debido y lo pagado de capital, interés y cargos; mora pagada, mora condonada y `late_fee_accrued` (en caché); `status` (§5.3); fecha de pago completo | Cuando entra una versión nueva, las cuotas no pagadas de la anterior quedan como reemplazadas y se crean las nuevas |
 | `LoanCharge` | Cargos del préstamo | `loan`, `product_charge`, nombre, monto, modalidad, estado | Una anulación los revierte (#31) |
 | `LoanGuarantor`, `LoanCollateral` | Garantes y bienes del préstamo | Se copian de la solicitud al desembolsar | El bien pasa a «en garantía» |
 | `CollectorAssignment` | Historial de cobradores | `loan`, `collector`, desde, hasta, motivo | Sirve para las comisiones y la trazabilidad |
-| `Disbursement` | Desembolso | `loan`, fecha, origen (sesión de caja o cuenta bancaria), medio, bruto, cargos descontados, **neto**, referencia, `idempotency_key` (único), asiento | Uno por préstamo |
+| `Disbursement` | Desembolso | `loan`, fecha, origen (sesión de caja o cuenta financiera), medio, bruto, cargos descontados, financiados y en caja, **neto**, cuenta del cargo en caja, referencia, `idempotency_key` (único), asiento y asiento de anulación | Uno por préstamo; `neto = bruto − descontados` (restricción) |
+| `LoanFile` | Archivos del préstamo | Tipo (pagaré firmado, otro) y los campos de `CustomerFile` | Al subir el pagaré firmado se marca `promissory_note_signed_at` |
 
 **Saldos en caché del préstamo:**
 - Campos: capital pendiente, interés pendiente, mora pendiente, días de atraso, tramo, próximo vencimiento y último pago.
@@ -189,8 +191,8 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
 | `LedgerAccount` | Plan de cuentas | Código, nombre, tipo (activo, pasivo, patrimonio, ingreso, gasto), cuenta padre, `is_system`, `allows_negative`, `is_active` | Las cuentas del sistema (Cartera, Intereses, Mora, Cargos) no se borran |
-| `FinancialAccount` | Caja general o banco | Cuenta contable, tipo, banco, número enmascarado, sucursal, moneda | No permite sobregiro (#30) |
-| `AccountBalance` | Saldo en caché | Cuenta y saldo | Se bloquea y actualiza en la misma transacción; se verifica cada noche |
+| `FinancialAccount` | Caja general o banco | Cuenta contable propia (`1101-NN` cajas, `1102-NN` bancos), tipo, banco, últimos 4 dígitos, sucursal (vacía = toda la empresa), moneda | No permite sobregiro (#30). Al registrarse, cada empresa recibe su «Caja general» |
+| `AccountBalance` | Saldo en caché | Cuenta y saldo **en su lado natural** (débito para activos y gastos, crédito para el resto), copia de `allows_negative` | Se bloquea y actualiza en la misma transacción, en orden de cuenta (sin bloqueos cruzados); `CHECK` contra el sobregiro; se verifica cada noche |
 | `JournalEntry` | Asiento | Número, fecha contable, sucursal, descripción, origen (tipo e ID), `reversal_of`, período, quién lo creó | **Siempre balanceado** (restricción diferida en la base) |
 | `JournalLine` | Línea del asiento | Asiento, cuenta, débito, crédito, moneda. Dimensiones: sucursal, sesión de caja, sesión de ruta, préstamo, cliente | Las tablas del libro **no permiten UPDATE ni DELETE** (disparador) |
 | `AccountingPeriod` | Mes contable | Mes, `status` (abierto o cerrado), quién lo cerró | Un mes cerrado no admite asientos sin permiso especial |
@@ -201,7 +203,7 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
 | `DocumentTemplate` | Plantilla | Tipo (pagaré, recibo, recibo térmico, estado de cuenta, carta de saldo, cierre de caja, contratos, legales), versión, motor (HTML o DOCX), contenido, `legal_status` (pendiente o validada), quién la validó y cuándo | Las plantillas legales no se usan en producción sin validar (015) |
-| `GeneratedDocument` | Documento emitido | Plantilla y versión, objeto relacionado, archivo, número, `sha256`, `verification_token` | Se puede reimprimir idéntico y verificar con QR (fase 9) |
+| `GeneratedDocument` | Documento emitido | Tipo, versión de plantilla, `legal_status` al emitir, objeto relacionado, folio, archivo, `sha256`, quién lo emitió (`verification_token` en la fase 9) | Solo admite inserciones (disparador); se reimprime idéntico y se verifica con QR (fase 9) |
 | `ExportJob` | Exportación en segundo plano | Usuario, reporte, filtros, formato, estado, archivo | Usa los mismos filtros que la pantalla |
 | `CustomerScore` | Clasificación (fase 7) | Cliente, puntuación, grado, factores, cuándo | Explicable (#38) |
 | `CommissionRule`, `CommissionRun`, `CommissionLine` | Comisiones (fase 7) | Regla, período, cálculo, aprobación | — |
@@ -307,7 +309,7 @@ Estas reglas se aplican en PostgreSQL, además de en el código, para que ni un 
 8. Las claves de idempotencia de pagos y desembolsos son únicas.
 9. Ninguna cuenta con `allows_negative = false` queda en negativo (la verificación se hace con la fila del saldo bloqueada).
 10. Los importes llevan `CHECK >= 0` donde corresponde; el signo lo da el débito o el crédito, nunca un importe negativo.
-11. **Row-Level Security activo en toda tabla con `company`:** la política compara con la empresa de la sesión (`app.current_company`); una conexión sin empresa fijada no ve ninguna fila. Las relaciones entre tablas exigen además la misma empresa en ambos lados (claves compuestas o `CHECK` de coherencia en las uniones críticas).
+11. **Row-Level Security activo en toda tabla con `company`, incluidas las copias de historial de pghistory (decisión 058):** la política compara con la empresa de la sesión (`app.current_company`); una conexión sin empresa fijada no ve ninguna fila. Las relaciones entre tablas exigen además la misma empresa en ambos lados (claves compuestas o `CHECK` de coherencia en las uniones críticas).
 
 La **conciliación nocturna** compara las cachés con el libro: saldos de préstamos y de cuentas, y el esperado de cada caja. Cualquier diferencia genera una alerta al administrador.
 

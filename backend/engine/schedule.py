@@ -1,19 +1,23 @@
 """Payment schedule generation (doc 03 - sections 3 and 4).
 
-Pure functions over Decimals and dates. The four closed methods live
-here (the open/pagare-abierto method has no fixed schedule and is
-handled by the payments flow). Guarantees, enforced by tests:
+Pure functions over Decimals and dates, for the five methods of doc 03.
+The open method («pagaré abierto») starts with the same schedule as
+interest-only up to its maturity; principal abonos re-version it later
+(payments flow). Guarantees, enforced by tests:
 
 - the principal parts sum EXACTLY to the principal (residue goes to the
   last installment, reference defect #35);
 - interest never changes because a due date shifted for a holiday;
-- due dates are strictly increasing and never on/before disbursement.
+- due dates are strictly increasing and never on/before disbursement;
+- with payment rounding (peso, 5, 10) the regular installment rounds UP,
+  the extra amortizes principal and the last installment closes the
+  balance exactly, so it is never larger than the others.
 """
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import ROUND_DOWN, Decimal, localcontext
+from decimal import ROUND_CEILING, ROUND_DOWN, Decimal, localcontext
 from enum import StrEnum
 
 from engine.money import CENT, money
@@ -36,6 +40,33 @@ class Method(StrEnum):
     INTEREST_ONLY = "interest_only"  # «A rédito»
     FIXED_PAYMENT = "fixed_payment"  # francesa
     FIXED_PRINCIPAL = "fixed_principal"  # cuota decreciente
+    OPEN = "open"  # «pagaré abierto»: interest on the balance, principal at will
+
+
+# Methods whose installment is pure interest: rounding it would silently
+# amortize principal and change the method, so they stay at the cent.
+INTEREST_ONLY_METHODS = frozenset({Method.INTEREST_ONLY, Method.OPEN})
+
+
+class Rounding(StrEnum):
+    """How the regular installment is rounded (doc 03 - section 1)."""
+
+    CENT = "cent"
+    PESO = "peso"
+    FIVE = "five"
+    TEN = "ten"
+
+
+ROUNDING_STEP: dict[Rounding, Decimal] = {
+    Rounding.CENT: CENT,
+    Rounding.PESO: Decimal("1"),
+    Rounding.FIVE: Decimal("5"),
+    Rounding.TEN: Decimal("10"),
+}
+
+
+def _round_up(value: Decimal, step: Decimal) -> Decimal:
+    return money((value / step).to_integral_value(rounding=ROUND_CEILING) * step)
 
 
 @dataclass(frozen=True)
@@ -143,51 +174,100 @@ def _resolve_dates(
     return results
 
 
+def _amortize(
+    *,
+    principal: Decimal,
+    installments: int,
+    target_total: Callable[[Decimal, Decimal], Decimal],
+    interest_for: Callable[[Decimal], Decimal],
+) -> list[tuple[Decimal, Decimal]]:
+    """Walk the balance down: each installment pays its interest and the
+    rest of its target total goes to principal; the last one closes the
+    balance exactly. Clamped both ways: a total may not cover the
+    interest (tiny loans) nor amortize past the remaining balance.
+    """
+    rows: list[tuple[Decimal, Decimal]] = []
+    balance = principal
+    for k in range(1, installments + 1):
+        interest = interest_for(balance)
+        if k == installments:
+            part = balance
+        else:
+            part = min(max(target_total(balance, interest) - interest, Decimal("0.00")), balance)
+        rows.append((part, interest))
+        balance -= part
+    return rows
+
+
 def _amounts(
-    *, principal: Decimal, periodic_rate: Decimal, installments: int, method: Method
+    *,
+    principal: Decimal,
+    periodic_rate: Decimal,
+    installments: int,
+    method: Method,
+    rounding_step: Decimal = CENT,
 ) -> list[tuple[Decimal, Decimal]]:
     """(principal, interest) per installment, already rounded to cents."""
     n = installments
+    rounded = rounding_step != CENT
+    if rounded and method in INTEREST_ONLY_METHODS:
+        raise ValueError("El redondeo de la cuota no aplica a los métodos de solo interés.")
+
     if method == Method.FLAT:
         interest_each = money(principal * periodic_rate)
-        return [(part, interest_each) for part in _split_principal(principal, n)]
+        parts = _split_principal(principal, n)
+        if not rounded:
+            return [(part, interest_each) for part in parts]
+        regular = _round_up(parts[0] + interest_each, rounding_step)
+        return _amortize(
+            principal=principal,
+            installments=n,
+            target_total=lambda _balance, _interest: regular,
+            interest_for=lambda _balance: interest_each,  # flat: always on the original
+        )
 
-    if method == Method.INTEREST_ONLY:
+    if method in INTEREST_ONLY_METHODS:
         interest_each = money(principal * periodic_rate)
         return [(Decimal("0.00"), interest_each) for _ in range(n - 1)] + [
             (money(principal), interest_each)
         ]
 
     if method == Method.FIXED_PRINCIPAL:
-        rows: list[tuple[Decimal, Decimal]] = []
-        balance = principal
-        for part in _split_principal(principal, n):
-            rows.append((part, money(balance * periodic_rate)))
-            balance -= part
-        return rows
+        base = _split_principal(principal, n)[0]
+        if not rounded:
+            rows: list[tuple[Decimal, Decimal]] = []
+            balance = principal
+            for part in _split_principal(principal, n):
+                rows.append((part, money(balance * periodic_rate)))
+                balance -= part
+            return rows
+        return _amortize(
+            principal=principal,
+            installments=n,
+            target_total=lambda _balance, interest: _round_up(base + interest, rounding_step),
+            interest_for=lambda balance: money(balance * periodic_rate),
+        )
 
     # FIXED_PAYMENT (French amortization)
     if periodic_rate == 0:
         return _amounts(
-            principal=principal, periodic_rate=periodic_rate, installments=n, method=Method.FLAT
+            principal=principal,
+            periodic_rate=periodic_rate,
+            installments=n,
+            method=Method.FLAT,
+            rounding_step=rounding_step,
         )
     with localcontext() as context:
         context.prec = 50
         factor = (1 + periodic_rate) ** n
-        payment = money(principal * periodic_rate * factor / (factor - 1))
-    rows = []
-    balance = principal
-    for k in range(1, n + 1):
-        interest = money(balance * periodic_rate)
-        if k == n:
-            part = balance  # the last installment closes the balance exactly
-        else:
-            # Clamp both ways: a rounded payment may not cover the interest
-            # (tiny loans) nor amortize past the remaining balance.
-            part = min(max(payment - interest, Decimal("0.00")), balance)
-        rows.append((part, interest))
-        balance -= part
-    return rows
+        exact = principal * periodic_rate * factor / (factor - 1)
+        payment = _round_up(exact, rounding_step) if rounded else money(exact)
+    return _amortize(
+        principal=principal,
+        installments=n,
+        target_total=lambda _balance, _interest: payment,
+        interest_for=lambda balance: money(balance * periodic_rate),
+    )
 
 
 def generate_schedule(
@@ -201,6 +281,7 @@ def generate_schedule(
     first_due: date | None = None,
     is_non_working: Callable[[date], bool] = WORKING_EVERY_DAY,
     semimonthly: bool = False,
+    rounding: Rounding = Rounding.CENT,
 ) -> list[Installment]:
     if installments < 1:
         raise ValueError("Debe haber al menos una cuota.")
@@ -228,6 +309,7 @@ def generate_schedule(
         periodic_rate=periodic_rate,
         installments=installments,
         method=method,
+        rounding_step=ROUNDING_STEP[Rounding(rounding)],
     )
     return [
         Installment(

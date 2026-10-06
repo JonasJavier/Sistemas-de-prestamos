@@ -2,8 +2,9 @@
 
 ``register_company`` is the single entry point that turns a public signup
 into a working tenant: company in trial, main branch, admin user with the
-manager + administrator roles, and the seeded catalogs (system roles,
-Dominican holidays, reasons). Everything happens in one transaction.
+manager + administrator roles, and the seeded catalogs (system roles with
+their approval limits, Dominican holidays, reasons, example products and
+the chart of accounts with a «Caja general»). One transaction.
 """
 
 import datetime as dt
@@ -13,9 +14,11 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.models import Membership, Role, User
+from apps.accounts.authz import DEFAULT_APPROVAL_LIMITS
+from apps.accounts.models import ApprovalLimit, Membership, Role, User
 from apps.core.models import Branch, Company, Holiday, Reason
 from apps.core.tenancy import company_context
+from apps.ledger.services import seed_chart
 from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
 from apps.platform.models import Plan, Subscription
 
@@ -121,20 +124,28 @@ def register_company(
             Membership.objects.create(
                 company=company, user=admin, branch=branch, role=roles[role_name]
             )
+        _seed_approval_limits(company, roles)
         _seed_holidays(company, today.year)
         _seed_reasons(company)
         _seed_products(company)
+        seed_chart(company, branch)
 
     return RegistrationResult(company=company, admin=admin, branch=branch)
+
+
+def _seed_approval_limits(company: Company, roles: dict[str, Role]) -> None:
+    ApprovalLimit.objects.bulk_create(
+        ApprovalLimit(company=company, role=roles[role_name], operation=op, max_amount=amount)
+        for role_name, limits in DEFAULT_APPROVAL_LIMITS.items()
+        for op, amount in limits.items()
+    )
 
 
 def _seed_holidays(company: Company, start_year: int) -> None:
     holidays = []
     for year in (start_year, start_year + 1):
         for (month, day), name in FIXED_HOLIDAYS:
-            holidays.append(
-                Holiday(company=company, date=dt.date(year, month, day), name=name)
-            )
+            holidays.append(Holiday(company=company, date=dt.date(year, month, day), name=name))
         for (month, day), name in MOVABLE_HOLIDAYS:
             holidays.append(
                 Holiday(

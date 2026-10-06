@@ -1,4 +1,3 @@
-
 import pytest
 from rest_framework.test import APIClient
 
@@ -68,9 +67,7 @@ def test_simulator_matches_engine_e4(client: APIClient, tenant: RegistrationResu
     assert data["principal"] == "10000.00"
 
 
-def test_simulator_validates_product_ranges(
-    client: APIClient, tenant: RegistrationResult
-) -> None:
+def test_simulator_validates_product_ranges(client: APIClient, tenant: RegistrationResult) -> None:
     response = client.post(
         "/api/v1/simulador/",
         {
@@ -181,3 +178,62 @@ def test_simulation_persists_nothing(client: APIClient, tenant: RegistrationResu
     )
     with company_context(tenant.company.id):
         assert LP.objects.count() == products_before
+
+
+def test_simulator_applies_the_product_payment_rounding(
+    client: APIClient, tenant: RegistrationResult
+) -> None:
+    """The product's «Redondeo de la cuota» reaches the engine (doc 03 - 1)."""
+    product_id = _product_id(tenant, "Personal San (semanal)")
+    assert (
+        client.patch(
+            f"/api/v1/productos/{product_id}/", {"payment_rounding": "peso"}, format="json"
+        ).status_code
+        == 200
+    )
+    response = client.post(
+        "/api/v1/simulador/",
+        {
+            "product": product_id,
+            "amount": "1000",
+            "installments": 6,
+            "frequency": "weekly",
+            "rate": "0.07",
+        },
+        format="json",
+    )
+    assert response.status_code == 200, response.content
+    totals = [row["total"] for row in response.json()["schedule"]]
+    # Flat: 166.66 + 70.00 = 236.66 rounds UP to 237; the last one closes.
+    assert totals == ["237.00"] * 5 + ["235.00"]
+
+
+def test_interest_only_products_cannot_round_the_installment(
+    client: APIClient, tenant: RegistrationResult
+) -> None:
+    product_id = _product_id(tenant, "Personal San (semanal)")
+    response = client.patch(
+        f"/api/v1/productos/{product_id}/",
+        {"method": "interest_only", "payment_rounding": "ten"},
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "payment_rounding" in response.json()
+
+
+def test_first_due_cannot_precede_tomorrow(client: APIClient, tenant: RegistrationResult) -> None:
+    from django.utils import timezone
+
+    response = client.post(
+        "/api/v1/simulador/",
+        {
+            "product": _product_id(tenant, "Personal San (semanal)"),
+            "amount": "1000",
+            "installments": 4,
+            "frequency": "weekly",
+            "first_due": timezone.localdate().isoformat(),
+        },
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "first_due" in response.json()

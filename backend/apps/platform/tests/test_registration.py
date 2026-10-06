@@ -58,9 +58,7 @@ def test_service_creates_a_working_tenant(db) -> None:
 
 def test_two_registrations_are_isolated(db) -> None:
     first = _register()
-    second = _register(
-        legal_name="Financiera Dos SRL", admin_email="luis@dos.do"
-    )
+    second = _register(legal_name="Financiera Dos SRL", admin_email="luis@dos.do")
     with company_context(first.company.id):
         assert Branch.objects.count() == 1
         assert Role.objects.count() == 8
@@ -68,9 +66,7 @@ def test_two_registrations_are_isolated(db) -> None:
         assert Branch.objects.get().company_id == second.company.id
 
 
-def test_registration_api_creates_company_and_sends_confirmation(
-    db, api_client: APIClient
-) -> None:
+def test_registration_api_creates_company_and_sends_confirmation(db, api_client: APIClient) -> None:
     response = api_client.post(
         "/api/v1/registro/",
         {

@@ -57,9 +57,7 @@ class Customer(CompanyScopedModel):
 
     address_line = models.CharField(max_length=300, blank=True)
     province = models.ForeignKey(Province, null=True, blank=True, on_delete=models.PROTECT)
-    municipality = models.ForeignKey(
-        Municipality, null=True, blank=True, on_delete=models.PROTECT
-    )
+    municipality = models.ForeignKey(Municipality, null=True, blank=True, on_delete=models.PROTECT)
     sector = models.ForeignKey(Sector, null=True, blank=True, on_delete=models.PROTECT)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -125,9 +123,7 @@ class Business(CompanyScopedModel):
     address = models.CharField(max_length=300, blank=True)
     since = models.DateField(null=True, blank=True)
     monthly_sales = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    monthly_expenses = models.DecimalField(
-        max_digits=14, decimal_places=2, null=True, blank=True
-    )
+    monthly_expenses = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
 
 @pghistory.track()
@@ -225,9 +221,7 @@ class VehicleDetail(CompanyScopedModel):
 
 @pghistory.track()
 class PropertyDetail(CompanyScopedModel):
-    collateral = models.OneToOneField(
-        Collateral, on_delete=models.CASCADE, related_name="property"
-    )
+    collateral = models.OneToOneField(Collateral, on_delete=models.CASCADE, related_name="property")
     title_number = models.CharField(max_length=60, blank=True)
     cadastral_designation = models.CharField(max_length=120, blank=True)
     location = models.CharField(max_length=300, blank=True)

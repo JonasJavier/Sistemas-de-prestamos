@@ -16,9 +16,7 @@ from apps.lending.api.serializers import (
 from apps.lending.models import LoanProduct, ProductCharge
 
 # Doc 06 matrix: the simulator serves the counter (P25): G, Su, O, Ca.
-CanSimulate = role_required(
-    "Gerente", "Supervisor", "Oficial de crédito", "Cajero", read_any=False
-)
+CanSimulate = role_required("Gerente", "Supervisor", "Oficial de crédito", "Cajero", read_any=False)
 
 
 class LoanProductViewSet(viewsets.ModelViewSet):

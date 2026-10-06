@@ -90,9 +90,7 @@ def test_pending_invitations_list_and_revoke(
     assert len(pending) == 1
     invitation_id = pending[0]["id"]
     assert (
-        manager_client.delete(
-            f"/api/v1/invitaciones/pendientes/{invitation_id}/"
-        ).status_code
+        manager_client.delete(f"/api/v1/invitaciones/pendientes/{invitation_id}/").status_code
         == 204
     )
     assert manager_client.get("/api/v1/invitaciones/pendientes/").json() == []

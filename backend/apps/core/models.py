@@ -7,6 +7,7 @@ of it in the phase 1 RLS migration.
 """
 
 import uuid
+from decimal import Decimal
 
 import pghistory
 from django.db import models
@@ -43,6 +44,12 @@ class Company(TimeStampedModel):
     status = models.CharField(max_length=10, choices=Status, default=Status.TRIAL)
     trial_ends_on = models.DateField(null=True, blank=True)
     status_reason = models.CharField(max_length=300, blank=True)
+
+    # Operating defaults of F3 (decision 027), editable per company.
+    application_validity_days = models.PositiveSmallIntegerField(default=15)
+    capacity_alert_ratio = models.DecimalField(
+        max_digits=4, decimal_places=3, default=Decimal("0.400")
+    )
 
     def __str__(self) -> str:
         return self.trade_name or self.legal_name
@@ -131,7 +138,9 @@ class Sequence(CompanyScopedModel):
     """Gapless per-branch document numbering (decision 030).
 
     `allocate()` locks the row inside the caller's transaction, so the
-    number is only consumed if the document commits with it.
+    number is only consumed if the document commits with it. Rows are
+    created on first use with the default prefix (``SD-000125``,
+    ``SD-R-004512``); a company may later edit the prefix (P75).
     """
 
     class DocType(models.TextChoices):
@@ -141,6 +150,18 @@ class Sequence(CompanyScopedModel):
         CASH_SESSION = "cash_session", "Caja"
         PAYOFF_QUOTE = "payoff_quote", "Carta de saldo"
         EXPENSE = "expense", "Gasto"
+        JOURNAL = "journal", "Asiento"
+
+    # Letter between the branch code and the number; loans carry none.
+    DEFAULT_INFIX = {
+        DocType.LOAN: "",
+        DocType.RECEIPT: "R-",
+        DocType.APPLICATION: "S-",
+        DocType.CASH_SESSION: "C-",
+        DocType.PAYOFF_QUOTE: "CS-",
+        DocType.EXPENSE: "G-",
+        DocType.JOURNAL: "A-",
+    }
 
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="sequences")
     doc_type = models.CharField(max_length=20, choices=DocType)
@@ -161,6 +182,19 @@ class Sequence(CompanyScopedModel):
     @classmethod
     def allocate(cls, branch: Branch, doc_type: str) -> str:
         """Return the next number (e.g. ``SD-000125``). Call inside a transaction."""
+        # Race-free first use: two concurrent first documents both try the
+        # insert, one wins, and both then queue on the same row lock.
+        cls.objects.bulk_create(
+            [
+                cls(
+                    company_id=branch.company_id,
+                    branch=branch,
+                    doc_type=doc_type,
+                    prefix=f"{branch.code}-{cls.DEFAULT_INFIX[cls.DocType(doc_type)]}",
+                )
+            ],
+            ignore_conflicts=True,
+        )
         seq = cls.objects.select_for_update().get(branch=branch, doc_type=doc_type)
         number = f"{seq.prefix}{seq.next_value:0{seq.padding}d}"
         seq.next_value += 1

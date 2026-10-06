@@ -1,0 +1,74 @@
+{% load money %}<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}{% endblock %} {{ folio }}</title>
+<style>
+  @page {
+    size: letter;
+    margin: 20mm 18mm 26mm 18mm;
+    @bottom-left {
+      content: "Folio {{ folio }} · Emitido por {{ issuer_label }} el {{ issued_at|date:'d/m/Y H:i' }}";
+      font: 7.5pt "Inter", "Segoe UI", Arial, sans-serif; color: #5b6b63;
+    }
+    @bottom-right {
+      content: "Página " counter(page) " de " counter(pages);
+      font: 7.5pt "Inter", "Segoe UI", Arial, sans-serif; color: #5b6b63;
+    }
+    @bottom-center {
+      content: "Generado con Cobradía · cobradia.com";
+      font: 7.5pt "Inter", "Segoe UI", Arial, sans-serif; color: #8a978f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { font: 9.5pt/1.45 "Inter", "Segoe UI", Arial, sans-serif; color: #1c2420; margin: 0; }
+  header.company { display: flex; align-items: center; gap: 12px; padding-bottom: 10px;
+    border-bottom: 2px solid #15402F; margin-bottom: 14px; }
+  .monogram { width: 42px; height: 42px; border-radius: 8px; background: #15402F; color: #fff;
+    font-weight: 700; font-size: 15pt; display: flex; align-items: center; justify-content: center; }
+  .monogram img { max-width: 42px; max-height: 42px; }
+  .company-name { font-size: 12pt; font-weight: 700; color: #15402F; }
+  .company-meta { font-size: 8pt; color: #4a5a52; }
+  .doc-title { margin-left: auto; text-align: right; }
+  .doc-title h1 { margin: 0; font-size: 14pt; letter-spacing: .04em; color: #15402F; }
+  .doc-title .number { font-size: 9pt; color: #4a5a52; }
+  .legal-band { border: 1px solid #C9A227; background: #fbf6e6; color: #6b5512; padding: 5px 8px;
+    font-size: 7.5pt; margin-bottom: 12px; border-radius: 4px; }
+  h2 { font-size: 10pt; color: #15402F; margin: 14px 0 6px; text-transform: uppercase;
+    letter-spacing: .05em; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 3px 6px; text-align: left; vertical-align: top; }
+  table.grid th { background: #eef2ef; font-size: 8pt; text-transform: uppercase; letter-spacing: .03em;
+    color: #2d3b34; border-bottom: 1px solid #c9d3cd; }
+  table.grid td { border-bottom: 1px solid #e3e8e5; }
+  table.grid tfoot td { font-weight: 700; border-top: 1.5px solid #15402F; border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kv td:first-child { color: #4a5a52; width: 45%; }
+  .kv td:last-child { font-weight: 600; }
+  .two-col { display: flex; gap: 18px; }
+  .two-col > div { flex: 1; }
+  p { margin: 0 0 8px; text-align: justify; }
+  .signatures { display: flex; flex-wrap: wrap; gap: 28px 40px; margin-top: 46px; }
+  .signature { flex: 1 1 40%; border-top: 1px solid #1c2420; padding-top: 4px; font-size: 8.5pt; }
+  .muted { color: #5b6b63; }
+</style>
+</head>
+<body>
+<header class="company">
+  <div class="monogram">{% if company.logo %}<img src="{{ company.logo.path }}" alt="">{% else %}{{ monogram }}{% endif %}</div>
+  <div>
+    <div class="company-name">{{ company.legal_name }}</div>
+    <div class="company-meta">
+      {% if company.rnc %}RNC {{ company.rnc }} · {% endif %}{{ loan.branch.name }}{% if loan.branch.address %} · {{ loan.branch.address }}{% endif %}
+      {% if company.phone or loan.branch.phone %}<br>Tel. {{ loan.branch.phone|default:company.phone }}{% endif %}{% if company.email %} · {{ company.email }}{% endif %}
+    </div>
+  </div>
+  <div class="doc-title">
+    <h1>{% block heading %}{% endblock %}</h1>
+    <div class="number">{% block number %}{% endblock %}</div>
+  </div>
+</header>
+{% if legal_pending %}<div class="legal-band">Plantilla de fábrica pendiente de validación legal por el abogado de la empresa (decisión 015).</div>{% endif %}
+{% block content %}{% endblock %}
+</body>
+</html>

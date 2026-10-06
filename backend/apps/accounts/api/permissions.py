@@ -32,9 +32,7 @@ class IsCompanyManager(BasePermission):
     message = "Solo el gerente o el administrador pueden hacer esto."
 
     def has_permission(self, request: Request, view: APIView) -> bool:
-        return bool(request.user and request.user.is_authenticated) and is_company_manager(
-            request
-        )
+        return bool(request.user and request.user.is_authenticated) and is_company_manager(request)
 
 
 class IsCompanyManagerOrReadOnly(IsCompanyManager):
@@ -44,14 +42,19 @@ class IsCompanyManagerOrReadOnly(IsCompanyManager):
         return super().has_permission(request, view)
 
 
-def role_required(*role_names: str, read_any: bool = True) -> type[BasePermission]:
+def role_required(
+    *role_names: str, read_any: bool = True, read_roles: tuple[str, ...] = ()
+) -> type[BasePermission]:
     """Permission class factory for the doc 06 matrix, one slice at a time.
 
     With ``read_any`` (default), any authenticated company user may read
     and only the named roles may write; without it, the roles gate reads
-    too. Membership lookups are cached per request and role set.
+    too. ``read_roles`` widens reads to more roles than writes (e.g. audit
+    reads what the manager edits). Membership lookups are cached per
+    request and role set.
     """
     names = frozenset(role_names)
+    readers = names | frozenset(read_roles)
 
     class RolePermission(BasePermission):
         message = "Tu rol no permite esta acción."
@@ -59,17 +62,19 @@ def role_required(*role_names: str, read_any: bool = True) -> type[BasePermissio
         def has_permission(self, request: Request, view: APIView) -> bool:
             if not (request.user and request.user.is_authenticated):
                 return False
-            if read_any and request.method in SAFE_METHODS:
+            reading = request.method in SAFE_METHODS
+            if read_any and reading:
                 return True
+            wanted = readers if reading else names
             cache = getattr(request, "_role_cache", None)
             if cache is None:
                 cache = request._role_cache = {}  # noqa: SLF001 - request-local cache
-            allowed = cache.get(names)
+            allowed = cache.get(wanted)
             if allowed is None:
                 allowed = Membership.objects.filter(
-                    user=request.user, role__name__in=names
+                    user=request.user, role__name__in=wanted
                 ).exists()
-                cache[names] = allowed
+                cache[wanted] = allowed
             return allowed
 
     return RolePermission

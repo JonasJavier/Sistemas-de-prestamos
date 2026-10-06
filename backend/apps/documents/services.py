@@ -1,0 +1,192 @@
+"""Issuing documents (doc 09 - section 1): HTML templates -> PDF.
+
+``issue`` renders once, stores the bytes with their sha256 and returns
+the register row; reprints serve the stored file, so they are identical.
+Loan documents are generated right after the disbursement commits (and
+lazily if that ever failed): their data is frozen, so the content is the
+same whenever they are produced.
+"""
+
+import hashlib
+from decimal import Decimal
+
+from django.core.files.base import ContentFile
+from django.template.loader import render_to_string
+from django.utils import timezone
+from num2words import num2words
+
+from apps.core.models import Company
+from apps.documents.models import GeneratedDocument
+from apps.lending.models import Loan
+from engine.rates import RateUnit, annual_equivalent, monthly_equivalent
+
+TEMPLATE_VERSION = "1.0"
+
+FREQUENCY_LABELS = {
+    "daily": ("diaria", "diarias"),
+    "interdaily": ("interdiaria", "interdiarias"),
+    "weekly": ("semanal", "semanales"),
+    "biweekly": ("quincenal", "quincenales"),
+    "monthly": ("mensual", "mensuales"),
+}
+
+MONTHS = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+]
+
+
+def amount_in_words(amount: Decimal) -> str:
+    """``1250.50`` -> «MIL DOSCIENTOS CINCUENTA PESOS DOMINICANOS CON 50/100»."""
+    pesos = int(amount)
+    cents = int((amount - pesos) * 100)
+    words = num2words(pesos, lang="es")
+    # Apocope before a masculine noun: «veintiún pesos», «ciento un pesos».
+    if words.endswith("uno"):
+        words = words[:-3] + ("ún" if words.endswith("veintiuno") else "un")
+    if pesos and pesos % 1_000_000 == 0:
+        words += " de"  # «un millón de pesos»
+    return f"{words} pesos dominicanos con {cents:02d}/100".upper()
+
+
+def date_in_words(day) -> str:
+    return f"{day.day} de {MONTHS[day.month - 1]} de {day.year}"
+
+
+def _monogram(company: Company) -> str:
+    name = company.trade_name or company.legal_name
+    initials = [word[0] for word in name.split() if word[:1].isalpha()]
+    return "".join(initials[:2]).upper() or "C"
+
+
+def render_pdf(template: str, context: dict) -> bytes:
+    from weasyprint import HTML  # heavy import, only when a document is issued
+
+    html = render_to_string(template, context)
+    return HTML(string=html).write_pdf()
+
+
+def issue(
+    *,
+    company: Company,
+    kind: str,
+    target,
+    folio: str,
+    template: str,
+    context: dict,
+    issued_by,
+    legal_status: str = "pending",
+) -> GeneratedDocument:
+    now = timezone.localtime()
+    issuer = (issued_by.get_full_name() or issued_by.email) if issued_by else "el sistema"
+    pdf = render_pdf(
+        template,
+        {
+            **context,
+            "company": company,
+            "monogram": _monogram(company),
+            "folio": folio,
+            "issued_by": issued_by,
+            # Goes inside a CSS string (page footer): no quotes nor backslashes.
+            "issuer_label": issuer.replace('"', "'").replace("\\", "/"),
+            "issued_at": now,
+            "legal_pending": legal_status != "validated",
+        },
+    )
+    document = GeneratedDocument(
+        company_id=company.id,
+        kind=kind,
+        template_version=TEMPLATE_VERSION,
+        legal_status=legal_status,
+        target_type=target._meta.label_lower,
+        target_id=target.pk,
+        folio=folio,
+        sha256=hashlib.sha256(pdf).hexdigest(),
+        issued_by=issued_by,
+    )
+    document.file.save(f"{folio}.pdf", ContentFile(pdf), save=False)
+    document.save()
+    return document
+
+
+def _loan_context(loan: Loan) -> dict:
+    terms = loan.terms.order_by("-version").first()
+    rows = list(loan.installments.filter(terms=terms).order_by("number"))
+    balance = terms.principal
+    schedule = []
+    for row in rows:
+        balance -= row.principal_due
+        schedule.append(
+            {"row": row, "total": row.principal_due + row.interest_due, "balance": balance}
+        )
+    total_interest = sum((r.interest_due for r in rows), Decimal("0.00"))
+    total_installments = sum((r.principal_due + r.interest_due for r in rows), Decimal("0.00"))
+    charges = list(loan.charges.all())
+    total_charges = sum((c.amount for c in charges), Decimal("0.00"))
+    disbursement = loan.disbursement
+    singular, plural = FREQUENCY_LABELS[terms.frequency]
+    unit = RateUnit(terms.rate_unit)
+    return {
+        "loan": loan,
+        "customer": loan.customer,
+        "terms": terms,
+        "schedule": schedule,
+        "first_due": rows[0].due_date if rows else None,
+        "last_due": rows[-1].due_date if rows else None,
+        "frequency_plural": plural,
+        "frequency_singular": singular,
+        "periodic_rate_pct": terms.periodic_rate * 100,
+        "monthly_rate_pct": monthly_equivalent(terms.rate, unit, terms.frequency) * 100,
+        "annual_rate_pct": annual_equivalent(terms.rate, unit, terms.frequency) * 100,
+        "total_interest": total_interest,
+        "total_installments": total_installments,
+        "charges": charges,
+        "total_charges": total_charges,
+        "credit_cost": total_interest + total_charges,
+        "disbursement": disbursement,
+        "principal_words": amount_in_words(terms.principal),
+        "disbursed_words": date_in_words(loan.disbursed_on),
+        "guarantors": [g.customer for g in loan.guarantors.select_related("customer")],
+        "collaterals": [c.collateral for c in loan.collaterals.select_related("collateral")],
+        "late_fee_cap_pct": terms.late_fee_cap_pct * 100,
+        "late_fee_rate_pct": terms.late_fee_monthly_rate * 100,
+    }
+
+
+LOAN_DOCUMENTS = [
+    (GeneratedDocument.Kind.PROMISSORY_NOTE, "documents/promissory_note.html", "P"),
+    (GeneratedDocument.Kind.PAYMENT_SCHEDULE, "documents/payment_schedule.html", "T"),
+]
+
+
+def ensure_loan_documents(loan: Loan, *, issued_by) -> list[GeneratedDocument]:
+    """The pagaré and the payment table of a loan, issued once each."""
+    existing = {
+        doc.kind: doc
+        for doc in GeneratedDocument.objects.filter(target_type="lending.loan", target_id=loan.pk)
+    }
+    missing = [spec for spec in LOAN_DOCUMENTS if spec[0] not in existing]
+    if missing:
+        company = Company.objects.get(pk=loan.company_id)
+        context = _loan_context(loan)
+        for kind, template, suffix in missing:
+            existing[kind] = issue(
+                company=company,
+                kind=kind,
+                target=loan,
+                folio=f"{loan.number}-{suffix}",
+                template=template,
+                context=context,
+                issued_by=issued_by,
+            )
+    return [existing[kind] for kind, _template, _suffix in LOAN_DOCUMENTS]

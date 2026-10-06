@@ -29,8 +29,6 @@ class CompanyNotSuspendedOrReadOnly(BasePermission):
             return True  # the platform owner has no tenant
         status = getattr(request, "_company_status", None)
         if status is None:
-            status = (
-                Company.objects.only("status").get(pk=company_id).status
-            )
+            status = Company.objects.only("status").get(pk=company_id).status
             request._company_status = status  # noqa: SLF001 - request-local cache
         return status not in BLOCKED_STATUSES

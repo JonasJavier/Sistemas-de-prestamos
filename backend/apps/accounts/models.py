@@ -116,9 +116,7 @@ class Membership(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["user", "branch", "role"], name="membership_unique"
-            ),
+            models.UniqueConstraint(fields=["user", "branch", "role"], name="membership_unique"),
         ]
 
     def __str__(self) -> str:
@@ -127,7 +125,12 @@ class Membership(models.Model):
 
 @pghistory.track()
 class ApprovalLimit(models.Model):
-    """How much a role (or a specific user) may approve per operation (doc 06 - section 5)."""
+    """How much a role (or a specific user) may approve per operation (doc 06 - section 5).
+
+    ``max_amount`` empty means «sin límite» (the Gerente column). Having
+    no row at all for an operation means the holder cannot approve it.
+    A user-specific row overrides the limits of the user's roles.
+    """
 
     class Operation(models.TextChoices):
         APPROVE_APPLICATION = "approve_application", "Aprobar solicitud"
@@ -146,7 +149,7 @@ class ApprovalLimit(models.Model):
         User, null=True, blank=True, on_delete=models.CASCADE, related_name="approval_limits"
     )
     operation = models.CharField(max_length=30, choices=Operation)
-    max_amount = models.DecimalField(max_digits=14, decimal_places=2)
+    max_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, default="DOP")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -164,7 +167,7 @@ class ApprovalLimit(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.operation} <= {self.max_amount}"
+        return f"{self.operation} <= {self.max_amount or 'sin límite'}"
 
 
 @pghistory.track(exclude=["token"])

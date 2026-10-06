@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
 from engine.rates import Frequency
+from engine.schedule import INTEREST_ONLY_METHODS, Method
 
 
 class LateFeePolicySerializer(serializers.ModelSerializer):
@@ -53,6 +54,7 @@ class LoanProductSerializer(serializers.ModelSerializer):
             "payoff_future_interest_pct",
             "guarantee",
             "min_coverage",
+            "required_documents",
             "is_active",
             "late_fee_policy",
             "charges",
@@ -77,7 +79,35 @@ class LoanProductSerializer(serializers.ModelSerializer):
         pair("min_amount", "max_amount", "monto")
         pair("min_rate", "max_rate", "tasa")
         pair("min_term", "max_term", "plazo")
+        method = attrs.get("method", getattr(self.instance, "method", None))
+        rounding = attrs.get("payment_rounding", getattr(self.instance, "payment_rounding", None))
+        if method in INTEREST_ONLY_METHODS and rounding not in (None, LoanProduct.Rounding.CENT):
+            raise serializers.ValidationError(
+                {
+                    "payment_rounding": "En los métodos de solo interés la cuota es el "
+                    "interés: se cobra al centavo."
+                }
+            )
+        default_rate = attrs.get("default_rate", getattr(self.instance, "default_rate", None))
+        low = attrs.get("min_rate", getattr(self.instance, "min_rate", None))
+        high = attrs.get("max_rate", getattr(self.instance, "max_rate", None))
+        if default_rate is not None and low is not None and high is not None:
+            if not low <= default_rate <= high:
+                raise serializers.ValidationError(
+                    {"default_rate": "La tasa por defecto debe estar dentro del rango."}
+                )
         return attrs
+
+    def validate_method(self, value: str) -> str:
+        return Method(value).value
+
+    def validate_required_documents(self, value: list) -> list[str]:
+        if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+            raise serializers.ValidationError("Envía una lista de nombres de documentos.")
+        cleaned = [v.strip() for v in value if v.strip()]
+        if len(set(cleaned)) != len(cleaned):
+            raise serializers.ValidationError("Hay documentos repetidos.")
+        return cleaned
 
     def create(self, validated_data: dict[str, Any]) -> LoanProduct:
         policy_data = validated_data.pop("late_fee_policy")
@@ -106,7 +136,5 @@ class SimulationRequestSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=0)
     installments = serializers.IntegerField(min_value=1)
     frequency = serializers.CharField()
-    rate = serializers.DecimalField(
-        max_digits=9, decimal_places=6, required=False, allow_null=True
-    )
+    rate = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     first_due = serializers.DateField(required=False, allow_null=True)

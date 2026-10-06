@@ -26,11 +26,16 @@ def _detect_content_type(head: bytes) -> str | None:
         return "image/jpeg"
     if head.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
-    if len(head) >= 12 and head[4:8] == b"ftyp" and head[8:12] in (
-        b"heic",
-        b"heix",
-        b"hevc",
-        b"mif1",
+    if (
+        len(head) >= 12
+        and head[4:8] == b"ftyp"
+        and head[8:12]
+        in (
+            b"heic",
+            b"heix",
+            b"hevc",
+            b"mif1",
+        )
     ):
         return "image/heic"
     return None

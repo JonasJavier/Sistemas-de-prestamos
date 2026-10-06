@@ -86,12 +86,7 @@ def test_daily_skips_non_working_days() -> None:
 
 
 def test_semimonthly_15_and_month_end() -> None:
-    dates = [
-        d
-        for d, _ in make_dates(
-            Frequency.BIWEEKLY, date(2026, 1, 10), n=4, semimonthly=True
-        )
-    ]
+    dates = [d for d, _ in make_dates(Frequency.BIWEEKLY, date(2026, 1, 10), n=4, semimonthly=True)]
     assert dates == [
         date(2026, 1, 15),
         date(2026, 1, 31),

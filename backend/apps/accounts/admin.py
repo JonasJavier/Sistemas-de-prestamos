@@ -16,9 +16,7 @@ class UserAdmin(DjangoUserAdmin):
         ("Acceso", {"fields": ("is_active", "is_staff", "is_superuser", "is_platform_admin")}),
         ("Fechas", {"fields": ("last_login", "date_joined")}),
     )
-    add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),
-    )
+    add_fieldsets = ((None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),)
 
 
 admin.site.register([Role, Membership, ApprovalLimit, Invitation])

@@ -8,16 +8,18 @@ Nothing is persisted: the reference created a draft per keystroke
 """
 
 import datetime as dt
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.core.models import Holiday
 from apps.lending.models import LoanProduct, ProductCharge
 from engine.money import money
 from engine.rates import Frequency, RateUnit, annual_equivalent, monthly_equivalent, period_rate
-from engine.schedule import Installment, Method, generate_schedule
+from engine.schedule import Installment, Method, Rounding, generate_schedule
 
 
 @dataclass(frozen=True)
@@ -25,6 +27,9 @@ class ChargeLine:
     name: str
     mode: str
     amount: Decimal
+    charge_id: object = None  # ProductCharge pk, frozen into LoanCharge
+    basis: str = ""
+    value: Decimal = Decimal("0")
 
 
 @dataclass(frozen=True)
@@ -42,11 +47,14 @@ class Simulation:
     total_to_pay: Decimal
 
 
-def _non_working_predicate(product: LoanProduct) -> callable:
+def non_working_predicate(product: LoanProduct) -> Callable[[dt.date], bool]:
+    """The product's collection days plus the company's confirmed holidays."""
     holidays: set[dt.date] = set()
     if not product.collect_holidays:
         holidays = set(
-            Holiday.objects.filter(is_confirmed=True).values_list("date", flat=True)
+            Holiday.objects.filter(company_id=product.company_id, is_confirmed=True).values_list(
+                "date", flat=True
+            )
         )
 
     def is_non_working(day: dt.date) -> bool:
@@ -78,9 +86,7 @@ def simulate(
     errors: dict[str, str] = {}
 
     if not product.min_amount <= amount <= product.max_amount:
-        errors["amount"] = (
-            f"El monto debe estar entre {product.min_amount} y {product.max_amount}."
-        )
+        errors["amount"] = f"El monto debe estar entre {product.min_amount} y {product.max_amount}."
     if not product.min_term <= installments <= product.max_term:
         errors["installments"] = (
             f"Las cuotas deben estar entre {product.min_term} y {product.max_term}."
@@ -101,8 +107,15 @@ def simulate(
     periodic = period_rate(rate, unit, freq)
 
     charge_lines = [
-        ChargeLine(name=c.name, mode=c.mode, amount=_charge_amount(c, amount))
-        for c in product.charges.filter(is_active=True)
+        ChargeLine(
+            name=c.name,
+            mode=c.mode,
+            amount=_charge_amount(c, amount),
+            charge_id=c.pk,
+            basis=c.basis,
+            value=c.value,
+        )
+        for c in product.charges.filter(is_active=True).order_by("name")
     ]
     financed = sum(
         (line.amount for line in charge_lines if line.mode == ProductCharge.Mode.FINANCED),
@@ -115,16 +128,27 @@ def simulate(
 
     # E7: financed charges raise the base; discounted ones reduce the cash out.
     principal = money(amount + financed)
-    schedule = generate_schedule(
-        principal=principal,
-        periodic_rate=periodic,
-        installments=installments,
-        method=Method(product.method),
-        frequency=freq,
-        disbursed_on=disbursed_on or dt.date.today(),
-        first_due=first_due,
-        is_non_working=_non_working_predicate(product),
-    )
+    # Business dates are Santo Domingo dates (doc 05 - section 2), never the
+    # server's clock: a UTC host would quote tomorrow after 8 p.m.
+    disbursed_on = disbursed_on or timezone.localdate()
+    if first_due is not None and first_due <= disbursed_on:
+        raise ValidationError(
+            {"first_due": "La primera cuota vence, como pronto, el día siguiente al desembolso."}
+        )
+    try:
+        schedule = generate_schedule(
+            principal=principal,
+            periodic_rate=periodic,
+            installments=installments,
+            method=Method(product.method),
+            frequency=freq,
+            disbursed_on=disbursed_on,
+            first_due=first_due,
+            is_non_working=non_working_predicate(product),
+            rounding=Rounding(product.payment_rounding),
+        )
+    except ValueError as exc:  # engine guards (e.g. rounding vs. method)
+        raise ValidationError({"non_field_errors": str(exc)}) from exc
     total_interest = sum((row.interest for row in schedule), Decimal("0.00"))
     total_charges = sum((line.amount for line in charge_lines), Decimal("0.00"))
     return Simulation(

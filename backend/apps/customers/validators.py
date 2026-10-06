@@ -40,3 +40,13 @@ def validate_rnc(value: str) -> str:
     if not RNC_RE.match(digits):
         raise ValidationError("El RNC debe tener 9 dígitos.")
     return digits
+
+
+def mask_document(value: str) -> str:
+    """Lists show documents masked (doc 06 - section 7): 001-•••••67-8."""
+    digits = clean_document(value)
+    if CEDULA_RE.match(digits):
+        return f"{digits[:3]}-•••••{digits[8:10]}-{digits[10]}"
+    if len(digits) <= 4:
+        return "•" * len(digits)
+    return f"{digits[:2]}•••{digits[-2:]}"

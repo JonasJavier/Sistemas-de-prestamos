@@ -3,8 +3,10 @@
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from engine.rates import Frequency, RateUnit, period_rate
-from engine.schedule import Method, generate_schedule
+from engine.schedule import Method, Rounding, generate_schedule
 
 D = Decimal
 START = date(2026, 1, 1)
@@ -101,3 +103,68 @@ def test_rate_conversions_table() -> None:
     assert period_rate(monthly, RateUnit.MONTHLY, Frequency.MONTHLY) == monthly
     assert period_rate(D("0.60"), RateUnit.ANNUAL, Frequency.MONTHLY) == D("0.05")
     assert period_rate(D("0.025"), RateUnit.PER_PERIOD, Frequency.BIWEEKLY) == D("0.025")
+
+
+def test_open_method_starts_like_interest_only() -> None:
+    """Pagaré abierto (doc 03 - 3.5): 1,000 at 10% monthly -> 100.00 each
+    period on the balance, principal at maturity unless abonos come first."""
+    rows = make("1000", "0.10", 12, Method.OPEN)
+    assert all(row.interest == D("100.00") for row in rows)
+    assert [row.principal for row in rows[:-1]] == [D("0.00")] * 11
+    assert rows[-1].principal == D("1000.00")
+
+
+def rounded(principal: str, rate: str, n: int, method: Method, rounding: Rounding):
+    return generate_schedule(
+        principal=D(principal),
+        periodic_rate=D(rate),
+        installments=n,
+        method=method,
+        frequency=Frequency.MONTHLY,
+        disbursed_on=START,
+        rounding=rounding,
+    )
+
+
+def test_e4_rounded_to_the_peso() -> None:
+    """E4 with «al peso»: 315.47 rounds UP to 316; the extra cents amortize
+    principal, so interest drops and the last installment closes exactly."""
+    rows = rounded("1000", "0.10", 4, Method.FIXED_PAYMENT, Rounding.PESO)
+    table = [(row.principal, row.interest, row.total) for row in rows]
+    assert table == [
+        (D("216.00"), D("100.00"), D("316.00")),
+        (D("237.60"), D("78.40"), D("316.00")),
+        (D("261.36"), D("54.64"), D("316.00")),
+        (D("285.04"), D("28.50"), D("313.54")),
+    ]
+    assert sum(row.principal for row in rows) == D("1000.00")
+    assert sum(row.interest for row in rows) == D("261.54")
+
+
+def test_e2_flat_rounded_to_the_peso() -> None:
+    """E2 (433.33) «al peso» -> 434, 434 and a smaller closing 432."""
+    rows = rounded("1000", "0.10", 3, Method.FLAT, Rounding.PESO)
+    assert [row.total for row in rows] == [D("434.00"), D("434.00"), D("432.00")]
+    assert all(row.interest == D("100.00") for row in rows)
+    assert sum(row.principal for row in rows) == D("1000.00")
+
+
+def test_e6_fixed_principal_rounded_to_five() -> None:
+    rows = rounded("1000", "0.10", 4, Method.FIXED_PRINCIPAL, Rounding.FIVE)
+    assert [row.total for row in rows] == [
+        D("350.00"),
+        D("325.00"),
+        D("300.00"),
+        D("275.00"),
+    ]
+    rows = rounded("1000", "0.07", 3, Method.FIXED_PRINCIPAL, Rounding.TEN)
+    # 333.33 + 70.00 -> 410 (340 to principal); 333.33 + 46.20 -> 380; the last closes.
+    assert [row.total for row in rows] == [D("410.00"), D("380.00"), D("349.03")]
+    assert sum(row.principal for row in rows) == D("1000.00")
+
+
+def test_interest_only_methods_reject_payment_rounding() -> None:
+    with pytest.raises(ValueError, match="solo interés"):
+        rounded("1000", "0.10", 4, Method.INTEREST_ONLY, Rounding.PESO)
+    with pytest.raises(ValueError, match="solo interés"):
+        rounded("1000", "0.10", 4, Method.OPEN, Rounding.TEN)

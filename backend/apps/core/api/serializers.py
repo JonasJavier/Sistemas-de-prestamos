@@ -2,7 +2,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from apps.core.models import Branch
+from apps.core.models import Branch, Reason
 
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -18,5 +18,16 @@ class BranchSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data: dict[str, Any]) -> Branch:
+        validated_data["company_id"] = self.context["request"].user.company_id
+        return super().create(validated_data)
+
+
+class ReasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reason
+        fields = ["id", "kind", "text", "is_active"]
+        read_only_fields = ["id"]
+
+    def create(self, validated_data: dict[str, Any]) -> Reason:
         validated_data["company_id"] = self.context["request"].user.company_id
         return super().create(validated_data)

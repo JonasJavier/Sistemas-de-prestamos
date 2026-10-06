@@ -68,9 +68,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         )
         matches = (
             Customer.objects.annotate(
-                full_name=Concat(
-                    "first_name", Value(" "), "last_name", Value(" "), "legal_name"
-                )
+                full_name=Concat("first_name", Value(" "), "last_name", Value(" "), "legal_name")
             )
             .filter(Q(phone=phone) | Q(phone2=phone))
             .filter(full_name__unaccent__trigram_word_similar=name)

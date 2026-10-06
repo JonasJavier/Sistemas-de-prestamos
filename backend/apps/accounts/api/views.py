@@ -31,15 +31,11 @@ class MeView(APIView):
         from django.conf import settings
 
         user = request.user
-        mfa_enabled = Authenticator.objects.filter(
-            user=user, type=Authenticator.Type.TOTP
-        ).exists()
+        mfa_enabled = Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).exists()
         roles: list[str] = []
         if user.company_id:
             roles = sorted(
-                Membership.objects.filter(user=user)
-                .values_list("role__name", flat=True)
-                .distinct()
+                Membership.objects.filter(user=user).values_list("role__name", flat=True).distinct()
             )
         return Response(
             {

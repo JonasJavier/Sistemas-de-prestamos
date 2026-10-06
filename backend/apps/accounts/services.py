@@ -60,9 +60,7 @@ def invite_user(
 
 
 @transaction.atomic
-def accept_invitation(
-    *, token: str, first_name: str, last_name: str, password: str
-) -> User:
+def accept_invitation(*, token: str, first_name: str, last_name: str, password: str) -> User:
     """Public acceptance: the token is the credential (table exempt from RLS)."""
     try:
         invitation = Invitation.objects.get(token=token, accepted_at__isnull=True)

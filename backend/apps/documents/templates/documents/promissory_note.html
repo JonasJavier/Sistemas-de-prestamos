@@ -1,0 +1,91 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Pagaré{% endblock %}
+{% block heading %}PAGARÉ{% endblock %}
+{% block number %}Préstamo {{ loan.number }} · Por {{ terms.principal|rd }}{% endblock %}
+{% block content %}
+<p>
+  Yo, <strong>{{ customer.display_name }}</strong>, {% if customer.kind == "company" %}sociedad con RNC{% else %}portador(a) de la {{ customer.get_document_type_display|lower }}{% endif %}
+  <strong>{{ customer.document_number }}</strong>{% if customer.address_line %}, con domicilio en {{ customer.address_line }}{% if customer.sector %}, {{ customer.sector.name }}{% endif %}{% if customer.municipality %}, {{ customer.municipality.name }}{% endif %}{% if customer.province %}, {{ customer.province.name }}{% endif %}{% endif %},
+  reconozco adeudar y me obligo a pagar incondicionalmente a la orden de <strong>{{ company.legal_name }}</strong>{% if company.rnc %}, RNC {{ company.rnc }}{% endif %},
+  la suma de <strong>{{ principal_words }} ({{ terms.principal|rd }})</strong>, más los intereses pactados,
+  en <strong>{{ terms.installments }} cuota{{ terms.installments|pluralize }} {% if terms.installments == 1 %}{{ frequency_singular }}{% else %}{{ frequency_plural }}{% endif %}</strong>
+  según la tabla de pagos anexa, que forma parte integral de este pagaré.
+  La primera cuota vence el <strong>{{ first_due|dmy }}</strong> y la última el <strong>{{ last_due|dmy }}</strong>.
+</p>
+
+<h2>Condiciones del préstamo</h2>
+<div class="two-col">
+  <div>
+    <table class="kv">
+      <tr><td>Monto aprobado</td><td class="num">{{ disbursement.gross|rd }}</td></tr>
+      <tr><td>Capital de las cuotas</td><td class="num">{{ terms.principal|rd }}</td></tr>
+      <tr><td>Neto entregado</td><td class="num">{{ disbursement.net|rd }}</td></tr>
+      <tr><td>Total de intereses</td><td class="num">{{ total_interest|rd }}</td></tr>
+      <tr><td>Total de cargos</td><td class="num">{{ total_charges|rd }}</td></tr>
+      <tr><td>Total a pagar en cuotas</td><td class="num">{{ total_installments|rd }}</td></tr>
+      <tr><td>Costo total del crédito (intereses + cargos)</td><td class="num">{{ credit_cost|rd }}</td></tr>
+    </table>
+  </div>
+  <div>
+    <table class="kv">
+      <tr><td>Tasa por período ({{ frequency_singular }})</td><td class="num">{{ periodic_rate_pct|pct:4 }}</td></tr>
+      <tr><td>Tasa mensual equivalente</td><td class="num">{{ monthly_rate_pct|pct:4 }}</td></tr>
+      <tr><td>Tasa anual equivalente</td><td class="num">{{ annual_rate_pct|pct:2 }}</td></tr>
+      <tr><td>Fecha de desembolso</td><td class="num">{{ loan.disbursed_on|dmy }}</td></tr>
+    </table>
+  </div>
+</div>
+
+{% if charges %}
+<h2>Cargos</h2>
+<table class="grid">
+  <thead><tr><th>Cargo</th><th>Modalidad</th><th class="num">Monto</th></tr></thead>
+  <tbody>
+  {% for charge in charges %}<tr><td>{{ charge.name }}</td><td>{{ charge.get_mode_display }}</td><td class="num">{{ charge.amount|rd }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2>Mora</h2>
+<p>
+  {% if terms.late_fee_method == "fixed" %}
+    Si una cuota no se paga a su vencimiento, transcurridos {{ terms.late_fee_grace_days }} día{{ terms.late_fee_grace_days|pluralize }} de gracia se aplicará un cargo fijo por mora de {{ terms.late_fee_fixed_amount|rd }} por cuota.
+  {% elif terms.late_fee_method == "full_period" %}
+    Si una cuota no se paga a su vencimiento, transcurridos {{ terms.late_fee_grace_days }} día{{ terms.late_fee_grace_days|pluralize }} de gracia se aplicará un cargo por mora del {{ late_fee_rate_pct|pct:4 }} por cada período completo de atraso sobre el saldo vencido de la cuota.
+  {% else %}
+    Si una cuota no se paga a su vencimiento, transcurridos {{ terms.late_fee_grace_days }} día{{ terms.late_fee_grace_days|pluralize }} de gracia se aplicará un cargo por mora del {{ late_fee_rate_pct|pct:4 }} mensual, prorrateado por día de atraso desde el vencimiento, sobre el saldo vencido de la cuota.
+  {% endif %}
+  La mora de cada cuota no superará el {{ late_fee_cap_pct|pct:2 }} de su saldo vencido. Los pagos se aplican primero a la cuota más antigua.
+</p>
+
+{% if guarantors %}
+<h2>Garantes solidarios</h2>
+<p>Los garantes que firman este pagaré se obligan solidariamente con el deudor al pago de todas las sumas adeudadas.</p>
+<table class="grid">
+  <thead><tr><th>Nombre</th><th>Documento</th></tr></thead>
+  <tbody>{% for g in guarantors %}<tr><td>{{ g.display_name }}</td><td>{{ g.document_number }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+{% if collaterals %}
+<h2>Bienes en garantía</h2>
+<table class="grid">
+  <thead><tr><th>Tipo</th><th>Descripción</th></tr></thead>
+  <tbody>{% for c in collaterals %}<tr><td>{{ c.get_type_display }}</td><td>{{ c.description }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+<h2>Consentimiento</h2>
+<p>
+  Autorizo a {{ company.legal_name }} a tratar mis datos personales para la gestión de este préstamo y a consultar y reportar
+  mi información crediticia a los burós de crédito, conforme a la Ley 172-13 sobre protección de datos personales.
+</p>
+
+<p class="muted">Hecho y firmado en {{ loan.branch.name }}, el {{ disbursed_words }}.</p>
+
+<div class="signatures">
+  <div class="signature">Deudor: {{ customer.display_name }}<br><span class="muted">{{ customer.document_number }}</span></div>
+  {% for g in guarantors %}<div class="signature">Garante: {{ g.display_name }}<br><span class="muted">{{ g.document_number }}</span></div>{% endfor %}
+  <div class="signature">Por {{ company.legal_name }}</div>
+</div>
+{% endblock %}

@@ -101,14 +101,17 @@
    - **Garantías y cobertura.**
    - **Documentos requeridos:** lista de verificación del producto.
 3. **Enviar a aprobación.**
-   - El sistema asigna al aprobador según el monto y su límite.
-   - Nunca asigna a quien creó la solicitud (decisión 023).
-4. **Decidir.** El aprobador puede:
+   - El sistema asigna al aprobador según el monto y su límite: el de **menor límite suficiente** (el supervisor antes que el gerente) y, entre iguales, el que tiene menos solicitudes pendientes (decisión 057).
+   - Nunca asigna a quien creó la solicitud (decisión 023). Si no hay nadie más con límite suficiente, el envío se detiene y explica que hay que invitar a un supervisor o gerente.
+   - No se envía sin el garante o el bien que exige el producto, ni con cobertura insuficiente.
+   - Cualquier aprobador elegible (rol, sucursal y límite) puede decidir, aunque no sea el asignado; queda registrado quién decidió.
+   - La solicitud pertenece a la sucursal del cliente.
+4. **Decidir.** Para aprobar, los documentos requeridos deben estar verificados y el cliente no puede estar bloqueado; el aprobador también puede verificar documentos durante la evaluación. El aprobador puede:
    - **aprobar**, incluso con condiciones ajustadas, como un monto menor o un garante adicional; cada ajuste queda registrado;
    - **rechazar**, con un motivo de catálogo y una nota;
    - **devolver**, para que el oficial corrija.
 5. **Vigencia.** Una solicitud aprobada queda **pendiente de desembolso**.
-   - Vale 15 días por defecto; si vence, se reevalúa.
+   - Vale 15 días por defecto (ajuste por empresa); una tarea nocturna marca las vencidas, y una vencida se reevalúa enviándola de nuevo a aprobación.
 
 ```mermaid
 stateDiagram-v2
@@ -131,13 +134,13 @@ Todas las solicitudes quedan en el historial del cliente con su decisión. En la
 ## F4 · Desembolso
 
 1. **Elegir la solicitud.** El cajero (si es efectivo) o contabilidad (si es transferencia o cheque) abre la bandeja «Por desembolsar».
-2. **Firmar documentos.**
+2. **Verificar y confirmar.**
    - Se verifica la identidad del cliente.
-   - Se imprimen el pagaré y la tabla de pagos; en la fase 8, también el contrato de garantía.
-   - El cliente firma.
-3. **Confirmar el desembolso.**
-   - Se elige el origen: la caja abierta del cajero o una cuenta bancaria.
+   - Se elige el origen: la caja abierta del cajero o una cuenta bancaria (en la fase 3, la caja general de la sucursal o un banco; decisión 055).
    - La pantalla muestra el monto, los cargos, el **neto a entregar** y la primera fecha de pago.
+3. **Firmar documentos (decisión 056).**
+   - Al confirmar se emiten el pagaré y la tabla de pagos **con el número definitivo del préstamo**; en la fase 8, también el contrato de garantía.
+   - El cliente y sus garantes firman **antes de recibir el dinero**.
 4. **Operación atómica.** Al confirmar, en una sola operación:
    - el préstamo queda **activo**, con su número y la versión 1 del calendario;
    - se registran los movimientos, los cargos y los asientos;
@@ -147,7 +150,8 @@ Todas las solicitudes quedan en el historial del cliente con su decisión. En la
 
 **Validaciones:**
 - La solicitud está aprobada y vigente.
-- La caja está abierta.
+- Quien desembolsa no es quien aprobó (paso 6, §4).
+- La caja está abierta (desde la fase 4; en la fase 3, la cuenta de origen está activa y es de la sucursal o de toda la empresa).
 - Hay fondos suficientes.
 - Las garantías exigidas están registradas.
 - Clave de idempotencia (paso 3, §6).

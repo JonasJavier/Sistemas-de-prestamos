@@ -47,6 +47,8 @@ jobs:
             -c "CREATE DATABASE cobradia OWNER cobradia;"
       - name: Lint
         run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
       - name: Check missing migrations
         run: uv run python manage.py makemigrations --check --dry-run --settings=config.settings.test
       - name: Tests
@@ -69,5 +71,7 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
       - name: Build
         run: pnpm build

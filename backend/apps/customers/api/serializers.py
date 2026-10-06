@@ -17,12 +17,24 @@ from apps.customers.models import (
     Relative,
     VehicleDetail,
 )
-from apps.customers.validators import clean_document, validate_cedula, validate_rnc
+from apps.customers.validators import (
+    clean_document,
+    mask_document,
+    validate_cedula,
+    validate_rnc,
+)
 
 
 class CustomerListSerializer(serializers.ModelSerializer):
+    """Lists and search: the document travels masked (doc 06 - section 7);
+    the full number only comes with the customer's detail."""
+
     display_name = serializers.CharField(read_only=True)
     branch_code = serializers.CharField(source="home_branch.code", read_only=True)
+    document_number = serializers.SerializerMethodField()
+
+    def get_document_number(self, customer: Customer) -> str:
+        return mask_document(customer.document_number)
 
     class Meta:
         model = Customer
@@ -102,9 +114,7 @@ class CustomerSerializer(serializers.ModelSerializer):
                 else:
                     number = clean_document(number)
             except DjangoValidationError as exc:
-                raise serializers.ValidationError(
-                    {"document_number": exc.messages[0]}
-                ) from exc
+                raise serializers.ValidationError({"document_number": exc.messages[0]}) from exc
             attrs["document_number"] = number
 
         # Kind coherence.
@@ -135,14 +145,10 @@ class CustomerSerializer(serializers.ModelSerializer):
             )
         sector = attrs.get("sector")
         if sector and municipality and sector.municipality_id != municipality.id:
-            raise serializers.ValidationError(
-                {"sector": "El sector no pertenece a ese municipio."}
-            )
+            raise serializers.ValidationError({"sector": "El sector no pertenece a ese municipio."})
 
         # Exact duplicate blocks the creation (F1 step 1).
-        duplicates = Customer.objects.filter(
-            document_type=doc_type, document_number=number
-        )
+        duplicates = Customer.objects.filter(document_type=doc_type, document_number=number)
         if instance is not None:
             duplicates = duplicates.exclude(pk=instance.pk)
         if number and duplicates.exists():

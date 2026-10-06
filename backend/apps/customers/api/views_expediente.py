@@ -184,9 +184,8 @@ class CollateralViewSet(viewsets.ModelViewSet):
     permission_classes = [CanEditCustomers, CompanyNotSuspendedOrReadOnly]
     filterset_fields = ["owner", "type", "status"]
     http_method_names = ["get", "post", "patch", "head", "options"]  # status changes by flow
-    queryset = (
-        Collateral.objects.select_related("owner", "vehicle", "property")
-        .order_by("-created_at")
+    queryset = Collateral.objects.select_related("owner", "vehicle", "property").order_by(
+        "-created_at"
     )
 
 

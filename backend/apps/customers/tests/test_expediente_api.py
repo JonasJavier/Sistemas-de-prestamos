@@ -64,9 +64,9 @@ def test_employment_upsert(client: APIClient, customer_id: str) -> None:
         format="json",
     )
     assert response.status_code == 200
-    assert client.get(f"/api/v1/clientes/{customer_id}/empleo/").json()[
-        "monthly_salary"
-    ] == "40000.00"
+    assert (
+        client.get(f"/api/v1/clientes/{customer_id}/empleo/").json()["monthly_salary"] == "40000.00"
+    )
 
 
 def test_business_upsert(client: APIClient, customer_id: str) -> None:
@@ -87,9 +87,7 @@ def test_relatives_crud(client: APIClient, customer_id: str) -> None:
     assert created.status_code == 201, created.content
     listing = client.get("/api/v1/familiares/", {"customer": customer_id})
     assert listing.json()["count"] == 1
-    assert (
-        client.delete(f"/api/v1/familiares/{created.json()['id']}/").status_code == 204
-    )
+    assert client.delete(f"/api/v1/familiares/{created.json()['id']}/").status_code == 204
 
 
 def test_reference_verification_trail(

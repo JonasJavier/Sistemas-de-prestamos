@@ -1,0 +1,50 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Tabla de pagos{% endblock %}
+{% block heading %}TABLA DE PAGOS{% endblock %}
+{% block number %}Préstamo {{ loan.number }} · Anexo del pagaré{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div>
+    <table class="kv">
+      <tr><td>Cliente</td><td>{{ customer.display_name }}</td></tr>
+      <tr><td>Documento</td><td>{{ customer.document_number }}</td></tr>
+      <tr><td>Desembolso</td><td>{{ loan.disbursed_on|dmy }}</td></tr>
+    </table>
+  </div>
+  <div>
+    <table class="kv">
+      <tr><td>Capital</td><td class="num">{{ terms.principal|rd }}</td></tr>
+      <tr><td>Cuotas</td><td class="num">{{ terms.installments }} {% if terms.installments == 1 %}{{ frequency_singular }}{% else %}{{ frequency_plural }}{% endif %}</td></tr>
+      <tr><td>Tasa por período · mensual · anual</td><td class="num">{{ periodic_rate_pct|pct:4 }} · {{ monthly_rate_pct|pct:2 }} · {{ annual_rate_pct|pct:2 }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2>Calendario</h2>
+<table class="grid">
+  <thead>
+    <tr><th>#</th><th>Vence</th><th class="num">Capital</th><th class="num">Interés</th><th class="num">Cuota</th><th class="num">Saldo</th></tr>
+  </thead>
+  <tbody>
+  {% for item in schedule %}
+    <tr>
+      <td>{{ item.row.number }}</td>
+      <td>{{ item.row.due_date|dmy }}{% if item.row.due_date != item.row.original_due_date %} <span class="muted">(corrida desde {{ item.row.original_due_date|dmy }})</span>{% endif %}</td>
+      <td class="num">{{ item.row.principal_due|num }}</td>
+      <td class="num">{{ item.row.interest_due|num }}</td>
+      <td class="num">{{ item.total|num }}</td>
+      <td class="num">{{ item.balance|num }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td colspan="2">Totales</td><td class="num">{{ terms.principal|num }}</td><td class="num">{{ total_interest|num }}</td><td class="num">{{ total_installments|num }}</td><td></td></tr>
+  </tfoot>
+</table>
+<p class="muted" style="margin-top:10px">Cargos del préstamo: {{ total_charges|rd }}. Una cuota que cae en día no laborable se cobra el siguiente día laborable, sin cambiar su interés.</p>
+
+<div class="signatures">
+  <div class="signature">Deudor: {{ customer.display_name }}</div>
+  <div class="signature">Por {{ company.legal_name }}</div>
+</div>
+{% endblock %}

@@ -44,9 +44,7 @@ def test_branch_code_cannot_change(tenant: RegistrationResult) -> None:
     client = APIClient()
     client.force_login(tenant.admin)
     branch_id = client.get("/api/v1/sucursales/").json()["results"][0]["id"]
-    response = client.patch(
-        f"/api/v1/sucursales/{branch_id}/", {"code": "XX"}, format="json"
-    )
+    response = client.patch(f"/api/v1/sucursales/{branch_id}/", {"code": "XX"}, format="json")
     assert response.status_code == 400
     response = client.patch(
         f"/api/v1/sucursales/{branch_id}/", {"name": "Casa matriz"}, format="json"

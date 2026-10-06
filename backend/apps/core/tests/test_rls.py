@@ -52,3 +52,36 @@ def test_cannot_update_across_companies(two_companies: tuple[Company, Company]) 
         assert updated == 0
     with company_context(b.id):
         assert Branch.objects.get().name == "Santiago"
+
+
+# Tables that carry company_id on purpose WITHOUT the tenant policy; each
+# one is documented where it is created (accounts 0003/0004, platform).
+RLS_EXEMPT = {
+    "accounts_user",  # login looks users up by email before any tenant
+    "accounts_userevent",
+    "accounts_invitation",  # the public token lookup is the credential
+    "accounts_invitationevent",
+    "platform_subscription",  # platform-owned (doc 05 - 4.0)
+    "platform_subscriptionevent",
+    "platform_supportaccessgrant",
+    "platform_supportaccessgrantevent",
+}
+
+
+def test_every_company_table_has_forced_rls(db) -> None:
+    """Doc 05 - section 7, rule 11: RLS on EVERY table with a company,
+    pghistory copies included. A new model without its RLS migration
+    fails here instead of leaking across tenants."""
+    from django.db import connection
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT c.relname, c.relrowsecurity AND c.relforcerowsecurity
+              FROM pg_class c
+              JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'company_id'
+             WHERE c.relkind = 'r' AND c.relnamespace = 'public'::regnamespace
+            """
+        )
+        unprotected = sorted(table for table, protected in cursor.fetchall() if not protected)
+    assert [t for t in unprotected if t not in RLS_EXEMPT] == []

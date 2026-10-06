@@ -20,7 +20,7 @@
 | Frecuencias permitidas | Diaria, interdiaria, semanal, quincenal, mensual | Todas |
 | Unidad de la tasa | Por período, mensual o anual (§2) | Por período, como la referencia · **Validar** |
 | Rangos | Monto, tasa y plazo, cada uno con su mínimo y su máximo | — |
-| Redondeo de la cuota | Al centavo, al peso, a 5 o a 10 | Al centavo |
+| Redondeo de la cuota | Al centavo, al peso, a 5 o a 10. La cuota regular se redondea **hacia arriba**; lo que sobra abona capital y la última cuota cierra el saldo exacto, así que nunca es mayor que las demás (decisión 054). No aplica a solo interés ni a abierto: ahí la cuota es el interés | Al centavo · **Validar** |
 | Días de cobro | Sábados sí o no, domingos sí o no, feriados sí o no | Sábados sí, domingos no, feriados no |
 | Cargos | Lista de cargos con base y modalidad (§5) | Gastos de cierre 0 % |
 | Orden de aplicación de pagos | Estándar o proporcional (§8.1) | Estándar |
@@ -134,6 +134,8 @@ El capital de cada cuota es igual (C / *n*) y el interés se calcula sobre el sa
 
 El cliente paga el interés de cada período sobre el capital pendiente y abona capital cuando quiere. Tiene un vencimiento máximo (por defecto, 12 meses); al llegar, se salda o se renueva. Mejora de la referencia: no hay una cuota #99 artificial.
 
+En el motor, el calendario inicial del abierto es el de solo interés hasta el vencimiento; cada abono a capital (fase 4) crea una nueva versión con el interés sobre el saldo nuevo.
+
 **Ejemplo** · 1,000 al 10 % mensual:
 - Meses 1 y 2: interés de 100.00 cada mes.
 - En el mes 2, el cliente abona 400 a capital.
@@ -182,6 +184,7 @@ El cliente paga el interés de cada período sobre el capital pendiente y abona 
   - Se hace en una sola operación: el movimiento de dinero, los cargos, el calendario, los asientos y los documentos (pagaré y tabla de pagos).
   - Lleva una clave de idempotencia: un doble clic no desembolsa dos veces.
 - **Requisito:** solo se desembolsa un préstamo aprobado.
+- **Fase 3 (decisión 055):** el origen es una cuenta financiera de la empresa: la caja general de la sucursal o un banco. La caja por cajero llega en la fase 4 y desde entonces el efectivo sale de la sesión de caja abierta. Un cargo «cobrado en caja» entra en la cuenta de origen o en la que se indique.
 
 ## 7. Mora
 

@@ -1,7 +1,7 @@
 """Loan products (doc 05 - section 4.4; parameters from doc 03 - section 1).
 
 Editing a product never alters existing loans: conditions are frozen
-into LoanTerms at disbursement (that model arrives with applications).
+into LoanTerms at disbursement.
 """
 
 import pghistory
@@ -13,6 +13,12 @@ from engine.rates import Frequency, RateUnit
 from engine.schedule import Method
 
 FREQUENCY_CHOICES = [(f.value, f.value) for f in Frequency]
+METHOD_CHOICES = [(m.value, m.value) for m in Method]
+RATE_UNIT_CHOICES = [(u.value, u.value) for u in RateUnit]
+
+
+def default_required_documents() -> list[str]:
+    return ["Cédula o RNC"]
 
 
 @pghistory.track()
@@ -40,10 +46,10 @@ class LoanProduct(CompanyScopedModel):
 
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=10, choices=Type)
-    method = models.CharField(max_length=20, choices=[(m.value, m.value) for m in Method])
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
     allowed_frequencies = models.JSONField(default=list)  # Frequency values
     rate_unit = models.CharField(
-        max_length=10, choices=[(u.value, u.value) for u in RateUnit], default=RateUnit.PER_PERIOD
+        max_length=10, choices=RATE_UNIT_CHOICES, default=RateUnit.PER_PERIOD
     )
 
     min_amount = models.DecimalField(max_digits=14, decimal_places=2)
@@ -54,9 +60,7 @@ class LoanProduct(CompanyScopedModel):
     min_term = models.PositiveSmallIntegerField()
     max_term = models.PositiveSmallIntegerField()
 
-    payment_rounding = models.CharField(
-        max_length=5, choices=Rounding, default=Rounding.CENT
-    )
+    payment_rounding = models.CharField(max_length=5, choices=Rounding, default=Rounding.CENT)
     collect_saturdays = models.BooleanField(default=True)
     collect_sundays = models.BooleanField(default=False)
     collect_holidays = models.BooleanField(default=False)
@@ -66,14 +70,14 @@ class LoanProduct(CompanyScopedModel):
 
     # Early payoff (doc 03 - section 9)
     payoff_full_current_period = models.BooleanField(default=True)
-    payoff_future_interest_pct = models.DecimalField(
-        max_digits=5, decimal_places=4, default=0
-    )
+    payoff_future_interest_pct = models.DecimalField(max_digits=5, decimal_places=4, default=0)
 
     guarantee = models.CharField(
         max_length=10, choices=GuaranteeRequirement, default=GuaranteeRequirement.NONE
     )
     min_coverage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    # Checklist an application must verify before approval (F3 step 2).
+    required_documents = models.JSONField(default=default_required_documents, blank=True)
 
     is_active = models.BooleanField(default=True)
 

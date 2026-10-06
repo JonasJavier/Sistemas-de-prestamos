@@ -123,7 +123,5 @@ class MyCompanyView(APIView):
         company = Company.objects.select_related("subscription__plan").get(pk=company_id)
         data = MyCompanySerializer(company).data
         if company.trial_ends_on:
-            data["trial_days_left"] = max(
-                (company.trial_ends_on - timezone.localdate()).days, 0
-            )
+            data["trial_days_left"] = max((company.trial_ends_on - timezone.localdate()).days, 0)
         return Response(data)
