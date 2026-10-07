@@ -11,7 +11,7 @@ import {
   type PlatformCompany,
 } from '../api/platform'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
-import { day, STATUS_BADGES } from '../lib/format'
+import { day, STATUS_BADGES, todayISO } from '../lib/format'
 
 export function PlatformPage() {
   const [dialog, ask] = usePrompt()
@@ -151,13 +151,13 @@ function PaymentForm({
   onSubmit: (data: PaymentPayload) => void
   pending: boolean
 }) {
-  const [data, setData] = useState<PaymentPayload>({
-    period_start: new Date().toISOString().slice(0, 10),
+  const [data, setData] = useState<PaymentPayload>(() => ({
+    period_start: todayISO(),
     period_end: '',
     amount: '',
     method: 'transfer',
     reference: '',
-  })
+  }))
 
   return (
     <Card>

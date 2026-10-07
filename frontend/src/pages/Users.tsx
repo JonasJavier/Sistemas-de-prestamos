@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { dateOf } from '../lib/format'
+import { dateOf, errorMessage } from '../lib/format'
 
 import {
   createInvitation,
@@ -61,7 +61,7 @@ export function UsersPage({ me }: { me: Me }) {
       let text = 'No se pudo enviar la invitación.'
       if (error instanceof ApiError && error.status === 400) {
         const data = error.data as Record<string, string[]>
-        text = Object.values(data).flat()[0] ?? text
+        text = errorMessage(data, text)
       }
       if (error instanceof ApiError && error.status === 403) {
         text = 'No tienes permiso para invitar usuarios.'

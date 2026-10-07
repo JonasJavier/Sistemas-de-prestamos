@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { ApiError } from '../../api/client'
 import {
@@ -10,7 +10,7 @@ import {
   type Business,
   type Employment,
 } from '../../api/customers'
-import { Alert, Button, Card, Field, Input } from '../../components/ui'
+import { Alert, Button, Card, Field, Input, Spinner } from '../../components/ui'
 
 async function orNull<T>(promise: Promise<T>): Promise<T | null> {
   try {
@@ -31,15 +31,26 @@ export function IncomeTab({ customerId }: { customerId: string }) {
 }
 
 function EmploymentCard({ customerId }: { customerId: string }) {
-  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ['employment', customerId],
     queryFn: () => orNull(getEmployment(customerId)),
   })
-  const [form, setForm] = useState<Partial<Employment>>({})
-  useEffect(() => {
-    if (query.data) setForm(query.data)
-  }, [query.data])
+  if (query.isPending) return <Spinner />
+  // Remounts with fresh data after a save: the form never drifts from the server.
+  return (
+    <EmploymentForm key={query.dataUpdatedAt} customerId={customerId} initial={query.data ?? {}} />
+  )
+}
+
+function EmploymentForm({
+  customerId,
+  initial,
+}: {
+  customerId: string
+  initial: Partial<Employment>
+}) {
+  const queryClient = useQueryClient()
+  const [form, setForm] = useState<Partial<Employment>>(initial)
 
   const save = useMutation({
     meta: { inlineError: true },
@@ -92,15 +103,20 @@ function EmploymentCard({ customerId }: { customerId: string }) {
 }
 
 function BusinessCard({ customerId }: { customerId: string }) {
-  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ['business', customerId],
     queryFn: () => orNull(getBusiness(customerId)),
   })
-  const [form, setForm] = useState<Partial<Business>>({})
-  useEffect(() => {
-    if (query.data) setForm(query.data)
-  }, [query.data])
+  if (query.isPending) return <Spinner />
+  // Remounts with fresh data after a save: the form never drifts from the server.
+  return (
+    <BusinessForm key={query.dataUpdatedAt} customerId={customerId} initial={query.data ?? {}} />
+  )
+}
+
+function BusinessForm({ customerId, initial }: { customerId: string; initial: Partial<Business> }) {
+  const queryClient = useQueryClient()
+  const [form, setForm] = useState<Partial<Business>>(initial)
 
   const save = useMutation({
     meta: { inlineError: true },

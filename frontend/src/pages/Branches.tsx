@@ -40,7 +40,7 @@ export function BranchesPage() {
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400) {
         const data = error.data as Record<string, string[]>
-        setMessage(Object.values(data).flat()[0] ?? 'Revisa los datos.')
+        setMessage(errorMessage(data, 'Revisa los datos.'))
       } else if (error instanceof ApiError && error.status === 403) {
         setMessage('No tienes permiso para crear sucursales.')
       } else {

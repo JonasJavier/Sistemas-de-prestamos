@@ -60,6 +60,13 @@ export const dateOf = (value: string | null | undefined) =>
       })
     : '—'
 
+/** Today as YYYY-MM-DD in local time (toISOString would give UTC's date). */
+export function todayISO() {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
 export const moment = (value: string | null | undefined) =>
   value ? new Date(value).toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' }) : '—'
 
@@ -122,16 +129,31 @@ export const LOAN_STATUS: Record<string, { label: string; tone: Tone }> = {
 
 export type Tone = 'neutral' | 'info' | 'warning' | 'success' | 'danger' | 'brand'
 
-/** First message of a DRF error payload, for compact alerts. */
+/** First message of a DRF error payload, at any depth: nested serializers
+ * answer {"vehicle": {"brand": ["…"]}} and a screen must never try to render
+ * that object. */
 export function errorMessage(data: unknown, fallback = 'No se pudo completar la acción.'): string {
-  if (!data || typeof data !== 'object') return fallback
-  const record = data as Record<string, unknown>
-  if (typeof record.detail === 'string') return record.detail
-  for (const value of Object.values(record)) {
+  const first = (value: unknown): string | null => {
     if (typeof value === 'string') return value
-    if (Array.isArray(value) && typeof value[0] === 'string') return value[0]
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const found = first(item)
+        if (found) return found
+      }
+      return null
+    }
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>
+      if (typeof record.detail === 'string') return record.detail
+      for (const [key, item] of Object.entries(record)) {
+        if (key === 'code' || key === 'status') continue
+        const found = first(item)
+        if (found) return found
+      }
+    }
+    return null
   }
-  return fallback
+  return first(data) ?? fallback
 }
 
 /** A key per screen visit: a double click never disburses twice (doc 03 - 6). */

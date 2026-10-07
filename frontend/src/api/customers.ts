@@ -144,9 +144,8 @@ export const createReference = (data: {
 export const verifyReference = (id: string, result: string) =>
   api<Reference>(`/api/v1/referencias/${id}/verify/`, { method: 'POST', body: { result } })
 
-export interface CustomerFileItem {
+export interface PrivateFileItem {
   id: string
-  customer: string
   kind: string
   content_type: string
   size: number
@@ -154,21 +153,36 @@ export interface CustomerFileItem {
   created_at: string
 }
 
-export const listFiles = (customer: string): Promise<{ results: CustomerFileItem[] }> =>
-  api(`/api/v1/archivos/?customer=${customer}`)
-
-export function uploadFile(customer: string, kind: string, file: File) {
-  const form = new FormData()
-  form.set('customer', customer)
-  form.set('kind', kind)
-  form.set('file', file)
-  return apiUpload<CustomerFileItem>('/api/v1/archivos/', form)
+/** Whose private files: a customer's or a collateral's (same API shape). */
+export interface FileOwner {
+  field: 'customer' | 'collateral'
+  id: string
 }
 
-export const deleteFile = (id: string) => api<null>(`/api/v1/archivos/${id}/`, { method: 'DELETE' })
-export const fileDownloadUrl = (id: string) => `/api/v1/archivos/${id}/download/`
-export const getFileLink = (id: string) =>
-  api<{ url: string; expires_in: number }>(`/api/v1/archivos/${id}/link/`, { method: 'POST' })
+const FILE_BASE: Record<FileOwner['field'], string> = {
+  customer: '/api/v1/archivos/',
+  collateral: '/api/v1/archivos-garantia/',
+}
+
+export const listPrivateFiles = (owner: FileOwner): Promise<{ results: PrivateFileItem[] }> =>
+  api(`${FILE_BASE[owner.field]}?${owner.field}=${owner.id}`)
+
+export function uploadPrivateFile(owner: FileOwner, kind: string, file: File) {
+  const form = new FormData()
+  form.set(owner.field, owner.id)
+  form.set('kind', kind)
+  form.set('file', file)
+  return apiUpload<PrivateFileItem>(FILE_BASE[owner.field], form)
+}
+
+export const deletePrivateFile = (owner: FileOwner, id: string) =>
+  api<null>(`${FILE_BASE[owner.field]}${id}/`, { method: 'DELETE' })
+export const privateFileUrl = (owner: FileOwner, id: string) =>
+  `${FILE_BASE[owner.field]}${id}/download/`
+export const privateFileLink = (owner: FileOwner, id: string) =>
+  api<{ url: string; expires_in: number }>(`${FILE_BASE[owner.field]}${id}/link/`, {
+    method: 'POST',
+  })
 
 export interface Collateral {
   id: string

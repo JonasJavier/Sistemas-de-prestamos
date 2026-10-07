@@ -6,7 +6,6 @@ import type { Me } from '../api/accounts'
 import { listApplications } from '../api/origination'
 import {
   Badge,
-  buttonClass,
   EmptyState,
   PageHeader,
   Pagination,
@@ -16,6 +15,7 @@ import {
   Spinner,
   Tabs,
 } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { APPLICATION_STATUS, dateOf, day, installmentsText, rd } from '../lib/format'
 import type { ApplicationsSearch, ApplicationTab } from '../lib/applications'
 import { useDebounced } from '../lib/hooks'

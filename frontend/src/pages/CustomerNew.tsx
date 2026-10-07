@@ -2,9 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
-import { phoneText } from '../lib/format'
+import { errorMessage, phoneText } from '../lib/format'
 
 import { listBranches } from '../api/accounts'
 import { ApiError } from '../api/client'
@@ -14,7 +14,8 @@ import {
   type CustomerListItem,
   type CustomerPayload,
 } from '../api/customers'
-import { Alert, Button, buttonClass, Card, Field, Input, PageHeader } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { buttonClass } from '../components/classes'
 
 const schema = z
   .object({
@@ -57,7 +58,7 @@ export function CustomerNewPage() {
     resolver: zodResolver(schema),
     defaultValues: { kind: 'person', document_type: 'cedula' },
   })
-  const kind = form.watch('kind')
+  const kind = useWatch({ control: form.control, name: 'kind' })
 
   // One active branch (most small lenders): nothing to choose.
   const activeBranches = branches.data?.results.filter((branch) => branch.is_active)
@@ -79,7 +80,7 @@ export function CustomerNewPage() {
       }
       if (error instanceof ApiError && error.status === 400 && error.data) {
         const data = error.data as Record<string, string[]>
-        setServerError(Object.values(data).flat()[0] ?? 'Revisa los datos.')
+        setServerError(errorMessage(data, 'Revisa los datos.'))
       } else if (error instanceof ApiError && error.status === 403) {
         setServerError('Tu rol no permite crear clientes.')
       } else {

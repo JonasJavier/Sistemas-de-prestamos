@@ -14,7 +14,6 @@ import { ScheduleTable } from '../components/ScheduleTable'
 import {
   Alert,
   Button,
-  buttonClass,
   Card,
   Field,
   Input,
@@ -23,6 +22,7 @@ import {
   Spinner,
   Stat,
 } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { day, errorMessage, newIdempotencyKey, rd } from '../lib/format'
 
 type Method = 'cash' | 'transfer' | 'check'

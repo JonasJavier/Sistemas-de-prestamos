@@ -7,7 +7,6 @@ import type { Me } from '../api/accounts'
 import { listCustomers } from '../api/customers'
 import {
   Badge,
-  buttonClass,
   EmptyState,
   PageHeader,
   Pagination,
@@ -16,6 +15,7 @@ import {
   SearchInput,
   Spinner,
 } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 

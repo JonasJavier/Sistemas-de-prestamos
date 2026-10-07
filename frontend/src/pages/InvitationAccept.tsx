@@ -4,6 +4,7 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { errorMessage } from '../lib/format'
 
 import { acceptInvitation, getInvitation } from '../api/accounts'
 import { ApiError } from '../api/client'
@@ -33,7 +34,7 @@ export function InvitationAcceptPage() {
       let text = 'No se pudo crear la cuenta.'
       if (error instanceof ApiError && error.status === 400 && error.data) {
         const data = error.data as Record<string, string[]>
-        text = Object.values(data).flat()[0] ?? text
+        text = errorMessage(data, text)
       }
       setMessage(text)
     },

@@ -6,7 +6,8 @@ import { usePrompt } from '../components/Dialog'
 import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { listApplications, listLoans } from '../api/origination'
-import { Alert, Badge, Button, buttonClass, Card, PageHeader } from '../components/ui'
+import { Alert, Badge, Button, Card, PageHeader, Tabs } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { APPLICATION_STATUS, dateOf, documentText, LOAN_STATUS, phoneText, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 import { CollateralTab } from './customer/CollateralTab'
@@ -177,22 +178,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
         </Alert>
       ) : null}
 
-      <nav className="flex gap-1 overflow-x-auto border-b border-edge">
-        {TABS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === key
-                ? 'border-brand-700 text-brand-700'
-                : 'border-transparent text-muted hover:text-ink'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
       {tab === 'resumen' ? (
         <Card>

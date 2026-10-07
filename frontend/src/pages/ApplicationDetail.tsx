@@ -18,7 +18,8 @@ import {
 import { ConditionsForm } from '../components/Conditions'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
-import { Alert, Badge, Button, buttonClass, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Badge, Button, Card, PageHeader, Spinner } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { toRequest, type Conditions } from '../lib/conditions'
 import {
   APPLICATION_STATUS,

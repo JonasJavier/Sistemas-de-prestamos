@@ -61,18 +61,19 @@ test.describe('acceso (doc 06 - 6)', () => {
 
 test.describe('aislamiento entre empresas (decisión 042)', () => {
   test('otra empresa no encuentra ni abre los datos de Financiera Modelo', async ({ browser }) => {
+    // Seeded data only: the test must not depend on the order of the others.
     const modelo = await sessionFor(browser, MODELO.gerente)
-    await modelo.goto('/prestamos')
-    const firstLoan = modelo.getByRole('link', { name: /María Gómez/ }).first()
-    await expect(firstLoan).toBeVisible()
-    const loanPath = new URL(await firstLoan.evaluate((a) => (a as HTMLAnchorElement).href))
+    await modelo.goto('/clientes')
+    const customer = modelo.getByRole('link', { name: /María Gómez/ }).first()
+    await expect(customer).toBeVisible()
+    const customerPath = new URL(await customer.evaluate((a) => (a as HTMLAnchorElement).href))
       .pathname
 
     const cibao = await sessionFor(browser, CIBAO_GERENTE)
     await cibao.goto('/clientes')
     await cibao.getByPlaceholder('Buscar por nombre, cédula, RNC o teléfono…').fill('Gómez')
     await expect(cibao.getByText('Ningún cliente coincide con «Gómez».')).toBeVisible()
-    await cibao.goto(loanPath)
-    await expect(cibao.getByText('Capital pendiente')).toHaveCount(0)
+    await cibao.goto(customerPath)
+    await expect(cibao.getByText('No se encontró el cliente.')).toBeVisible()
   })
 })

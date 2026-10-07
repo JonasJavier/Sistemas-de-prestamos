@@ -29,7 +29,7 @@ const listHolidays = (year: number): Promise<Holiday[]> => api(`/api/v1/feriados
 export function HolidaysPage() {
   const [dialog, ask] = usePrompt()
   const queryClient = useQueryClient()
-  const current = new Date().getFullYear()
+  const [current] = useState(() => new Date().getFullYear())
   const [year, setYear] = useState(current)
   const holidays = useQuery({ queryKey: ['holidays', year], queryFn: () => listHolidays(year) })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['holidays'] })

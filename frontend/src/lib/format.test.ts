@@ -95,6 +95,13 @@ describe('errorMessage', () => {
     expect(errorMessage({ amount: ['Fuera de rango.'] })).toBe('Fuera de rango.')
     expect(errorMessage(null, 'Falló.')).toBe('Falló.')
   })
+
+  it('finds the message inside nested serializers instead of returning an object', () => {
+    expect(errorMessage({ vehicle: { brand: ['La marca es obligatoria.'] } })).toBe(
+      'La marca es obligatoria.',
+    )
+    expect(errorMessage({ status: 400, errors: [{ code: 'x', message: 'Mal.' }] })).toBe('Mal.')
+  })
 })
 
 describe('deviceText', () => {

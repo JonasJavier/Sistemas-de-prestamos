@@ -3,7 +3,9 @@ import { useState } from 'react'
 
 import { ApiError } from '../../api/client'
 import { createCollateral, listCollaterals } from '../../api/customers'
-import { Alert, Button, Card, Field, Input } from '../../components/ui'
+import { Alert, Badge, Button, Card, Field, Input } from '../../components/ui'
+import { PrivateFiles } from '../../components/PrivateFiles'
+import { errorMessage, rd } from '../../lib/format'
 
 const STATUS_TEXT: Record<string, string> = {
   registered: 'Registrado',
@@ -14,6 +16,12 @@ const STATUS_TEXT: Record<string, string> = {
 
 const selectClasses =
   'h-11 w-full rounded-lg border border-edge bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent-500 sm:h-9'
+
+const FILE_KINDS = [
+  ['photo', 'Foto'],
+  ['document', 'Documento (matrícula, título)'],
+  ['appraisal', 'Tasación'],
+] as const
 
 export function CollateralTab({ customerId }: { customerId: string }) {
   const queryClient = useQueryClient()
@@ -53,7 +61,7 @@ export function CollateralTab({ customerId }: { customerId: string }) {
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400 && error.data) {
         const data = error.data as Record<string, string[]>
-        setMessage(Object.values(data).flat()[0] ?? 'Revisa los datos.')
+        setMessage(errorMessage(data, 'Revisa los datos.'))
       } else {
         setMessage('No se pudo registrar la garantía.')
       }
@@ -148,28 +156,37 @@ export function CollateralTab({ customerId }: { customerId: string }) {
 
       <Card>
         <h3 className="mb-3 text-base font-semibold">Bienes del cliente</h3>
-        <ul className="space-y-2 text-sm">
+        <ul className="divide-y divide-edge text-sm">
           {collaterals.data?.results.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3">
-              <span>
-                <span className="font-medium">{item.description}</span>{' '}
-                <span className="text-muted">
-                  {item.vehicle
-                    ? `· ${item.vehicle.brand} ${item.vehicle.model} ${item.vehicle.year ?? ''} ${
-                        item.vehicle.plate ? `· placa ${item.vehicle.plate}` : ''
-                      }`
-                    : ''}
-                  {item.property?.location ? `· ${item.property.location}` : ''}
-                  {item.appraised_value
-                    ? ` · tasado RD$ ${Number(item.appraised_value).toLocaleString('es-DO', {
-                        minimumFractionDigits: 2,
-                      })}`
-                    : ''}
-                </span>
-              </span>
-              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[12.5px] font-medium text-brand-800">
-                {STATUS_TEXT[item.status] ?? item.status}
-              </span>
+            <li key={item.id} className="py-2">
+              <details className="group">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
+                  <span>
+                    <span className="font-medium">{item.description}</span>{' '}
+                    <span className="text-muted">
+                      {item.vehicle
+                        ? `· ${item.vehicle.brand} ${item.vehicle.model} ${item.vehicle.year ?? ''} ${
+                            item.vehicle.plate ? `· placa ${item.vehicle.plate}` : ''
+                          }`
+                        : ''}
+                      {item.property?.location ? `· ${item.property.location}` : ''}
+                      {item.appraised_value ? ` · tasado ${rd(item.appraised_value)}` : ''}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <Badge tone="brand">{STATUS_TEXT[item.status] ?? item.status}</Badge>
+                    <span className="text-[12.5px] font-medium text-brand-700 group-open:hidden">
+                      Fotos y documentos
+                    </span>
+                    <span className="hidden text-[12.5px] font-medium text-brand-700 group-open:inline">
+                      Ocultar
+                    </span>
+                  </span>
+                </summary>
+                <div className="mt-3 rounded-lg bg-surface-2 p-3">
+                  <PrivateFiles owner={{ field: 'collateral', id: item.id }} kinds={FILE_KINDS} />
+                </div>
+              </details>
             </li>
           ))}
           {collaterals.data && collaterals.data.results.length === 0 ? (

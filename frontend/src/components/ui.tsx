@@ -1,22 +1,10 @@
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react'
 
 import { fractionToPercent, percentToFraction } from '../lib/format'
+import { buttonClass, type ButtonVariant } from './classes'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
  * replaces these as screens grow; the class vocabulary stays the same. */
-
-type ButtonVariant = 'primary' | 'secondary' | 'danger'
-
-const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-700 text-on-brand hover:bg-brand-800',
-  secondary: 'border border-edge bg-surface text-ink hover:bg-brand-100',
-  danger: 'bg-danger-600 text-white hover:bg-danger-600/90',
-}
-
-/** Button look for <button> and for router links that act as buttons. */
-export function buttonClass(variant: ButtonVariant = 'primary', className = '') {
-  return `inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 ${BUTTON_VARIANTS[variant]} ${className}`
-}
 
 export function Button({
   variant = 'primary',

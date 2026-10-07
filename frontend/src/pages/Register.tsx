@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { errorMessage } from '../lib/format'
 
 import { ApiError } from '../api/client'
 import { registerCompany } from '../api/platform'
@@ -22,13 +23,11 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 function serverError(error: unknown): string {
-  if (error instanceof ApiError && error.status === 400 && error.data) {
-    const data = error.data as Record<string, string[]>
-    const first = Object.values(data)[0]
-    if (Array.isArray(first) && first.length > 0) return first[0]
-  }
   if (error instanceof ApiError && error.status === 429) {
     return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
+  }
+  if (error instanceof ApiError && error.status === 400) {
+    return errorMessage(error.data, 'Revisa los datos del formulario.')
   }
   return 'No se pudo completar el registro. Intenta de nuevo.'
 }
