@@ -22,6 +22,7 @@ import {
   Button,
   Card,
   Field,
+  Input,
   PageHeader,
   Select,
   Spinner,
@@ -59,6 +60,9 @@ const MODE_TEXT: Record<string, string> = {
 function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) {
   const [reason, setReason] = useState('')
   const [note, setNote] = useState('')
+  // Doc 08 - 5, grave action: reason, note and the loan number typed back.
+  const [typed, setTyped] = useState('')
+  const confirmed = typed.trim().toUpperCase() === number.toUpperCase()
   const reasons = useQuery({ queryKey: ['reasons', 'void'], queryFn: () => listReasons('void') })
   const run = useMutation({
     meta: { inlineError: true },
@@ -85,13 +89,21 @@ function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) 
       <Field label="Nota">
         <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
+      <Field label={`Para confirmar, escribe el número del préstamo (${number})`}>
+        <Input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </Field>
       {run.error instanceof ApiError ? (
         <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
       ) : null}
       <div className="flex justify-end">
         <Button
           variant="danger"
-          disabled={!reason || !note.trim() || run.isPending}
+          disabled={!reason || !note.trim() || !confirmed || run.isPending}
           onClick={() => run.mutate()}
         >
           Anular

@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import type { Me } from '../api/accounts'
 import { globalSearch } from '../api/customers'
 import { phoneText, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
+import { Modal } from './Modal'
 
 interface Option {
   key: string
@@ -24,14 +25,6 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
   const debounced = useDebounced(q, 250)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
   const term = debounced.trim()
   const results = useQuery({
     queryKey: ['global-search', term],
@@ -45,24 +38,29 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
   }
   const originator = hasRole(me, ACCESS.originate)
 
+  const loanOptions: Option[] = (results.data?.loans ?? []).map((loan) => ({
+    key: `loan-${loan.number}`,
+    label: (
+      <>
+        <span className="font-medium tabular-nums">Préstamo {loan.number}</span>
+        <span className="ml-2 text-muted">{loan.customer_name}</span>
+      </>
+    ),
+    hint: rd(loan.principal_outstanding),
+    run: () => go('/prestamos/$numero', { numero: loan.number }),
+  }))
+  const customerOptions: Option[] = (results.data?.customers ?? []).map((customer) => ({
+    key: `customer-${customer.id}`,
+    label: <span className="font-medium">{customer.display_name}</span>,
+    hint: `${customer.document_number} · ${phoneText(customer.phone)}`,
+    run: () => go('/clientes/$id', { id: customer.id }),
+  }))
+  // A loan number typed: loans first. A name or a document: the person first.
+  const byNumber = (results.data?.loans ?? []).some((loan) =>
+    loan.number.toLowerCase().includes(term.toLowerCase()),
+  )
   const options: Option[] = [
-    ...(results.data?.loans ?? []).map((loan) => ({
-      key: `loan-${loan.number}`,
-      label: (
-        <>
-          <span className="font-medium tabular-nums">Préstamo {loan.number}</span>
-          <span className="ml-2 text-muted">{loan.customer_name}</span>
-        </>
-      ),
-      hint: rd(loan.principal_outstanding),
-      run: () => go('/prestamos/$numero', { numero: loan.number }),
-    })),
-    ...(results.data?.customers ?? []).map((customer) => ({
-      key: `customer-${customer.id}`,
-      label: <span className="font-medium">{customer.display_name}</span>,
-      hint: `${customer.document_number} · ${phoneText(customer.phone)}`,
-      run: () => go('/clientes/$id', { id: customer.id }),
-    })),
+    ...(byNumber ? [...loanOptions, ...customerOptions] : [...customerOptions, ...loanOptions]),
     ...(originator
       ? [
           {
@@ -84,17 +82,8 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
   const found = options.filter((option) => !option.action).length
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[12vh]"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Búsqueda global"
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-edge bg-surface shadow-xl"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <Modal onClose={onClose} label="Búsqueda global" align="top">
+      <div className="w-full max-w-lg overflow-hidden rounded-xl border border-edge bg-surface shadow-xl">
         <input
           autoFocus
           value={q}
@@ -153,6 +142,6 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
           ))}
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 
+import { Modal } from './Modal'
 import { Button, Field, Input, Textarea } from './ui'
 
 export interface PromptOptions {
@@ -49,25 +50,10 @@ function PromptDialog({
   const titleId = useId()
   const blocked = Boolean(required) && !value.trim()
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose(null)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4"
-      onClick={() => onClose(null)}
-    >
+    <Modal onClose={() => onClose(null)} labelledBy={titleId}>
       <form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
         className="w-full max-w-md space-y-4 rounded-xl border border-edge bg-surface p-6 shadow-xl"
-        onClick={(event) => event.stopPropagation()}
         onSubmit={(event) => {
           event.preventDefault()
           if (!blocked) onClose(value.trim())
@@ -98,6 +84,6 @@ function PromptDialog({
           </Button>
         </div>
       </form>
-    </div>
+    </Modal>
   )
 }

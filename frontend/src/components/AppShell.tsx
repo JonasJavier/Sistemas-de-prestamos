@@ -6,6 +6,7 @@ import type { Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
 import { ACCESS, hasRole } from '../lib/roles'
 import { CommandPalette } from './CommandPalette'
+import { Modal } from './Modal'
 import { HomeIcon, LoanIcon, MenuIcon, MoonIcon, PeopleIcon, SearchIcon, SunIcon } from './icons'
 import { Brand, Button } from './ui'
 
@@ -155,19 +156,19 @@ function MobileBar({ me, groups, onSearch }: { me: Me; groups: NavGroup[]; onSea
   return (
     <>
       {open ? (
-        <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menú"
-            className="absolute inset-x-0 bottom-0 max-h-[75vh] space-y-4 overflow-y-auto rounded-t-2xl bg-brand-950 p-4 pb-20"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal onClose={() => setOpen(false)} label="Menú" align="bottom">
+          <div className="max-h-[80vh] w-full space-y-4 overflow-y-auto rounded-t-2xl bg-brand-950 p-4 pb-8">
             <CompanyBadge me={me} />
             <NavLinks groups={groups} onNavigate={() => setOpen(false)} />
+            <button
+              type="button"
+              className="w-full rounded-lg border border-brand-900 px-3 py-2 text-left text-sm text-brand-200 hover:bg-brand-900"
+              onClick={() => setOpen(false)}
+            >
+              Cerrar menú
+            </button>
           </div>
-        </div>
+        </Modal>
       ) : null}
       <nav
         aria-label="Accesos rápidos"

@@ -2,9 +2,9 @@
 
 **Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **paleta definitiva «Bosque y Arena» elegida el 05/10/2026 (decisión 053)** por el dueño entre cuatro opciones de un lienzo comparativo, tras descartar el «solo blanco» por simplón; tipografías **Sora** (títulos y marca) e **Inter** (interfaz y cifras) de la decisión 052; tema claro predeterminado con oscuro opcional por interruptor.
 
-**En una frase:** la identidad **«Bosque y Arena»** (decisión 053, distinta de la referencia Púrpura Datos): menú lateral verde bosque, fondo arena cálido, tarjetas blancas, acciones esmeralda y un dorado discreto como firma, sobre Tailwind 4 + shadcn/ui, con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
+**En una frase:** la identidad **«Bosque y Arena»** (decisión 053, distinta de la referencia Púrpura Datos): menú lateral verde bosque, fondo arena cálido, tarjetas blancas, acciones esmeralda y un dorado discreto como firma, sobre Tailwind 4 con componentes propios (vocabulario de shadcn/ui, decisión 064), con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
 
-Este documento define los *tokens* y patrones que la Fase 1 convierte en código (`@theme` de Tailwind y componentes shadcn ajustados). Lo que funciona de la referencia se conserva ([ficha 09](../referencia/09-sistema-de-diseno.md#93-lo-que-funciona-y-conviene-conservar)); sus problemas de UX ([9.4](../referencia/09-sistema-de-diseno.md#94-problemas-de-ux)) se corrigen aquí.
+Este documento define los *tokens* y patrones que la Fase 1 convierte en código (`@theme` de Tailwind y los componentes de `frontend/src/components/`). Lo que funciona de la referencia se conserva ([ficha 09](../referencia/09-sistema-de-diseno.md#93-lo-que-funciona-y-conviene-conservar)); sus problemas de UX ([9.4](../referencia/09-sistema-de-diseno.md#94-problemas-de-ux)) se corrigen aquí.
 
 ## 1. Identidad
 
@@ -91,20 +91,20 @@ Formato regional fijo (es-DO): `RD$ 1,250.00`, fechas `04/10/2026`, sin notacion
 | Barra superior | 56 px |
 | Puntos de quiebre | Los de Tailwind (`sm 640 · md 768 · lg 1024 · xl 1280`); el diseño de cobro y «Mi ruta» se hace primero para 360–430 px |
 
-## 5. Componentes (sobre shadcn/ui)
+## 5. Componentes
 
-Los diez componentes clave definidos en la [dirección de diseño](../referencia/09-sistema-de-diseno.md#95-dirección-de-diseño-para-nuestro-sistema) se adoptan tal cual, con estas precisiones:
+Los diez componentes clave definidos en la [dirección de diseño](../referencia/09-sistema-de-diseno.md#95-dirección-de-diseño-para-nuestro-sistema) se adoptan con estas precisiones. **Implementación (decisión 064):** componentes propios y livianos en `frontend/src/components/` con el mismo vocabulario de clases de shadcn/ui, en vez de importar shadcn y Radix: todo overlay (diálogos, búsqueda, menú del celular) usa el `<dialog>` nativo del navegador en modo modal, que atrapa el foco, vuelve inerte el fondo y cierra con Esc sin dependencias. Si una pieza futura lo justifica (menú desplegable, *combobox*), se adopta Radix solo para esa pieza.
 
-| Componente | Base shadcn | Precisiones |
+| Componente | Base | Precisiones |
 | --- | --- | --- |
-| Barra de comandos (Ctrl+K) | `Command` | Resultados agrupados (clientes, préstamos, acciones); acción directa «Cobrar» con Enter |
-| Tabla de datos | `Table` + TanStack Table | Filtros como chips removibles sincronizados con la URL; totales fijos al pie que respetan los filtros; estado vacío con acción |
-| Tarjeta KPI | `Card` | Valor, comparación y un «?» con la definición exacta del indicador (paso 9) |
-| Panel de cobro | `Sheet` lateral (escritorio) / inferior (móvil) | Desglose antes de confirmar, recibido y cambio con teclado numérico |
-| Confirmación proporcional | `AlertDialog` | Reversible: un clic. Delicada: motivo. Grave (castigo, anulación): motivo + escribir el número del préstamo |
+| Barra de comandos (Ctrl+K) | `CommandPalette` sobre `Modal` | Resultados agrupados (clientes, préstamos, acciones); acción directa «Cobrar» con Enter |
+| Tabla de datos | `RowList` + `Pagination` (TanStack Table cuando haga falta ordenar columnas) | Filtros como chips removibles sincronizados con la URL; totales fijos al pie que respetan los filtros; estado vacío con acción |
+| Tarjeta KPI | `Stat` | Valor, comparación y un «?» con la definición exacta del indicador (paso 9) |
+| Panel de cobro | `Modal` lateral (escritorio) / inferior (móvil) | Desglose antes de confirmar, recibido y cambio con teclado numérico |
+| Confirmación proporcional | `usePrompt` sobre `Modal` | Reversible: un clic. Delicada: motivo. Grave (castigo, anulación): motivo + escribir el número del préstamo |
 | Insignias de estado | `Badge` | Siempre color + texto; tonos de la §2 |
-| Avisos | `sonner` (toast) + banner | Toast para confirmaciones; banner persistente para prueba por vencer, empresa suspendida o modo soporte activo |
-| Formularios | `Form` + React Hook Form + Zod | Error junto al campo; borrador automático en los largos |
+| Avisos | `Toaster` propio + `Alert` | Toast para confirmaciones; banner persistente para prueba por vencer, empresa suspendida o modo soporte activo |
+| Formularios | `Field` + React Hook Form + Zod; tasas con `PercentInput` (se escriben en %) | Error junto al campo; borrador automático en los largos |
 | Línea de tiempo | propia | Cronología del préstamo y del cliente (`DomainEvent`) |
 | Calendario de cuotas | propia | Tabla con insignias y barra de progreso del préstamo |
 
