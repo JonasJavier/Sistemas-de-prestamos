@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   dateOf,
+  documentText,
   day,
   errorMessage,
   fractionToPercent,
   installmentsText,
   pct,
+  phoneText,
   percentToFraction,
   rd,
 } from './format'
@@ -60,6 +62,22 @@ describe('rates typed as percentages', () => {
     expect(percentToFraction('')).toBe('')
     expect(percentToFraction('abc')).toBe('abc')
     expect(fractionToPercent('')).toBe('')
+  })
+})
+
+describe('documents and phones as people write them', () => {
+  it('formats cédula, RNC and local phones', () => {
+    expect(documentText('00112345674')).toBe('001-1234567-4')
+    expect(documentText('101123456')).toBe('1-01-12345-6')
+    expect(phoneText('8095550101')).toBe('809-555-0101')
+    expect(phoneText('18295550102')).toBe('1-829-555-0102')
+  })
+
+  it('leaves masked or foreign values as they come', () => {
+    expect(documentText('001-•••••67-4')).toBe('001-•••••67-4')
+    expect(documentText('')).toBe('—')
+    expect(phoneText('+34 600 123 456')).toBe('+34 600 123 456')
+    expect(phoneText(null)).toBe('')
   })
 })
 

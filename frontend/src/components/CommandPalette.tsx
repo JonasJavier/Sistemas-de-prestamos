@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 
 import type { Me } from '../api/accounts'
 import { globalSearch } from '../api/customers'
-import { rd } from '../lib/format'
+import { phoneText, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 
@@ -60,7 +60,7 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
     ...(results.data?.customers ?? []).map((customer) => ({
       key: `customer-${customer.id}`,
       label: <span className="font-medium">{customer.display_name}</span>,
-      hint: `${customer.document_number} · ${customer.phone}`,
+      hint: `${customer.document_number} · ${phoneText(customer.phone)}`,
       run: () => go('/clientes/$id', { id: customer.id }),
     })),
     ...(originator

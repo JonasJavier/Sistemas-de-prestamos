@@ -239,13 +239,22 @@ export function Stat({
   emphasis?: boolean
   hint?: ReactNode
 }) {
+  // «RD$ 1,250,000.00» keeps one line on a phone: the currency goes smaller.
+  const amount = typeof value === 'string' && value.startsWith('RD$ ') ? value.slice(4) : null
   return (
-    <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm">
+    <div className="min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
       <div className="text-[12.5px] text-muted">{label}</div>
       <div
-        className={`font-display text-xl font-bold tabular-nums ${emphasis ? 'text-brand-700' : ''}`}
+        className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${emphasis ? 'text-brand-700' : ''}`}
       >
-        {value}
+        {amount !== null ? (
+          <>
+            <span className="mr-1 text-[0.7em] font-semibold opacity-80">RD$</span>
+            {amount}
+          </>
+        ) : (
+          value
+        )}
       </div>
       {hint ? <div className="mt-0.5 text-[12px] text-muted">{hint}</div> : null}
     </div>

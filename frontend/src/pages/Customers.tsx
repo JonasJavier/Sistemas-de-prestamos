@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
+import { phoneText } from '../lib/format'
 
 import type { Me } from '../api/accounts'
 import { listCustomers } from '../api/customers'
@@ -69,7 +70,8 @@ export function CustomersPage({ me }: { me: Me }) {
                     </div>
                     <div className="text-[12.5px] text-muted tabular-nums">
                       {customer.document_number /* masked by the API (doc 06 - 7) */} ·{' '}
-                      {customer.phone || 'sin teléfono'} · Sucursal {customer.branch_code}
+                      {phoneText(customer.phone) || 'sin teléfono'} · Sucursal{' '}
+                      {customer.branch_code}
                     </div>
                   </div>
                   <Badge tone={customer.status === 'active' ? 'brand' : 'danger'}>

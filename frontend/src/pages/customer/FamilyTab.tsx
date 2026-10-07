@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { usePrompt } from '../../components/Dialog'
+import { phoneText } from '../../lib/format'
 
 import {
   createReference,
@@ -71,7 +72,7 @@ function RelativesCard({ customerId }: { customerId: string }) {
             <span>
               <span className="font-medium">{relative.name}</span>{' '}
               <span className="text-muted">
-                · {relative.relationship} {relative.phone ? `· ${relative.phone}` : ''}
+                · {relative.relationship} {relative.phone ? `· ${phoneText(relative.phone)}` : ''}
               </span>
             </span>
             <button
@@ -145,7 +146,7 @@ function ReferencesCard({ customerId }: { customerId: string }) {
           <li key={reference.id} className="flex items-start justify-between gap-3">
             <span>
               <span className="font-medium">{reference.name}</span>{' '}
-              <span className="text-muted">· {reference.phone}</span>
+              <span className="text-muted">· {phoneText(reference.phone)}</span>
               {reference.verified_at ? (
                 <span className="mt-0.5 block text-[12.5px] text-success-600">
                   Verificada por {reference.verified_by_email}: {reference.verification_result}

@@ -8,6 +8,27 @@ export const rd = (value: string | number | null | undefined) =>
         maximumFractionDigits: 2,
       })}`
 
+/** Dominican documents as people write them: 001-1234567-8 (cédula) and
+ * 1-01-12345-6 (RNC). Masked values from the API pass through untouched. */
+export const documentText = (number: string | null | undefined) => {
+  if (!number) return '—'
+  if (/^\d{11}$/.test(number))
+    return `${number.slice(0, 3)}-${number.slice(3, 10)}-${number.slice(10)}`
+  if (/^\d{9}$/.test(number))
+    return `${number[0]}-${number.slice(1, 3)}-${number.slice(3, 8)}-${number.slice(8)}`
+  return number
+}
+
+/** 809-555-0101; anything else (extensions, foreign numbers) as typed. */
+export const phoneText = (number: string | null | undefined) => {
+  if (!number) return ''
+  const digits = number.replace(/\D/g, '')
+  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+  if (digits.length === 11 && digits.startsWith('1'))
+    return `1-${digits.slice(1, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`
+  return number
+}
+
 /** A fraction as a percentage: "0.025" -> "2.5%", "0.4" -> "40%". Only
  * trailing zeros AFTER the decimal point go away. */
 export const pct = (value: string | number | null | undefined, places = 2) =>

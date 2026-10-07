@@ -6,8 +6,8 @@ import { usePrompt } from '../components/Dialog'
 import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { listApplications, listLoans } from '../api/origination'
-import { Alert, Badge, Button, buttonClass, Card } from '../components/ui'
-import { APPLICATION_STATUS, dateOf, LOAN_STATUS, rd } from '../lib/format'
+import { Alert, Badge, Button, buttonClass, Card, PageHeader } from '../components/ui'
+import { APPLICATION_STATUS, dateOf, documentText, LOAN_STATUS, phoneText, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 import { CollateralTab } from './customer/CollateralTab'
 import { FamilyTab } from './customer/FamilyTab'
@@ -111,61 +111,65 @@ export function CustomerDetailPage({ me }: { me: Me }) {
   return (
     <>
       {dialog}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <Link to="/clientes" className="text-[12.5px] text-muted hover:underline">
+      <PageHeader
+        back={
+          <Link to="/clientes" className="hover:underline">
             ← Clientes
           </Link>
-          <h1 className="text-xl font-semibold">{data.display_name}</h1>
-          <p className="text-sm text-muted tabular-nums">
-            {data.document_type === 'rnc' ? 'RNC' : 'Documento'}: {data.document_number}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {hasRole(me, ACCESS.originate) ? (
-            <Link to="/solicitudes/nueva" search={{ cliente: id }} className={buttonClass()}>
-              Nueva solicitud
-            </Link>
-          ) : null}
-          <span
-            className={`rounded-full px-3 py-1 text-[12.5px] font-medium ${
-              data.status === 'active'
-                ? 'bg-brand-100 text-brand-800'
-                : 'bg-danger-600/15 text-danger-600'
-            }`}
-          >
-            {data.status === 'active' ? 'Activo' : 'Bloqueado'}
+        }
+        documentTitle={data.display_name}
+        title={
+          <span className="flex flex-wrap items-center gap-2">
+            {data.display_name}
+            <Badge tone={data.status === 'active' ? 'brand' : 'danger'}>
+              {data.status === 'active' ? 'Activo' : 'Bloqueado'}
+            </Badge>
           </span>
-          {data.status === 'active' ? (
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                const reason = await ask({
-                  title: `Bloquear a ${data.display_name}`,
-                  description: 'Un cliente bloqueado no recibe préstamos nuevos («no prestar»).',
-                  label: 'Motivo del bloqueo',
-                  type: 'textarea',
-                  required: true,
-                  confirmText: 'Bloquear',
-                  danger: true,
-                })
-                if (reason) block.mutate(reason)
-              }}
-              disabled={block.isPending}
-            >
-              Bloquear
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              onClick={() => unblock.mutate()}
-              disabled={unblock.isPending}
-            >
-              Desbloquear
-            </Button>
-          )}
-        </div>
-      </div>
+        }
+        subtitle={
+          <span className="tabular-nums">
+            {data.document_type === 'rnc' ? 'RNC' : 'Cédula'} {documentText(data.document_number)}
+            {data.phone ? ` · ${phoneText(data.phone)}` : ''}
+          </span>
+        }
+        actions={
+          <>
+            {data.status === 'active' ? (
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  const reason = await ask({
+                    title: `Bloquear a ${data.display_name}`,
+                    description: 'Un cliente bloqueado no recibe préstamos nuevos («no prestar»).',
+                    label: 'Motivo del bloqueo',
+                    type: 'textarea',
+                    required: true,
+                    confirmText: 'Bloquear',
+                    danger: true,
+                  })
+                  if (reason) block.mutate(reason)
+                }}
+                disabled={block.isPending}
+              >
+                Bloquear
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => unblock.mutate()}
+                disabled={unblock.isPending}
+              >
+                Desbloquear
+              </Button>
+            )}
+            {hasRole(me, ACCESS.originate) && data.status === 'active' ? (
+              <Link to="/solicitudes/nueva" search={{ cliente: id }} className={buttonClass()}>
+                Nueva solicitud
+              </Link>
+            ) : null}
+          </>
+        }
+      />
 
       {data.status === 'blocked' ? (
         <Alert tone="danger">
@@ -196,7 +200,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
           <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-muted">Teléfono</dt>
-              <dd className="font-medium tabular-nums">{data.phone}</dd>
+              <dd className="font-medium tabular-nums">{phoneText(data.phone) || '—'}</dd>
             </div>
             <div>
               <dt className="text-muted">Correo</dt>

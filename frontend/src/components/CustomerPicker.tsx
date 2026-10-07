@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { phoneText } from '../lib/format'
 
 import { listCustomers, type CustomerListItem } from '../api/customers'
 import { useDebounced } from '../lib/hooks'
@@ -46,7 +47,7 @@ export function CustomerPicker({
                   <span>
                     <span className="font-medium">{customer.display_name}</span>
                     <span className="ml-2 text-muted tabular-nums">
-                      {customer.document_number} · {customer.phone}
+                      {customer.document_number} · {phoneText(customer.phone)}
                     </span>
                   </span>
                   {customer.status === 'blocked' ? <Badge tone="danger">Bloqueado</Badge> : null}

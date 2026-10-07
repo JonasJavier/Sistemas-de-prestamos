@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { phoneText } from '../lib/format'
 
 import { listBranches } from '../api/accounts'
 import { ApiError } from '../api/client'
@@ -131,7 +132,7 @@ export function CustomerNewPage() {
                   <li key={candidate.id}>
                     <span className="font-medium">{candidate.display_name}</span>{' '}
                     <span className="text-muted">
-                      · {candidate.document_number} · {candidate.phone}
+                      · {candidate.document_number} · {phoneText(candidate.phone)}
                     </span>
                   </li>
                 ))}
