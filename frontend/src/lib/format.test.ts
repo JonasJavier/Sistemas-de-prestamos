@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   dateOf,
+  deviceText,
   documentText,
   day,
   errorMessage,
@@ -93,5 +94,17 @@ describe('errorMessage', () => {
     expect(errorMessage({ detail: 'Sin permiso.' })).toBe('Sin permiso.')
     expect(errorMessage({ amount: ['Fuera de rango.'] })).toBe('Fuera de rango.')
     expect(errorMessage(null, 'Falló.')).toBe('Falló.')
+  })
+})
+
+describe('deviceText', () => {
+  it('names the browser and the system of a session', () => {
+    const edge =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0'
+    const android =
+      'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
+    expect(deviceText(edge)).toBe('Edge en Windows')
+    expect(deviceText(android)).toBe('Chrome en Android')
+    expect(deviceText('curl/8.0')).toBe('Navegador en otro sistema')
   })
 })

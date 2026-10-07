@@ -8,6 +8,7 @@ export const MODELO = {
   oficial: 'oficial@modelo.test',
   cajera: 'cajera@modelo.test',
   cobrador: 'cobrador@modelo.test',
+  contabilidad: 'contabilidad@modelo.test',
 }
 export const CIBAO_GERENTE = 'gerente@cibao.test'
 

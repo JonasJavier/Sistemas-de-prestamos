@@ -39,6 +39,20 @@ test.describe('acceso (doc 06 - 6)', () => {
     await expect(page).toHaveURL(/\/entrar/)
   })
 
+  test('cerrar otra sesión desde Mi cuenta saca a ese dispositivo', async ({ browser }) => {
+    const laptop = await sessionFor(browser, MODELO.contabilidad)
+    const phone = await sessionFor(browser, MODELO.contabilidad)
+
+    await laptop.goto('/cuenta')
+    await expect(laptop.getByText('Esta sesión')).toBeVisible()
+    await laptop.getByRole('button', { name: 'Cerrar las demás' }).click()
+    await expect(laptop.getByRole('button', { name: 'Cerrar las demás' })).toHaveCount(0)
+
+    // The other device learns it on its next request (401 → «tu sesión se cerró»).
+    await phone.goto('/prestamos')
+    await expect(phone).toHaveURL(/\/entrar/)
+  })
+
   test('una dirección inexistente muestra la página 404', async ({ page }) => {
     await page.goto('/esto-no-existe')
     await expect(page.getByText('Esta página no existe')).toBeVisible()

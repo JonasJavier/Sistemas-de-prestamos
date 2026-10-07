@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.mfa",
     "allauth.headless",
+    "allauth.usersessions",  # doc 06 - 6: see and close your open sessions
     "django_celery_beat",
     "pgtrigger",
     "pghistory",

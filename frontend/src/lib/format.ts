@@ -165,3 +165,30 @@ export const STATUS_BADGES: Record<
   suspended: { text: 'Suspendida', classes: 'bg-warning-700/15 text-warning-700' },
   closed: { text: 'Cerrada', classes: 'bg-danger-600/15 text-danger-600' },
 }
+
+/** «Edge en Windows», «Chrome en Android»: enough to recognise a device. */
+export function deviceText(userAgent: string) {
+  const browser = /Edg\//.test(userAgent)
+    ? 'Edge'
+    : /OPR\//.test(userAgent)
+      ? 'Opera'
+      : /Firefox\//.test(userAgent)
+        ? 'Firefox'
+        : /Chrome\//.test(userAgent)
+          ? 'Chrome'
+          : /Safari\//.test(userAgent)
+            ? 'Safari'
+            : 'Navegador'
+  const system = /Android/.test(userAgent)
+    ? 'Android'
+    : /iPhone|iPad/.test(userAgent)
+      ? 'iPhone o iPad'
+      : /Windows/.test(userAgent)
+        ? 'Windows'
+        : /Mac OS X/.test(userAgent)
+          ? 'Mac'
+          : /Linux/.test(userAgent)
+            ? 'Linux'
+            : 'otro sistema'
+  return `${browser} en ${system}`
+}

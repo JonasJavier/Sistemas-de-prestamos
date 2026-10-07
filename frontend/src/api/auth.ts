@@ -149,3 +149,26 @@ export async function resetPassword(key: string, password: string): Promise<void
     throw error
   }
 }
+
+/** allauth.usersessions: where the account is signed in (doc 06 - 6). */
+export interface UserSessionInfo {
+  id: number
+  user_agent: string
+  ip: string
+  /** Unix seconds. */
+  created_at: number
+  is_current: boolean
+}
+
+export async function listSessions(): Promise<UserSessionInfo[]> {
+  const response = await api<{ data: UserSessionInfo[] }>(`${BASE}/auth/sessions`)
+  return response.data
+}
+
+export async function endSessions(ids: number[]): Promise<UserSessionInfo[]> {
+  const response = await api<{ data: UserSessionInfo[] }>(`${BASE}/auth/sessions`, {
+    method: 'DELETE',
+    body: { sessions: ids },
+  })
+  return response.data
+}

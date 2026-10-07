@@ -6,11 +6,15 @@ import type { Me } from '../api/accounts'
 import { activateTotp, getRecoveryCodes, getTotpConfig, regenerateRecoveryCodes } from '../api/auth'
 import { ApiError } from '../api/client'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { SessionsCard } from './account/SessionsCard'
 
 export function AccountPage({ me }: { me: Me }) {
   return (
     <>
-      <PageHeader title="Mi cuenta" subtitle="Tus datos y la verificación en dos pasos." />
+      <PageHeader
+        title="Mi cuenta"
+        subtitle="Tus datos, la verificación en dos pasos y dónde está abierta tu cuenta."
+      />
 
       {me.mfa_required && !me.mfa_enabled ? (
         <Alert tone="warning">
@@ -35,6 +39,7 @@ export function AccountPage({ me }: { me: Me }) {
       </Card>
 
       <TwoFactorCard />
+      <SessionsCard />
     </>
   )
 }
