@@ -7,7 +7,10 @@ import { Alert, Card, PublicPage } from '../components/ui'
 
 export function VerifyEmailPage() {
   const { key } = useParams({ from: '/verificar-correo/$key' })
-  const mutation = useMutation({ mutationFn: () => verifyEmail(key) })
+  const mutation = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => verifyEmail(key),
+  })
   const fired = useRef(false)
 
   useEffect(() => {

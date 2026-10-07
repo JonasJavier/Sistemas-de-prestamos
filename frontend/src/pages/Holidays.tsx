@@ -37,6 +37,7 @@ export function HolidaysPage() {
   const [name, setName] = useState('')
 
   const add = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => api('/api/v1/feriados/', { method: 'POST', body: { date, name } }),
     onSuccess: () => {
       setDate('')
@@ -45,15 +46,18 @@ export function HolidaysPage() {
     },
   })
   const update = useMutation({
+    meta: { inlineError: true },
     mutationFn: ({ id, data }: { id: string; data: Partial<Holiday> }) =>
       api(`/api/v1/feriados/${id}/`, { method: 'PATCH', body: data }),
     onSuccess: refresh,
   })
   const remove = useMutation({
+    meta: { inlineError: true },
     mutationFn: (id: string) => api(`/api/v1/feriados/${id}/`, { method: 'DELETE' }),
     onSuccess: refresh,
   })
   const seed = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => api('/api/v1/feriados/sembrar/', { method: 'POST', body: { year } }),
     onSuccess: refresh,
   })

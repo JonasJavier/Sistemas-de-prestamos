@@ -130,6 +130,7 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
   const { quote, fieldErrors, errorText } = useLiveQuote(request)
 
   const save = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       updateApplication(id, {
         product: conditions!.productId,
@@ -143,8 +144,13 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
       refresh()
     },
   })
-  const submit = useMutation({ mutationFn: () => submitApplication(id), onSuccess: refresh })
+  const submit = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => submitApplication(id),
+    onSuccess: refresh,
+  })
   const withdraw = useMutation({
+    meta: { inlineError: true },
     mutationFn: (note: string) => withdrawApplication(id, note),
     onSuccess: refresh,
   })

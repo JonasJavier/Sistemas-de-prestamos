@@ -7,23 +7,9 @@ import { listProducts, type LoanProduct } from '../api/lending'
 import { ConditionsForm, QuoteSummary } from '../components/Conditions'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Alert, buttonClass, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
-import { EMPTY_CONDITIONS, toRequest, type Conditions } from '../lib/conditions'
+import { startingConditions, toRequest, type Conditions } from '../lib/conditions'
 import { useLiveQuote } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
-
-/** Opens with the first active product filled in, so a quote shows at once. */
-function startingConditions(products: LoanProduct[]): Conditions {
-  const first = products.find((product) => product.is_active)
-  return first
-    ? {
-        productId: first.id,
-        amount: String(Number(first.min_amount)),
-        installments: String(first.min_term),
-        frequency: first.allowed_frequencies[0] ?? '',
-        rate: first.default_rate ?? first.min_rate,
-      }
-    : EMPTY_CONDITIONS
-}
 
 export function SimulatorPage({ me }: { me: Me }) {
   const products = useQuery({ queryKey: ['products'], queryFn: listProducts })

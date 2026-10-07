@@ -40,11 +40,13 @@ export function GuaranteesPanel({
   const [considered, setConsidered] = useState('')
 
   const guarantor = useMutation({
+    meta: { inlineError: true },
     mutationFn: (customer: string) => addGuarantor(application.id, customer),
     onSuccess: onChange,
   })
   const dropGuarantor = useMutation({ mutationFn: removeGuarantor, onSuccess: onChange })
   const asset = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => addApplicationCollateral(application.id, assetId, considered || undefined),
     onSuccess: () => {
       setAssetId('')

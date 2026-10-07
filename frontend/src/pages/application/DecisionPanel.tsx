@@ -47,6 +47,7 @@ export function DecisionPanel({
   })
 
   const decide = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => {
       if (mode === 'approve') return approveApplication(application.id, { note })
       if (mode === 'adjust')

@@ -83,6 +83,7 @@ export function AccountsPage({ me }: { me: Me }) {
   const [bank, setBank] = useState('')
   const [number, setNumber] = useState('')
   const create = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       createAccount({
         name,
@@ -106,6 +107,7 @@ export function AccountsPage({ me }: { me: Me }) {
   const [note, setNote] = useState('')
   const [direction, setDirection] = useState<'in' | 'out'>('in')
   const move = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       panel === 'transfer'
         ? transferBetween({ source, target, amount, note })

@@ -23,6 +23,7 @@ export function PasswordResetPage() {
   const { key } = useParams({ from: '/recuperar/$key' })
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
   const mutation = useMutation({
+    meta: { inlineError: true },
     mutationFn: (data: FormData) => resetPassword(key, data.password),
   })
   const badKey = mutation.isError && authErrorCode(mutation.error) === 'invalid_password_reset'

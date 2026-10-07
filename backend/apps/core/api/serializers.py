@@ -17,6 +17,19 @@ class BranchSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("El código de la sucursal no se puede cambiar.")
         return value
 
+    def validate_is_active(self, value: bool) -> bool:
+        # A company always keeps one open branch: users, numbering and cash live there.
+        if (
+            self.instance is not None
+            and self.instance.is_active
+            and not value
+            and not Branch.objects.filter(is_active=True).exclude(pk=self.instance.pk).exists()
+        ):
+            raise serializers.ValidationError(
+                "Es la única sucursal activa: crea otra antes de desactivar esta."
+            )
+        return value
+
     def create(self, validated_data: dict[str, Any]) -> Branch:
         validated_data["company_id"] = self.context["request"].user.company_id
         return super().create(validated_data)

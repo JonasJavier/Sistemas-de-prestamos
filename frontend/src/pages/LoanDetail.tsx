@@ -60,7 +60,11 @@ function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) 
   const [reason, setReason] = useState('')
   const [note, setNote] = useState('')
   const reasons = useQuery({ queryKey: ['reasons', 'void'], queryFn: () => listReasons('void') })
-  const run = useMutation({ mutationFn: () => voidLoan(number, reason, note), onSuccess: onDone })
+  const run = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => voidLoan(number, reason, note),
+    onSuccess: onDone,
+  })
   return (
     <Card className="space-y-3 border-danger-600/40">
       <h2 className="text-base font-semibold">Anular préstamo</h2>
@@ -122,6 +126,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['loan', numero] })
   const [signed, setSigned] = useState<File | null>(null)
   const upload = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => uploadSignedNote(numero, signed!),
     onSuccess: () => {
       setSigned(null)

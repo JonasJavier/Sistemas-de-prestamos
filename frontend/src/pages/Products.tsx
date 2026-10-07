@@ -97,6 +97,7 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
   const [value, setValue] = useState('')
   const [mode, setMode] = useState<ProductCharge['mode']>('discounted')
   const add = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       createCharge({ product: product.id, name, basis, value, mode, is_active: true }),
     onSuccess: () => {
@@ -249,6 +250,7 @@ function Editor({
       late_fee_policy: { ...current.late_fee_policy, [key]: value },
     }))
   const save = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => (product ? updateProduct(product.id, form) : createProduct(form)),
     onSuccess: onSaved,
   })

@@ -77,6 +77,7 @@ export function DisbursementDetailPage() {
   const [done, setDone] = useState<string | null>(null)
 
   const run = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       disburse(id, { source_account: source, method, reference, idempotency_key: key }),
     onSuccess: (result) => setDone(result.loan),

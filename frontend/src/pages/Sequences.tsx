@@ -25,6 +25,7 @@ export function SequencesPage() {
   const [editing, setEditing] = useState<string | null>(null)
   const [prefix, setPrefix] = useState('')
   const save = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       api(`/api/v1/numeraciones/${editing}/`, { method: 'PATCH', body: { prefix } }),
     onSuccess: () => {

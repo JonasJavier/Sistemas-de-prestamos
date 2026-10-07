@@ -52,6 +52,18 @@ def test_branch_code_cannot_change(tenant: RegistrationResult) -> None:
     assert response.status_code == 200
 
 
+def test_the_last_active_branch_cannot_be_deactivated(tenant: RegistrationResult) -> None:
+    client = APIClient()
+    client.force_login(tenant.admin)
+    only = client.get("/api/v1/sucursales/").json()["results"][0]["id"]
+    refused = client.patch(f"/api/v1/sucursales/{only}/", {"is_active": False}, format="json")
+    assert refused.status_code == 400
+    assert "única sucursal activa" in refused.json()["is_active"][0]
+    client.post("/api/v1/sucursales/", {"code": "ST", "name": "Santiago"}, format="json")
+    allowed = client.patch(f"/api/v1/sucursales/{only}/", {"is_active": False}, format="json")
+    assert allowed.status_code == 200
+
+
 def test_branches_are_company_scoped(
     tenant: RegistrationResult, other_tenant: RegistrationResult
 ) -> None:

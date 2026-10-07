@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { createBranch, listBranches, updateBranch } from '../api/accounts'
 import { ApiError } from '../api/client'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { errorMessage } from '../lib/format'
 
 const schema = z.object({
   code: z
@@ -49,6 +50,7 @@ export function BranchesPage() {
   })
 
   const toggle = useMutation({
+    meta: { inlineError: true },
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       updateBranch(id, { is_active }),
     onSuccess: invalidate,
@@ -96,6 +98,9 @@ export function BranchesPage() {
         </p>
       </Card>
 
+      {toggle.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(toggle.error.data)}</Alert>
+      ) : null}
       <Card>
         {branches.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
         {branches.data ? (

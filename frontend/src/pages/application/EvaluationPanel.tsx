@@ -43,6 +43,7 @@ export function EvaluationPanel({
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const add = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       addBudgetItem({
         application: application.id,

@@ -61,6 +61,13 @@ plugins = ["mypy_django_plugin.main"]
 strict_optional = true
 warn_unused_ignores = true
 
+# The financial engine is checked strictly in CI (money never guesses types);
+# the Django apps join gradually as their request.user typing is cleaned up.
+[[tool.mypy.overrides]]
+module = ["engine.money", "engine.rates", "engine.schedule"]
+strict = true
+warn_unreachable = true
+
 [tool.django-stubs]
 django_settings_module = "config.settings.test"
 

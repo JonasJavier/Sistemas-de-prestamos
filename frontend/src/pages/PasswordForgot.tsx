@@ -13,7 +13,10 @@ type FormData = z.infer<typeof schema>
 
 export function PasswordForgotPage() {
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
-  const mutation = useMutation({ mutationFn: (data: FormData) => requestPasswordReset(data.email) })
+  const mutation = useMutation({
+    meta: { inlineError: true },
+    mutationFn: (data: FormData) => requestPasswordReset(data.email),
+  })
 
   return (
     <PublicPage subtitle="Recupera el acceso a tu cuenta">

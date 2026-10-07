@@ -42,6 +42,7 @@ function EmploymentCard({ customerId }: { customerId: string }) {
   }, [query.data])
 
   const save = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => putEmployment(customerId, form),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['employment', customerId] }),
   })
@@ -102,6 +103,7 @@ function BusinessCard({ customerId }: { customerId: string }) {
   }, [query.data])
 
   const save = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => putBusiness(customerId, form),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['business', customerId] }),
   })

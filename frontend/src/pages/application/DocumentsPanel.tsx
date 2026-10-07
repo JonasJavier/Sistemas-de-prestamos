@@ -31,11 +31,13 @@ export function DocumentsPanel({
   const [uploadKind, setUploadKind] = useState<'bureau_report' | 'document'>('bureau_report')
 
   const toggle = useMutation({
+    meta: { inlineError: true },
     mutationFn: ({ id, verified }: { id: string; verified: boolean }) =>
       verified ? unverifyRequirement(id) : verifyRequirement(id),
     onSuccess: onChange,
   })
   const saveBureau = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       updateApplication(application.id, {
         bureau_provider: provider,
@@ -45,6 +47,7 @@ export function DocumentsPanel({
     onSuccess: onChange,
   })
   const send = useMutation({
+    meta: { inlineError: true },
     mutationFn: () => uploadApplicationFile(application.id, uploadKind, upload!),
     onSuccess: () => {
       setUpload(null)

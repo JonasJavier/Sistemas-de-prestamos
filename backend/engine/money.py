@@ -12,7 +12,7 @@ Amount = Decimal | int | str
 
 
 def D(value: Amount) -> Decimal:  # noqa: N802 - deliberate short constructor
-    if isinstance(value, float):  # type: ignore[unreachable]
+    if isinstance(value, float):
         raise TypeError("Never build money from float; use str or Decimal.")
     return Decimal(value)
 

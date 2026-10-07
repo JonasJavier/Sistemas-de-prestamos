@@ -10,7 +10,7 @@ import { ConditionsForm, QuoteSummary } from '../components/Conditions'
 import { CustomerPicker } from '../components/CustomerPicker'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Alert, Badge, Button, Card, Field, Input, PageHeader } from '../components/ui'
-import { toRequest, type Conditions } from '../lib/conditions'
+import { startingConditions, toRequest, type Conditions } from '../lib/conditions'
 import { errorMessage } from '../lib/format'
 import { useLiveQuote } from '../lib/hooks'
 
@@ -42,19 +42,30 @@ export function ApplicationNewPage() {
     frequency: search.frecuencia ?? '',
     rate: search.tasa ?? '',
   })
+  // Until the officer picks one, the first active product with its defaults
+  // (the amount stays empty: it must be typed, never assumed).
+  const starting = useMemo(
+    () => ({ ...startingConditions(products.data?.results ?? []), amount: '' }),
+    [products.data],
+  )
+  const value = useMemo(
+    () => (conditions.productId ? conditions : { ...starting, amount: conditions.amount }),
+    [conditions, starting],
+  )
   const [purpose, setPurpose] = useState('')
-  const request = useMemo(() => toRequest(conditions), [conditions])
+  const request = useMemo(() => toRequest(value), [value])
   const { quote, fieldErrors, errorText } = useLiveQuote(request)
 
   const create = useMutation({
+    meta: { inlineError: true },
     mutationFn: () =>
       createApplication({
         customer: customer!.id,
-        product: conditions.productId,
-        amount: conditions.amount,
-        installments: Number(conditions.installments),
-        frequency: conditions.frequency,
-        rate: conditions.rate || null,
+        product: value.productId,
+        amount: value.amount,
+        installments: Number(value.installments),
+        frequency: value.frequency,
+        rate: value.rate || null,
         purpose,
       }),
     onSuccess: (application) =>
@@ -100,8 +111,8 @@ export function ApplicationNewPage() {
               ¿No existe?{' '}
               <Link to="/clientes/nuevo" className="font-medium text-brand-700 hover:underline">
                 Regístralo primero
-              </Link>{' '}
-              (F1: buscar antes de crear).
+              </Link>
+              : así evitamos clientes duplicados.
             </p>
           </>
         )}
@@ -111,7 +122,7 @@ export function ApplicationNewPage() {
         <h2 className="text-base font-semibold">2. Condiciones</h2>
         <ConditionsForm
           products={products.data?.results ?? []}
-          value={conditions}
+          value={value}
           onChange={setConditions}
           errorText={errorText}
         />
