@@ -1,12 +1,39 @@
-# Sistema de préstamos
+# Cobradía
 
-Proyecto en planificación: **Cobradía**, plataforma SaaS multiempresa (multitenant) para administrar carteras de préstamos, comercializable en planes (decisiones 041 y 044). Dominio: `cobradia.com`.
+**Cobradía** (`cobradia.com`) es una plataforma SaaS multiempresa para que las financieras dominicanas administren préstamos, cobros y caja. Cada empresa se registra en línea con 30 días de prueba y trabaja con sus datos aislados de las demás (decisiones 041–045).
 
-- [Bases del proyecto (Fase 0): stack, alcance, reglas, flujos, pantallas y plan](docs/proyecto/README.md)
-- [Registro de decisiones](docs/proyecto/decisiones.md)
-- [Plan de producto inicial (primer borrador)](docs/PLAN_PRODUCTO.md)
-- [Estudio de la referencia pantalla por pantalla](docs/referencia/README.md)
-- [Inventario del sistema de referencia](docs/INVENTARIO_REFERENCIA.md)
-- [Flujos verificados con datos ficticios](docs/FLUJOS_VERIFICADOS.md)
-- [Matriz de pruebas y decisiones pendientes](docs/MATRIZ_PRUEBAS_Y_DECISIONES.md)
+**Estado (07/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; sigue la fase 4 · Cobros y caja. Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
 
+## Estructura
+
+| Carpeta | Qué hay |
+| --- | --- |
+| `backend/` | API en Django 6.1 + DRF, PostgreSQL con Row-Level Security, Celery. `engine/` es el motor financiero en Python puro |
+| `frontend/` | Aplicación web en React 19 + Vite + TypeScript, TanStack Router/Query y Tailwind 4 |
+| `infra/` | Docker Compose para desarrollo: PostgreSQL, Redis y Mailpit |
+| `docs/proyecto/` | Las bases del proyecto (pasos 01–10) y el [registro de decisiones](docs/proyecto/decisiones.md): **la fuente de verdad** |
+| `docs/referencia/` | Estudio del sistema de referencia; solo material de consulta |
+
+## Desarrollo local
+
+Requisitos: Docker, Python 3.14 con [uv](https://docs.astral.sh/uv/), Node 24 con pnpm 11.
+
+```bash
+docker compose -f infra/compose.yml up -d
+```
+
+Los puertos no son los estándar para convivir con otros servicios: PostgreSQL en **54320**, Redis en **63790**, Mailpit en http://localhost:8025. Los pasos del backend, las cuentas de prueba y el recorrido de la demo están en [`backend/DEV.md`](backend/DEV.md); el frontend arranca con `pnpm -C frontend dev` (http://localhost:5173, con proxy de `/api` al backend en el puerto 8800).
+
+## Calidad
+
+Nada entra a `main` en rojo. La integración continua (`.github/workflows/ci.yml`) corre:
+
+- **Backend:** `ruff check`, `ruff format --check`, migraciones pendientes y `pytest` contra PostgreSQL con un rol sin privilegios (así RLS se prueba de verdad).
+- **Frontend:** `oxlint`, formato, pruebas unitarias y compilación.
+
+Las convenciones de trabajo (idiomas, dinero en `Decimal`, multiempresa, commits) están en [`CLAUDE.md`](CLAUDE.md) y en el [paso 10 §5](docs/proyecto/10-plan-de-construccion.md#5-convenciones-de-trabajo).
+
+## Material previo
+
+- [Plan de producto inicial](docs/PLAN_PRODUCTO.md) (primer borrador; manda `docs/proyecto/`)
+- [Estudio de la referencia pantalla por pantalla](docs/referencia/README.md), [inventario](docs/INVENTARIO_REFERENCIA.md), [flujos verificados](docs/FLUJOS_VERIFICADOS.md) y [matriz de pruebas](docs/MATRIZ_PRUEBAS_Y_DECISIONES.md)

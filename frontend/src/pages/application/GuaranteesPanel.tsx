@@ -54,8 +54,7 @@ export function GuaranteesPanel({
   })
   const dropAsset = useMutation({ mutationFn: removeApplicationCollateral, onSuccess: onChange })
   const error = [guarantor.error, asset.error].find((e) => e instanceof ApiError) as
-    | ApiError
-    | undefined
+    ApiError | undefined
   const used = new Set(application.collaterals.map((c) => c.collateral))
   const available = (assets.data ?? []).filter(
     (c) => !used.has(c.id) && (c.status === 'registered' || c.status === 'released'),

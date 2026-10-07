@@ -55,9 +55,8 @@ export function DocumentsPanel({
     mutationFn: applicationFileLink,
     onSuccess: ({ url }) => window.open(url, '_blank', 'noopener'),
   })
-  const error = [toggle.error, saveBureau.error, send.error].find(
-    (e) => e instanceof ApiError,
-  ) as ApiError | undefined
+  const error = [toggle.error, saveBureau.error, send.error].find((e) => e instanceof ApiError) as
+    ApiError | undefined
 
   return (
     <Card className="space-y-4">
@@ -68,7 +67,10 @@ export function DocumentsPanel({
           {application.requirements.map((req) => {
             const verified = Boolean(req.verified_at)
             return (
-              <li key={req.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <li
+                key={req.id}
+                className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              >
                 <span>
                   <span className={verified ? 'text-success-600' : 'text-muted'}>
                     {verified ? '✓' : '○'}
@@ -116,7 +118,11 @@ export function DocumentsPanel({
               <Input inputMode="numeric" value={score} onChange={(e) => setScore(e.target.value)} />
             </Field>
             <Field label="Fecha de consulta">
-              <Input type="date" value={bureauDate} onChange={(e) => setBureauDate(e.target.value)} />
+              <Input
+                type="date"
+                value={bureauDate}
+                onChange={(e) => setBureauDate(e.target.value)}
+              />
             </Field>
             <Button type="submit" variant="secondary" disabled={saveBureau.isPending}>
               Guardar
@@ -138,7 +144,10 @@ export function DocumentsPanel({
         ) : (
           <ul className="divide-y divide-edge rounded-lg border border-edge">
             {application.files.map((file) => (
-              <li key={file.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <li
+                key={file.id}
+                className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              >
                 <span>
                   {file.kind === 'bureau_report' ? 'Reporte de buró' : 'Documento'}
                   <span className="ml-1 text-[12px] text-muted">

@@ -25,7 +25,8 @@ export function SequencesPage() {
   const [editing, setEditing] = useState<string | null>(null)
   const [prefix, setPrefix] = useState('')
   const save = useMutation({
-    mutationFn: () => api(`/api/v1/numeraciones/${editing}/`, { method: 'PATCH', body: { prefix } }),
+    mutationFn: () =>
+      api(`/api/v1/numeraciones/${editing}/`, { method: 'PATCH', body: { prefix } }),
     onSuccess: () => {
       setEditing(null)
       queryClient.invalidateQueries({ queryKey: ['sequences'] })
@@ -38,14 +39,19 @@ export function SequencesPage() {
         title="Numeraciones"
         subtitle="Cada sucursal numera sus documentos sin saltos. La numeración nace con el primer documento; el prefijo solo cambia los números futuros."
       />
-      {save.error instanceof ApiError ? <Alert tone="danger">{errorMessage(save.error.data)}</Alert> : null}
+      {save.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(save.error.data)}</Alert>
+      ) : null}
       {rows.isPending ? (
         <Spinner />
       ) : rows.data && rows.data.length > 0 ? (
         <Card className="!p-0">
           <ul className="divide-y divide-edge">
             {rows.data.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-sm">
+              <li
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-sm"
+              >
                 <span>
                   <span className="font-medium">{row.doc_type_label}</span>
                   <span className="ml-2 text-muted">sucursal {row.branch_code}</span>
@@ -87,7 +93,9 @@ export function SequencesPage() {
           </ul>
         </Card>
       ) : (
-        <EmptyState>Las numeraciones aparecen cuando se emite el primer documento de cada tipo.</EmptyState>
+        <EmptyState>
+          Las numeraciones aparecen cuando se emite el primer documento de cada tipo.
+        </EmptyState>
       )}
     </>
   )

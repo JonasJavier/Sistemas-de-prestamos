@@ -11,7 +11,10 @@ export function SubscriptionPage() {
 
   return (
     <>
-      <PageHeader title="Suscripción" subtitle="El plan de tu financiera y hasta cuándo está pagado." />
+      <PageHeader
+        title="Suscripción"
+        subtitle="El plan de tu financiera y hasta cuándo está pagado."
+      />
 
       {data?.status === 'trial' && typeof data.trial_days_left === 'number' ? (
         <Alert tone="info">
@@ -55,9 +58,7 @@ export function SubscriptionPage() {
               </div>
               <div>
                 <dt className="text-muted">Pagada hasta</dt>
-                <dd className="font-medium tabular-nums">
-                  {day(data.subscription?.paid_until)}
-                </dd>
+                <dd className="font-medium tabular-nums">{day(data.subscription?.paid_until)}</dd>
               </div>
             </dl>
           </div>

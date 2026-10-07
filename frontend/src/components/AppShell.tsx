@@ -141,15 +141,7 @@ const barItem =
   'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11.5px] font-medium text-muted outline-none focus-visible:bg-brand-100 [&.active]:text-brand-700'
 
 /** Phones get a bottom bar (decision 038): the frequent actions, search and «Más». */
-function MobileBar({
-  me,
-  groups,
-  onSearch,
-}: {
-  me: Me
-  groups: NavGroup[]
-  onSearch: () => void
-}) {
+function MobileBar({ me, groups, onSearch }: { me: Me; groups: NavGroup[]; onSearch: () => void }) {
   const [open, setOpen] = useState(false)
   const quick = me.is_platform_admin
     ? [{ to: '/plataforma', label: 'Empresas', icon: <HomeIcon /> }]
@@ -267,7 +259,10 @@ export function AppShell({
       </a>
       {searchable && searching ? <CommandPalette me={me} onClose={closeSearch} /> : null}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-5 overflow-y-auto bg-brand-950 p-4 sm:flex">
-        <Link to="/" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold-500">
+        <Link
+          to="/"
+          className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold-500"
+        >
           <Brand className="text-xl" tone="light" />
         </Link>
         <CompanyBadge me={me} />

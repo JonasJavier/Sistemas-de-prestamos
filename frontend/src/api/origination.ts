@@ -475,7 +475,8 @@ export const accountMovements = (id: string): Promise<{ results: Movement[] }> =
 export const capitalMovement = (
   id: string,
   data: { amount: string; direction: 'in' | 'out'; note: string },
-): Promise<{ entry: string }> => api(`/api/v1/cuentas/${id}/capital/`, { method: 'POST', body: data })
+): Promise<{ entry: string }> =>
+  api(`/api/v1/cuentas/${id}/capital/`, { method: 'POST', body: data })
 
 export const transferBetween = (data: {
   source: string

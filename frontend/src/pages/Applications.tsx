@@ -139,7 +139,10 @@ export function ApplicationsPage({ me }: { me: Me }) {
         <EmptyState
           action={
             originator && !term ? (
-              <Link to="/solicitudes/nueva" className="font-semibold text-brand-700 hover:underline">
+              <Link
+                to="/solicitudes/nueva"
+                className="font-semibold text-brand-700 hover:underline"
+              >
                 Crear solicitud
               </Link>
             ) : null

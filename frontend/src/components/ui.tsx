@@ -333,7 +333,14 @@ export function SearchInput({ className = '', ...props }: ComponentProps<'input'
   return (
     <div className={`relative ${className}`}>
       <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-muted">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden className="size-4">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          aria-hidden
+          className="size-4"
+        >
           <circle cx="11" cy="11" r="6.5" />
           <path d="m20 20-4.2-4.2" strokeLinecap="round" />
         </svg>

@@ -1,8 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { usePrompt } from '../components/Dialog'
 
 import { api, ApiError } from '../api/client'
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, Spinner } from '../components/ui'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  Select,
+  Spinner,
+} from '../components/ui'
 import { day, errorMessage } from '../lib/format'
 
 interface Holiday {
@@ -16,6 +27,7 @@ const listHolidays = (year: number): Promise<Holiday[]> => api(`/api/v1/feriados
 
 /** P75 «Feriados»: unconfirmed holidays do not move due dates (doc 03 - 4). */
 export function HolidaysPage() {
+  const [dialog, ask] = usePrompt()
   const queryClient = useQueryClient()
   const current = new Date().getFullYear()
   const [year, setYear] = useState(current)
@@ -52,6 +64,7 @@ export function HolidaysPage() {
 
   return (
     <>
+      {dialog}
       <PageHeader
         title="Feriados"
         subtitle="Las cuotas que caen en feriado confirmado pasan al siguiente día laborable; los préstamos ya desembolsados conservan sus fechas."
@@ -67,8 +80,8 @@ export function HolidaysPage() {
       />
       {pending > 0 ? (
         <Alert tone="warning">
-          {pending} feriado{pending === 1 ? '' : 's'} trasladable{pending === 1 ? '' : 's'} sin confirmar
-          (Ley 139-97): confírmalos o ajusta su fecha.
+          {pending} feriado{pending === 1 ? '' : 's'} trasladable{pending === 1 ? '' : 's'} sin
+          confirmar (Ley 139-97): confírmalos o ajusta su fecha.
         </Alert>
       ) : null}
       {failure ? <Alert tone="danger">{errorMessage(failure.data)}</Alert> : null}
@@ -81,7 +94,10 @@ export function HolidaysPage() {
         ) : holidays.data && holidays.data.length > 0 ? (
           <ul className="divide-y divide-edge">
             {holidays.data.map((holiday) => (
-              <li key={holiday.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm">
+              <li
+                key={holiday.id}
+                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+              >
                 <span className="flex items-center gap-3">
                   <span className="w-24 tabular-nums">{day(holiday.date)}</span>
                   <span>{holiday.name}</span>
@@ -96,7 +112,9 @@ export function HolidaysPage() {
                     <button
                       type="button"
                       className="text-[12.5px] font-medium text-brand-700 hover:underline"
-                      onClick={() => update.mutate({ id: holiday.id, data: { is_confirmed: true } })}
+                      onClick={() =>
+                        update.mutate({ id: holiday.id, data: { is_confirmed: true } })
+                      }
                     >
                       Confirmar
                     </button>
@@ -104,9 +122,17 @@ export function HolidaysPage() {
                   <button
                     type="button"
                     className="text-[12.5px] font-medium text-brand-700 hover:underline"
-                    onClick={() => {
-                      const next = window.prompt('Nueva fecha (AAAA-MM-DD):', holiday.date)
-                      if (next) update.mutate({ id: holiday.id, data: { date: next, is_confirmed: true } })
+                    onClick={async () => {
+                      const next = await ask({
+                        title: `Trasladar «${holiday.name}»`,
+                        label: 'Nueva fecha',
+                        type: 'date',
+                        initial: holiday.date,
+                        required: true,
+                        confirmText: 'Trasladar',
+                      })
+                      if (next)
+                        update.mutate({ id: holiday.id, data: { date: next, is_confirmed: true } })
                     }}
                   >
                     Trasladar
@@ -125,7 +151,11 @@ export function HolidaysPage() {
         ) : (
           <div className="p-4 text-sm text-muted">
             Sin feriados en {year}.{' '}
-            <button type="button" className="font-medium text-brand-700 hover:underline" onClick={() => seed.mutate()}>
+            <button
+              type="button"
+              className="font-medium text-brand-700 hover:underline"
+              onClick={() => seed.mutate()}
+            >
               Cargar los feriados dominicanos de {year}
             </button>
           </div>
@@ -148,7 +178,11 @@ export function HolidaysPage() {
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
           <Field label="Nombre">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Viernes Santo" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Viernes Santo"
+            />
           </Field>
           <Button type="submit" disabled={!date || !name || add.isPending}>
             Agregar

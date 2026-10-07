@@ -134,17 +134,15 @@ export function LoginPage() {
           {message ? (
             <Alert tone="warning">{message}</Alert>
           ) : motivo === 'sesion' ? (
-            <Alert tone="info">Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.</Alert>
+            <Alert tone="info">
+              Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.
+            </Alert>
           ) : null}
           <Field label="Correo" error={form.formState.errors.email?.message}>
             <Input type="email" autoComplete="email" autoFocus {...form.register('email')} />
           </Field>
           <Field label="Contraseña" error={form.formState.errors.password?.message}>
-            <Input
-              type="password"
-              autoComplete="current-password"
-              {...form.register('password')}
-            />
+            <Input type="password" autoComplete="current-password" {...form.register('password')} />
           </Field>
           <Button type="submit" className="w-full" disabled={mutation.isPending}>
             {mutation.isPending ? 'Entrando…' : 'Entrar'}

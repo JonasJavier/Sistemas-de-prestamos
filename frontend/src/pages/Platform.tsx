@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { usePrompt } from '../components/Dialog'
 
 import {
   listCompanies,
@@ -13,6 +14,7 @@ import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
 import { day, STATUS_BADGES } from '../lib/format'
 
 export function PlatformPage() {
+  const [dialog, ask] = usePrompt()
   const queryClient = useQueryClient()
   const [paying, setPaying] = useState<PlatformCompany | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -25,8 +27,7 @@ export function PlatformPage() {
     onSuccess: refresh,
   })
   const reactivate = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      reactivateCompany(id, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => reactivateCompany(id, reason),
     onSuccess: refresh,
   })
   const pay = useMutation({
@@ -41,7 +42,11 @@ export function PlatformPage() {
 
   return (
     <>
-      <PageHeader title="Empresas de la plataforma" subtitle="Estado, prueba y suscripción de cada empresa registrada." />
+      {dialog}
+      <PageHeader
+        title="Empresas de la plataforma"
+        subtitle="Estado, prueba y suscripción de cada empresa registrada."
+      />
       {message ? <Alert tone="info">{message}</Alert> : null}
 
       <Card>
@@ -63,9 +68,7 @@ export function PlatformPage() {
                 return (
                   <tr key={company.id} className="border-b border-edge/60 last:border-0">
                     <td className="py-2 pr-3">
-                      <div className="font-medium">
-                        {company.trade_name || company.legal_name}
-                      </div>
+                      <div className="font-medium">{company.trade_name || company.legal_name}</div>
                       <div className="text-muted">{company.rnc || 'Sin RNC'}</div>
                     </td>
                     <td className="py-2 pr-3">
@@ -88,7 +91,10 @@ export function PlatformPage() {
                           <Button
                             variant="secondary"
                             onClick={() =>
-                              reactivate.mutate({ id: company.id, reason: 'Reactivada por el dueño' })
+                              reactivate.mutate({
+                                id: company.id,
+                                reason: 'Reactivada por el dueño',
+                              })
                             }
                           >
                             Reactivar
@@ -96,8 +102,16 @@ export function PlatformPage() {
                         ) : (
                           <Button
                             variant="secondary"
-                            onClick={() => {
-                              const reason = window.prompt('Motivo de la suspensión:')
+                            onClick={async () => {
+                              const reason = await ask({
+                                title: `Suspender ${company.trade_name || company.legal_name}`,
+                                description: 'La empresa queda en solo lectura hasta reactivarla.',
+                                label: 'Motivo de la suspensión',
+                                type: 'textarea',
+                                required: true,
+                                confirmText: 'Suspender',
+                                danger: true,
+                              })
                               if (reason) suspend.mutate({ id: company.id, reason })
                             }}
                           >
@@ -114,7 +128,14 @@ export function PlatformPage() {
         ) : null}
       </Card>
 
-      {paying ? <PaymentForm company={paying} onCancel={() => setPaying(null)} onSubmit={(data) => pay.mutate({ id: paying.id, data })} pending={pay.isPending} /> : null}
+      {paying ? (
+        <PaymentForm
+          company={paying}
+          onCancel={() => setPaying(null)}
+          onSubmit={(data) => pay.mutate({ id: paying.id, data })}
+          pending={pay.isPending}
+        />
+      ) : null}
     </>
   )
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
+import { usePrompt } from '../components/Dialog'
 
 import type { Me } from '../api/accounts'
 import { ApiError } from '../api/client'
@@ -19,7 +20,15 @@ import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
 import { Alert, Badge, Button, buttonClass, Card, PageHeader, Spinner } from '../components/ui'
 import { toRequest, type Conditions } from '../lib/conditions'
-import { APPLICATION_STATUS, dateOf, day, errorMessage, installmentsText, pct, rd } from '../lib/format'
+import {
+  APPLICATION_STATUS,
+  dateOf,
+  day,
+  errorMessage,
+  installmentsText,
+  pct,
+  rd,
+} from '../lib/format'
 import { useLiveQuote } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { DecisionPanel } from './application/DecisionPanel'
@@ -56,8 +65,8 @@ function StatusNotice({ application }: { application: Application }) {
       return (
         <Alert tone="success">
           Aprobada por {application.decided_by_name} por {rd(application.approved_amount)} en{' '}
-          {installmentsText(application.approved_installments ?? 0, application.approved_frequency)} al{' '}
-          {pct(application.approved_rate, 4)}. Vigente hasta {day(application.valid_until)}.
+          {installmentsText(application.approved_installments ?? 0, application.approved_frequency)}{' '}
+          al {pct(application.approved_rate, 4)}. Vigente hasta {day(application.valid_until)}.
           {application.decision_note ? ` Nota: ${application.decision_note}` : ''}
         </Alert>
       )
@@ -70,7 +79,9 @@ function StatusNotice({ application }: { application: Application }) {
       )
     case 'expired':
       return (
-        <Alert tone="warning">La aprobación venció sin desembolsar: envíala de nuevo a evaluación.</Alert>
+        <Alert tone="warning">
+          La aprobación venció sin desembolsar: envíala de nuevo a evaluación.
+        </Alert>
       )
     case 'disbursed':
       return (
@@ -93,6 +104,7 @@ function StatusNotice({ application }: { application: Application }) {
 
 /** P27 (editor) and P28 (review and decision) in one place. */
 export function ApplicationDetailPage({ me }: { me: Me }) {
+  const [dialog, ask] = usePrompt()
   const { id } = useParams({ from: '/app/solicitudes/$id' })
   const queryClient = useQueryClient()
   const application = useQuery({ queryKey: ['application', id], queryFn: () => getApplication(id) })
@@ -143,17 +155,16 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
   const status = APPLICATION_STATUS[data.status]
   const product = products.data?.results.find((p) => p.id === data.product)
   const failure = [submit.error, save.error, withdraw.error].find((e) => e instanceof ApiError) as
-    | ApiError
-    | undefined
+    ApiError | undefined
   const issues =
     ((failure?.data as Record<string, unknown> | undefined)?.issues as { message: string }[]) ?? []
   const canVerify =
-    hasRole(me, ACCESS.originate) &&
-    ['draft', 'returned', 'in_review'].includes(data.status)
+    hasRole(me, ACCESS.originate) && ['draft', 'returned', 'in_review'].includes(data.status)
   const schedule = quote.data?.schedule ?? evaluation.data?.simulation.schedule
 
   return (
     <>
+      {dialog}
       <PageHeader
         back={
           <Link to="/solicitudes" className="hover:underline">
@@ -185,8 +196,13 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
               <Button
                 variant="secondary"
                 disabled={withdraw.isPending}
-                onClick={() => {
-                  const note = window.prompt('¿Por qué desiste el cliente? (opcional)')
+                onClick={async () => {
+                  const note = await ask({
+                    title: 'El cliente desistió',
+                    label: 'Motivo (opcional)',
+                    type: 'textarea',
+                    confirmText: 'Marcar como desistida',
+                  })
                   if (note !== null) withdraw.mutate(note)
                 }}
               >
@@ -199,11 +215,7 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
               </Button>
             ) : null}
             {data.can.disburse ? (
-              <Link
-                to="/desembolsos/$id"
-                params={{ id: data.id }}
-                className={buttonClass()}
-              >
+              <Link to="/desembolsos/$id" params={{ id: data.id }} className={buttonClass()}>
                 Desembolsar
               </Link>
             ) : null}
@@ -244,7 +256,10 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
               <Button variant="secondary" onClick={() => setDraft(null)}>
                 Descartar
               </Button>
-              <Button onClick={() => save.mutate()} disabled={Boolean(fieldErrors) || save.isPending}>
+              <Button
+                onClick={() => save.mutate()}
+                disabled={Boolean(fieldErrors) || save.isPending}
+              >
                 Guardar condiciones
               </Button>
             </div>
@@ -261,7 +276,11 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
           <p className="text-sm">
             {rd(data.amount)} en {installmentsText(data.installments, data.frequency)} al{' '}
             {pct(data.rate, 4)}{' '}
-            {data.rate_unit === 'monthly' ? 'mensual' : data.rate_unit === 'annual' ? 'anual' : 'por período'}
+            {data.rate_unit === 'monthly'
+              ? 'mensual'
+              : data.rate_unit === 'annual'
+                ? 'anual'
+                : 'por período'}
             {data.purpose ? ` · destino: ${data.purpose}` : ''}
           </p>
         )}
@@ -271,7 +290,10 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
               Tabla de pagos estimada {draft ? '(con los cambios sin guardar)' : ''}
             </summary>
             <div className="mt-3">
-              <ScheduleTable rows={schedule} principal={(quote.data ?? evaluation.data?.simulation)?.principal} />
+              <ScheduleTable
+                rows={schedule}
+                principal={(quote.data ?? evaluation.data?.simulation)?.principal}
+              />
             </div>
           </details>
         ) : null}

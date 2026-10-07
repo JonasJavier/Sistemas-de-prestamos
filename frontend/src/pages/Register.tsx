@@ -62,54 +62,50 @@ export function RegisterPage() {
 
   return (
     <PublicPage subtitle="Crea la cuenta de tu financiera · 30 días gratis, sin tarjeta">
-        <Card>
-          <form
-            className="space-y-4"
-            onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-            noValidate
+      <Card>
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+          noValidate
+        >
+          {message ? <Alert tone="danger">{message}</Alert> : null}
+          <Field
+            label="Nombre de la financiera"
+            error={form.formState.errors.company_legal_name?.message}
           >
-            {message ? <Alert tone="danger">{message}</Alert> : null}
-            <Field
-              label="Nombre de la financiera"
-              error={form.formState.errors.company_legal_name?.message}
-            >
-              <Input autoFocus {...form.register('company_legal_name')} />
+            <Input autoFocus {...form.register('company_legal_name')} />
+          </Field>
+          <Field label="RNC (opcional)" error={form.formState.errors.rnc?.message}>
+            <Input inputMode="numeric" {...form.register('rnc')} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Tu nombre" error={form.formState.errors.first_name?.message}>
+              <Input autoComplete="given-name" {...form.register('first_name')} />
             </Field>
-            <Field label="RNC (opcional)" error={form.formState.errors.rnc?.message}>
-              <Input inputMode="numeric" {...form.register('rnc')} />
+            <Field label="Tu apellido" error={form.formState.errors.last_name?.message}>
+              <Input autoComplete="family-name" {...form.register('last_name')} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Tu nombre" error={form.formState.errors.first_name?.message}>
-                <Input autoComplete="given-name" {...form.register('first_name')} />
-              </Field>
-              <Field label="Tu apellido" error={form.formState.errors.last_name?.message}>
-                <Input autoComplete="family-name" {...form.register('last_name')} />
-              </Field>
-            </div>
-            <Field label="Teléfono (opcional)" error={form.formState.errors.phone?.message}>
-              <Input type="tel" autoComplete="tel" {...form.register('phone')} />
-            </Field>
-            <Field label="Correo" error={form.formState.errors.email?.message}>
-              <Input type="email" autoComplete="email" {...form.register('email')} />
-            </Field>
-            <Field label="Contraseña" error={form.formState.errors.password?.message}>
-              <Input
-                type="password"
-                autoComplete="new-password"
-                {...form.register('password')}
-              />
-            </Field>
-            <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Creando tu cuenta…' : 'Empezar mi prueba gratis'}
-            </Button>
-          </form>
-        </Card>
-        <p className="text-center text-sm text-muted">
-          ¿Ya tienes cuenta?{' '}
-          <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
-            Inicia sesión
-          </Link>
-        </p>
+          </div>
+          <Field label="Teléfono (opcional)" error={form.formState.errors.phone?.message}>
+            <Input type="tel" autoComplete="tel" {...form.register('phone')} />
+          </Field>
+          <Field label="Correo" error={form.formState.errors.email?.message}>
+            <Input type="email" autoComplete="email" {...form.register('email')} />
+          </Field>
+          <Field label="Contraseña" error={form.formState.errors.password?.message}>
+            <Input type="password" autoComplete="new-password" {...form.register('password')} />
+          </Field>
+          <Button type="submit" className="w-full" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Creando tu cuenta…' : 'Empezar mi prueba gratis'}
+          </Button>
+        </form>
+      </Card>
+      <p className="text-center text-sm text-muted">
+        ¿Ya tienes cuenta?{' '}
+        <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
+          Inicia sesión
+        </Link>
+      </p>
     </PublicPage>
   )
 }

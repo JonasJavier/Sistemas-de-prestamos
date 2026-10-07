@@ -33,7 +33,10 @@ export function LoansPage() {
 
   return (
     <>
-      <PageHeader title="Préstamos" subtitle="Cartera de tu alcance, por número, cliente o cédula." />
+      <PageHeader
+        title="Préstamos"
+        subtitle="Cartera de tu alcance, por número, cliente o cédula."
+      />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_220px]">
         <SearchInput
           value={q}

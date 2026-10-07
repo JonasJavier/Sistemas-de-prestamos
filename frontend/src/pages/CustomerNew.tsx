@@ -123,8 +123,8 @@ export function CustomerNewPage() {
           {candidates ? (
             <div className="space-y-2 sm:col-span-2">
               <Alert tone="warning">
-                Hay clientes parecidos (mismo teléfono y nombre similar). Revisa antes de crear
-                un duplicado:
+                Hay clientes parecidos (mismo teléfono y nombre similar). Revisa antes de crear un
+                duplicado:
               </Alert>
               <ul className="space-y-1 text-sm">
                 {candidates.map((candidate) => (

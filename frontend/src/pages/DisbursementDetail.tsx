@@ -11,7 +11,18 @@ import {
   loanDocumentUrl,
 } from '../api/origination'
 import { ScheduleTable } from '../components/ScheduleTable'
-import { Alert, Button, buttonClass, Card, Field, Input, PageHeader, Select, Spinner, Stat } from '../components/ui'
+import {
+  Alert,
+  Button,
+  buttonClass,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  Select,
+  Spinner,
+  Stat,
+} from '../components/ui'
 import { day, errorMessage, newIdempotencyKey, rd } from '../lib/format'
 
 type Method = 'cash' | 'transfer' | 'check'
@@ -35,16 +46,12 @@ function Done({ number }: { number: string }) {
             href={loanDocumentUrl(number, doc.id)}
             target="_blank"
             rel="noopener"
-            className="inline-flex h-11 items-center rounded-lg border border-edge bg-surface px-4 text-sm font-semibold hover:bg-brand-100 sm:h-9"
+            className={buttonClass('secondary')}
           >
             Imprimir {doc.label.toLowerCase()}
           </a>
         )) ?? <Spinner label="Preparando documentos…" />}
-        <Link
-          to="/prestamos/$numero"
-          params={{ numero: number }}
-          className={buttonClass()}
-        >
+        <Link to="/prestamos/$numero" params={{ numero: number }} className={buttonClass()}>
           Ver el expediente del préstamo
         </Link>
       </div>
@@ -86,7 +93,11 @@ export function DisbursementDetailPage() {
   if (done || app.loan_number) {
     return (
       <>
-        <PageHeader back={back} title={`Desembolso de ${app.number}`} subtitle={app.customer_name} />
+        <PageHeader
+          back={back}
+          title={`Desembolso de ${app.number}`}
+          subtitle={app.customer_name}
+        />
         <Done number={done ?? app.loan_number!} />
       </>
     )
@@ -103,7 +114,9 @@ export function DisbursementDetailPage() {
   }
   const data = preview.data!
   const sim = data.simulation
-  const accounts = data.accounts.filter((a) => (method === 'cash' ? a.kind === 'cash' : a.kind === 'bank'))
+  const accounts = data.accounts.filter((a) =>
+    method === 'cash' ? a.kind === 'cash' : a.kind === 'bank',
+  )
   const chosen = data.accounts.find((a) => a.id === source)
   const short = chosen ? Number(chosen.balance) < Number(sim.net_disbursed) : false
   const failure = run.error instanceof ApiError ? run.error.data : null
@@ -139,7 +152,11 @@ export function DisbursementDetailPage() {
           }
         />
         <Stat label="Neto a entregar" value={rd(sim.net_disbursed)} emphasis />
-        <Stat label="Primera cuota" value={day(sim.schedule[0]?.due_date)} hint={rd(sim.schedule[0]?.total)} />
+        <Stat
+          label="Primera cuota"
+          value={day(sim.schedule[0]?.due_date)}
+          hint={rd(sim.schedule[0]?.total)}
+        />
       </div>
 
       <Card className="space-y-3">
@@ -168,7 +185,9 @@ export function DisbursementDetailPage() {
           </Field>
           <Field label={method === 'cash' ? 'Caja de origen' : 'Cuenta bancaria de origen'}>
             <Select value={source} onChange={(e) => setSource(e.target.value)}>
-              <option value="">{accounts.length ? 'Elegir…' : 'No hay cuentas de este tipo'}</option>
+              <option value="">
+                {accounts.length ? 'Elegir…' : 'No hay cuentas de este tipo'}
+              </option>
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
                   {account.name} · saldo {rd(account.balance)}
@@ -176,12 +195,16 @@ export function DisbursementDetailPage() {
               ))}
             </Select>
           </Field>
-          <Field label={method === 'cash' ? 'Referencia (opcional)' : 'Número de transferencia o cheque'}>
+          <Field
+            label={method === 'cash' ? 'Referencia (opcional)' : 'Número de transferencia o cheque'}
+          >
             <Input value={reference} onChange={(e) => setReference(e.target.value)} />
           </Field>
         </div>
         {short ? (
-          <Alert tone="warning">La cuenta elegida no tiene fondos suficientes: no se permite sobregiro.</Alert>
+          <Alert tone="warning">
+            La cuenta elegida no tiene fondos suficientes: no se permite sobregiro.
+          </Alert>
         ) : null}
         {failure ? <Alert tone="danger">{errorMessage(failure)}</Alert> : null}
         <div className="flex justify-end">

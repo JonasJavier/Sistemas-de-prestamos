@@ -40,9 +40,7 @@ export const dateOf = (value: string | null | undefined) =>
     : '—'
 
 export const moment = (value: string | null | undefined) =>
-  value
-    ? new Date(value).toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' })
-    : '—'
+  value ? new Date(value).toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' }) : '—'
 
 export const FREQUENCY_TEXT: Record<string, string> = {
   daily: 'Diaria',
@@ -63,7 +61,9 @@ export const FREQUENCY_PLURAL: Record<string, string> = {
 
 export const installmentsText = (count: number, frequency: string) =>
   `${count} cuota${count === 1 ? '' : 's'} ${
-    count === 1 ? (FREQUENCY_TEXT[frequency] ?? frequency).toLowerCase() : (FREQUENCY_PLURAL[frequency] ?? frequency)
+    count === 1
+      ? (FREQUENCY_TEXT[frequency] ?? frequency).toLowerCase()
+      : (FREQUENCY_PLURAL[frequency] ?? frequency)
   }`
 
 export const RATE_UNIT_TEXT: Record<string, string> = {
@@ -135,7 +135,10 @@ export function percentToFraction(percent: string): string {
 }
 
 /** A company's lifecycle state (F19), for the owner panel and the subscription. */
-export const STATUS_BADGES: Record<'trial' | 'active' | 'suspended' | 'closed', { text: string; classes: string }> = {
+export const STATUS_BADGES: Record<
+  'trial' | 'active' | 'suspended' | 'closed',
+  { text: string; classes: string }
+> = {
   trial: { text: 'En prueba', classes: 'bg-gold-100 text-gold-800' },
   active: { text: 'Activa', classes: 'bg-success-600/15 text-success-600' },
   suspended: { text: 'Suspendida', classes: 'bg-warning-700/15 text-warning-700' },

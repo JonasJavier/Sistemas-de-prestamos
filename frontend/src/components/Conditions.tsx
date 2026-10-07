@@ -111,8 +111,8 @@ export function QuoteSummary({ data }: { data: Simulation }) {
         <Stat label="Total a pagar" value={rd(data.total_to_pay)} />
       </div>
       <p className="text-[12.5px] text-muted">
-        Tasa por período {pct(data.periodic_rate, 4)} · mensual equivalente{' '}
-        {pct(data.monthly_rate)} · anual equivalente {pct(data.annual_rate)}
+        Tasa por período {pct(data.periodic_rate, 4)} · mensual equivalente {pct(data.monthly_rate)}{' '}
+        · anual equivalente {pct(data.annual_rate)}
         {data.charges.length > 0
           ? ` · cargos: ${data.charges
               .map((charge) => `${charge.name} ${rd(charge.amount)}`)

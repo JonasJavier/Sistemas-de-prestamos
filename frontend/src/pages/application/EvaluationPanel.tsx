@@ -142,7 +142,10 @@ export function EvaluationPanel({
         ) : (
           <ul className="divide-y divide-edge rounded-lg border border-edge">
             {application.budget_items.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              >
                 <span>
                   <span className="text-muted">{KIND_TEXT[item.kind]} · </span>
                   {item.description}
@@ -182,9 +185,17 @@ export function EvaluationPanel({
               <Input value={description} onChange={(e) => setDescription(e.target.value)} />
             </Field>
             <Field label="Monto mensual">
-              <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <Input
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
             </Field>
-            <Button type="submit" variant="secondary" disabled={!description || !amount || add.isPending}>
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={!description || !amount || add.isPending}
+            >
               Agregar
             </Button>
           </form>

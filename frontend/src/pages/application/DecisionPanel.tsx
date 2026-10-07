@@ -9,7 +9,16 @@ import {
   returnApplication,
   type Application,
 } from '../../api/origination'
-import { Alert, Button, Card, Field, Input, Select, Textarea } from '../../components/ui'
+import {
+  Alert,
+  Button,
+  Card,
+  Field,
+  Input,
+  PercentInput,
+  Select,
+  Textarea,
+} from '../../components/ui'
 import { errorMessage, FREQUENCY_TEXT } from '../../lib/format'
 
 type Mode = 'approve' | 'adjust' | 'return' | 'reject'
@@ -53,7 +62,8 @@ export function DecisionPanel({
     },
     onSuccess: onDone,
   })
-  const failure = decide.error instanceof ApiError ? (decide.error.data as Record<string, unknown>) : null
+  const failure =
+    decide.error instanceof ApiError ? (decide.error.data as Record<string, unknown>) : null
   const issues = (failure?.issues as { message: string }[] | undefined) ?? []
 
   const LABELS: Record<Mode, string> = {
@@ -71,6 +81,7 @@ export function DecisionPanel({
           <button
             key={key}
             type="button"
+            aria-pressed={mode === key}
             onClick={() => setMode(key)}
             className={`rounded-full border px-3 py-1 text-sm ${
               mode === key
@@ -105,7 +116,7 @@ export function DecisionPanel({
             </Select>
           </Field>
           <Field label="Tasa">
-            <Input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />
+            <PercentInput value={rate} onChange={setRate} />
           </Field>
         </div>
       ) : null}
@@ -156,7 +167,7 @@ export function DecisionPanel({
             ((mode === 'return' || mode === 'reject') && !note.trim()) ||
             (mode === 'reject' && !reason)
           }
-          className={mode === 'reject' ? '!bg-danger-600 hover:!bg-danger-600/90' : ''}
+          variant={mode === 'reject' ? 'danger' : 'primary'}
         >
           {decide.isPending ? 'Guardando…' : LABELS[mode]}
         </Button>

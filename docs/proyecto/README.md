@@ -17,7 +17,7 @@ Aquí se define **Cobradía** antes de escribir código: tecnología, alcance, r
 | 5 | [Modelo de datos y estados](05-modelo-de-datos.md) | Entidades, relaciones y ciclos de vida de la solicitud, el préstamo, la cuota, el pago y la caja | **Aprobado** |
 | 6 | [Roles, permisos, seguridad y auditoría](06-seguridad-y-permisos.md) | Quién puede hacer qué, separación de funciones, 2FA y qué se audita | **Aprobado** |
 | 7 | [Mapa de pantallas y *wireframes*](07-pantallas.md) | Navegación, cada pantalla y su contenido; prototipo del flujo principal | **Aprobado** |
-| 8 | [Sistema de diseño](08-sistema-de-diseno.md) | Identidad de Cobradía (verde profundo y ámbar), tipografía, componentes, estados, móvil y accesibilidad | **Aprobado** |
+| 8 | [Sistema de diseño](08-sistema-de-diseno.md) | Identidad de Cobradía (paleta «Bosque y Arena»: verde bosque, arena, esmeralda y dorado; Sora + Inter), tipografía, componentes, estados, móvil y accesibilidad | **Aprobado** |
 | 9 | [Documentos, reportes e indicadores](09-documentos-reportes-indicadores.md) | Plantillas rediseñadas (pagaré, recibo, estado de cuenta, legales) y definición exacta de cada indicador | **Aprobado** |
 | 10 | [Plan de construcción](10-plan-de-construccion.md) | Fases, entregables, criterios de aceptación, estrategia de pruebas, entornos, despliegue y convenciones | **Aprobado** |
 
@@ -26,6 +26,8 @@ Aquí se define **Cobradía** antes de escribir código: tecnología, alcance, r
 ## Fases de construcción
 
 **No hay MVP** (decisión 016): se construye la versión completa en 10 fases internas y se lanza una sola vez. Al cierre de cada fase se hace una demostración al cliente en el entorno de pruebas. Detalle en [02 · §8](02-vision-y-alcance.md#8-estrategia-de-construcción-y-lanzamiento-aprobada); se aprueba en el paso 10.
+
+**Estado:** fases 0–3 aceptadas (la 3, el 06/10/2026), con un segundo *double check* de las fases 1–3 el 07/10/2026 (decisiones 061–062). Sigue la fase 4.
 
 | Fase | Qué se construye |
 | --- | --- |

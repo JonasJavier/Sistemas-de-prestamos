@@ -55,7 +55,9 @@ function Movements({ account }: { account: FinancialAccount }) {
               <td className="py-1.5 pr-3 text-right tabular-nums text-success-600">
                 {Number(row.debit) ? rd(row.debit) : ''}
               </td>
-              <td className="py-1.5 text-right tabular-nums">{Number(row.credit) ? rd(row.credit) : ''}</td>
+              <td className="py-1.5 text-right tabular-nums">
+                {Number(row.credit) ? rd(row.credit) : ''}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -82,7 +84,13 @@ export function AccountsPage({ me }: { me: Me }) {
   const [number, setNumber] = useState('')
   const create = useMutation({
     mutationFn: () =>
-      createAccount({ name, kind, bank_name: bank, account_number: number, branch: branch || null }),
+      createAccount({
+        name,
+        kind,
+        bank_name: bank,
+        account_number: number,
+        branch: branch || null,
+      }),
     onSuccess: () => {
       setName('')
       setBank('')
@@ -110,7 +118,8 @@ export function AccountsPage({ me }: { me: Me }) {
       queryClient.invalidateQueries({ queryKey: ['account'] })
     },
   })
-  const failure = [create.error, move.error].find((e) => e instanceof ApiError) as ApiError | undefined
+  const failure = [create.error, move.error].find((e) => e instanceof ApiError) as
+    ApiError | undefined
   const rows = accounts.data ?? []
   const total = rows.reduce((sum, a) => sum + Number(a.balance), 0)
 
@@ -122,11 +131,17 @@ export function AccountsPage({ me }: { me: Me }) {
         actions={
           canManage ? (
             <>
-              <Button variant="secondary" onClick={() => setPanel(panel === 'transfer' ? null : 'transfer')}>
+              <Button
+                variant="secondary"
+                onClick={() => setPanel(panel === 'transfer' ? null : 'transfer')}
+              >
                 Transferir
               </Button>
               {isManager ? (
-                <Button variant="secondary" onClick={() => setPanel(panel === 'capital' ? null : 'capital')}>
+                <Button
+                  variant="secondary"
+                  onClick={() => setPanel(panel === 'capital' ? null : 'capital')}
+                >
                   Aporte o retiro
                 </Button>
               ) : null}
@@ -152,13 +167,25 @@ export function AccountsPage({ me }: { me: Me }) {
               </Select>
             </Field>
             <Field label="Nombre">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Popular operativa" />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Popular operativa"
+              />
             </Field>
             <Field label="Banco">
-              <Input value={bank} onChange={(e) => setBank(e.target.value)} disabled={kind === 'cash'} />
+              <Input
+                value={bank}
+                onChange={(e) => setBank(e.target.value)}
+                disabled={kind === 'cash'}
+              />
             </Field>
             <Field label="Número (se guardan solo los últimos 4)">
-              <Input value={number} onChange={(e) => setNumber(e.target.value)} disabled={kind === 'cash'} />
+              <Input
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
+                disabled={kind === 'cash'}
+              />
             </Field>
             <Field label="Sucursal">
               <Select value={branch} onChange={(e) => setBranch(e.target.value)}>
@@ -199,7 +226,10 @@ export function AccountsPage({ me }: { me: Me }) {
               </Field>
             ) : (
               <Field label="Movimiento">
-                <Select value={direction} onChange={(e) => setDirection(e.target.value as 'in' | 'out')}>
+                <Select
+                  value={direction}
+                  onChange={(e) => setDirection(e.target.value as 'in' | 'out')}
+                >
                   <option value="in">Aporte de capital (entra)</option>
                   <option value="out">Retiro de capital (sale)</option>
                 </Select>
@@ -216,7 +246,11 @@ export function AccountsPage({ me }: { me: Me }) {
               </Select>
             </Field>
             <Field label="Monto">
-              <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <Input
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
             </Field>
             <Field label={panel === 'capital' ? 'Motivo (obligatorio)' : 'Nota'}>
               <Input value={note} onChange={(e) => setNote(e.target.value)} />
@@ -224,7 +258,9 @@ export function AccountsPage({ me }: { me: Me }) {
             <div className="sm:col-span-4 flex justify-end">
               <Button
                 type="submit"
-                disabled={!target || !amount || (panel === 'transfer' ? !source : !note) || move.isPending}
+                disabled={
+                  !target || !amount || (panel === 'transfer' ? !source : !note) || move.isPending
+                }
               >
                 {panel === 'transfer' ? 'Transferir' : 'Registrar'}
               </Button>
@@ -252,7 +288,9 @@ export function AccountsPage({ me }: { me: Me }) {
                   <span>
                     <span className="font-semibold">{account.name}</span>
                     {account.account_number_last4 ? (
-                      <span className="ml-1 text-muted tabular-nums">••{account.account_number_last4}</span>
+                      <span className="ml-1 text-muted tabular-nums">
+                        ••{account.account_number_last4}
+                      </span>
                     ) : null}{' '}
                     <Badge tone={account.kind === 'cash' ? 'brand' : 'info'}>
                       {account.kind === 'cash' ? 'Caja' : account.bank_name || 'Banco'}
@@ -263,7 +301,9 @@ export function AccountsPage({ me }: { me: Me }) {
                       {account.branch_name ? ` · ${account.branch_name}` : ' · toda la empresa'}
                     </span>
                   </span>
-                  <span className="font-display text-lg font-bold tabular-nums">{rd(account.balance)}</span>
+                  <span className="font-display text-lg font-bold tabular-nums">
+                    {rd(account.balance)}
+                  </span>
                 </button>
                 {open === account.id ? (
                   <div className="border-t border-edge bg-surface-2 px-4 py-3">

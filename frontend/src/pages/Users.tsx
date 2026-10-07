@@ -16,7 +16,17 @@ import {
   type Me,
 } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, RowList, Spinner } from '../components/ui'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  RowList,
+  Spinner,
+} from '../components/ui'
 
 const schema = z.object({
   email: z.email('Escribe un correo válido.'),
@@ -31,9 +41,7 @@ const selectClasses =
 
 export function UsersPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
-  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(
-    null,
-  )
+  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null)
 
   const users = useQuery({ queryKey: ['users'], queryFn: listUsers })
   const branches = useQuery({ queryKey: ['branches'], queryFn: listBranches })
@@ -76,7 +84,10 @@ export function UsersPage({ me }: { me: Me }) {
 
   return (
     <>
-      <PageHeader title="Usuarios" subtitle="Invita a tu equipo: cada quien crea su propia contraseña." />
+      <PageHeader
+        title="Usuarios"
+        subtitle="Invita a tu equipo: cada quien crea su propia contraseña."
+      />
 
       <Card>
         <h2 className="mb-3 text-base font-semibold">Invitar a alguien del equipo</h2>

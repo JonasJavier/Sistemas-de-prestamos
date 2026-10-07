@@ -1,15 +1,19 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
-// https://vite.dev/config/
+// The Django API during development; same-origin in production (Caddy).
+// Port 8800: another local project already owns the classic 8000.
+const API_PROXY = { '/api': 'http://127.0.0.1:8800' }
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      // The Django API during development; same-origin in production (Caddy).
-      // Port 8800: another local project already owns the classic 8000.
-      '/api': 'http://127.0.0.1:8800',
-    },
+  test: {
+    include: ['src/**/*.test.ts'],
+    // Same zone as the business (doc 03): dates must not depend on the machine.
+    env: { TZ: 'America/Santo_Domingo' },
   },
+  server: { proxy: API_PROXY },
+  // `vite preview` serves the production build for the end-to-end tests in CI.
+  preview: { proxy: API_PROXY },
 })

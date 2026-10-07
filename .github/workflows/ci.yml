@@ -51,6 +51,10 @@ jobs:
         run: uv run ruff format --check .
       - name: Check missing migrations
         run: uv run python manage.py makemigrations --check --dry-run --settings=config.settings.test
+      - name: Known vulnerabilities (doc 06 - 8)
+        run: |
+          uv export --frozen --no-hashes --no-dev --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit --disable-pip --no-deps -r "$RUNNER_TEMP/requirements.txt"
       - name: Tests
         run: uv run pytest -q
 
@@ -73,5 +77,98 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
+      - name: Format
+        run: pnpm format:check
+      - name: Unit tests
+        run: pnpm test
+      - name: Known vulnerabilities (doc 06 - 8)
+        run: pnpm audit --prod
       - name: Build
         run: pnpm build
+
+  # The phase demos as a user lives them (doc 10 - 2): the real API, the
+  # production build and a browser, over the demo seed.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:8
+        ports:
+          - 6379:6379
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+    env:
+      DATABASE_URL: postgres://cobradia:cobradia@localhost:5432/cobradia
+      REDIS_CACHE_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/1
+      CELERY_RESULT_BACKEND: redis://localhost:6379/2
+      EMAIL_HOST: localhost
+      EMAIL_PORT: "1025"
+      FRONTEND_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Create non-superuser app role
+        run: |
+          psql postgres://postgres:postgres@localhost:5432/postgres \
+            -c "CREATE ROLE cobradia LOGIN PASSWORD 'cobradia' CREATEDB;" \
+            -c "CREATE DATABASE cobradia OWNER cobradia;"
+      - name: Backend with the demo seed
+        working-directory: backend
+        run: |
+          uv sync --frozen
+          uv run python manage.py migrate --noinput
+          uv run python manage.py seed_demo
+          nohup uv run python manage.py runserver 127.0.0.1:8800 --noreload > "$RUNNER_TEMP/backend.log" 2>&1 &
+      - name: Frontend production build
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          nohup pnpm preview --port 5173 --strictPort > "$RUNNER_TEMP/frontend.log" 2>&1 &
+      - name: Wait for both servers
+        run: |
+          for url in http://127.0.0.1:8800/api/v1/csrf/ http://localhost:5173/entrar; do
+            for i in $(seq 1 60); do curl -fsS "$url" > /dev/null && break; sleep 1; done
+            curl -fsS "$url" > /dev/null
+          done
+      - name: Browser
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end tests
+        working-directory: frontend
+        run: pnpm e2e
+      - name: Server logs and traces on failure
+        if: failure()
+        run: |
+          tail -n 100 "$RUNNER_TEMP/backend.log" "$RUNNER_TEMP/frontend.log"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: frontend/test-results
+          retention-days: 7

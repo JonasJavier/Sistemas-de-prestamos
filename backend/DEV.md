@@ -10,7 +10,34 @@ uv run python manage.py runserver 127.0.0.1:8800   # el 8000 lo ocupa otro proye
 
 Frontend: `pnpm -C ../frontend dev` (proxy `/api` → 127.0.0.1:8800). Correos en http://localhost:8025.
 
-## Cuentas de prueba locales (solo esta base de desarrollo)
+## Datos de demostración
+
+```bash
+uv run python manage.py seed_demo
+```
+
+Crea, si no existen, datos ficticios para demos y pruebas (doc 10 §3): el dueño de la plataforma, **Financiera Modelo SRL** con un usuario por rol, una caja con RD$ 500,000 y tres clientes con cédula válida, y **Préstamos del Cibao SRL** para mostrar el aislamiento. Se puede correr las veces que haga falta: no toca lo que ya existe. Con `DEBUG` apagado se niega, salvo `--allow-non-debug` (solo en el entorno de pruebas).
+
+| Cuenta | Rol |
+| --- | --- |
+| `dueno@cobradia.test` | Dueño de la plataforma |
+| `gerente@modelo.test` | Gerente y administrador de Financiera Modelo |
+| `supervisor@modelo.test` · `oficial@modelo.test` · `cajera@modelo.test` · `cobrador@modelo.test` · `contabilidad@modelo.test` | Un rol cada una |
+| `gerente@cibao.test` | Gerente de Préstamos del Cibao (la otra empresa) |
+
+Todas usan la contraseña `demo-cobradia-2026`.
+
+## Pruebas de extremo a extremo
+
+Con PostgreSQL, el backend (`runserver 127.0.0.1:8800`), el frontend (`pnpm -C ../frontend dev`) y `seed_demo` corriendo:
+
+```bash
+pnpm -C ../frontend e2e
+```
+
+Recorren la demo de la fase 3 (oficial → supervisor → cajera), el acceso, el aislamiento entre empresas y el uso en el celular. En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Cada corrida crea un préstamo nuevo en Financiera Modelo.
+
+## Cuentas sembradas a mano en las fases 1 y 3 (base local de Jonas)
 
 | Cuenta | Rol | Contraseña |
 | --- | --- | --- |

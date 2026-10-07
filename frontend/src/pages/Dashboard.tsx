@@ -97,7 +97,9 @@ function Today({ me }: { me: Me }) {
         label="Préstamos activos"
         value={loans.data?.count}
         hint={
-          loans.data ? `${rd(loans.data.totals.principal_outstanding)} de capital` : 'Cartera de tu alcance'
+          loans.data
+            ? `${rd(loans.data.totals.principal_outstanding)} de capital`
+            : 'Cartera de tu alcance'
         }
       />
     </section>

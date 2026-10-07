@@ -22,7 +22,9 @@ type FormData = z.infer<typeof schema>
 export function PasswordResetPage() {
   const { key } = useParams({ from: '/recuperar/$key' })
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
-  const mutation = useMutation({ mutationFn: (data: FormData) => resetPassword(key, data.password) })
+  const mutation = useMutation({
+    mutationFn: (data: FormData) => resetPassword(key, data.password),
+  })
   const badKey = mutation.isError && authErrorCode(mutation.error) === 'invalid_password_reset'
 
   return (

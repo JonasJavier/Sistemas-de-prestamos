@@ -56,7 +56,10 @@ export function BranchesPage() {
 
   return (
     <>
-      <PageHeader title="Sucursales" subtitle="Cada sucursal numera sus documentos con su código." />
+      <PageHeader
+        title="Sucursales"
+        subtitle="Cada sucursal numera sus documentos con su código."
+      />
       <Card>
         <h2 className="mb-3 text-base font-semibold">Nueva sucursal</h2>
         <form
@@ -126,9 +129,7 @@ export function BranchesPage() {
                   <td className="py-2 text-right">
                     <Button
                       variant="secondary"
-                      onClick={() =>
-                        toggle.mutate({ id: branch.id, is_active: !branch.is_active })
-                      }
+                      onClick={() => toggle.mutate({ id: branch.id, is_active: !branch.is_active })}
                       disabled={toggle.isPending}
                     >
                       {branch.is_active ? 'Desactivar' : 'Activar'}

@@ -102,8 +102,7 @@ export const getEmployment = (id: string): Promise<Employment> =>
   api(`/api/v1/clientes/${id}/empleo/`)
 export const putEmployment = (id: string, data: Partial<Employment>): Promise<Employment> =>
   api(`/api/v1/clientes/${id}/empleo/`, { method: 'PUT', body: data })
-export const getBusiness = (id: string): Promise<Business> =>
-  api(`/api/v1/clientes/${id}/negocio/`)
+export const getBusiness = (id: string): Promise<Business> => api(`/api/v1/clientes/${id}/negocio/`)
 export const putBusiness = (id: string, data: Partial<Business>): Promise<Business> =>
   api(`/api/v1/clientes/${id}/negocio/`, { method: 'PUT', body: data })
 
@@ -166,8 +165,7 @@ export function uploadFile(customer: string, kind: string, file: File) {
   return apiUpload<CustomerFileItem>('/api/v1/archivos/', form)
 }
 
-export const deleteFile = (id: string) =>
-  api<null>(`/api/v1/archivos/${id}/`, { method: 'DELETE' })
+export const deleteFile = (id: string) => api<null>(`/api/v1/archivos/${id}/`, { method: 'DELETE' })
 export const fileDownloadUrl = (id: string) => `/api/v1/archivos/${id}/download/`
 export const getFileLink = (id: string) =>
   api<{ url: string; expires_in: number }>(`/api/v1/archivos/${id}/link/`, { method: 'POST' })

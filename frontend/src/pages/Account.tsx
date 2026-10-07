@@ -3,12 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
-import {
-  activateTotp,
-  getRecoveryCodes,
-  getTotpConfig,
-  regenerateRecoveryCodes,
-} from '../api/auth'
+import { activateTotp, getRecoveryCodes, getTotpConfig, regenerateRecoveryCodes } from '../api/auth'
 import { ApiError } from '../api/client'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
 
@@ -94,8 +89,8 @@ function TwoFactorCard() {
       {totp.data && !totp.data.active && totp.data.config ? (
         <div className="space-y-4">
           <p className="text-sm text-muted">
-            1. Escanea este código con tu app autenticadora (Google Authenticator, Authy o
-            similar). 2. Escribe el código de 6 dígitos que te muestre.
+            1. Escanea este código con tu app autenticadora (Google Authenticator, Authy o similar).
+            2. Escribe el código de 6 dígitos que te muestre.
           </p>
           <div className="flex flex-col items-start gap-4 sm:flex-row">
             <div className="rounded-lg bg-white p-3">
@@ -138,8 +133,8 @@ function TwoFactorCard() {
           {freshCodes ? (
             <div className="space-y-2">
               <p className="text-sm font-medium">
-                Guarda estos códigos de respaldo en un lugar seguro (cada uno sirve una sola
-                vez; no volverán a mostrarse):
+                Guarda estos códigos de respaldo en un lugar seguro (cada uno sirve una sola vez; no
+                volverán a mostrarse):
               </p>
               <div className="grid grid-cols-2 gap-1 rounded-lg border border-edge bg-canvas p-3 font-mono text-sm tabular-nums sm:grid-cols-5">
                 {freshCodes.map((c) => (

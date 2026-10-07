@@ -74,7 +74,15 @@ function payloadOf(product: LoanProduct): ProductPayload {
   return rest
 }
 
-function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Check({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
   return (
     <label className="flex items-center gap-2 text-sm">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
@@ -89,7 +97,8 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
   const [value, setValue] = useState('')
   const [mode, setMode] = useState<ProductCharge['mode']>('discounted')
   const add = useMutation({
-    mutationFn: () => createCharge({ product: product.id, name, basis, value, mode, is_active: true }),
+    mutationFn: () =>
+      createCharge({ product: product.id, name, basis, value, mode, is_active: true }),
     onSuccess: () => {
       setName('')
       setValue('')
@@ -97,7 +106,8 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
     },
   })
   const toggle = useMutation({
-    mutationFn: (charge: ProductCharge) => updateCharge(charge.id, { is_active: !charge.is_active }),
+    mutationFn: (charge: ProductCharge) =>
+      updateCharge(charge.id, { is_active: !charge.is_active }),
     onSuccess: onChange,
   })
   const MODE: Record<string, string> = {
@@ -111,10 +121,13 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
       {product.charges.length ? (
         <ul className="divide-y divide-edge rounded-lg border border-edge">
           {product.charges.map((charge) => (
-            <li key={charge.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+            <li
+              key={charge.id}
+              className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+            >
               <span className={charge.is_active ? '' : 'text-muted line-through'}>
-                {charge.name} · {charge.basis === 'percent' ? pct(charge.value) : rd(charge.value)} ·{' '}
-                {MODE[charge.mode]}
+                {charge.name} · {charge.basis === 'percent' ? pct(charge.value) : rd(charge.value)}{' '}
+                · {MODE[charge.mode]}
               </span>
               <button
                 type="button"
@@ -137,10 +150,17 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
         }}
       >
         <Field label="Nombre">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Gastos de cierre" />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Gastos de cierre"
+          />
         </Field>
         <Field label="Base">
-          <Select value={basis} onChange={(e) => setBasis(e.target.value as ProductCharge['basis'])}>
+          <Select
+            value={basis}
+            onChange={(e) => setBasis(e.target.value as ProductCharge['basis'])}
+          >
             <option value="percent">% del monto</option>
             <option value="fixed">Monto fijo</option>
           </Select>
@@ -170,13 +190,17 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
           Agregar
         </Button>
       </form>
-      {add.error instanceof ApiError ? <Alert tone="danger">{errorMessage(add.error.data)}</Alert> : null}
+      {add.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(add.error.data)}</Alert>
+      ) : null}
     </div>
   )
 }
 
 function Preview({ product }: { product: LoanProduct }) {
-  const amount = String(Math.round((Number(product.min_amount) + Number(product.max_amount)) / 2 / 100) * 100)
+  const amount = String(
+    Math.round((Number(product.min_amount) + Number(product.max_amount)) / 2 / 100) * 100,
+  )
   const request = {
     product: product.id,
     amount,
@@ -209,17 +233,27 @@ function Preview({ product }: { product: LoanProduct }) {
   )
 }
 
-function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p: LoanProduct) => void }) {
+function Editor({
+  product,
+  onSaved,
+}: {
+  product: LoanProduct | null
+  onSaved: (p: LoanProduct) => void
+}) {
   const [form, setForm] = useState<ProductPayload>(product ? payloadOf(product) : BLANK)
   const set = <K extends keyof ProductPayload>(key: K, value: ProductPayload[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
   const setPolicy = (key: keyof ProductPayload['late_fee_policy'], value: string | number | null) =>
-    setForm((current) => ({ ...current, late_fee_policy: { ...current.late_fee_policy, [key]: value } }))
+    setForm((current) => ({
+      ...current,
+      late_fee_policy: { ...current.late_fee_policy, [key]: value },
+    }))
   const save = useMutation({
     mutationFn: () => (product ? updateProduct(product.id, form) : createProduct(form)),
     onSuccess: onSaved,
   })
-  const errors = save.error instanceof ApiError ? (save.error.data as Record<string, unknown>) : null
+  const errors =
+    save.error instanceof ApiError ? (save.error.data as Record<string, unknown>) : null
   const err = (key: string) => {
     const value = errors?.[key]
     return Array.isArray(value) ? String(value[0]) : typeof value === 'string' ? value : undefined
@@ -239,7 +273,10 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
           <Input value={form.name} onChange={(e) => set('name', e.target.value)} />
         </Field>
         <Field label="Tipo">
-          <Select value={form.type} onChange={(e) => set('type', e.target.value as LoanProduct['type'])}>
+          <Select
+            value={form.type}
+            onChange={(e) => set('type', e.target.value as LoanProduct['type'])}
+          >
             {Object.entries(TYPES).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
@@ -256,7 +293,9 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
                 ...current,
                 method,
                 payment_rounding:
-                  method === 'interest_only' || method === 'open' ? 'cent' : current.payment_rounding,
+                  method === 'interest_only' || method === 'open'
+                    ? 'cent'
+                    : current.payment_rounding,
               }))
             }}
           >
@@ -280,7 +319,9 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
               onChange={(on) =>
                 set(
                   'allowed_frequencies',
-                  on ? [...form.allowed_frequencies, key] : form.allowed_frequencies.filter((f) => f !== key),
+                  on
+                    ? [...form.allowed_frequencies, key]
+                    : form.allowed_frequencies.filter((f) => f !== key),
                 )
               }
             />
@@ -293,19 +334,38 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="Monto mínimo" error={err('min_amount')}>
-          <Input inputMode="decimal" value={form.min_amount} onChange={(e) => set('min_amount', e.target.value)} />
+          <Input
+            inputMode="decimal"
+            value={form.min_amount}
+            onChange={(e) => set('min_amount', e.target.value)}
+          />
         </Field>
         <Field label="Monto máximo" error={err('max_amount')}>
-          <Input inputMode="decimal" value={form.max_amount} onChange={(e) => set('max_amount', e.target.value)} />
+          <Input
+            inputMode="decimal"
+            value={form.max_amount}
+            onChange={(e) => set('max_amount', e.target.value)}
+          />
         </Field>
         <Field label="Cuotas mínimas" error={err('min_term')}>
-          <Input inputMode="numeric" value={form.min_term} onChange={(e) => set('min_term', Number(e.target.value))} />
+          <Input
+            inputMode="numeric"
+            value={form.min_term}
+            onChange={(e) => set('min_term', Number(e.target.value))}
+          />
         </Field>
         <Field label="Cuotas máximas" error={err('max_term')}>
-          <Input inputMode="numeric" value={form.max_term} onChange={(e) => set('max_term', Number(e.target.value))} />
+          <Input
+            inputMode="numeric"
+            value={form.max_term}
+            onChange={(e) => set('max_term', Number(e.target.value))}
+          />
         </Field>
         <Field label="Unidad de la tasa">
-          <Select value={form.rate_unit} onChange={(e) => set('rate_unit', e.target.value as LoanProduct['rate_unit'])}>
+          <Select
+            value={form.rate_unit}
+            onChange={(e) => set('rate_unit', e.target.value as LoanProduct['rate_unit'])}
+          >
             <option value="per_period">Por período</option>
             <option value="monthly">Mensual</option>
             <option value="annual">Anual</option>
@@ -330,7 +390,9 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
           <Select
             value={form.payment_rounding}
             disabled={interestOnly}
-            onChange={(e) => set('payment_rounding', e.target.value as LoanProduct['payment_rounding'])}
+            onChange={(e) =>
+              set('payment_rounding', e.target.value as LoanProduct['payment_rounding'])
+            }
           >
             <option value="cent">Al centavo</option>
             <option value="peso">Al peso (hacia arriba)</option>
@@ -341,14 +403,19 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
         <Field label="Orden de aplicación">
           <Select
             value={form.allocation_order}
-            onChange={(e) => set('allocation_order', e.target.value as LoanProduct['allocation_order'])}
+            onChange={(e) =>
+              set('allocation_order', e.target.value as LoanProduct['allocation_order'])
+            }
           >
             <option value="standard">Cargos → mora → interés → capital</option>
             <option value="proportional">Proporcional</option>
           </Select>
         </Field>
         <Field label="Garantía exigida">
-          <Select value={form.guarantee} onChange={(e) => set('guarantee', e.target.value as LoanProduct['guarantee'])}>
+          <Select
+            value={form.guarantee}
+            onChange={(e) => set('guarantee', e.target.value as LoanProduct['guarantee'])}
+          >
             <option value="none">No requerida</option>
             <option value="guarantor">Garante</option>
             <option value="asset">Bien en garantía</option>
@@ -365,9 +432,21 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
       </div>
 
       <div className="flex flex-wrap gap-4">
-        <Check label="Cobra sábados" checked={form.collect_saturdays} onChange={(v) => set('collect_saturdays', v)} />
-        <Check label="Cobra domingos" checked={form.collect_sundays} onChange={(v) => set('collect_sundays', v)} />
-        <Check label="Cobra feriados" checked={form.collect_holidays} onChange={(v) => set('collect_holidays', v)} />
+        <Check
+          label="Cobra sábados"
+          checked={form.collect_saturdays}
+          onChange={(v) => set('collect_saturdays', v)}
+        />
+        <Check
+          label="Cobra domingos"
+          checked={form.collect_sundays}
+          onChange={(v) => set('collect_sundays', v)}
+        />
+        <Check
+          label="Cobra feriados"
+          checked={form.collect_holidays}
+          onChange={(v) => set('collect_holidays', v)}
+        />
         <Check
           label="Liquidación: interés del período en curso completo"
           checked={form.payoff_full_current_period}
@@ -387,7 +466,10 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
             />
           </Field>
           <Field label="Método">
-            <Select value={form.late_fee_policy.fee_method} onChange={(e) => setPolicy('fee_method', e.target.value)}>
+            <Select
+              value={form.late_fee_policy.fee_method}
+              onChange={(e) => setPolicy('fee_method', e.target.value)}
+            >
               <option value="prorated_daily">Prorrateada por día</option>
               <option value="full_period">% por período completo</option>
               <option value="fixed">Cargo fijo por cuota</option>
@@ -416,7 +498,10 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
         </div>
       </div>
 
-      <Field label="Documentos requeridos para aprobar (uno por línea)" error={err('required_documents')}>
+      <Field
+        label="Documentos requeridos para aprobar (uno por línea)"
+        error={err('required_documents')}
+      >
         <Textarea
           value={form.required_documents.join('\n')}
           onChange={(e) => set('required_documents', e.target.value.split('\n'))}

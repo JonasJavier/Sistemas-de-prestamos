@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
+import { usePrompt } from '../components/Dialog'
 
 import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
@@ -49,7 +50,9 @@ function LendingTab({ customerId }: { customerId: string }) {
                 >
                   {loan.number}
                 </Link>
-                <Badge tone={LOAN_STATUS[loan.status]?.tone}>{LOAN_STATUS[loan.status]?.label}</Badge>
+                <Badge tone={LOAN_STATUS[loan.status]?.tone}>
+                  {LOAN_STATUS[loan.status]?.label}
+                </Badge>
                 <span className="tabular-nums">{rd(loan.principal_outstanding)}</span>
               </li>
             ))}
@@ -88,6 +91,7 @@ function LendingTab({ customerId }: { customerId: string }) {
 }
 
 export function CustomerDetailPage({ me }: { me: Me }) {
+  const [dialog, ask] = usePrompt()
   const { id } = useParams({ from: '/app/clientes/$id' })
   const [tab, setTab] = useState<TabKey>('resumen')
   const queryClient = useQueryClient()
@@ -106,6 +110,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
 
   return (
     <>
+      {dialog}
       <div className="flex items-center justify-between gap-3">
         <div>
           <Link to="/clientes" className="text-[12.5px] text-muted hover:underline">
@@ -118,11 +123,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {hasRole(me, ACCESS.originate) ? (
-            <Link
-              to="/solicitudes/nueva"
-              search={{ cliente: id }}
-              className={buttonClass()}
-            >
+            <Link to="/solicitudes/nueva" search={{ cliente: id }} className={buttonClass()}>
               Nueva solicitud
             </Link>
           ) : null}
@@ -138,8 +139,16 @@ export function CustomerDetailPage({ me }: { me: Me }) {
           {data.status === 'active' ? (
             <Button
               variant="secondary"
-              onClick={() => {
-                const reason = window.prompt('Motivo del bloqueo («no prestar»):')
+              onClick={async () => {
+                const reason = await ask({
+                  title: `Bloquear a ${data.display_name}`,
+                  description: 'Un cliente bloqueado no recibe préstamos nuevos («no prestar»).',
+                  label: 'Motivo del bloqueo',
+                  type: 'textarea',
+                  required: true,
+                  confirmText: 'Bloquear',
+                  danger: true,
+                })
                 if (reason) block.mutate(reason)
               }}
               disabled={block.isPending}

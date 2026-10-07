@@ -29,7 +29,16 @@ import {
   Tabs,
   Textarea,
 } from '../components/ui'
-import { day, errorMessage, installmentsText, LOAN_STATUS, METHOD_TEXT, moment, pct, rd } from '../lib/format'
+import {
+  day,
+  errorMessage,
+  installmentsText,
+  LOAN_STATUS,
+  METHOD_TEXT,
+  moment,
+  pct,
+  rd,
+} from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 
 const TABS = [
@@ -72,10 +81,12 @@ function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) 
       <Field label="Nota">
         <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
-      {run.error instanceof ApiError ? <Alert tone="danger">{errorMessage(run.error.data)}</Alert> : null}
+      {run.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
+      ) : null}
       <div className="flex justify-end">
         <Button
-          className="!bg-danger-600 hover:!bg-danger-600/90"
+          variant="danger"
           disabled={!reason || !note.trim() || run.isPending}
           onClick={() => run.mutate()}
         >
@@ -145,7 +156,11 @@ export function LoanDetailPage({ me }: { me: Me }) {
         }
         subtitle={
           <>
-            <Link to="/clientes/$id" params={{ id: data.customer }} className="font-medium text-ink hover:underline">
+            <Link
+              to="/clientes/$id"
+              params={{ id: data.customer }}
+              className="font-medium text-ink hover:underline"
+            >
               {data.customer_name}
             </Link>{' '}
             · {data.product_name} · sucursal {data.branch_code}
@@ -153,7 +168,11 @@ export function LoanDetailPage({ me }: { me: Me }) {
               <>
                 {' '}
                 · solicitud{' '}
-                <Link to="/solicitudes/$id" params={{ id: data.application }} className="hover:underline">
+                <Link
+                  to="/solicitudes/$id"
+                  params={{ id: data.application }}
+                  className="hover:underline"
+                >
                   {data.application_number}
                 </Link>
               </>
@@ -175,7 +194,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
         </Alert>
       ) : null}
       {data.status === 'active' && !data.promissory_note_signed_at ? (
-        <Alert tone="warning">Pagaré firmado pendiente: súbelo escaneado en la pestaña Documentos.</Alert>
+        <Alert tone="warning">
+          Pagaré firmado pendiente: súbelo escaneado en la pestaña Documentos.
+        </Alert>
       ) : null}
       {voiding ? (
         <VoidDialog
@@ -216,8 +237,8 @@ export function LoanDetailPage({ me }: { me: Me }) {
               <dd className="text-right tabular-nums">{pct(terms.periodic_rate, 4)}</dd>
               <dt className="text-muted">Mora</dt>
               <dd className="text-right">
-                {pct(terms.late_fee_monthly_rate)} mensual · {terms.late_fee_grace_days} días de gracia · tope{' '}
-                {pct(terms.late_fee_cap_pct)}
+                {pct(terms.late_fee_monthly_rate)} mensual · {terms.late_fee_grace_days} días de
+                gracia · tope {pct(terms.late_fee_cap_pct)}
               </dd>
               <dt className="text-muted">Aprobó</dt>
               <dd className="text-right">{terms.approved_by_name ?? '—'}</dd>
@@ -234,7 +255,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
                 <dt className="text-muted">Bruto</dt>
                 <dd className="text-right tabular-nums">{rd(data.disbursement.gross)}</dd>
                 <dt className="text-muted">Neto entregado</dt>
-                <dd className="text-right font-semibold tabular-nums">{rd(data.disbursement.net)}</dd>
+                <dd className="text-right font-semibold tabular-nums">
+                  {rd(data.disbursement.net)}
+                </dd>
                 <dt className="text-muted">Asiento</dt>
                 <dd className="text-right tabular-nums">{data.disbursement.entry_number}</dd>
                 <dt className="text-muted">Desembolsó</dt>
@@ -265,8 +288,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
           ) : (
             <>
               <p className="mb-2 text-[12.5px] text-muted">
-                Versión {terms?.version} del calendario (desde {day(terms?.effective_from)}). Cada cambio de
-                fecha, abono a capital o reestructuración crea una versión nueva; ninguna se modifica.
+                Versión {terms?.version} del calendario (desde {day(terms?.effective_from)}). Cada
+                cambio de fecha, abono a capital o reestructuración crea una versión nueva; ninguna
+                se modifica.
               </p>
               <ScheduleTable
                 principal={terms?.principal}
@@ -344,7 +368,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
           <div className="border-t border-edge pt-3">
             <h3 className="mb-2 text-sm font-semibold">Pagaré firmado</h3>
             {data.promissory_note_signed_at ? (
-              <p className="text-sm text-success-600">Recibido el {moment(data.promissory_note_signed_at)}.</p>
+              <p className="text-sm text-success-600">
+                Recibido el {moment(data.promissory_note_signed_at)}.
+              </p>
             ) : (
               <form
                 className="flex flex-wrap items-end gap-2"

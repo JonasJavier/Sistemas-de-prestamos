@@ -24,27 +24,57 @@ import { LoginPage, type LoginSearch } from './pages/Login'
 // when the pointer rests on a link to it (defaultPreload: 'intent').
 const AccountPage = lazyRouteComponent(() => import('./pages/Account'), 'AccountPage')
 const AccountsPage = lazyRouteComponent(() => import('./pages/Accounts'), 'AccountsPage')
-const ApplicationDetailPage = lazyRouteComponent(() => import('./pages/ApplicationDetail'), 'ApplicationDetailPage')
-const ApplicationNewPage = lazyRouteComponent(() => import('./pages/ApplicationNew'), 'ApplicationNewPage')
-const ApplicationsPage = lazyRouteComponent(() => import('./pages/Applications'), 'ApplicationsPage')
+const ApplicationDetailPage = lazyRouteComponent(
+  () => import('./pages/ApplicationDetail'),
+  'ApplicationDetailPage',
+)
+const ApplicationNewPage = lazyRouteComponent(
+  () => import('./pages/ApplicationNew'),
+  'ApplicationNewPage',
+)
+const ApplicationsPage = lazyRouteComponent(
+  () => import('./pages/Applications'),
+  'ApplicationsPage',
+)
 const BranchesPage = lazyRouteComponent(() => import('./pages/Branches'), 'BranchesPage')
-const CustomerDetailPage = lazyRouteComponent(() => import('./pages/CustomerDetail'), 'CustomerDetailPage')
+const CustomerDetailPage = lazyRouteComponent(
+  () => import('./pages/CustomerDetail'),
+  'CustomerDetailPage',
+)
 const CustomerNewPage = lazyRouteComponent(() => import('./pages/CustomerNew'), 'CustomerNewPage')
 const CustomersPage = lazyRouteComponent(() => import('./pages/Customers'), 'CustomersPage')
-const DisbursementDetailPage = lazyRouteComponent(() => import('./pages/DisbursementDetail'), 'DisbursementDetailPage')
-const DisbursementsPage = lazyRouteComponent(() => import('./pages/Disbursements'), 'DisbursementsPage')
+const DisbursementDetailPage = lazyRouteComponent(
+  () => import('./pages/DisbursementDetail'),
+  'DisbursementDetailPage',
+)
+const DisbursementsPage = lazyRouteComponent(
+  () => import('./pages/Disbursements'),
+  'DisbursementsPage',
+)
 const HolidaysPage = lazyRouteComponent(() => import('./pages/Holidays'), 'HolidaysPage')
-const InvitationAcceptPage = lazyRouteComponent(() => import('./pages/InvitationAccept'), 'InvitationAcceptPage')
+const InvitationAcceptPage = lazyRouteComponent(
+  () => import('./pages/InvitationAccept'),
+  'InvitationAcceptPage',
+)
 const LoanDetailPage = lazyRouteComponent(() => import('./pages/LoanDetail'), 'LoanDetailPage')
 const LoansPage = lazyRouteComponent(() => import('./pages/Loans'), 'LoansPage')
-const PasswordForgotPage = lazyRouteComponent(() => import('./pages/PasswordForgot'), 'PasswordForgotPage')
-const PasswordResetPage = lazyRouteComponent(() => import('./pages/PasswordReset'), 'PasswordResetPage')
+const PasswordForgotPage = lazyRouteComponent(
+  () => import('./pages/PasswordForgot'),
+  'PasswordForgotPage',
+)
+const PasswordResetPage = lazyRouteComponent(
+  () => import('./pages/PasswordReset'),
+  'PasswordResetPage',
+)
 const PlatformPage = lazyRouteComponent(() => import('./pages/Platform'), 'PlatformPage')
 const ProductsPage = lazyRouteComponent(() => import('./pages/Products'), 'ProductsPage')
 const RegisterPage = lazyRouteComponent(() => import('./pages/Register'), 'RegisterPage')
 const SequencesPage = lazyRouteComponent(() => import('./pages/Sequences'), 'SequencesPage')
 const SimulatorPage = lazyRouteComponent(() => import('./pages/Simulator'), 'SimulatorPage')
-const SubscriptionPage = lazyRouteComponent(() => import('./pages/Subscription'), 'SubscriptionPage')
+const SubscriptionPage = lazyRouteComponent(
+  () => import('./pages/Subscription'),
+  'SubscriptionPage',
+)
 const UsersPage = lazyRouteComponent(() => import('./pages/Users'), 'UsersPage')
 const VerifyEmailPage = lazyRouteComponent(() => import('./pages/VerifyEmail'), 'VerifyEmailPage')
 
@@ -198,7 +228,8 @@ const applicationNewRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/solicitudes/nueva',
   validateSearch: (search: Record<string, unknown>): NewApplicationSearch => {
-    const text = (key: string) => (typeof search[key] === 'string' ? (search[key] as string) : undefined)
+    const text = (key: string) =>
+      typeof search[key] === 'string' ? (search[key] as string) : undefined
     return {
       cliente: text('cliente'),
       producto: text('producto'),

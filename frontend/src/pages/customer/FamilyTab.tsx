@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { usePrompt } from '../../components/Dialog'
 
 import {
   createReference,
@@ -91,6 +92,7 @@ function RelativesCard({ customerId }: { customerId: string }) {
 }
 
 function ReferencesCard({ customerId }: { customerId: string }) {
+  const [dialog, ask] = usePrompt()
   const queryClient = useQueryClient()
   const references = useQuery({
     queryKey: ['references', customerId],
@@ -113,6 +115,7 @@ function ReferencesCard({ customerId }: { customerId: string }) {
 
   return (
     <Card>
+      {dialog}
       <h3 className="mb-3 text-base font-semibold">Referencias</h3>
       <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
         <Field label="Nombre">
@@ -154,8 +157,14 @@ function ReferencesCard({ customerId }: { customerId: string }) {
             {!reference.verified_at ? (
               <Button
                 variant="secondary"
-                onClick={() => {
-                  const result = window.prompt('Resultado de la llamada:')
+                onClick={async () => {
+                  const result = await ask({
+                    title: `Verificar a ${reference.name}`,
+                    label: 'Resultado de la llamada',
+                    type: 'textarea',
+                    required: true,
+                    confirmText: 'Marcar verificada',
+                  })
                   if (result) verify.mutate({ id: reference.id, result })
                 }}
                 disabled={verify.isPending}
