@@ -36,6 +36,7 @@ Para entender o buscar código, **todo agente de IA usa primero el grafo de Code
 Reglas:
 
 - Si el índice está viejo (otro `head_sha` en `list_projects`) o falta, ejecutar `index_repository` antes de explorar; reindexar tras commits grandes.
+- Ojo: el reindexado puede actualizar el `head_sha` y quedarse con el contenido viejo (mismo número de nodos, símbolos nuevos que no aparecen). Si pasa, `delete_project` y luego `index_repository` en modo `full`.
 - Grep, Glob y Read siguen sirviendo para documentos, configuración y archivos que no son código; y **siempre se lee un archivo con Read antes de editarlo**.
 - Leer por rangos o por símbolo, no archivos enteros, salvo que se vaya a editar buena parte.
 
