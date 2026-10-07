@@ -5,8 +5,10 @@ Views translate HTTP to the F3/F4 services and back; every rule lives in
 again there, whatever the permission classes let through).
 """
 
+from decimal import Decimal
+
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -84,6 +86,20 @@ def _fail(exc: flow.ApplicationError) -> Response:
 def _scoped(queryset: QuerySet, user) -> QuerySet:
     scope = authz.branch_scope(user)
     return queryset if scope is None else queryset.filter(branch_id__in=scope)
+
+
+def _search(queryset: QuerySet, q: str) -> QuerySet:
+    """By number, customer name or document; every word must match somewhere,
+    so «josé pérez» and «001-1234567-4» both find the customer."""
+    for word in q.split():
+        queryset = queryset.filter(
+            Q(number__icontains=word)
+            | Q(customer__first_name__unaccent__icontains=word)
+            | Q(customer__last_name__unaccent__icontains=word)
+            | Q(customer__legal_name__unaccent__icontains=word)
+            | Q(customer__document_number__icontains=word.replace("-", ""))
+        )
+    return queryset
 
 
 def _evaluation_payload(evaluation: flow.Evaluation) -> dict:
@@ -176,14 +192,7 @@ class ApplicationViewSet(
             queryset = queryset.filter(
                 status=Application.Status.APPROVED, valid_until__gte=timezone.localdate()
             )
-        q = self.request.query_params.get("q", "").strip()
-        if q:
-            queryset = queryset.filter(
-                Q(number__icontains=q)
-                | Q(customer__first_name__unaccent__icontains=q)
-                | Q(customer__last_name__unaccent__icontains=q)
-                | Q(customer__legal_name__unaccent__icontains=q)
-            )
+        queryset = _search(queryset, self.request.query_params.get("q", ""))
         return _scoped(queryset, user).order_by("-created_at")
 
     def get_serializer_class(self):
@@ -523,18 +532,22 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
         # The collector sees only the loans assigned to him (doc 06: «P»).
         if authz.role_names(user) <= {CO}:
             queryset = queryset.filter(collector=user)
-        q = self.request.query_params.get("q", "").strip()
-        if q:
-            queryset = queryset.filter(
-                Q(number__icontains=q)
-                | Q(customer__first_name__unaccent__icontains=q)
-                | Q(customer__last_name__unaccent__icontains=q)
-                | Q(customer__legal_name__unaccent__icontains=q)
-            )
+        queryset = _search(queryset, self.request.query_params.get("q", ""))
         return _scoped(queryset, user).order_by("-disbursed_on", "-created_at")
 
     def get_serializer_class(self):
         return LoanListSerializer if self.action == "list" else LoanSerializer
+
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        """The totals cover every loan of the filter, not just the page (doc 07 - 5)."""
+        response = super().list(request, *args, **kwargs)
+        totals = self.filter_queryset(self.get_queryset()).aggregate(
+            principal_outstanding=Sum("principal_outstanding")
+        )
+        response.data["totals"] = {
+            "principal_outstanding": str(totals["principal_outstanding"] or Decimal("0.00"))
+        }
+        return response
 
     @action(detail=True, methods=["get"])
     def calendario(self, request: Request, number: str | None = None) -> Response:

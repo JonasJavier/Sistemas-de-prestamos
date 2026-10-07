@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { dateOf } from '../lib/format'
 
 import {
   createInvitation,
@@ -12,9 +13,10 @@ import {
   listUsers,
   revokeInvitation,
   setUserActive,
+  type Me,
 } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Badge, Button, Card, Field, Input, PageHeader, RowList, Spinner } from '../components/ui'
 
 const schema = z.object({
   email: z.email('Escribe un correo válido.'),
@@ -27,7 +29,7 @@ type FormData = z.infer<typeof schema>
 const selectClasses =
   'h-11 w-full rounded-lg border border-edge bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent-500 sm:h-9'
 
-export function UsersPage() {
+export function UsersPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
   const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(
     null,
@@ -74,7 +76,7 @@ export function UsersPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Usuarios</h1>
+      <PageHeader title="Usuarios" subtitle="Invita a tu equipo: cada quien crea su propia contraseña." />
 
       <Card>
         <h2 className="mb-3 text-base font-semibold">Invitar a alguien del equipo</h2>
@@ -131,7 +133,7 @@ export function UsersPage() {
                   <span className="font-medium">{invitation.email}</span>{' '}
                   <span className="text-muted">
                     · {invitation.role_name} en {invitation.branch_name} · vence el{' '}
-                    {new Date(invitation.expires_at).toLocaleDateString('es-DO')}
+                    {dateOf(invitation.expires_at)}
                   </span>
                 </span>
                 <Button
@@ -147,58 +149,45 @@ export function UsersPage() {
         </Card>
       ) : null}
 
-      <Card>
-        {users.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
-        {users.data ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                <th className="py-2 pr-3">Usuario</th>
-                <th className="py-2 pr-3">Roles</th>
-                <th className="py-2 pr-3">Estado</th>
-                <th className="py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {users.data.results.map((user) => (
-                <tr key={user.id} className="border-b border-edge/60 last:border-0">
-                  <td className="py-2 pr-3">
-                    <div className="font-medium">
-                      {user.first_name} {user.last_name}
-                    </div>
-                    <div className="text-muted">{user.email}</div>
-                  </td>
-                  <td className="py-2 pr-3 text-muted">
-                    {user.memberships
-                      .map((m) => `${m.role_name} (${m.branch_code})`)
-                      .join(', ') || '—'}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
-                        user.is_active
-                          ? 'bg-brand-100 text-brand-800'
-                          : 'bg-warning-700/15 text-warning-700'
-                      }`}
-                    >
-                      {user.is_active ? 'Activo' : 'Desactivado'}
-                    </span>
-                  </td>
-                  <td className="py-2 text-right">
-                    <Button
-                      variant="secondary"
-                      onClick={() => toggleUser.mutate({ id: user.id, active: !user.is_active })}
-                      disabled={toggleUser.isPending}
-                    >
-                      {user.is_active ? 'Desactivar' : 'Activar'}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : null}
-      </Card>
+      {users.isPending ? <Spinner /> : null}
+      {users.data ? (
+        <RowList>
+          {users.data.results.map((user) => (
+            <li
+              key={user.id}
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <div className="font-semibold">
+                  {user.first_name} {user.last_name}
+                  {user.id === me.id ? (
+                    <span className="ml-2 text-[12.5px] font-normal text-muted">(tú)</span>
+                  ) : null}
+                </div>
+                <div className="text-[12.5px] text-muted">{user.email}</div>
+                <div className="text-[12.5px] text-muted">
+                  {user.memberships.map((m) => `${m.role_name} (${m.branch_code})`).join(' · ') ||
+                    'Sin roles'}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge tone={user.is_active ? 'brand' : 'warning'}>
+                  {user.is_active ? 'Activo' : 'Desactivado'}
+                </Badge>
+                {user.id !== me.id ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => toggleUser.mutate({ id: user.id, active: !user.is_active })}
+                    disabled={toggleUser.isPending}
+                  >
+                    {user.is_active ? 'Desactivar' : 'Activar'}
+                  </Button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </RowList>
+      ) : null}
     </>
   )
 }

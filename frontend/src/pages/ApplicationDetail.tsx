@@ -17,10 +17,11 @@ import {
 import { ConditionsForm } from '../components/Conditions'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
-import { Alert, Badge, Button, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Badge, Button, buttonClass, Card, PageHeader, Spinner } from '../components/ui'
 import { toRequest, type Conditions } from '../lib/conditions'
-import { APPLICATION_STATUS, day, errorMessage, installmentsText, pct, rd } from '../lib/format'
-import { hasRole, useLiveQuote } from '../lib/hooks'
+import { APPLICATION_STATUS, dateOf, day, errorMessage, installmentsText, pct, rd } from '../lib/format'
+import { useLiveQuote } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
 import { DecisionPanel } from './application/DecisionPanel'
 import { DocumentsPanel } from './application/DocumentsPanel'
 import { EvaluationPanel } from './application/EvaluationPanel'
@@ -63,7 +64,7 @@ function StatusNotice({ application }: { application: Application }) {
     case 'in_review':
       return (
         <Alert tone="info">
-          En evaluación desde {day(application.submitted_at)}; asignada a{' '}
+          En evaluación desde {dateOf(application.submitted_at)}; asignada a{' '}
           {application.assigned_approver_name}.
         </Alert>
       )
@@ -147,7 +148,7 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
   const issues =
     ((failure?.data as Record<string, unknown> | undefined)?.issues as { message: string }[]) ?? []
   const canVerify =
-    hasRole(me, 'Gerente', 'Supervisor', 'Oficial de crédito') &&
+    hasRole(me, ACCESS.originate) &&
     ['draft', 'returned', 'in_review'].includes(data.status)
   const schedule = quote.data?.schedule ?? evaluation.data?.simulation.schedule
 
@@ -159,6 +160,7 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
             ← Solicitudes
           </Link>
         }
+        documentTitle={`Solicitud ${data.number}`}
         title={
           <span className="flex flex-wrap items-center gap-2">
             Solicitud <span className="tabular-nums">{data.number}</span>
@@ -200,7 +202,7 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
               <Link
                 to="/desembolsos/$id"
                 params={{ id: data.id }}
-                className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
+                className={buttonClass()}
               >
                 Desembolsar
               </Link>

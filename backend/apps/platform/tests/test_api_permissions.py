@@ -83,7 +83,7 @@ def test_owner_records_payment_and_company_activates(
 
 def test_anonymous_cannot_access_platform_panel(db) -> None:
     response = APIClient().get("/api/v1/plataforma/empresas/")
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_tenant_reads_its_own_company(tenant_admin: User) -> None:

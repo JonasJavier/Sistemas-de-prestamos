@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ import {
   type CustomerListItem,
   type CustomerPayload,
 } from '../api/customers'
-import { Alert, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Button, buttonClass, Card, Field, Input, PageHeader } from '../components/ui'
 
 const schema = z
   .object({
@@ -58,6 +58,14 @@ export function CustomerNewPage() {
   })
   const kind = form.watch('kind')
 
+  // One active branch (most small lenders): nothing to choose.
+  const activeBranches = branches.data?.results.filter((branch) => branch.is_active)
+  useEffect(() => {
+    if (activeBranches?.length === 1 && !form.getValues('home_branch')) {
+      form.setValue('home_branch', activeBranches[0].id)
+    }
+  }, [activeBranches, form])
+
   const create = useMutation({
     mutationFn: (payload: CustomerPayload) => createCustomer(payload),
     onSuccess: (customer) => navigate({ to: '/clientes/$id', params: { id: customer.id } }),
@@ -91,7 +99,15 @@ export function CustomerNewPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Nuevo cliente</h1>
+      <PageHeader
+        back={
+          <Link to="/clientes" className="hover:underline">
+            ← Clientes
+          </Link>
+        }
+        title="Nuevo cliente"
+        subtitle="Antes de crearlo revisamos si ya existe, por documento o por nombre."
+      />
       <Card>
         <form
           className="grid grid-cols-1 gap-3 sm:grid-cols-2"
@@ -204,10 +220,13 @@ export function CustomerNewPage() {
             </select>
           </Field>
 
-          <div className="sm:col-span-2">
+          <div className="flex gap-2 sm:col-span-2">
             <Button type="submit" disabled={create.isPending}>
               {create.isPending ? 'Creando…' : 'Crear cliente'}
             </Button>
+            <Link to="/clientes" className={buttonClass('secondary')}>
+              Cancelar
+            </Link>
           </div>
         </form>
       </Card>

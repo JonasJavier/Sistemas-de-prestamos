@@ -30,7 +30,7 @@ import {
   Textarea,
 } from '../components/ui'
 import { day, errorMessage, installmentsText, LOAN_STATUS, METHOD_TEXT, moment, pct, rd } from '../lib/format'
-import { hasRole } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
 
 const TABS = [
   ['resumen', 'Resumen'],
@@ -123,7 +123,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
   if (!data) return <Alert tone="danger">No se encontró el préstamo.</Alert>
   const status = LOAN_STATUS[data.status]
   const terms = data.current_terms
-  const canVoid = data.status === 'active' && hasRole(me, 'Gerente', 'Supervisor')
+  const canVoid = data.status === 'active' && hasRole(me, ACCESS.voidLoans)
   const currentRows = (calendar.data?.installments ?? []).filter(
     (row) => row.version === (terms?.version ?? 1),
   )
@@ -136,6 +136,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
             ← Préstamos
           </Link>
         }
+        documentTitle={`Préstamo ${data.number}`}
         title={
           <span className="flex flex-wrap items-center gap-2">
             Préstamo <span className="tabular-nums">{data.number}</span>
@@ -190,7 +191,10 @@ export function LoanDetailPage({ me }: { me: Me }) {
         <Stat label="Capital pendiente" value={rd(data.principal_outstanding)} emphasis />
         <Stat label="Interés por cobrar" value={rd(data.interest_outstanding)} />
         <Stat label="Próximo vencimiento" value={day(data.next_due_date)} />
-        <Stat label="Atraso" value={`${data.days_past_due} días`} hint="El cálculo diario llega con los cobros" />
+        <Stat
+          label="Atraso"
+          value={data.days_past_due === 0 ? 'Al día' : `${data.days_past_due} días`}
+        />
       </div>
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} />

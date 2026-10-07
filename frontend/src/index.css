@@ -28,6 +28,7 @@
   --color-ink: #26302b;
   --color-muted: #716b5e;
   --color-edge: #e6dfd0;
+  --color-on-brand: #ffffff; /* text on emerald fills */
 
   --font-sans: 'Inter Variable', system-ui, sans-serif;
   --font-display: 'Sora Variable', 'Inter Variable', system-ui, sans-serif;
@@ -51,6 +52,7 @@
   --color-ink: #e8ede8;
   --color-muted: #9fa89f;
   --color-edge: #333c35;
+  --color-on-brand: #0b1f17; /* the dark emerald needs dark text (WCAG AA) */
 }
 
 body {

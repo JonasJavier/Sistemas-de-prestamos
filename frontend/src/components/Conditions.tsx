@@ -1,7 +1,7 @@
 import type { LoanProduct, Simulation } from '../api/lending'
 import { FREQUENCY_TEXT, pct, RATE_UNIT_TEXT, rd } from '../lib/format'
 import type { Conditions } from '../lib/conditions'
-import { Field, Input, Select, Stat } from './ui'
+import { Field, Input, PercentInput, Select, Stat } from './ui'
 
 /** Product + amount + term + frequency + rate, preloading product defaults. */
 export function ConditionsForm({
@@ -77,14 +77,13 @@ export function ConditionsForm({
         </Field>
         <div className="col-span-2 sm:col-span-1">
           <Field
-            label={`Tasa (${RATE_UNIT_TEXT[product?.rate_unit ?? 'per_period']})`}
+            label={`Tasa ${RATE_UNIT_TEXT[product?.rate_unit ?? 'per_period']}`}
             error={errorText('rate')}
           >
-            <Input
-              inputMode="decimal"
-              placeholder="0.10 = 10%"
+            <PercentInput
+              key={value.productId}
               value={value.rate}
-              onChange={(e) => onChange({ ...value, rate: e.target.value })}
+              onChange={(rate) => onChange({ ...value, rate })}
             />
           </Field>
         </div>

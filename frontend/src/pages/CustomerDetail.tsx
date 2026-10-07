@@ -5,9 +5,9 @@ import { useState } from 'react'
 import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { listApplications, listLoans } from '../api/origination'
-import { Alert, Badge, Button, Card } from '../components/ui'
-import { APPLICATION_STATUS, day, LOAN_STATUS, rd } from '../lib/format'
-import { hasRole } from '../lib/hooks'
+import { Alert, Badge, Button, buttonClass, Card } from '../components/ui'
+import { APPLICATION_STATUS, dateOf, LOAN_STATUS, rd } from '../lib/format'
+import { ACCESS, hasRole } from '../lib/roles'
 import { CollateralTab } from './customer/CollateralTab'
 import { FamilyTab } from './customer/FamilyTab'
 import { FilesTab } from './customer/FilesTab'
@@ -74,7 +74,7 @@ function LendingTab({ customerId }: { customerId: string }) {
                 <Badge tone={APPLICATION_STATUS[app.status]?.tone}>
                   {APPLICATION_STATUS[app.status]?.label}
                 </Badge>
-                <span className="text-muted">{day(app.created_at)}</span>
+                <span className="text-muted">{dateOf(app.created_at)}</span>
                 <span className="tabular-nums">{rd(app.amount)}</span>
               </li>
             ))}
@@ -117,11 +117,11 @@ export function CustomerDetailPage({ me }: { me: Me }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {hasRole(me, 'Gerente', 'Supervisor', 'Oficial de crédito') ? (
+          {hasRole(me, ACCESS.originate) ? (
             <Link
               to="/solicitudes/nueva"
               search={{ cliente: id }}
-              className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
+              className={buttonClass()}
             >
               Nueva solicitud
             </Link>

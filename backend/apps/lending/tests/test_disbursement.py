@@ -349,6 +349,25 @@ def test_loans_are_isolated_and_collectors_see_only_theirs(tenant, other_tenant)
     assert tenant.client("cobrador").get("/api/v1/prestamos/").json()["count"] == 1
 
 
+def test_loan_list_totals_cover_the_filter_and_search_by_name_or_document(tenant) -> None:
+    """Doc 07 - 5: totals respect the filters, not the page on screen."""
+    for amount in ("20000", "15000"):
+        assert _disburse(tenant, _approved(tenant, amount=amount)).status_code == 201
+    manager = tenant.client("gerente")
+    listing = manager.get("/api/v1/prestamos/?page_size=1").json()
+    assert listing["count"] == 2
+    assert len(listing["results"]) == 1
+    expected = sum(
+        D(loan["principal_outstanding"])
+        for loan in manager.get("/api/v1/prestamos/").json()["results"]
+    )
+    assert D(listing["totals"]["principal_outstanding"]) == expected
+    # «maría gómez» (accents and order free) and the cédula with dashes both find them.
+    assert manager.get("/api/v1/prestamos/?q=gomez maria").json()["count"] == 2
+    assert manager.get("/api/v1/prestamos/?q=001-1234567-4").json()["count"] == 2
+    assert manager.get("/api/v1/prestamos/?q=maria otro").json()["count"] == 0
+
+
 @pytest.mark.parametrize(
     ("amount", "words"),
     [

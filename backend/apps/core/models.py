@@ -12,6 +12,8 @@ from decimal import Decimal
 import pghistory
 from django.db import models
 
+from apps.core.tenancy import TenantManager
+
 
 class TimeStampedModel(models.Model):
     """UUIDv7 primary key plus creation/update instants (doc 05 - section 2)."""
@@ -56,9 +58,15 @@ class Company(TimeStampedModel):
 
 
 class CompanyScopedModel(TimeStampedModel):
-    """Abstract base for every record that belongs to one tenant."""
+    """Abstract base for every record that belongs to one tenant.
+
+    ``objects`` only ever returns the running tenant's rows (barrier 1 of
+    ``apps.core.tenancy``); RLS enforces the same thing in PostgreSQL.
+    """
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="+")
+
+    objects = TenantManager()
 
     class Meta:
         abstract = True

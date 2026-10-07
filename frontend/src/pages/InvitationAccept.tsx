@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { acceptInvitation, getInvitation } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Brand, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
 
 const schema = z.object({
   first_name: z.string().min(1, 'Escribe tu nombre.'),
@@ -109,11 +109,8 @@ export function InvitationAcceptPage() {
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md space-y-4 text-center">
-        <Brand />
-        {children}
-      </Card>
-    </main>
+    <PublicPage>
+      <Card className="space-y-4 text-center">{children}</Card>
+    </PublicPage>
   )
 }

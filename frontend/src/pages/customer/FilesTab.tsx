@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
+import { dateOf } from '../../lib/format'
 
 import { ApiError } from '../../api/client'
 import {
@@ -87,7 +88,7 @@ export function FilesTab({ customerId }: { customerId: string }) {
             ref={inputRef}
             type="file"
             accept=".pdf,.jpg,.jpeg,.png,.heic"
-            className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-800"
+            className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-on-brand hover:file:bg-brand-800"
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) upload.mutate(file)
@@ -105,7 +106,7 @@ export function FilesTab({ customerId }: { customerId: string }) {
                 {KINDS.find(([value]) => value === file.kind)?.[1] ?? file.kind}
               </span>{' '}
               <span className="text-muted tabular-nums">
-                · {formatSize(file.size)} · {new Date(file.created_at).toLocaleDateString('es-DO')}
+                · {formatSize(file.size)} · {dateOf(file.created_at)}
               </span>
             </span>
             <span className="flex gap-2">

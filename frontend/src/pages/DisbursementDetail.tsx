@@ -11,17 +11,7 @@ import {
   loanDocumentUrl,
 } from '../api/origination'
 import { ScheduleTable } from '../components/ScheduleTable'
-import {
-  Alert,
-  Button,
-  Card,
-  Field,
-  Input,
-  PageHeader,
-  Select,
-  Spinner,
-  Stat,
-} from '../components/ui'
+import { Alert, Button, buttonClass, Card, Field, Input, PageHeader, Select, Spinner, Stat } from '../components/ui'
 import { day, errorMessage, newIdempotencyKey, rd } from '../lib/format'
 
 type Method = 'cash' | 'transfer' | 'check'
@@ -53,7 +43,7 @@ function Done({ number }: { number: string }) {
         <Link
           to="/prestamos/$numero"
           params={{ numero: number }}
-          className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
+          className={buttonClass()}
         >
           Ver el expediente del préstamo
         </Link>

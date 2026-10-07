@@ -1,0 +1,9 @@
+"""API pagination: 25 rows by default (doc 07 - 5), up to 100 on request."""
+
+from rest_framework.pagination import PageNumberPagination
+
+
+class Pagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"
+    max_page_size = 100

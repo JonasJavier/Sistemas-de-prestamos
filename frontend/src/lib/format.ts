@@ -20,7 +20,24 @@ export const pct = (value: string | number | null | undefined, places = 2) =>
 
 /** Business dates travel as YYYY-MM-DD; never let the browser shift them. */
 export const day = (value: string | null | undefined) =>
-  value ? new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('es-DO') : '—'
+  value
+    ? new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString('es-DO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : '—'
+
+/** The local calendar date of an instant (created_at…): never slice a UTC
+ * timestamp, after 8 p.m. in Santo Domingo it is already tomorrow in UTC. */
+export const dateOf = (value: string | null | undefined) =>
+  value
+    ? new Date(value).toLocaleDateString('es-DO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : '—'
 
 export const moment = (value: string | null | undefined) =>
   value
@@ -101,3 +118,26 @@ export const newIdempotencyKey = () =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID().replace(/-/g, '')
     : `${Date.now()}${Math.random().toString(16).slice(2)}`
+
+/** Rates travel as fractions (0.05); people read and type percentages (5). */
+export function fractionToPercent(fraction: string): string {
+  if (!fraction) return ''
+  const value = Number(fraction)
+  return Number.isFinite(value) ? String(Number((value * 100).toFixed(6))) : fraction
+}
+
+export function percentToFraction(percent: string): string {
+  const clean = percent.replace(',', '.').trim()
+  if (!clean) return ''
+  const value = Number(clean)
+  // Anything that is not a number goes as typed: the server explains the error.
+  return Number.isFinite(value) ? String(Number((value / 100).toFixed(8))) : clean
+}
+
+/** A company's lifecycle state (F19), for the owner panel and the subscription. */
+export const STATUS_BADGES: Record<'trial' | 'active' | 'suspended' | 'closed', { text: string; classes: string }> = {
+  trial: { text: 'En prueba', classes: 'bg-gold-100 text-gold-800' },
+  active: { text: 'Activa', classes: 'bg-success-600/15 text-success-600' },
+  suspended: { text: 'Suspendida', classes: 'bg-warning-700/15 text-warning-700' },
+  closed: { text: 'Cerrada', classes: 'bg-danger-600/15 text-danger-600' },
+}

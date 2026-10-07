@@ -9,6 +9,8 @@ export interface Me {
   is_manager: boolean
   roles: string[]
   company_id: string | null
+  company_name: string | null
+  company_status: 'trial' | 'active' | 'suspended' | 'closed' | null
   mfa_enabled: boolean
   mfa_required: boolean
 }

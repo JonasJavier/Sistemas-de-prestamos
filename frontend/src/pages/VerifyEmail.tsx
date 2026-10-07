@@ -3,7 +3,7 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import { verifyEmail } from '../api/auth'
-import { Alert, Brand, Card } from '../components/ui'
+import { Alert, Card, PublicPage } from '../components/ui'
 
 export function VerifyEmailPage() {
   const { key } = useParams({ from: '/verificar-correo/$key' })
@@ -19,9 +19,8 @@ export function VerifyEmailPage() {
   }, [key])
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <Card className="max-w-md space-y-4 text-center">
-        <Brand />
+    <PublicPage>
+      <Card className="space-y-4 text-center">
         {mutation.isPending ? <p className="text-sm text-muted">Confirmando tu correo…</p> : null}
         {mutation.isSuccess ? (
           <>
@@ -42,6 +41,6 @@ export function VerifyEmailPage() {
           </>
         ) : null}
       </Card>
-    </main>
+    </PublicPage>
   )
 }

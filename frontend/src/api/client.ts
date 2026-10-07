@@ -1,5 +1,23 @@
 /** Minimal typed fetch wrapper: session cookies + Django CSRF. */
 
+/** DRF page: 25 rows by default (apps.core.api.pagination). */
+export interface Page<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
+/** Query string from the filled values only; numbers become text. */
+export function toQuery(params: Record<string, string | number | undefined | null>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') search.set(key, String(value))
+  }
+  const qs = search.toString()
+  return qs ? `?${qs}` : ''
+}
+
 export class ApiError extends Error {
   status: number
   data: unknown

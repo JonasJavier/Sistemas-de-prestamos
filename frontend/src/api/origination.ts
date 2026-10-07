@@ -1,4 +1,4 @@
-import { api, apiUpload } from './client'
+import { api, apiUpload, toQuery, type Page } from './client'
 import type { Simulation } from './lending'
 
 /* ---------- Applications (F3) ---------- */
@@ -170,11 +170,9 @@ export function listApplications(params: {
   status?: string
   customer?: string
   q?: string
-}): Promise<{ count: number; results: ApplicationListItem[] }> {
-  const search = new URLSearchParams()
-  for (const [key, value] of Object.entries(params)) if (value) search.set(key, value)
-  const qs = search.toString()
-  return api(`/api/v1/solicitudes/${qs ? `?${qs}` : ''}`)
+  page?: number
+}): Promise<Page<ApplicationListItem>> {
+  return api(`/api/v1/solicitudes/${toQuery(params)}`)
 }
 
 export const getApplication = (id: string): Promise<Application> =>
@@ -388,11 +386,9 @@ export function listLoans(params: {
   status?: string
   q?: string
   customer?: string
-}): Promise<{ count: number; results: LoanListItem[] }> {
-  const search = new URLSearchParams()
-  for (const [key, value] of Object.entries(params)) if (value) search.set(key, value)
-  const qs = search.toString()
-  return api(`/api/v1/prestamos/${qs ? `?${qs}` : ''}`)
+  page?: number
+}): Promise<Page<LoanListItem> & { totals: { principal_outstanding: string } }> {
+  return api(`/api/v1/prestamos/${toQuery(params)}`)
 }
 
 export const getLoan = (number: string): Promise<Loan> => api(`/api/v1/prestamos/${number}/`)

@@ -22,6 +22,7 @@ import {
   Field,
   Input,
   PageHeader,
+  PercentInput,
   Select,
   Spinner,
   Textarea,
@@ -144,8 +145,17 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
             <option value="fixed">Monto fijo</option>
           </Select>
         </Field>
-        <Field label={basis === 'percent' ? 'Valor (0.02 = 2%)' : 'Monto (RD$)'}>
-          <Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
+        <Field label={basis === 'percent' ? 'Porcentaje' : 'Monto (RD$)'}>
+          {basis === 'percent' ? (
+            <PercentInput
+              key={`percent-${product.charges.length}`}
+              value={value}
+              onChange={setValue}
+              placeholder="Ej.: 2"
+            />
+          ) : (
+            <Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
+          )}
         </Field>
         <Field label="Modalidad">
           <Select value={mode} onChange={(e) => setMode(e.target.value as ProductCharge['mode'])}>
@@ -301,17 +311,16 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
             <option value="annual">Anual</option>
           </Select>
         </Field>
-        <Field label={`Tasa mínima (${pct(form.min_rate)})`} error={err('min_rate')}>
-          <Input inputMode="decimal" value={form.min_rate} onChange={(e) => set('min_rate', e.target.value)} />
+        <Field label="Tasa mínima" error={err('min_rate')}>
+          <PercentInput value={form.min_rate} onChange={(rate) => set('min_rate', rate)} />
         </Field>
-        <Field label={`Tasa máxima (${pct(form.max_rate)})`} error={err('max_rate')}>
-          <Input inputMode="decimal" value={form.max_rate} onChange={(e) => set('max_rate', e.target.value)} />
+        <Field label="Tasa máxima" error={err('max_rate')}>
+          <PercentInput value={form.max_rate} onChange={(rate) => set('max_rate', rate)} />
         </Field>
-        <Field label={`Tasa por defecto (${pct(form.default_rate)})`} error={err('default_rate')}>
-          <Input
-            inputMode="decimal"
-            value={form.default_rate ?? ''}
-            onChange={(e) => set('default_rate', e.target.value || null)}
+        <Field label="Tasa por defecto" error={err('default_rate')}>
+          <PercentInput
+            value={form.default_rate}
+            onChange={(rate) => set('default_rate', rate || null)}
           />
         </Field>
       </div>
@@ -384,11 +393,10 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
               <option value="fixed">Cargo fijo por cuota</option>
             </Select>
           </Field>
-          <Field label={`Tasa mensual (${pct(form.late_fee_policy.monthly_rate)})`}>
-            <Input
-              inputMode="decimal"
+          <Field label="Tasa mensual">
+            <PercentInput
               value={form.late_fee_policy.monthly_rate}
-              onChange={(e) => setPolicy('monthly_rate', e.target.value)}
+              onChange={(rate) => setPolicy('monthly_rate', rate)}
             />
           </Field>
           <Field label="Cargo fijo (RD$)">
@@ -399,11 +407,10 @@ function Editor({ product, onSaved }: { product: LoanProduct | null; onSaved: (p
               onChange={(e) => setPolicy('fixed_amount', e.target.value || null)}
             />
           </Field>
-          <Field label={`Tope (${pct(form.late_fee_policy.cap_pct)} del vencido)`}>
-            <Input
-              inputMode="decimal"
+          <Field label="Tope (sobre lo vencido)">
+            <PercentInput
               value={form.late_fee_policy.cap_pct}
-              onChange={(e) => setPolicy('cap_pct', e.target.value)}
+              onChange={(rate) => setPolicy('cap_pct', rate)}
             />
           </Field>
         </div>

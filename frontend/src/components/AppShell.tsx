@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import type { Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
+import { ACCESS, hasRole } from '../lib/roles'
 import { CommandPalette } from './CommandPalette'
+import { HomeIcon, LoanIcon, MenuIcon, MoonIcon, PeopleIcon, SearchIcon, SunIcon } from './icons'
 import { Brand, Button } from './ui'
 
 function ThemeToggle() {
@@ -19,14 +21,16 @@ function ThemeToggle() {
     }
     setDark(next)
   }
+  const label = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
   return (
     <button
       type="button"
       onClick={toggle}
-      title={dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-      className="rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-sm hover:bg-brand-100"
+      title={label}
+      aria-label={label}
+      className="grid size-9 place-items-center rounded-lg border border-edge bg-surface text-muted outline-none hover:bg-brand-100 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500"
     >
-      {dark ? '☀️' : '🌙'}
+      {dark ? <SunIcon /> : <MoonIcon />}
     </button>
   )
 }
@@ -41,8 +45,6 @@ interface NavGroup {
   items: NavItem[]
 }
 
-const can = (me: Me, ...roles: string[]) => Boolean(me.roles?.some((role) => roles.includes(role)))
-
 /** Grouped navigation (decision 038): only what the role can use. */
 function navFor(me: Me): NavGroup[] {
   if (me.is_platform_admin) {
@@ -52,23 +54,15 @@ function navFor(me: Me): NavGroup[] {
     ]
   }
   const operation: NavItem[] = [{ to: '/clientes', label: 'Clientes' }]
-  if (can(me, 'Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero', 'Contabilidad', 'Auditoría')) {
-    operation.push({ to: '/solicitudes', label: 'Solicitudes' })
-  }
-  if (can(me, 'Gerente', 'Cajero', 'Contabilidad')) {
-    operation.push({ to: '/desembolsos', label: 'Desembolsos' })
-  }
-  if (can(me, 'Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero', 'Cobrador', 'Contabilidad', 'Auditoría')) {
-    operation.push({ to: '/prestamos', label: 'Préstamos' })
-  }
-  if (can(me, 'Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero')) {
-    operation.push({ to: '/simulador', label: 'Simulador' })
-  }
+  if (hasRole(me, ACCESS.applications)) operation.push({ to: '/solicitudes', label: 'Solicitudes' })
+  if (hasRole(me, ACCESS.disburse)) operation.push({ to: '/desembolsos', label: 'Desembolsos' })
+  if (hasRole(me, ACCESS.loans)) operation.push({ to: '/prestamos', label: 'Préstamos' })
+  if (hasRole(me, ACCESS.simulate)) operation.push({ to: '/simulador', label: 'Simulador' })
   const groups: NavGroup[] = [
     { title: null, items: [{ to: '/', label: 'Inicio' }] },
     { title: 'Operación', items: operation },
   ]
-  if (can(me, 'Gerente', 'Contabilidad', 'Auditoría')) {
+  if (hasRole(me, ACCESS.finance)) {
     groups.push({ title: 'Finanzas', items: [{ to: '/cuentas', label: 'Cuentas y bancos' }] })
   }
   if (me.is_manager) {
@@ -89,11 +83,11 @@ function navFor(me: Me): NavGroup[] {
 }
 
 const linkClasses =
-  'rounded-lg border-l-3 border-transparent px-3 py-2 text-sm text-brand-200 hover:bg-brand-900 hover:text-white [&.active]:border-gold-500 [&.active]:bg-brand-900 [&.active]:font-semibold [&.active]:text-white'
+  'rounded-lg border-l-3 border-transparent px-3 py-2 text-sm text-brand-200 outline-none hover:bg-brand-900 hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:border-gold-500 [&.active]:bg-brand-900 [&.active]:font-semibold [&.active]:text-white'
 
 function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () => void }) {
   return (
-    <nav className="mt-6 flex flex-col gap-4">
+    <nav aria-label="Menú principal" className="flex flex-col gap-4">
       {groups.map((group, index) => (
         <div key={group.title ?? index} className="flex flex-col gap-1">
           {group.title ? (
@@ -118,16 +112,52 @@ function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () 
   )
 }
 
-/** Phones get a bottom bar (decision 038): the frequent actions plus «Más». */
-function MobileBar({ me, groups }: { me: Me; groups: NavGroup[] }) {
+const STATUS_CHIP: Record<string, { label: string; className: string }> = {
+  trial: { label: 'En prueba', className: 'bg-gold-100 text-gold-800' },
+  suspended: { label: 'Solo lectura', className: 'bg-danger-600/15 text-danger-600' },
+}
+
+/** The tenant the user works in, always in sight (doc 07 - section 2). */
+function CompanyBadge({ me }: { me: Me }) {
+  if (!me.company_name) return null
+  const chip = me.company_status ? STATUS_CHIP[me.company_status] : undefined
+  return (
+    <div className="rounded-lg bg-brand-900/60 px-3 py-2">
+      <div className="truncate text-sm font-medium text-white" title={me.company_name}>
+        {me.company_name}
+      </div>
+      {chip ? (
+        <span
+          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${chip.className}`}
+        >
+          {chip.label}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+const barItem =
+  'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11.5px] font-medium text-muted outline-none focus-visible:bg-brand-100 [&.active]:text-brand-700'
+
+/** Phones get a bottom bar (decision 038): the frequent actions, search and «Más». */
+function MobileBar({
+  me,
+  groups,
+  onSearch,
+}: {
+  me: Me
+  groups: NavGroup[]
+  onSearch: () => void
+}) {
   const [open, setOpen] = useState(false)
-  const quick: NavItem[] = me.is_platform_admin
-    ? [{ to: '/plataforma', label: 'Empresas' }]
+  const quick = me.is_platform_admin
+    ? [{ to: '/plataforma', label: 'Empresas', icon: <HomeIcon /> }]
     : [
-        { to: '/', label: 'Inicio' },
-        { to: '/clientes', label: 'Clientes' },
-        ...(can(me, 'Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero', 'Cobrador', 'Contabilidad', 'Auditoría')
-          ? [{ to: '/prestamos', label: 'Préstamos' }]
+        { to: '/', label: 'Inicio', icon: <HomeIcon /> },
+        { to: '/clientes', label: 'Clientes', icon: <PeopleIcon /> },
+        ...(hasRole(me, ACCESS.loans)
+          ? [{ to: '/prestamos', label: 'Préstamos', icon: <LoanIcon /> }]
           : []),
       ]
   return (
@@ -136,30 +166,53 @@ function MobileBar({ me, groups }: { me: Me; groups: NavGroup[] }) {
         <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="absolute inset-x-0 bottom-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-brand-950 p-4 pb-20"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú"
+            className="absolute inset-x-0 bottom-0 max-h-[75vh] space-y-4 overflow-y-auto rounded-t-2xl bg-brand-950 p-4 pb-20"
             onClick={(e) => e.stopPropagation()}
           >
+            <CompanyBadge me={me} />
             <NavLinks groups={groups} onNavigate={() => setOpen(false)} />
           </div>
         </div>
       ) : null}
-      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-16 border-t border-edge bg-surface sm:hidden">
+      <nav
+        aria-label="Accesos rápidos"
+        className="fixed inset-x-0 bottom-0 z-50 flex h-16 border-t border-edge bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
+      >
         {quick.map((item) => (
           <Link
             key={item.to}
             to={item.to}
             onClick={() => setOpen(false)}
             activeOptions={{ exact: item.to === '/' }}
-            className="flex flex-1 items-center justify-center text-[13px] font-medium text-muted [&.active]:text-brand-700"
+            className={barItem}
           >
+            {item.icon}
             {item.label}
           </Link>
         ))}
+        {!me.is_platform_admin ? (
+          <button
+            type="button"
+            className={barItem}
+            onClick={() => {
+              setOpen(false)
+              onSearch()
+            }}
+          >
+            <SearchIcon />
+            Buscar
+          </button>
+        ) : null}
         <button
           type="button"
+          aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
-          className="flex flex-1 items-center justify-center text-[13px] font-medium text-muted"
+          className={barItem}
         >
+          <MenuIcon />
           Más
         </button>
       </nav>
@@ -178,6 +231,21 @@ export function AppShell({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searching, setSearching] = useState(false)
+  const closeSearch = useCallback(() => setSearching(false), [])
+  const searchable = !me.is_platform_admin
+
+  useEffect(() => {
+    if (!searchable) return
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearching((value) => !value)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [searchable])
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: async () => {
@@ -187,23 +255,53 @@ export function AppShell({
   })
 
   const groups = navFor(me)
+  const name = [me.first_name, me.last_name].filter(Boolean).join(' ') || user.email
+  const roleText = me.is_platform_admin ? 'Dueño de la plataforma' : me.roles.join(' · ')
   return (
     <div className="flex min-h-screen">
-      {!me.is_platform_admin ? <CommandPalette /> : null}
-      <aside className="hidden w-56 flex-col bg-brand-950 p-4 sm:flex">
-        <Brand className="text-xl" tone="light" />
+      <a
+        href="#contenido"
+        className="sr-only z-50 rounded-lg bg-surface px-3 py-2 text-sm font-semibold focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Saltar al contenido
+      </a>
+      {searchable && searching ? <CommandPalette me={me} onClose={closeSearch} /> : null}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-5 overflow-y-auto bg-brand-950 p-4 sm:flex">
+        <Link to="/" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold-500">
+          <Brand className="text-xl" tone="light" />
+        </Link>
+        <CompanyBadge me={me} />
         <NavLinks groups={groups} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-edge bg-surface px-4">
-          <span className="text-sm text-muted sm:hidden">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-edge bg-surface/95 px-4 backdrop-blur">
+          <span className="sm:hidden">
             <Brand className="text-lg" />
           </span>
-          <span className="hidden text-sm text-muted sm:block" />
+          {!me.is_platform_admin ? (
+            <button
+              type="button"
+              onClick={() => setSearching(true)}
+              className="hidden h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface-2 px-3 text-sm text-muted outline-none hover:border-brand-700/40 focus-visible:ring-2 focus-visible:ring-accent-500 sm:flex"
+            >
+              <SearchIcon />
+              <span className="flex-1 truncate text-left">Buscar cliente, cédula o préstamo…</span>
+              <kbd className="rounded border border-edge bg-surface px-1.5 font-sans text-[11px]">
+                Ctrl K
+              </kbd>
+            </button>
+          ) : (
+            <span className="hidden sm:block" />
+          )}
           <div className="flex items-center gap-3">
+            <div className="hidden text-right leading-tight md:block">
+              <div className="text-sm font-medium">{name}</div>
+              <div className="max-w-56 truncate text-[12px] text-muted" title={roleText}>
+                {roleText}
+              </div>
+            </div>
             <ThemeToggle />
-            <span className="hidden text-sm text-muted md:inline">{user.email}</span>
             <Button
               variant="secondary"
               onClick={() => logoutMutation.mutate()}
@@ -213,11 +311,15 @@ export function AppShell({
             </Button>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 pb-24 pt-6 sm:pb-6">
+        <main
+          id="contenido"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 pb-24 pt-6 outline-none sm:pb-8"
+        >
           {children}
         </main>
       </div>
-      <MobileBar me={me} groups={groups} />
+      <MobileBar me={me} groups={groups} onSearch={() => setSearching(true)} />
     </div>
   )
 }

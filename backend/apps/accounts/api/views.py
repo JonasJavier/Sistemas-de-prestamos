@@ -47,6 +47,9 @@ class MeView(APIView):
                 "is_manager": is_company_manager(request) if user.company_id else False,
                 "roles": roles,
                 "company_id": str(user.company_id) if user.company_id else None,
+                # Company is a global table (no RLS): its name and state frame the shell.
+                "company_name": str(user.company) if user.company_id else None,
+                "company_status": user.company.status if user.company_id else None,
                 "mfa_enabled": mfa_enabled,
                 "mfa_required": settings.REQUIRE_MFA,
             }

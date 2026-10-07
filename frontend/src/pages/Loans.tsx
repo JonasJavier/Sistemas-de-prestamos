@@ -1,9 +1,19 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { listLoans } from '../api/origination'
-import { Badge, Card, EmptyState, Input, PageHeader, Select, Spinner } from '../components/ui'
+import {
+  Badge,
+  EmptyState,
+  PageHeader,
+  Pagination,
+  rowLinkClass,
+  RowList,
+  SearchInput,
+  Select,
+  Spinner,
+} from '../components/ui'
 import { day, LOAN_STATUS, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 
@@ -11,20 +21,36 @@ import { useDebounced } from '../lib/hooks'
 export function LoansPage() {
   const [status, setStatus] = useState('active')
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
   const term = useDebounced(q.trim(), 300)
   const query = useQuery({
-    queryKey: ['loans', status, term],
-    queryFn: () => listLoans({ status, q: term }),
+    queryKey: ['loans', status, term, page],
+    queryFn: () => listLoans({ status, q: term, page }),
+    placeholderData: keepPreviousData,
   })
   const rows = query.data?.results ?? []
-  const outstanding = rows.reduce((sum, loan) => sum + Number(loan.principal_outstanding), 0)
+  const count = query.data?.count ?? 0
 
   return (
     <>
-      <PageHeader title="Préstamos" subtitle="Cartera de la empresa, por número o cliente." />
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_200px]">
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por número o cliente…" />
-        <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+      <PageHeader title="Préstamos" subtitle="Cartera de tu alcance, por número, cliente o cédula." />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_220px]">
+        <SearchInput
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setPage(1)
+          }}
+          placeholder="Buscar por número, cliente o cédula…"
+        />
+        <Select
+          aria-label="Estado"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setPage(1)
+          }}
+        >
           <option value="">Todos los estados</option>
           {Object.entries(LOAN_STATUS).map(([key, value]) => (
             <option key={key} value={key}>
@@ -36,61 +62,57 @@ export function LoansPage() {
       {query.isPending ? (
         <Spinner />
       ) : rows.length > 0 ? (
-        <Card className="!p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                  <th className="px-4 py-2">Número</th>
-                  <th className="py-2 pr-3">Cliente</th>
-                  <th className="py-2 pr-3">Estado</th>
-                  <th className="py-2 pr-3 text-right">Capital pendiente</th>
-                  <th className="py-2 pr-4 text-right">Próximo vencimiento</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((loan) => {
-                  const s = LOAN_STATUS[loan.status]
-                  return (
-                    <tr key={loan.id} className="border-b border-edge/60 last:border-0 hover:bg-surface-2">
-                      <td className="px-4 py-2">
-                        <Link
-                          to="/prestamos/$numero"
-                          params={{ numero: loan.number }}
-                          className="font-semibold tabular-nums text-brand-700 hover:underline"
-                        >
-                          {loan.number}
-                        </Link>
-                        <div className="text-[12px] text-muted">{loan.product_name}</div>
-                      </td>
-                      <td className="py-2 pr-3">
-                        {loan.customer_name}
-                        <div className="text-[12px] text-muted tabular-nums">{loan.customer_document}</div>
-                      </td>
-                      <td className="py-2 pr-3">
+        <>
+          <RowList>
+            {rows.map((loan) => {
+              const s = LOAN_STATUS[loan.status]
+              return (
+                <li key={loan.id}>
+                  <Link
+                    to="/prestamos/$numero"
+                    params={{ numero: loan.number }}
+                    className={rowLinkClass}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold tabular-nums">{loan.number}</span>
                         <Badge tone={s?.tone}>{s?.label ?? loan.status}</Badge>
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">{rd(loan.principal_outstanding)}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums">{day(loan.next_due_date)}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-brand-700/40 font-semibold">
-                  <td className="px-4 py-2" colSpan={3}>
-                    {query.data?.count} préstamo{query.data?.count === 1 ? '' : 's'}
-                    {query.data && query.data.count > rows.length ? ' (totales de esta página)' : ''}
-                  </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{rd(outstanding)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
+                      </div>
+                      <div className="truncate text-sm">
+                        {loan.customer_name}{' '}
+                        <span className="text-muted tabular-nums">· {loan.customer_document}</span>
+                      </div>
+                      <div className="text-[12.5px] text-muted">{loan.product_name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-display font-bold tabular-nums">
+                        {rd(loan.principal_outstanding)}
+                      </div>
+                      <div className="text-[12.5px] text-muted">
+                        {loan.next_due_date
+                          ? `Próxima cuota ${day(loan.next_due_date)}`
+                          : 'Sin cuotas pendientes'}
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              )
+            })}
+            <li className="flex flex-wrap items-center justify-between gap-2 bg-surface-2 px-4 py-3 text-sm font-semibold">
+              <span>
+                {count} préstamo{count === 1 ? '' : 's'}
+              </span>
+              <span className="tabular-nums">
+                Capital pendiente {rd(query.data?.totals.principal_outstanding)}
+              </span>
+            </li>
+          </RowList>
+          <Pagination page={page} count={count} onChange={setPage} />
+        </>
       ) : (
-        <EmptyState>No hay préstamos con estos filtros.</EmptyState>
+        <EmptyState>
+          {term ? `Ningún préstamo coincide con «${term}».` : 'No hay préstamos con estos filtros.'}
+        </EmptyState>
       )}
     </>
   )

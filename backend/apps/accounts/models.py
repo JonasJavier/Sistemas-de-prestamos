@@ -12,6 +12,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models import Q
 
+from apps.core.tenancy import TenantManager
+
 
 class UserManager(BaseUserManager["User"]):
     use_in_migrations = True
@@ -93,6 +95,8 @@ class Role(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = TenantManager()
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["company", "name"], name="role_unique_per_company"),
@@ -113,6 +117,8 @@ class Membership(models.Model):
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="memberships")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
 
     class Meta:
         constraints = [
@@ -153,6 +159,8 @@ class ApprovalLimit(models.Model):
     currency = models.CharField(max_length=3, default="DOP")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TenantManager()
 
     class Meta:
         constraints = [

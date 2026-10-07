@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { ApiError } from '../api/client'
 import { registerCompany } from '../api/platform'
-import { Alert, Brand, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
 
 const schema = z.object({
   company_legal_name: z.string().min(3, 'Escribe el nombre de tu financiera.'),
@@ -46,9 +46,8 @@ export function RegisterPage() {
 
   if (done) {
     return (
-      <main className="flex min-h-screen items-center justify-center px-4">
-        <Card className="max-w-md space-y-4 text-center">
-          <Brand />
+      <PublicPage>
+        <Card className="space-y-4 text-center">
           <h1 className="text-xl font-semibold">¡Tu prueba de 30 días empezó!</h1>
           <p className="text-sm text-muted">
             Te enviamos un correo para confirmar tu cuenta. Confírmalo y luego inicia sesión.
@@ -57,19 +56,12 @@ export function RegisterPage() {
             Ir a iniciar sesión
           </Link>
         </Card>
-      </main>
+      </PublicPage>
     )
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <Brand />
-          <p className="mt-1 text-sm text-muted">
-            Crea la cuenta de tu financiera · 30 días gratis, sin tarjeta
-          </p>
-        </div>
+    <PublicPage subtitle="Crea la cuenta de tu financiera · 30 días gratis, sin tarjeta">
         <Card>
           <form
             className="space-y-4"
@@ -118,7 +110,6 @@ export function RegisterPage() {
             Inicia sesión
           </Link>
         </p>
-      </div>
-    </main>
+    </PublicPage>
   )
 }

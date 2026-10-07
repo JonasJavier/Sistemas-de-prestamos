@@ -1,101 +1,99 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import type { Me } from '../api/accounts'
 import { listCustomers } from '../api/customers'
-import { Button, Card, Input } from '../components/ui'
+import {
+  Badge,
+  buttonClass,
+  EmptyState,
+  PageHeader,
+  Pagination,
+  rowLinkClass,
+  RowList,
+  SearchInput,
+  Spinner,
+} from '../components/ui'
+import { useDebounced } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
 
-export function CustomersPage() {
+/** P11: customers, searchable by name, document or phone. */
+export function CustomersPage({ me }: { me: Me }) {
   const [q, setQ] = useState('')
-  const [submitted, setSubmitted] = useState('')
+  const [page, setPage] = useState(1)
+  const term = useDebounced(q.trim(), 300)
+  const canCreate = hasRole(me, ACCESS.originate)
   const customers = useQuery({
-    queryKey: ['customers', submitted],
-    queryFn: () => listCustomers({ q: submitted }),
+    queryKey: ['customers', term, page],
+    queryFn: () => listCustomers({ q: term, page }),
+    placeholderData: keepPreviousData,
   })
+  const rows = customers.data?.results ?? []
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Clientes</h1>
-        <Link to="/clientes/nuevo">
-          <Button>Nuevo cliente</Button>
-        </Link>
-      </div>
-
-      <Card>
-        <form
-          className="mb-3 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            setSubmitted(q)
-          }}
-        >
-          <Input
-            placeholder="Buscar por nombre, cédula, RNC o teléfono…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <Button type="submit" variant="secondary">
-            Buscar
-          </Button>
-        </form>
-
-        {customers.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
-        {customers.data && customers.data.count === 0 ? (
-          <p className="py-6 text-center text-sm text-muted">
-            {submitted
-              ? 'Ningún cliente coincide con la búsqueda.'
-              : 'Aún no hay clientes · crea el primero con «Nuevo cliente».'}
-          </p>
-        ) : null}
-        {customers.data && customers.data.count > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                <th className="py-2 pr-3">Cliente</th>
-                <th className="py-2 pr-3">Documento</th>
-                <th className="py-2 pr-3">Teléfono</th>
-                <th className="py-2 pr-3">Sucursal</th>
-                <th className="py-2 pr-3">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.data.results.map((customer) => (
-                <tr key={customer.id} className="border-b border-edge/60 last:border-0">
-                  <td className="py-2 pr-3">
-                    <Link
-                      to="/clientes/$id"
-                      params={{ id: customer.id }}
-                      className="font-medium text-brand-700 hover:underline"
-                    >
+      <PageHeader
+        title="Clientes"
+        subtitle="Personas y empresas, con su expediente y sus garantías."
+        actions={
+          canCreate ? (
+            <Link to="/clientes/nuevo" className={buttonClass()}>
+              Nuevo cliente
+            </Link>
+          ) : null
+        }
+      />
+      <SearchInput
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value)
+          setPage(1)
+        }}
+        placeholder="Buscar por nombre, cédula, RNC o teléfono…"
+      />
+      {customers.isPending ? (
+        <Spinner />
+      ) : rows.length > 0 ? (
+        <>
+          <RowList>
+            {rows.map((customer) => (
+              <li key={customer.id}>
+                <Link to="/clientes/$id" params={{ id: customer.id }} className={rowLinkClass}>
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">
                       {customer.display_name}
-                    </Link>
-                    <span className="ml-2 text-[12.5px] text-muted">
-                      {customer.kind === 'company' ? 'Empresa' : ''}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-3 tabular-nums">
-                    {customer.document_number /* masked by the API (doc 06 - 7) */}
-                  </td>
-                  <td className="py-2 pr-3 tabular-nums">{customer.phone}</td>
-                  <td className="py-2 pr-3">{customer.branch_code}</td>
-                  <td className="py-2 pr-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
-                        customer.status === 'active'
-                          ? 'bg-brand-100 text-brand-800'
-                          : 'bg-danger-600/15 text-danger-600'
-                      }`}
-                    >
-                      {customer.status === 'active' ? 'Activo' : 'Bloqueado'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : null}
-      </Card>
+                      {customer.kind === 'company' ? (
+                        <span className="ml-2 text-[12.5px] font-normal text-muted">Empresa</span>
+                      ) : null}
+                    </div>
+                    <div className="text-[12.5px] text-muted tabular-nums">
+                      {customer.document_number /* masked by the API (doc 06 - 7) */} ·{' '}
+                      {customer.phone || 'sin teléfono'} · Sucursal {customer.branch_code}
+                    </div>
+                  </div>
+                  <Badge tone={customer.status === 'active' ? 'brand' : 'danger'}>
+                    {customer.status === 'active' ? 'Activo' : 'Bloqueado'}
+                  </Badge>
+                </Link>
+              </li>
+            ))}
+          </RowList>
+          <Pagination page={page} count={customers.data?.count ?? 0} onChange={setPage} />
+        </>
+      ) : (
+        <EmptyState
+          action={
+            canCreate && !term ? (
+              <Link to="/clientes/nuevo" className={buttonClass()}>
+                Crear el primer cliente
+              </Link>
+            ) : null
+          }
+        >
+          {term ? `Ningún cliente coincide con «${term}».` : 'Aún no hay clientes.'}
+        </EmptyState>
+      )}
     </>
   )
 }

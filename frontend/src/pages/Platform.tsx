@@ -9,8 +9,8 @@ import {
   type PaymentPayload,
   type PlatformCompany,
 } from '../api/platform'
-import { Alert, Button, Card, Field, Input } from '../components/ui'
-import { STATUS_BADGES } from './Dashboard'
+import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { day, STATUS_BADGES } from '../lib/format'
 
 export function PlatformPage() {
   const queryClient = useQueryClient()
@@ -41,7 +41,7 @@ export function PlatformPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Empresas de la plataforma</h1>
+      <PageHeader title="Empresas de la plataforma" subtitle="Estado, prueba y suscripción de cada empresa registrada." />
       {message ? <Alert tone="info">{message}</Alert> : null}
 
       <Card>
@@ -77,7 +77,7 @@ export function PlatformPage() {
                     </td>
                     <td className="py-2 pr-3 tabular-nums">{company.trial_ends_on ?? '—'}</td>
                     <td className="py-2 pr-3 tabular-nums">
-                      {company.subscription?.paid_until ?? '—'}
+                      {day(company.subscription?.paid_until)}
                     </td>
                     <td className="py-2 text-right">
                       <div className="flex justify-end gap-2">

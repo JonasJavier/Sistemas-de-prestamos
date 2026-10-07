@@ -3,20 +3,40 @@ import { Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 
 import type { Me } from '../api/accounts'
-import { listProducts } from '../api/lending'
+import { listProducts, type LoanProduct } from '../api/lending'
 import { ConditionsForm, QuoteSummary } from '../components/Conditions'
 import { ScheduleTable } from '../components/ScheduleTable'
-import { Alert, Card, PageHeader } from '../components/ui'
+import { Alert, buttonClass, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
 import { EMPTY_CONDITIONS, toRequest, type Conditions } from '../lib/conditions'
-import { hasRole, useLiveQuote } from '../lib/hooks'
+import { useLiveQuote } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
+
+/** Opens with the first active product filled in, so a quote shows at once. */
+function startingConditions(products: LoanProduct[]): Conditions {
+  const first = products.find((product) => product.is_active)
+  return first
+    ? {
+        productId: first.id,
+        amount: String(Number(first.min_amount)),
+        installments: String(first.min_term),
+        frequency: first.allowed_frequencies[0] ?? '',
+        rate: first.default_rate ?? first.min_rate,
+      }
+    : EMPTY_CONDITIONS
+}
 
 export function SimulatorPage({ me }: { me: Me }) {
   const products = useQuery({ queryKey: ['products'], queryFn: listProducts })
-  const [conditions, setConditions] = useState<Conditions>(EMPTY_CONDITIONS)
+  if (products.isPending) return <Spinner />
+  return <Simulator me={me} products={products.data?.results ?? []} />
+}
+
+function Simulator({ me, products }: { me: Me; products: LoanProduct[] }) {
+  const [conditions, setConditions] = useState<Conditions>(() => startingConditions(products))
   const request = useMemo(() => toRequest(conditions), [conditions])
   const { quote, fieldErrors, errorText } = useLiveQuote(request)
   const data = quote.data
-  const canOriginate = hasRole(me, 'Gerente', 'Supervisor', 'Oficial de crédito')
+  const canOriginate = hasRole(me, ACCESS.originate)
 
   return (
     <>
@@ -34,7 +54,7 @@ export function SimulatorPage({ me }: { me: Me }) {
                 frecuencia: conditions.frequency,
                 tasa: conditions.rate,
               }}
-              className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
+              className={buttonClass()}
             >
               Crear solicitud
             </Link>
@@ -44,7 +64,7 @@ export function SimulatorPage({ me }: { me: Me }) {
 
       <Card>
         <ConditionsForm
-          products={products.data?.results ?? []}
+          products={products}
           value={conditions}
           onChange={setConditions}
           errorText={errorText}
@@ -53,6 +73,12 @@ export function SimulatorPage({ me }: { me: Me }) {
 
       {quote.error && !fieldErrors ? (
         <Alert tone="danger">No se pudo cotizar. Intenta de nuevo.</Alert>
+      ) : null}
+
+      {products.length === 0 ? (
+        <EmptyState>
+          No hay productos activos. {me.is_manager ? 'Crea uno en Ajustes › Productos.' : ''}
+        </EmptyState>
       ) : null}
 
       {data ? (

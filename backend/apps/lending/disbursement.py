@@ -156,17 +156,21 @@ def disburse(
     reference: str = "",
     charge_account: FinancialAccount | None = None,
 ) -> Loan:
-    existing = Disbursement.objects.filter(idempotency_key=idempotency_key).first()
-    if existing is not None:
-        if existing.loan.application_id != application.pk:
-            raise DisbursementError("La clave de idempotencia ya se usó.", code="idempotency")
-        return existing.loan
-
+    # Lock first, then look for the key: a concurrent double click waits
+    # here and, once the first request commits, gets the same loan back
+    # instead of a «not approved» error.
     application = (
         Application.objects.select_for_update(of=("self",))
         .select_related("product__late_fee_policy", "customer", "branch")
         .get(pk=application.pk)
     )
+    existing = (
+        Disbursement.objects.filter(idempotency_key=idempotency_key).select_related("loan").first()
+    )
+    if existing is not None:
+        if existing.loan.application_id != application.pk:
+            raise DisbursementError("La clave de idempotencia ya se usó.", code="idempotency")
+        return existing.loan
     today = timezone.localdate()
     if application.status != Application.Status.APPROVED:
         raise DisbursementError("Solo se desembolsa una solicitud aprobada.", code="state")

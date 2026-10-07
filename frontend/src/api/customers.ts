@@ -1,4 +1,4 @@
-import { api, apiUpload } from './client'
+import { api, apiUpload, toQuery, type Page } from './client'
 
 export interface CustomerListItem {
   id: string
@@ -48,12 +48,9 @@ export interface CustomerPayload {
 export function listCustomers(params: {
   q?: string
   status?: string
-}): Promise<{ count: number; results: CustomerListItem[] }> {
-  const search = new URLSearchParams()
-  if (params.q) search.set('q', params.q)
-  if (params.status) search.set('status', params.status)
-  const qs = search.toString()
-  return api(`/api/v1/clientes/${qs ? `?${qs}` : ''}`)
+  page?: number
+}): Promise<Page<CustomerListItem>> {
+  return api(`/api/v1/clientes/${toQuery(params)}`)
 }
 
 export function getCustomer(id: string): Promise<Customer> {

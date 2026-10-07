@@ -10,12 +10,12 @@ import {
   regenerateRecoveryCodes,
 } from '../api/auth'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
 
 export function AccountPage({ me }: { me: Me }) {
   return (
     <>
-      <h1 className="text-xl font-semibold">Mi cuenta</h1>
+      <PageHeader title="Mi cuenta" subtitle="Tus datos y la verificación en dos pasos." />
 
       {me.mfa_required && !me.mfa_enabled ? (
         <Alert tone="warning">

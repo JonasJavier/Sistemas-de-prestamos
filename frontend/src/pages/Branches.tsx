@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 import { createBranch, listBranches, updateBranch } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
 
 const schema = z.object({
   code: z
@@ -56,7 +56,7 @@ export function BranchesPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Sucursales</h1>
+      <PageHeader title="Sucursales" subtitle="Cada sucursal numera sus documentos con su código." />
       <Card>
         <h2 className="mb-3 text-base font-semibold">Nueva sucursal</h2>
         <form

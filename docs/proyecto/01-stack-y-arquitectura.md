@@ -198,7 +198,7 @@ flowchart LR
 9. **Multitenant con una base compartida (decisiones 041–043).**
    - Todo registro operativo lleva `company`; la sucursal sigue siendo un límite de acceso dentro de la empresa.
    - Al iniciar sesión, la empresa queda fijada por la cuenta del usuario: no hay selector de compañía ni subdominios (decisión 043; quedan como opción futura).
-   - En cada petición, un middleware fija la empresa de la sesión en la conexión de PostgreSQL (`SET app.current_company`), y las políticas de **Row-Level Security** solo dejan ver filas de esa empresa. El ORM filtra primero; RLS es la barrera que queda si el código falla.
+   - En cada petición, un middleware fija la empresa de la sesión en la conexión de PostgreSQL (`SET app.current_company`), y las políticas de **Row-Level Security** solo dejan ver filas de esa empresa. El ORM filtra primero: el *manager* `TenantManager` de todo modelo con empresa agrega la empresa en curso a cada consulta (decisión 061); RLS es la barrera que queda si el código falla, y la aplicación se niega a arrancar con un rol de base de datos que la ignore (superusuario o `BYPASSRLS`).
    - Las tareas de Celery reciben la empresa como parámetro y fijan la misma variable antes de tocar datos.
    - El dueño de la plataforma administra las empresas desde un panel aparte (módulo `platform`) y no toca los datos de negocio (decisión 046).
 

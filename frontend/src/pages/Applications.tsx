@@ -1,16 +1,27 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
 import { listApplications } from '../api/origination'
-import { Badge, Card, EmptyState, Input, PageHeader, Spinner, Tabs } from '../components/ui'
-import { APPLICATION_STATUS, day, installmentsText, rd } from '../lib/format'
-import { hasRole, useDebounced } from '../lib/hooks'
+import {
+  Badge,
+  buttonClass,
+  EmptyState,
+  PageHeader,
+  Pagination,
+  rowLinkClass,
+  RowList,
+  SearchInput,
+  Spinner,
+  Tabs,
+} from '../components/ui'
+import { APPLICATION_STATUS, dateOf, day, installmentsText, rd } from '../lib/format'
+import type { ApplicationsSearch, ApplicationTab } from '../lib/applications'
+import { useDebounced } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
 
-type TabKey = 'por_aprobar' | 'mias' | 'in_review' | 'por_desembolsar' | 'rejected' | 'todas'
-
-const TAB_FILTERS: Record<TabKey, { bandeja?: string; status?: string }> = {
+const TAB_FILTERS: Record<ApplicationTab, { bandeja?: string; status?: string }> = {
   por_aprobar: { bandeja: 'por_aprobar' },
   mias: { bandeja: 'mias' },
   in_review: { status: 'in_review' },
@@ -19,10 +30,16 @@ const TAB_FILTERS: Record<TabKey, { bandeja?: string; status?: string }> = {
   todas: {},
 }
 
+const EMPTY_TEXT: Partial<Record<ApplicationTab, string>> = {
+  por_aprobar: 'No tienes solicitudes por aprobar.',
+  mias: 'No tienes borradores ni solicitudes devueltas.',
+  por_desembolsar: 'No hay solicitudes aprobadas esperando desembolso.',
+}
+
 /** P26: the officer's drafts, the approver's tray, and everything else. */
 export function ApplicationsPage({ me }: { me: Me }) {
-  const decider = hasRole(me, 'Gerente', 'Supervisor')
-  const originator = hasRole(me, 'Gerente', 'Supervisor', 'Oficial de crédito')
+  const decider = hasRole(me, ACCESS.decide)
+  const originator = hasRole(me, ACCESS.originate)
   const tabs = [
     ...(decider ? ([['por_aprobar', 'Por aprobar']] as const) : []),
     ...(originator ? ([['mias', 'Mis borradores']] as const) : []),
@@ -31,13 +48,19 @@ export function ApplicationsPage({ me }: { me: Me }) {
     ['rejected', 'Rechazadas'],
     ['todas', 'Todas'],
   ] as const
-  const [tab, setTab] = useState<TabKey>(tabs[0][0])
+  const search: ApplicationsSearch = useSearch({ from: '/app/solicitudes' })
+  const navigate = useNavigate({ from: '/solicitudes' })
+  const tab: ApplicationTab =
+    search.bandeja && tabs.some(([key]) => key === search.bandeja) ? search.bandeja : tabs[0][0]
   const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
   const term = useDebounced(q.trim(), 300)
   const query = useQuery({
-    queryKey: ['applications', tab, term],
-    queryFn: () => listApplications({ ...TAB_FILTERS[tab], q: term }),
+    queryKey: ['applications', tab, term, page],
+    queryFn: () => listApplications({ ...TAB_FILTERS[tab], q: term, page }),
+    placeholderData: keepPreviousData,
   })
+  const rows = query.data?.results ?? []
 
   return (
     <>
@@ -46,35 +69,38 @@ export function ApplicationsPage({ me }: { me: Me }) {
         subtitle="Del simulador a la aprobación: nadie aprueba lo que creó."
         actions={
           originator ? (
-            <Link
-              to="/solicitudes/nueva"
-              className="inline-flex h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:h-9"
-            >
+            <Link to="/solicitudes/nueva" className={buttonClass()}>
               Nueva solicitud
             </Link>
           ) : null
         }
       />
-      <Tabs tabs={tabs} value={tab} onChange={setTab} />
-      <Input
+      <Tabs
+        tabs={tabs}
+        value={tab}
+        onChange={(next) => {
+          setPage(1)
+          void navigate({ search: { bandeja: next }, replace: true })
+        }}
+      />
+      <SearchInput
         value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar por número o cliente…"
+        onChange={(e) => {
+          setQ(e.target.value)
+          setPage(1)
+        }}
+        placeholder="Buscar por número, cliente o cédula…"
       />
       {query.isPending ? (
         <Spinner />
-      ) : query.data && query.data.results.length > 0 ? (
-        <Card className="!p-0">
-          <ul className="divide-y divide-edge">
-            {query.data.results.map((app) => {
+      ) : rows.length > 0 ? (
+        <>
+          <RowList>
+            {rows.map((app) => {
               const status = APPLICATION_STATUS[app.status]
               return (
                 <li key={app.id}>
-                  <Link
-                    to="/solicitudes/$id"
-                    params={{ id: app.id }}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 hover:bg-surface-2"
-                  >
+                  <Link to="/solicitudes/$id" params={{ id: app.id }} className={rowLinkClass}>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold tabular-nums">{app.number}</span>
@@ -86,8 +112,7 @@ export function ApplicationsPage({ me }: { me: Me }) {
                       </div>
                       <div className="text-[12.5px] text-muted">
                         {app.product_name} · {installmentsText(app.installments, app.frequency)} ·
-                        por{' '}
-                        {app.created_by_name}
+                        por {app.created_by_name}
                         {app.assigned_approver_name && app.status === 'in_review'
                           ? ` · asignada a ${app.assigned_approver_name}`
                           : ''}
@@ -100,28 +125,29 @@ export function ApplicationsPage({ me }: { me: Me }) {
                       <div className="text-[12.5px] text-muted">
                         {app.status === 'approved' && app.valid_until
                           ? `Vigente hasta ${day(app.valid_until)}`
-                          : day(app.created_at)}
+                          : dateOf(app.created_at)}
                       </div>
                     </div>
                   </Link>
                 </li>
               )
             })}
-          </ul>
-        </Card>
+          </RowList>
+          <Pagination page={page} count={query.data?.count ?? 0} onChange={setPage} />
+        </>
       ) : (
         <EmptyState
           action={
-            originator ? (
+            originator && !term ? (
               <Link to="/solicitudes/nueva" className="font-semibold text-brand-700 hover:underline">
                 Crear solicitud
               </Link>
             ) : null
           }
         >
-          {tab === 'por_aprobar'
-            ? 'No tienes solicitudes por aprobar.'
-            : 'Aún no hay solicitudes aquí.'}
+          {term
+            ? `Ninguna solicitud coincide con «${term}».`
+            : (EMPTY_TEXT[tab] ?? 'Aún no hay solicitudes aquí.')}
         </EmptyState>
       )}
     </>

@@ -121,3 +121,31 @@ export async function verifyEmail(key: string): Promise<void> {
     throw error
   }
 }
+
+/** allauth headless errors come as { errors: [{ message, code, param }] }. */
+export function authErrorCode(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null
+  const errors = (error.data as { errors?: { code?: string }[] } | null)?.errors
+  return errors?.[0]?.code ?? null
+}
+
+export function authErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) return fallback
+  const errors = (error.data as { errors?: { message?: string }[] } | null)?.errors
+  return errors?.[0]?.message ?? fallback
+}
+
+/** Always answers the same, registered or not: no one can probe emails. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api(`${BASE}/auth/password/request`, { method: 'POST', body: { email } })
+}
+
+export async function resetPassword(key: string, password: string): Promise<void> {
+  try {
+    await api(`${BASE}/auth/password/reset`, { method: 'POST', body: { key, password } })
+  } catch (error) {
+    // 401 = the password changed and the user must sign in again (2FA included).
+    if (error instanceof ApiError && error.status === 401) return
+    throw error
+  }
+}

@@ -64,6 +64,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "apps.accounts.middleware.SessionTimeoutMiddleware",
     "apps.core.tenancy.TenantMiddleware",
     "apps.accounts.middleware.MFARequiredMiddleware",
     "pghistory.middleware.HistoryMiddleware",
@@ -145,6 +146,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Doc 06 - section 6: 5 failed logins lock the address for 15 minutes,
+# plus a per-IP limit (allauth keeps the counters in the cache, Redis).
+ACCOUNT_RATE_LIMITS = {"login_failed": "10/m/ip,5/15m/key"}
+
+# Doc 06 - section 6: closes after 30 minutes idle and 12 hours in any case
+# (SessionTimeoutMiddleware renews the idle window while the user works).
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_ABSOLUTE_SECONDS = 12 * 60 * 60
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
@@ -152,7 +161,9 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # API ------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        # 401 (not DRF's default 403) when the session is gone, so the SPA
+        # can tell «sesión vencida» apart from «sin permiso».
+        "apps.accounts.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -163,8 +174,7 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.OrderingFilter",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 25,
+    "DEFAULT_PAGINATION_CLASS": "apps.core.api.pagination.Pagination",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "registration": "5/hour",  # F19: public signup, per IP

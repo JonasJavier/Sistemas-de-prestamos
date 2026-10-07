@@ -24,7 +24,7 @@ import {
   Spinner,
 } from '../components/ui'
 import { day, errorMessage, rd } from '../lib/format'
-import { hasRole } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
 
 function Movements({ account }: { account: FinancialAccount }) {
   const query = useQuery({
@@ -69,8 +69,8 @@ export function AccountsPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
   const accounts = useQuery({ queryKey: ['accounts'], queryFn: listAccounts })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['accounts'] })
-  const canManage = hasRole(me, 'Gerente', 'Contabilidad')
-  const isManager = hasRole(me, 'Gerente')
+  const canManage = hasRole(me, ACCESS.manageAccounts)
+  const isManager = hasRole(me, ACCESS.adjustCapital)
   const [open, setOpen] = useState<string | null>(null)
   const [panel, setPanel] = useState<'new' | 'transfer' | 'capital' | null>(null)
 

@@ -19,6 +19,26 @@ Claude es **el responsable técnico del proyecto, con autonomía total** (decisi
 - `docs/proyecto/decisiones.md` — registro de decisiones numeradas. Toda decisión nueva se registra ahí.
 - `docs/referencia/` — estudio del sistema de referencia (Púrpura Datos); solo material de consulta.
 
+## Explorar el código: Codebase Memory primero
+
+Para entender o buscar código, **todo agente de IA usa primero el grafo de Codebase Memory** (MCP `codebase-memory-mcp`): da respuestas estructurales precisas con una fracción de los tokens que gastan grep y la lectura de archivos completos. Proyecto indexado: `C-Users-savage-Documents-GitHub-Sistemas-de-prestamos`.
+
+| Necesito… | Herramienta |
+| --- | --- |
+| Panorama de módulos, rutas y capas | `get_architecture(aspects=["overview"])` |
+| Encontrar una función, clase o ruta | `search_graph(query=…)` o `search_graph(name_pattern=…)` |
+| Leer solo ese símbolo | `get_code_snippet(qualified_name=…)` (tras `search_graph`) |
+| Quién llama a X / qué llama X (impacto de un cambio) | `trace_path(function_name=…, direction="inbound"/"outbound")` |
+| Qué símbolos toca mi diff | `detect_changes()` |
+| Texto literal (mensajes, constantes) | `search_code(pattern=…)` |
+| Código muerto | `search_graph(max_degree=0, exclude_entry_points=true)` |
+
+Reglas:
+
+- Si el índice está viejo (otro `head_sha` en `list_projects`) o falta, ejecutar `index_repository` antes de explorar; reindexar tras commits grandes.
+- Grep, Glob y Read siguen sirviendo para documentos, configuración y archivos que no son código; y **siempre se lee un archivo con Read antes de editarlo**.
+- Leer por rangos o por símbolo, no archivos enteros, salvo que se vaya a editar buena parte.
+
 ## Convenciones clave
 
 - Código, identificadores y commits **en inglés**; interfaz, documentos y docs **en español** (decisión 010).

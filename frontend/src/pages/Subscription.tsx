@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getMyCompany } from '../api/platform'
-import { Alert, Card } from '../components/ui'
-import { STATUS_BADGES } from './Dashboard'
+import { Alert, Card, PageHeader } from '../components/ui'
+import { day, STATUS_BADGES } from '../lib/format'
 
 export function SubscriptionPage() {
   const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
@@ -11,12 +11,12 @@ export function SubscriptionPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Suscripción</h1>
+      <PageHeader title="Suscripción" subtitle="El plan de tu financiera y hasta cuándo está pagado." />
 
       {data?.status === 'trial' && typeof data.trial_days_left === 'number' ? (
         <Alert tone="info">
           Tu prueba gratis termina en <strong>{data.trial_days_left} días</strong> (
-          {data.trial_ends_on}).
+          {day(data.trial_ends_on)}).
         </Alert>
       ) : null}
       {data?.status === 'suspended' ? (
@@ -56,7 +56,7 @@ export function SubscriptionPage() {
               <div>
                 <dt className="text-muted">Pagada hasta</dt>
                 <dd className="font-medium tabular-nums">
-                  {data.subscription?.paid_until ?? '—'}
+                  {day(data.subscription?.paid_until)}
                 </dd>
               </div>
             </dl>

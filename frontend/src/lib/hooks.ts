@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 
 import { ApiError } from '../api/client'
 import { simulate, type Simulation, type SimulationRequest } from '../api/lending'
-import type { Me } from '../api/accounts'
 
 export function useDebounced<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -34,6 +33,3 @@ export function useLiveQuote(request: SimulationRequest | null) {
   }
   return { quote, fieldErrors, errorText }
 }
-
-export const hasRole = (me: Me | undefined, ...roles: string[]) =>
-  Boolean(me?.roles?.some((role) => roles.includes(role)))
