@@ -92,6 +92,19 @@ def company_context(company_id: UUID | str) -> Iterator[None]:
             set_current_company(previous)
 
 
+def on_commit_in_tenant(company_id: UUID, func: Callable[[], Any]) -> None:
+    """Run ``func`` after the transaction commits, inside ``company_id``'s
+    context: the commit may happen after the code that registered it has
+    left its tenant (a command, a task), and RLS would hide every row."""
+    from django.db import transaction
+
+    def run() -> None:
+        with company_context(company_id):
+            func()
+
+    transaction.on_commit(run, robust=True)
+
+
 class CurrentCompany(models.Expression):
     """The running tenant, resolved when the query is compiled.
 

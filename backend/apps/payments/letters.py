@@ -10,6 +10,7 @@ from apps.accounts import authz
 from apps.accounts.models import User
 from apps.audit.models import record_event
 from apps.core.models import Sequence
+from apps.core.tenancy import on_commit_in_tenant
 from apps.customers.access import can_serve
 from apps.lending.models import Loan
 from apps.payments import portfolio
@@ -82,5 +83,5 @@ def issue_quote(*, loan: Loan, user: User, as_of: dt.date | None = None) -> Payo
     )
     from apps.documents.services import issue_payoff_letter
 
-    transaction.on_commit(lambda: issue_payoff_letter(letter, issued_by=user))
+    on_commit_in_tenant(loan.company_id, lambda: issue_payoff_letter(letter, issued_by=user))
     return letter

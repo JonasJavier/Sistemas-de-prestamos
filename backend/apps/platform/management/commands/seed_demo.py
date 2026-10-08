@@ -146,14 +146,14 @@ class Command(BaseCommand):
                 )
         self.stdout.write(f"«{DEMO_COMPANY}»: gerente@modelo.test y un usuario por rol.")
 
-    @transaction.atomic
     def _demo_portfolio(self) -> None:
         """Loans to collect in the phase 4 demo: through the real services
         (application, approval, cash disbursement), then dated in the past."""
         company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
         if company is None:
             return
-        with company_context(company.id):
+        # Commit inside the tenant: what runs at commit (documents) needs it.
+        with company_context(company.id), transaction.atomic():
             if Loan.objects.filter(collector__email="cobrador@modelo.test").exists():
                 return
             from apps.cash import services as cash

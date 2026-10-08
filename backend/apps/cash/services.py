@@ -18,6 +18,7 @@ from apps.accounts.models import ApprovalLimit, User
 from apps.audit.models import record_event
 from apps.cash.models import DENOMINATIONS, CashCount, CashSession, RouteSession
 from apps.core.models import Branch, Reason, Sequence
+from apps.core.tenancy import on_commit_in_tenant
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount, JournalLine
 from apps.notifications.models import Notification
@@ -411,7 +412,7 @@ def approve_session(*, session: CashSession, user: User, note: str = "") -> Cash
     )
     from apps.documents.services import issue_cash_close  # documents import cash
 
-    transaction.on_commit(lambda: issue_cash_close(session, issued_by=user))
+    on_commit_in_tenant(session.company_id, lambda: issue_cash_close(session, issued_by=user))
     return session
 
 
@@ -563,7 +564,7 @@ def settle_route(
     )
     from apps.documents.services import issue_route_settlement
 
-    transaction.on_commit(lambda: issue_route_settlement(route, issued_by=user))
+    on_commit_in_tenant(route.company_id, lambda: issue_route_settlement(route, issued_by=user))
     return route
 
 
