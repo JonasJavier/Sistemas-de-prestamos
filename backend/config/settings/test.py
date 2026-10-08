@@ -8,6 +8,7 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "registration": "1000/hour",
     "invitation": "1000/hour",
+    "public_receipt": "1000/minute",
 }
 
 # Fast hashing in tests; never in production.

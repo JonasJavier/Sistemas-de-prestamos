@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts import authz
+from apps.customers.access import scope_customers, scope_loans
 from apps.customers.api.serializers import CustomerListSerializer
 from apps.customers.models import Customer
 from apps.customers.search import search_customers
@@ -32,11 +33,7 @@ def _loans(request: Request, q: str) -> list[dict]:
         | Q(customer__last_name__unaccent__icontains=q)
         | Q(customer__legal_name__unaccent__icontains=q)
     )
-    scope = authz.branch_scope(user)
-    if scope is not None:
-        loans = loans.filter(branch_id__in=scope)
-    if authz.role_names(user) <= {authz.COBRADOR}:
-        loans = loans.filter(collector=user)
+    loans = scope_loans(loans, user)
     return [
         {
             "number": loan.number,
@@ -56,7 +53,11 @@ class GlobalSearchView(APIView):
         if len(q) < 2:
             return Response({"customers": [], "loans": []})
         customers = search_customers(
-            q, Customer.objects.select_related("home_branch").order_by("-created_at")
+            q,
+            scope_customers(
+                Customer.objects.select_related("home_branch").order_by("-created_at"),
+                request.user,
+            ),
         )[:5]
         return Response(
             {

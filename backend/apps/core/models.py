@@ -216,6 +216,28 @@ class ApprovalRequest(CompanyScopedModel):
         return f"{self.get_kind_display()} {self.target_label}"
 
 
+class PublicLink(TimeStampedModel):
+    """A platform-wide index of the unguessable public links (decision 024):
+    the receipt shared by WhatsApp, and the QR verifications of phase 9.
+
+    It holds no business data, only which tenant and object a token points
+    to, so a visitor without a session can be served inside that tenant's
+    context. Revoking the link makes the token useless.
+    """
+
+    class Kind(models.TextChoices):
+        RECEIPT = "receipt", "Recibo"
+
+    token = models.CharField(max_length=64, unique=True)
+    tenant = models.UUIDField()  # the company; deliberately not a tenant-scoped FK
+    kind = models.CharField(max_length=20, choices=Kind)
+    object_id = models.UUIDField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.kind} {self.object_id}"
+
+
 class Sequence(CompanyScopedModel):
     """Gapless per-branch document numbering (decision 030).
 

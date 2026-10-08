@@ -486,10 +486,15 @@ class LoanSerializer(LoanListSerializer):
     void_reason_text = serializers.CharField(
         source="void_reason.text", read_only=True, default=None
     )
+    collector_name = serializers.SerializerMethodField()
+    closed_on = serializers.DateField(read_only=True)
 
     class Meta(LoanListSerializer.Meta):
         fields = [
             *LoanListSerializer.Meta.fields,
+            "collector",
+            "collector_name",
+            "closed_on",
             "application",
             "application_number",
             "currency",
@@ -511,6 +516,9 @@ class LoanSerializer(LoanListSerializer):
 
     def get_officer_name(self, obj: Loan) -> str | None:
         return _person(obj.officer)
+
+    def get_collector_name(self, obj: Loan) -> str | None:
+        return _person(obj.collector)
 
     def get_current_terms(self, obj: Loan) -> dict | None:
         terms = obj.terms.order_by("-version").first()
@@ -537,6 +545,14 @@ class LoanSerializer(LoanListSerializer):
             }
             for c in obj.collaterals.select_related("collateral")
         ]
+
+
+class DateChangeSerializer(serializers.Serializer):
+    first_due = serializers.DateField()
+    reason = serializers.PrimaryKeyRelatedField(
+        queryset=Reason.objects.filter(kind=Reason.Kind.DATE_CHANGE, is_active=True)
+    )
+    note = serializers.CharField(max_length=1000)
 
 
 class VoidSerializer(serializers.Serializer):

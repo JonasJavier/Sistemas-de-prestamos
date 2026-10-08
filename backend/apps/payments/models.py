@@ -94,6 +94,9 @@ class Payment(CompanyScopedModel):
     late_fee_waived = models.DecimalField(**MONEY, default=0)
     interest_waived = models.DecimalField(**MONEY, default=0)  # payoff: future interest
     discount = models.DecimalField(**MONEY, default=0)  # authorized payoff discount
+    # «Saldo posterior» on the receipt: frozen when the payment is made.
+    principal_after = models.DecimalField(**MONEY, default=0)
+    owed_after = models.DecimalField(**MONEY, default=0)  # everything still scheduled
 
     # Where the money went: a cashier's session, a collector's route or a bank.
     financial_account = models.ForeignKey(

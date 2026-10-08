@@ -13,6 +13,10 @@ urlpatterns = [
     path("api/v1/", include("apps.customers.api.urls")),
     path("api/v1/", include("apps.lending.api.urls")),
     path("api/v1/", include("apps.ledger.api.urls")),
+    path("api/v1/", include("apps.payments.api.urls")),
+    path("api/v1/", include("apps.cash.api.urls")),
+    path("api/v1/", include("apps.collections.api.urls")),
+    path("api/v1/", include("apps.notifications.api.urls")),
     path("api/v1/auth/", include("allauth.headless.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

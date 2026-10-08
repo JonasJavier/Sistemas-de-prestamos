@@ -89,3 +89,35 @@ class MFARequiredMiddleware:
             ).exists()
             request._has_totp = cached  # noqa: SLF001 - request-local cache
         return cached
+
+
+HOURS_EXEMPT_PREFIXES = ("/api/v1/auth/", "/api/v1/csrf/")
+
+
+class WorkingHoursMiddleware:
+    """Decision 035: outside the branch hours a cashier's or collector's
+    session closes; the SPA shows why on the sign-in screen."""
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        user = request.user
+        if (
+            settings.ENFORCE_WORKING_HOURS
+            and request.path.startswith("/api/")
+            and not request.path.startswith(HOURS_EXEMPT_PREFIXES)
+            and user.is_authenticated
+            and getattr(user, "company_id", None)
+        ):
+            from apps.accounts.hours import outside_hours
+
+            message = outside_hours(user)
+            if message:
+                logout(request)
+                return JsonResponse(
+                    {"detail": message, "code": "outside_hours"},
+                    status=401,
+                    headers={"WWW-Authenticate": 'Session realm="api"'},
+                )
+        return self.get_response(request)

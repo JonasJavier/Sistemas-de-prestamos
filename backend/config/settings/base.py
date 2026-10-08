@@ -67,6 +67,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "apps.accounts.middleware.SessionTimeoutMiddleware",
     "apps.core.tenancy.TenantMiddleware",
+    "apps.accounts.middleware.WorkingHoursMiddleware",
     "apps.accounts.middleware.MFARequiredMiddleware",
     "pghistory.middleware.HistoryMiddleware",
 ]
@@ -137,6 +138,11 @@ MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 # accounts stay usable, and on in production.
 REQUIRE_MFA = env.bool("REQUIRE_MFA", default=False)
 
+# Decision 035: cashiers and collectors only work within their branch's
+# hours. Off by default in development (demos happen at any hour) and in
+# tests that do not ask for it; on in production.
+ENFORCE_WORKING_HOURS = env.bool("ENFORCE_WORKING_HOURS", default=False)
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {
@@ -180,6 +186,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "registration": "5/hour",  # F19: public signup, per IP
         "invitation": "30/hour",  # F17: public invitation lookup/accept, per IP
+        "public_receipt": "60/minute",  # decision 024: the WhatsApp receipt link, per IP
     },
 }
 

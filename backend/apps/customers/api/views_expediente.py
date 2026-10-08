@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from apps.accounts.api.permissions import role_required
 from apps.audit.models import SensitiveAccessLog
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
+from apps.customers.access import scope_customers
 from apps.customers.api.serializers import (
     BusinessSerializer,
     CollateralFileSerializer,
@@ -50,6 +51,10 @@ class _CustomerChildViewSet(viewsets.ModelViewSet):
     permission_classes = [CanEditCustomers, CompanyNotSuspendedOrReadOnly]
     filterset_fields = ["customer"]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+    customer_field = "customer"
+
+    def get_queryset(self):
+        return scope_customers(super().get_queryset(), self.request.user, field=self.customer_field)
 
 
 class RelativeViewSet(_CustomerChildViewSet):
@@ -131,6 +136,9 @@ class CustomerFileViewSet(_PrivateFileViewSet):
     )
     target_type = "customer_file"
 
+    def get_queryset(self):
+        return scope_customers(super().get_queryset(), self.request.user, field="customer")
+
     def _detail(self, file: CustomerFile) -> str:
         return f"{file.get_kind_display()} de {file.customer.display_name}"
 
@@ -142,6 +150,9 @@ class CollateralFileViewSet(_PrivateFileViewSet):
         "-created_at"
     )
     target_type = "collateral_file"
+
+    def get_queryset(self):
+        return scope_customers(super().get_queryset(), self.request.user, field="collateral__owner")
 
     def _detail(self, file: CollateralFile) -> str:
         return f"{file.get_kind_display()} de {file.collateral.description}"
@@ -188,6 +199,9 @@ class CollateralViewSet(viewsets.ModelViewSet):
         "-created_at"
     )
 
+    def get_queryset(self):
+        return scope_customers(super().get_queryset(), self.request.user, field="owner")
+
 
 class CustomerEmploymentView(APIView):
     """GET/PUT upsert for the one-to-one income records (F1 step 3)."""
@@ -197,12 +211,14 @@ class CustomerEmploymentView(APIView):
     serializer_class = EmploymentSerializer
 
     def _customer(self, pk: str) -> Customer:
-        return Customer.objects.get(pk=pk)  # RLS: 404 if not ours (handled below)
+        # RLS and the branch scope: 404 if not ours (handled below).
+        return scope_customers(Customer.objects.all(), self.request.user).get(pk=pk)
 
     def get(self, request: Request, pk: str) -> Response:
         try:
+            self._customer(pk)
             record = self.model.objects.get(customer_id=pk)
-        except self.model.DoesNotExist:
+        except self.model.DoesNotExist, Customer.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(self.serializer_class(record).data)
 

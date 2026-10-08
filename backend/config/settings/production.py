@@ -18,3 +18,6 @@ SECURE_HSTS_PRELOAD = True
 
 # Decision 034: mandatory 2FA. Can only be disabled explicitly via env.
 REQUIRE_MFA = env.bool("REQUIRE_MFA", default=True)
+
+# Decision 035: working hours for cashiers and collectors.
+ENFORCE_WORKING_HOURS = env.bool("ENFORCE_WORKING_HOURS", default=True)

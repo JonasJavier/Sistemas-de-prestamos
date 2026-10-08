@@ -3,11 +3,14 @@ from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from apps.accounts import authz
 from apps.accounts.api.permissions import role_required
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
+from apps.customers import access
 from apps.customers.api.serializers import (
     BlockSerializer,
     CustomerListSerializer,
@@ -15,6 +18,7 @@ from apps.customers.api.serializers import (
 )
 from apps.customers.models import Customer
 from apps.customers.search import search_customers
+from apps.customers.validators import mask_document
 
 # Doc 06 matrix: create/edit customers -> G, Su, O; block -> G, Su.
 CanEditCustomers = role_required("Gerente", "Supervisor", "Oficial de crédito")
@@ -29,7 +33,10 @@ class CustomerViewSet(viewsets.ModelViewSet):
     filterset_fields = ["status", "kind", "home_branch"]
 
     def get_queryset(self) -> QuerySet[Customer]:
-        queryset = Customer.objects.select_related("home_branch").order_by("-created_at")
+        queryset = access.scope_customers(
+            Customer.objects.select_related("home_branch").order_by("-created_at"),
+            self.request.user,
+        )
         q = self.request.query_params.get("q", "")
         if q.strip():
             queryset = search_customers(q, queryset)
@@ -92,6 +99,52 @@ class CustomerViewSet(viewsets.ModelViewSet):
         customer.block_reason = ""
         customer.save(update_fields=["status", "block_reason", "updated_at"])
         return Response(CustomerSerializer(customer).data)
+
+    @action(detail=False, methods=["get"], url_path="otra-sucursal")
+    def other_branch(self, request: Request) -> Response:
+        """An exact document of a customer outside the user's branches: only
+        enough to ask for access (decision 033)."""
+        digits = "".join(ch for ch in request.query_params.get("documento", "") if ch.isalnum())
+        if len(digits) < 6 or not authz.has_any_role(request.user, *access.GRANT_ROLES):
+            return Response([])
+        visible = access.scope_customers(Customer.objects.all(), request.user).values("id")
+        matches = (
+            Customer.objects.filter(document_number=digits)
+            .exclude(id__in=visible)
+            .select_related("home_branch")[:3]
+        )
+        return Response(
+            [
+                {
+                    "id": str(c.id),
+                    "display_name": c.display_name,
+                    "document": mask_document(c.document_number),
+                    "branch_name": c.home_branch.name,
+                }
+                for c in matches
+            ]
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="acceso-especial",
+        permission_classes=[IsAuthenticated, CompanyNotSuspendedOrReadOnly],
+    )
+    def special_access(self, request: Request, pk: str | None = None) -> Response:
+        """«Atender un cliente de otra sucursal», with a reason; logged."""
+        if not authz.has_any_role(request.user, *access.GRANT_ROLES):
+            return Response({"detail": "Tu rol no atiende otras sucursales."}, status=403)
+        customer = Customer.objects.filter(pk=pk).first()
+        if customer is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            grant = access.grant(
+                user=request.user, customer=customer, note=request.data.get("note", "")
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc), "code": "note"}, status=400)
+        return Response({"expires_at": grant.expires_at}, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer) -> None:
         # Consent timestamp is set once, when the signed consent arrives.

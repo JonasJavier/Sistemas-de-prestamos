@@ -8,8 +8,32 @@ from apps.core.models import Branch, Holiday, Reason, Sequence
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
-        fields = ["id", "code", "name", "address", "phone", "is_active", "created_at"]
+        fields = [
+            "id",
+            "code",
+            "name",
+            "address",
+            "phone",
+            "is_active",
+            "opens_at",
+            "closes_at",
+            "workdays",
+            "created_at",
+        ]
         read_only_fields = ["id", "created_at"]
+
+    def validate_workdays(self, value: list) -> list[int]:
+        days = sorted({int(day) for day in value})
+        if not days or any(day < 0 or day > 6 for day in days):
+            raise serializers.ValidationError("Elige al menos un día laborable.")
+        return days
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        opens = attrs.get("opens_at", getattr(self.instance, "opens_at", None))
+        closes = attrs.get("closes_at", getattr(self.instance, "closes_at", None))
+        if opens and closes and opens >= closes:
+            raise serializers.ValidationError({"closes_at": "El cierre va después de la apertura."})
+        return attrs
 
     def validate_code(self, value: str) -> str:
         # Decision 030: the code prefixes document numbers and never changes.

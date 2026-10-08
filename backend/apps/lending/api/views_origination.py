@@ -37,6 +37,7 @@ from apps.lending.api.serializers_origination import (
     ApplicationSerializer,
     ApproveSerializer,
     BudgetItemSerializer,
+    DateChangeSerializer,
     DisburseSerializer,
     EventSerializer,
     GuarantorSerializer,
@@ -87,6 +88,13 @@ def _fail(exc: flow.ApplicationError) -> Response:
 def _scoped(queryset: QuerySet, user) -> QuerySet:
     scope = authz.branch_scope(user)
     return queryset if scope is None else queryset.filter(branch_id__in=scope)
+
+
+def _scoped_loans(queryset: QuerySet, user) -> QuerySet:
+    """Branch scope plus the customers served from another branch today (059)."""
+    from apps.customers.access import scope_loans
+
+    return scope_loans(queryset, user)
 
 
 def _search(queryset: QuerySet, q: str) -> QuerySet:
@@ -540,10 +548,17 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
             "customer", "product", "branch", "officer", "application"
         )
         # The collector sees only the loans assigned to him (doc 06: «P»).
-        if authz.role_names(user) <= {CO}:
-            queryset = queryset.filter(collector=user)
         queryset = _search(queryset, self.request.query_params.get("q", ""))
-        return _scoped(queryset, user).order_by("-disbursed_on", "-created_at")
+        params = self.request.query_params
+        if params.get("collector") == "none":
+            queryset = queryset.filter(collector__isnull=True)
+        elif params.get("collector"):
+            queryset = queryset.filter(collector_id=params["collector"])
+        if params.get("tramo") == "al_dia":
+            queryset = queryset.filter(days_past_due=0)
+        elif params.get("tramo") == "atraso":
+            queryset = queryset.filter(days_past_due__gt=0)
+        return _scoped_loans(queryset, user).order_by("-disbursed_on", "-created_at")
 
     def get_serializer_class(self):
         return LoanListSerializer if self.action == "list" else LoanSerializer
@@ -585,6 +600,16 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
     def documentos(self, request: Request, number: str | None = None) -> Response:
         loan = self.get_object()
         documents = ensure_loan_documents(loan, issued_by=request.user)
+        documents += list(
+            GeneratedDocument.objects.filter(
+                Q(target_type="lending.loan", target_id=loan.pk)
+                & Q(kind=GeneratedDocument.Kind.PAYOFF_FINAL)
+                | Q(
+                    target_type="payments.payoffquote",
+                    target_id__in=loan.payoff_quotes.values("id"),
+                )
+            ).order_by("created_at")
+        )
         signed = loan.files.filter(kind=LoanFile.Kind.SIGNED_PROMISSORY_NOTE).first()
         return Response(
             {
@@ -609,7 +634,14 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
     def documento(self, request: Request, number: str | None = None, doc_id: str = "") -> Response:
         loan = self.get_object()
         document = get_object_or_404(
-            GeneratedDocument, pk=doc_id, target_type="lending.loan", target_id=loan.pk
+            GeneratedDocument.objects.filter(
+                Q(target_type="lending.loan", target_id=loan.pk)
+                | Q(
+                    target_type="payments.payoffquote",
+                    target_id__in=loan.payoff_quotes.values("id"),
+                )
+            ),
+            pk=doc_id,
         )
         SensitiveAccessLog.objects.create(
             company_id=loan.company_id,
@@ -646,6 +678,29 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
         loan.promissory_note_signed_at = timezone.now()
         loan.save(update_fields=["promissory_note_signed_at", "updated_at"])
         return Response(LoanSerializer(loan).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="cambiar-fecha", permission_classes=[CanDecide])
+    def change_dates(self, request: Request, number: str | None = None) -> Response:
+        """Doc 03 - 4: a new calendar version, with reason (G, Su)."""
+        from apps.payments.schedule_changes import change_dates
+        from apps.payments.services import PaymentError
+
+        loan = self.get_object()
+        serializer = DateChangeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            change_dates(
+                loan=loan,
+                user=request.user,
+                first_due=data["first_due"],
+                reason=data["reason"],
+                note=data["note"],
+            )
+        except PaymentError as exc:
+            return _fail(exc)
+        loan.refresh_from_db()
+        return Response(LoanSerializer(loan).data)
 
     @action(detail=True, methods=["post"], permission_classes=[CanDecide])
     def anular(self, request: Request, number: str | None = None) -> Response:

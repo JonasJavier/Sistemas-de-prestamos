@@ -30,7 +30,7 @@ from apps.audit.models import record_event
 from apps.cash import services as cash
 from apps.cash.models import CashSession, RouteSession
 from apps.collections.models import RouteStop
-from apps.core.models import ApprovalRequest, Branch, Sequence
+from apps.core.models import ApprovalRequest, Branch, PublicLink, Sequence
 from apps.customers.access import can_serve, only_collector
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount
@@ -644,7 +644,16 @@ def post_payment(
             approval.save(update_fields=["status", "used_at", "updated_at"])
 
     loan.last_payment_on = today
-    portfolio.refresh(loan, today)
+    lines = portfolio.refresh(loan, today)
+    payment.principal_after = loan.principal_outstanding
+    payment.owed_after = sum((line.total for line in lines), ZERO)
+    payment.save(update_fields=["principal_after", "owed_after", "updated_at"])
+    PublicLink.objects.create(
+        token=payment.receipt_token,
+        tenant=loan.company_id,
+        kind=PublicLink.Kind.RECEIPT,
+        object_id=payment.id,
+    )
     _mark_route_stop(payment, dest, today)
     if dest.route is not None and method == Payment.Method.CASH:
         cash.check_cash_limit(dest.route)
