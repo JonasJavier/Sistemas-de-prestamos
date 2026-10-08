@@ -27,7 +27,7 @@ Aquí se define **Cobradía** antes de escribir código: tecnología, alcance, r
 
 **No hay MVP** (decisión 016): se construye la versión completa en 10 fases internas y se lanza una sola vez. Al cierre de cada fase se hace una demostración al cliente en el entorno de pruebas. Detalle en [02 · §8](02-vision-y-alcance.md#8-estrategia-de-construcción-y-lanzamiento-aprobada); se aprueba en el paso 10.
 
-**Estado:** fases 0–3 aceptadas (la 3, el 06/10/2026), con un segundo *double check* de las fases 1–3 el 07/10/2026 (decisiones 061–062). Sigue la fase 4.
+**Estado:** fases 0–3 aceptadas (la 3, el 06/10/2026), con un segundo *double check* de las fases 1–3 el 07/10/2026 (decisiones 061–064). La fase 4 (cobros y caja) quedó construida el 08/10/2026 (decisiones 065–074) y espera la aceptación de Jonas, que incluye probar el cobro en ruta en un celular real.
 
 | Fase | Qué se construye |
 | --- | --- |

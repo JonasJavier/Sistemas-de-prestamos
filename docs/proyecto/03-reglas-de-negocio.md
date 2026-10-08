@@ -185,6 +185,7 @@ En el motor, el calendario inicial del abierto es el de solo interés hasta el v
   - Lleva una clave de idempotencia: un doble clic no desembolsa dos veces.
 - **Requisito:** solo se desembolsa un préstamo aprobado.
 - **Fase 3 (decisión 055):** el origen es una cuenta financiera de la empresa: la caja general de la sucursal o un banco. La caja por cajero llega en la fase 4 y desde entonces el efectivo sale de la sesión de caja abierta. Un cargo «cobrado en caja» entra en la cuenta de origen o en la que se indique.
+- **Desde la fase 4 (decisión 065):** el efectivo sale siempre de la caja abierta de quien desembolsa (y el cargo «cobrado en caja» entra en ella); el gerente y contabilidad, que no tienen caja, desembolsan por banco.
 
 ## 7. Mora
 
@@ -208,6 +209,13 @@ En el motor, el calendario inicial del abierto es el de solo interés hasta el v
 | 90 | 35.00 (limitada por el tope; sin tope serían 52.50) |
 
 Con la configuración de la referencia (5 % por cada día de atraso), los 8 días dieron **140.00**: el 40 % de la cuota.
+
+**Cómo se calcula (decisión 067):**
+- Día a día, sobre lo que falta de la cuota: un pago parcial baja la base desde el día siguiente; el día del pago todavía cuenta con la base anterior.
+- Pasados los días de gracia, se cuenta desde el vencimiento; dentro de la gracia no hay mora.
+- El tope se mide sobre lo que estaba vencido el día del vencimiento.
+- «Porcentaje por período completo» cobra la tasa entera por cada período iniciado de la frecuencia del préstamo (la referencia, con 5 % diario: 140.00 en 8 días); «cargo fijo» cobra el monto una vez superada la gracia, también con tope.
+- La mora y el interés se reconocen como ingreso al cobrarse (**Validar con el contador**); condonar no genera asiento.
 
 **Reglas de la mora:**
 - Una tarea nocturna actualiza la mora para los reportes; el cobro siempre la recalcula a la fecha del pago.
@@ -252,6 +260,7 @@ A la cuota 3 le quedan 8.75 de interés y 250.00 de capital.
 Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
 - Reduce el capital pendiente y crea una nueva versión del calendario.
 - En cuota fija se elige entre **reducir el plazo** (por defecto) o **reducir la cuota**.
+- Exige estar al día y reprograma solo las cuotas sin pagos; una cuota con un adelanto queda como estaba. Su reverso crea otra versión idéntica a la anterior (decisión 068).
 - En el método plano, el pago extra adelanta cuotas. Para ahorrar interés existe la liquidación anticipada (§9).
 
 ### 8.4 Efectivo, cambio y medios de pago
@@ -266,6 +275,7 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
 
 - **Sin cobros dobles:** cada cobro lleva una clave de idempotencia y bloquea el préstamo mientras se registra, así que dos cajeros no pueden cobrar la misma cuota a la vez.
 - **Recibo:** tiene numeración consecutiva, en hoja o en formato térmico de 80 mm, y siempre muestra el desglose completo.
+- **Fase 4 (decisión 066):** el desglose se verifica también en la base de datos (las asignaciones suman el monto aplicado al confirmar la transacción); el recibo se imprime desde el navegador en cualquiera de los dos formatos, guarda el capital y el saldo posteriores tal como quedaron, y su enlace de WhatsApp muestra solo ese recibo y se puede revocar.
 
 ## 9. Liquidación anticipada (saldo para saldar)
 
@@ -279,12 +289,14 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
 **Reglas de la liquidación:**
 - Cualquier descuento adicional requiere permiso y motivo, y aparece como concepto aparte en el recibo.
 - La **carta de saldo** indica el monto y la fecha hasta la que es válido.
+- **Vigencia (decisión 068):** se calcula para hoy o hasta 30 días adelante; vale solo ese día si hay mora corriendo o el interés del período es proporcional, y si no, hasta el próximo vencimiento.
 
 ## 10. Reversos y correcciones
 
 - **Nada se borra.** Un pago se **reversa completo**, con motivo, permiso y un enlace al pago original. Las cuotas vuelven a su estado anterior.
 - **Si la caja del pago ya cerró:** el reverso entra en la caja abierta del día, como ajuste.
 - **«Corregir pago»:** reversa el pago y registra el correcto en una sola operación. Así se logra el efecto de un reverso parcial sin romper la conciliación (la referencia sugería un reverso parcial que no existía, defecto #37).
+- **Solo el último pago vigente** de un préstamo se reversa: los posteriores se asignaron encima de él. Lo pide quien cobra con un motivo del catálogo y lo autoriza otra persona dentro de su límite, reconfirmando con su 2FA (decisiones 066 y 069).
 
 **E14** · Se registró 350.00 por error y el pago correcto era de 300.00. La operación genera un reverso de −350.00 y un pago nuevo de 300.00, enlazados.
 - **Caja:** queda con +300.00 netos.
@@ -309,6 +321,7 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
 - **Préstamos migrados** (ya comenzados en otro sistema):
   - Se cargan con su calendario original y sus pagos históricos, con las fechas reales y marcados como «migrados».
   - Esos pagos no mueven la caja, y el saldo inicial debe cuadrar (corrige #34).
+  - **Fase 4 (decisión 074):** solo el capital pendiente entra al libro, contra «Saldos de apertura (migración)»; si no coincide al centavo con el sistema anterior, no se carga.
 
 ## 12. Atraso y estados
 

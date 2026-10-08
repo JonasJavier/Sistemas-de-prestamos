@@ -16,7 +16,7 @@ Frontend: `pnpm -C ../frontend dev` (proxy `/api` → 127.0.0.1:8800). Correos e
 uv run python manage.py seed_demo
 ```
 
-Crea, si no existen, datos ficticios para demos y pruebas (doc 10 §3): el dueño de la plataforma, **Financiera Modelo SRL** con un usuario por rol, una caja con RD$ 500,000 y tres clientes con cédula válida, y **Préstamos del Cibao SRL** para mostrar el aislamiento. Se puede correr las veces que haga falta: no toca lo que ya existe. Con `DEBUG` apagado se niega, salvo `--allow-non-debug` (solo en el entorno de pruebas).
+Crea, si no existen, datos ficticios para demos y pruebas (doc 10 §3): el dueño de la plataforma, **Financiera Modelo SRL** con un usuario por rol, una caja con RD$ 500,000 y tres clientes con cédula válida, y **Préstamos del Cibao SRL** para mostrar el aislamiento. Desde la fase 4 agrega una **cartera para cobrar**: tres préstamos desembolsados por las vías reales (María Gómez con 18 días de atraso y José Pérez con 5, más uno al día), los semanales asignados al cobrador; se agrega una sola vez, mientras el cobrador no tenga cartera. Se puede correr las veces que haga falta: no toca lo que ya existe. Con `DEBUG` apagado se niega, salvo `--allow-non-debug` (solo en el entorno de pruebas).
 
 | Cuenta | Rol |
 | --- | --- |
@@ -35,7 +35,25 @@ Con PostgreSQL, el backend (`runserver 127.0.0.1:8800`), el frontend (`pnpm -C .
 pnpm -C ../frontend e2e
 ```
 
-Recorren la demo de la fase 3 (oficial → supervisor → cajera), el acceso, el aislamiento entre empresas y el uso en el celular. En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Cada corrida crea un préstamo nuevo en Financiera Modelo.
+Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase 4 (la cajera abre caja, cobra con cambio, corrige un pago que autoriza el supervisor con su contraseña, cuadra y cierra; el cobrador cobra en su ruta desde el celular y la cajera recibe la rendición; el gerente ve atrasos y rutas), el acceso, el aislamiento entre empresas y el uso en el celular. En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Se pueden repetir: cada corrida crea un préstamo nuevo y cobra montos pequeños.
+
+## Fase 4: cobros y caja
+
+- **Tarea nocturna** (mora, días de atraso, foto diaria, conciliación con el libro): Celery beat la corre a las 00:30. A mano: `uv run python manage.py shell -c "from apps.payments.tasks import nightly_portfolio; print(nightly_portfolio())"`. Si la conciliación encuentra una diferencia, avisa al gerente en la campana.
+- **Horario de cajeros y cobradores** (decisión 071): apagado en desarrollo para poder hacer demos a cualquier hora. Para probarlo, `ENFORCE_WORKING_HOURS=true` en el `.env` y reiniciar el backend; el horario de cada sucursal se edita en Ajustes · Sucursales.
+- **Reconfirmación con 2FA** al autorizar reversos: con la app autenticadora activa, se pide su código; sin ella (solo en desarrollo), la contraseña.
+- **Migración de préstamos en curso** (F16 básica, decisión 074):
+
+  ```bash
+  uv run python manage.py migrar_prestamos prestamos.csv --usuario gerente@modelo.test
+  uv run python manage.py migrar_prestamos prestamos.csv --usuario gerente@modelo.test --aplicar
+  ```
+
+  Columnas: `documento, producto, monto, tasa, frecuencia, cuotas, fecha_desembolso, primera_cuota, numero_anterior, cobrador, saldo_capital, pagos` (tasa como fracción, fechas `AAAA-MM-DD`, pagos como `2026-01-05:1500;2026-02-05:1500`). Sin `--aplicar` solo ensaya; con una fila mala no guarda nada.
+
+## Probar en un celular
+
+En la misma red Wi-Fi: `pnpm -C ../frontend dev --host` muestra la dirección (por ejemplo `http://192.168.1.20:5173`). En el `.env` del backend, `DEV_EXTRA_HOSTS=192.168.1.20` y `DEV_EXTRA_ORIGINS=http://192.168.1.20:5173`, y reiniciar el backend. Así funciona todo menos la ubicación: los navegadores solo la dan en HTTPS. Para probar «Mi ruta» completa hace falta HTTPS: el entorno de pruebas (`staging.cobradia.com`, doc 10 §3) o un túnel HTTPS temporal hacia el puerto 5173, agregando su dirección a las mismas dos variables.
 
 ## Cuentas sembradas a mano en las fases 1 y 3 (base local de Jonas)
 

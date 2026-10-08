@@ -117,6 +117,8 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P45 | Rutas | `/rutas` | Asignación de cartera por cobrador, avance del día, **mapa de ubicación** (031), rendiciones pendientes | G Su | 4 |
 | P46 | Casos legales | `/legal` | Tabla y ficha de cada caso: abogado, alguacil, documentos, costas y estado | G | 8 |
 
+> **Construidas en la fase 4 (decisiones 065–074):** P11 (avisos y autorizaciones, con la campana de la barra superior), P33–P36, P40–P41 (P41 es la misma P33 adaptada al celular del cobrador), P43 (tramos con totales; asignar gestor, gestiones y promesas en la fase 5), P45 (avance, mapa de ubicación registrado, horario y asignación de cartera desde Préstamos), P50–P52 y la página pública del recibo de WhatsApp (`/r/:token`). En el celular, la barra inferior quedó como dice la §2: oficina «Inicio · Caja · Buscar · Cobrar · Más» y cobrador «Mi ruta · Buscar · Cobrar · Más».
+
 ### Finanzas
 
 | # | Pantalla | Ruta | Contenido y acciones | Roles | Fase |

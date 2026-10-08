@@ -28,6 +28,8 @@ Qué documentos emite Cobradía, cómo se ven, y la **definición exacta de cada
 | Cierre de caja | F7 | Fondo, movimientos por medio de pago, rendiciones, arqueo por denominación, esperado vs. contado, diferencia y aprobación |
 | Rendición del cobrador | F6 | Cobros del día del cobrador, efectivo a entregar, diferencia y firmas |
 
+> **Fase 4 (decisiones 066 y 068):** el recibo se imprime desde el navegador en hoja o en 80 mm a partir de datos inmutables (el pago, su desglose y el saldo posterior congelado) y lleva la marca «Reversado» si se reversa; su enlace público solo muestra ese recibo. El cierre de caja (al aprobarse), la rendición del cobrador (al recibirse), la carta de saldo y la carta de saldo final (al liquidar) se emiten en PDF y se guardan una vez en el registro de documentos (decisión 049).
+
 ### Legales (fase 8, validación previa del abogado)
 
 | Documento | Formato | Notas |

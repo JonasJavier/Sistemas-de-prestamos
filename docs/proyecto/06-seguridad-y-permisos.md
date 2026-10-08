@@ -139,7 +139,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
   - Se cierra tras 30 minutos de inactividad y a las 12 horas en cualquier caso.
   - El usuario ve sus sesiones abiertas y puede cerrarlas; el administrador puede forzar el cierre.
 - **Reconfirmación con 2FA** para las acciones críticas:
-  - autorizar reversos;
+  - autorizar reversos (hecho en la fase 4, decisión 069);
   - castigar;
   - cambiar cuentas bancarias;
   - cambiar roles o límites;
@@ -147,6 +147,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 - **Horario (035):**
   - Cajeros y cobradores solo entran en el horario de su sucursal; al terminar el horario, la sesión se cierra.
   - Un supervisor puede dar una extensión temporal, que queda auditada.
+  - Hecho en la fase 4 (decisión 071): apertura, cierre y días por sucursal; extensión de 15 minutos a 6 horas con motivo, desde Rutas.
 - **Aviso de acceso nuevo:** el usuario recibe un correo cuando se inicia sesión desde un dispositivo nuevo.
 - **Restablecer el 2FA de un usuario:** lo hace el administrador tras verificar la identidad; queda auditado y se avisa al gerente.
 

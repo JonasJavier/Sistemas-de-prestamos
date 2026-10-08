@@ -213,6 +213,26 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 
 pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, la IP y el motivo.
 
+### 4.11 Lo que agregó la fase 4 (decisiones 065–074)
+
+| Dónde | Qué | Para qué |
+| --- | --- | --- |
+| `FinancialAccount` | Tipos **caja de cajero** (`1103-NN`) y **efectivo de cobrador** (`1104-NN`), con `holder` (una por persona y sucursal) | El efectivo de cada quien tiene su cuenta, sin sobregiro, y solo se mueve desde su sesión (065) |
+| Plan de cuentas | «Faltantes de caja por cobrar» (`1301`), «Sobrantes de caja» (`4201`) y «Saldos de apertura (migración)» (`3201`) | Diferencias del arqueo y de la rendición; cartera migrada (074) |
+| `CashSession`, `CashCount`, `RouteSession` | Lo que quedó de la caja anterior, el fondo, el traslado al cerrar; el aviso del límite de efectivo en la ruta | §4.6; el esperado sigue saliendo del libro |
+| `Payment` | Capital y saldo **posteriores**, congelados en el recibo; mora condonada, interés futuro condonado y descuento aparte | El recibo no cambia con pagos posteriores (066) |
+| `Installment` | `interest_waived` (interés que la liquidación no cobra); lo pagado de interés nunca supera lo debido menos lo condonado | Liquidación (068) |
+| `LoanTerms` | `replaced_installments`: las cuotas que cada versión reemplazó | Restaurar exactamente el calendario al reversar un abono (068) |
+| `Loan`, `Disbursement` | `legacy_number` del sistema anterior; la sesión de caja del desembolso en efectivo | Migración (074); anulación con el dinero de vuelta por una caja abierta |
+| `CollectorAssignment` | Quién cobró cada préstamo y desde cuándo | Comisiones (fase 7) y trazabilidad |
+| `ApprovalRequest` (core) | Condonación, descuento, reverso y corrección: quién pidió, quién decidió, cuándo se usó | Un solo mecanismo de autorización (069) |
+| `PublicLink` (plataforma, sin empresa) | Índice de los enlaces públicos: token → empresa y objeto, revocable | El recibo de WhatsApp se resuelve sin sesión y dentro de la empresa correcta (066) |
+| `Branch`, `HoursExtension`, `User` | Horario y días laborables de la sucursal; extensiones temporales; consentimiento de ubicación con fecha y texto | Horario de cajeros y cobradores (071); ruta (072) |
+| `BranchAccessGrant` | Acceso del día a un cliente de otra sucursal, con motivo | Alcance por sucursal en clientes (070) |
+| `Company` | `collector_cash_limit` (RD$ 25,000 por defecto) | Aviso al supervisor (072) |
+| `Notification` | Avisos de la campana | Autorizaciones, diferencias, cierres, límite de efectivo y conciliación |
+| `RouteStop`, `CollectionAction`, `LocationPing`, `DelinquencySnapshot` | §4.7, construidos en esta fase (la promesa de pago llega en la 5) | Ruta, visitas, ubicación y foto diaria del atraso |
+
 ## 5. Ciclos de vida
 
 ### 5.1 Solicitud

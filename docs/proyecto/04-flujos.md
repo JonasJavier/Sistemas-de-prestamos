@@ -177,6 +177,8 @@ Todas las solicitudes quedan en el historial del cliente con su decisión. En la
 - El préstamo queda bloqueado mientras se registra, así que nadie lo cobra a la vez.
 - Clave de idempotencia.
 
+> **Fase 4 (decisiones 065, 066 y 069):** la pantalla de cobro (P33) muestra lo exigible, montos rápidos (vencido, vencido + cuota actual, liquidar, abono a capital) y el desglose real antes de confirmar; el efectivo entra en la caja abierta del cajero; una condonación o un descuento por encima del límite se piden desde la misma pantalla y se usan una vez que otra persona los aprueba. Sin caja abierta solo se registran transferencias, depósitos o cheques.
+
 ## F6 · Cobro en ruta y rendición
 
 1. **Ruta del día.** Cada mañana el sistema genera la ruta de cada cobrador:
@@ -220,6 +222,8 @@ sequenceDiagram
     S-->>Caj: Diferencia 0 o justificación
 ```
 
+> **Fase 4 (decisión 072):** la ruta del día se arma al abrirla con la cartera vencida o que vence hoy del cobrador (conserva su orden); abrirla exige aceptar una vez el registro de ubicación. El celular envía la ubicación cada 5 minutos con «Mi ruta» en pantalla; cada cobro y visita guarda la suya. El cobrador no condona ni reversa. Al superar el límite de efectivo en mano se avisa una vez al supervisor; un cobro fuera de la ruta del día queda marcado. La rendición la recibe un cajero en su caja abierta; la diferencia exige motivo y avisa al supervisor. Las promesas con fecha y monto llegan en la fase 5.
+
 ## F7 · Caja diaria
 
 1. **Apertura.**
@@ -251,6 +255,8 @@ flowchart LR
     E --> G[Aprobación del<br/>supervisor]
     G --> H[PDF de cierre]
 ```
+
+> **Fase 4 (decisión 065):** cada cajero tiene su caja contable por sucursal; el esperado sale del libro. La diferencia del arqueo se asienta al cerrar (faltante a «Faltantes de caja por cobrar», sobrante a «Sobrantes de caja») y lo que no se traslada queda como fondo del día siguiente. Una caja de un día anterior no admite cobros hasta cerrarse. El supervisor aprueba hasta su límite de diferencia (el gerente, sin límite) y nunca su propia caja; al aprobar se emite el PDF del cierre.
 
 ## F8 · Atraso y gestión de cobro
 
@@ -315,6 +321,8 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
    - Si la caja del pago ya cerró, el ajuste entra en la caja abierta.
    - En el recibo original aparece la marca «Reversado».
 
+> **Fase 4 (decisiones 066 y 069):** solo se reversa el último pago vigente; la vista previa del efecto corre la operación real y la deshace. Aprobar el reverso exige el código 2FA de quien autoriza. Si la caja del pago ya cerró (o la ruta ya se rindió), el dinero vuelve por la caja abierta de quien lo pidió. El reverso de una liquidación reabre el préstamo y vuelve a poner en garantía sus bienes; el de un abono a capital restaura el calendario anterior en una versión nueva.
+
 ## F13 · Castigo y recuperación (fase 8)
 
 - **Sugerencia.** A partir de 180 días de atraso (por defecto), el sistema sugiere castigar el préstamo.
@@ -355,6 +363,8 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
 5. **Día del lanzamiento.** La carga final entra en producción con la aprobación del cliente.
 
 Los pagos migrados no mueven la caja (paso 3, §11).
+
+> **Fase 4 (decisión 074):** migración básica con el comando `migrar_prestamos` (CSV que se ensaya por defecto); la fase 10 agrega las plantillas de Excel, los clientes y los ensayos con el cliente.
 
 ## F17 · Usuarios y acceso
 
