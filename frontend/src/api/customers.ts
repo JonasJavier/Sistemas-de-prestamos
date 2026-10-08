@@ -228,3 +228,18 @@ export const globalSearch = (
   q: string,
 ): Promise<{ customers: CustomerListItem[]; loans: LoanHit[] }> =>
   api(`/api/v1/buscar/?q=${encodeURIComponent(q)}`)
+
+/* ---------- Customers of another branch (decisions 033, 059, 070) ---------- */
+
+export interface OtherBranchCustomer {
+  id: string
+  display_name: string
+  document: string
+  branch_name: string
+}
+
+export const findInOtherBranches = (document: string): Promise<OtherBranchCustomer[]> =>
+  api(`/api/v1/clientes/otra-sucursal/?documento=${encodeURIComponent(document)}`)
+
+export const grantBranchAccess = (id: string, note: string): Promise<{ expires_at: string }> =>
+  api(`/api/v1/clientes/${id}/acceso-especial/`, { method: 'POST', body: { note } })

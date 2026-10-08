@@ -14,8 +14,13 @@ import {
   uploadSignedNote,
   voidLoan,
 } from '../api/origination'
+import { listPayments } from '../api/payments'
+import { listVisits } from '../api/routes'
+import { buttonClass } from '../components/classes'
+import { MoreMenu } from '../components/MoreMenu'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
+import { CollectorDialog, DateChangeDialog, PayoffLetterDialog } from './loan/LoanActions'
 import {
   Alert,
   Badge,
@@ -45,6 +50,8 @@ import { ACCESS, hasRole } from '../lib/roles'
 const TABS = [
   ['resumen', 'Resumen'],
   ['calendario', 'Calendario'],
+  ['pagos', 'Pagos'],
+  ['gestiones', 'Gestiones'],
   ['garantias', 'Garantías y garantes'],
   ['documentos', 'Documentos'],
   ['cronologia', 'Cronología'],
@@ -119,7 +126,18 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<TabKey>('resumen')
   const [voiding, setVoiding] = useState(false)
+  const [dialog, setDialog] = useState<'payoff' | 'dates' | 'collector' | null>(null)
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
+  const payments = useQuery({
+    queryKey: ['loan', numero, 'payments'],
+    queryFn: () => listPayments({ loan: numero }),
+    enabled: tab === 'pagos',
+  })
+  const visits = useQuery({
+    queryKey: ['loan', numero, 'visits'],
+    queryFn: () => listVisits(numero),
+    enabled: tab === 'gestiones',
+  })
   const calendar = useQuery({
     queryKey: ['loan', numero, 'calendar'],
     queryFn: () => getLoanCalendar(numero),
@@ -151,7 +169,22 @@ export function LoanDetailPage({ me }: { me: Me }) {
   if (!data) return <Alert tone="danger">No se encontró el préstamo.</Alert>
   const status = LOAN_STATUS[data.status]
   const terms = data.current_terms
-  const canVoid = data.status === 'active' && hasRole(me, ACCESS.voidLoans)
+  const active = data.status === 'active'
+  const canVoid = active && hasRole(me, ACCESS.voidLoans)
+  const more = [
+    ...(active && hasRole(me, ACCESS.payoffLetters)
+      ? [{ label: 'Carta de saldo', onSelect: () => setDialog('payoff') }]
+      : []),
+    ...(active && hasRole(me, ACCESS.supervise)
+      ? [
+          { label: 'Cambiar fechas', onSelect: () => setDialog('dates') },
+          { label: 'Cambiar cobrador', onSelect: () => setDialog('collector') },
+        ]
+      : []),
+    ...(canVoid && !voiding
+      ? [{ label: 'Anular', onSelect: () => setVoiding(true), danger: true }]
+      : []),
+  ]
   const currentRows = (calendar.data?.installments ?? []).filter(
     (row) => row.version === (terms?.version ?? 1),
   )
@@ -181,6 +214,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
               {data.customer_name}
             </Link>{' '}
             · {data.product_name} · sucursal {data.branch_code}
+            {data.collector_name ? ` · cobra ${data.collector_name}` : ''}
             {data.application ? (
               <>
                 {' '}
@@ -197,11 +231,14 @@ export function LoanDetailPage({ me }: { me: Me }) {
           </>
         }
         actions={
-          canVoid && !voiding ? (
-            <Button variant="secondary" onClick={() => setVoiding(true)}>
-              Anular
-            </Button>
-          ) : null
+          <>
+            <MoreMenu items={more} />
+            {active && hasRole(me, ACCESS.collect) ? (
+              <Link to="/cobrar/$numero" params={{ numero }} className={buttonClass()}>
+                Cobrar
+              </Link>
+            ) : null}
+          </>
         }
       />
 
@@ -228,10 +265,16 @@ export function LoanDetailPage({ me }: { me: Me }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Capital pendiente" value={rd(data.principal_outstanding)} emphasis />
         <Stat label="Interés por cobrar" value={rd(data.interest_outstanding)} />
-        <Stat label="Próximo vencimiento" value={day(data.next_due_date)} />
+        <Stat
+          label={data.days_past_due > 0 ? 'Vencido desde' : 'Próximo vencimiento'}
+          value={day(data.next_due_date)}
+        />
         <Stat
           label="Atraso"
           value={data.days_past_due === 0 ? 'Al día' : `${data.days_past_due} días`}
+          hint={
+            Number(data.late_fee_outstanding) ? `mora ${rd(data.late_fee_outstanding)}` : undefined
+          }
         />
       </div>
 
@@ -324,6 +367,74 @@ export function LoanDetailPage({ me }: { me: Me }) {
             </>
           )}
         </Card>
+      ) : null}
+
+      {tab === 'pagos' ? (
+        <Card>
+          {payments.isPending ? (
+            <Spinner />
+          ) : payments.data?.results.length ? (
+            <ul className="divide-y divide-edge text-sm">
+              {payments.data.results.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">
+                    <Link
+                      to="/recibos/$numero"
+                      params={{ numero: p.number }}
+                      className="font-semibold text-brand-700 hover:underline"
+                    >
+                      {p.number}
+                    </Link>{' '}
+                    <span className="text-muted">
+                      · {p.kind_label} · {p.method_label} · {moment(p.paid_at)} ·{' '}
+                      {p.collected_by_name}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    {p.status === 'reversed' ? <Badge tone="danger">Reversado</Badge> : null}
+                    <span className="tabular-nums font-medium">{rd(p.amount)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Sin pagos todavía.</p>
+          )}
+        </Card>
+      ) : null}
+
+      {tab === 'gestiones' ? (
+        <Card>
+          {visits.isPending ? (
+            <Spinner />
+          ) : visits.data?.length ? (
+            <ul className="divide-y divide-edge text-sm">
+              {visits.data.map((v) => (
+                <li key={v.id} className="py-2">
+                  <span className="font-medium">
+                    {v.kind}: {v.result}
+                  </span>{' '}
+                  <span className="text-muted">
+                    · {v.user_name} · {moment(v.created_at)}
+                  </span>
+                  {v.note ? <div className="text-muted">{v.note}</div> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Sin gestiones registradas.</p>
+          )}
+        </Card>
+      ) : null}
+
+      {dialog === 'payoff' ? (
+        <PayoffLetterDialog number={numero} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === 'dates' ? (
+        <DateChangeDialog number={numero} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === 'collector' ? (
+        <CollectorDialog number={numero} current={data.collector} onClose={() => setDialog(null)} />
       ) : null}
 
       {tab === 'garantias' ? (

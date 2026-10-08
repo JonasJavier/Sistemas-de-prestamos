@@ -67,3 +67,33 @@ export const MoonIcon = () => (
     <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
   </Svg>
 )
+
+export const BellIcon = () => (
+  <Svg>
+    <path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2H4.5z" />
+    <path d="M10 20.5a2.2 2.2 0 0 0 4 0" />
+  </Svg>
+)
+
+export const CashIcon = () => (
+  <Svg>
+    <rect x="2.5" y="6" width="19" height="12" rx="2" />
+    <path d="M6 12h.01M18 12h.01" />
+    <path d="M12 9.2v5.6M13.6 10.2c-.3-.6-.9-1-1.6-1-1 0-1.7.6-1.7 1.4 0 1.8 3.4 1 3.4 2.8 0 .8-.8 1.4-1.7 1.4-.7 0-1.4-.4-1.7-1" />
+  </Svg>
+)
+
+export const RouteIcon = () => (
+  <Svg>
+    <circle cx="6" cy="18" r="2.2" />
+    <circle cx="18" cy="6" r="2.2" />
+    <path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8" />
+  </Svg>
+)
+
+export const CollectIcon = () => (
+  <Svg>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M14.6 9.3c-.4-.9-1.4-1.5-2.6-1.5-1.5 0-2.6.8-2.6 2 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 2.1-2.8 2.1-1.2 0-2.3-.6-2.7-1.6M12 6.2v1.6M12 16.2v1.6" />
+  </Svg>
+)

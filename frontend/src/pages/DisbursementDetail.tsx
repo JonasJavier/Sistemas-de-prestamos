@@ -79,7 +79,12 @@ export function DisbursementDetailPage() {
   const run = useMutation({
     meta: { inlineError: true },
     mutationFn: () =>
-      disburse(id, { source_account: source, method, reference, idempotency_key: key }),
+      disburse(id, {
+        source_account: method === 'cash' ? null : source,
+        method,
+        reference,
+        idempotency_key: key,
+      }),
     onSuccess: (result) => setDone(result.loan),
   })
 
@@ -115,11 +120,14 @@ export function DisbursementDetailPage() {
   }
   const data = preview.data!
   const sim = data.simulation
-  const accounts = data.accounts.filter((a) =>
-    method === 'cash' ? a.kind === 'cash' : a.kind === 'bank',
-  )
+  const accounts = data.accounts.filter((a) => a.kind === 'bank')
   const chosen = data.accounts.find((a) => a.id === source)
-  const short = chosen ? Number(chosen.balance) < Number(sim.net_disbursed) : false
+  const drawer = data.cash_session
+  const available =
+    method === 'cash' ? (drawer ? Number(drawer.cash) : 0) : Number(chosen?.balance ?? 0)
+  const short =
+    (method === 'cash' ? Boolean(drawer) : Boolean(chosen)) && available < Number(sim.net_disbursed)
+  const ready = method === 'cash' ? Boolean(drawer?.branch_matches) : Boolean(source)
   const failure = run.error instanceof ApiError ? run.error.data : null
 
   return (
@@ -184,18 +192,30 @@ export function DisbursementDetailPage() {
               <option value="check">Cheque</option>
             </Select>
           </Field>
-          <Field label={method === 'cash' ? 'Caja de origen' : 'Cuenta bancaria de origen'}>
-            <Select value={source} onChange={(e) => setSource(e.target.value)}>
-              <option value="">
-                {accounts.length ? 'Elegir…' : 'No hay cuentas de este tipo'}
-              </option>
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name} · saldo {rd(account.balance)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          {method === 'cash' ? (
+            <Field label="Sale de">
+              <div className="flex h-11 items-center rounded-lg border border-edge bg-surface-2 px-3 text-sm sm:h-9">
+                {drawer ? (
+                  `Tu caja ${drawer.number} · ${rd(drawer.cash)}`
+                ) : (
+                  <Link to="/caja" className="font-semibold text-brand-700 underline">
+                    Abre tu caja para entregar efectivo
+                  </Link>
+                )}
+              </div>
+            </Field>
+          ) : (
+            <Field label="Cuenta bancaria de origen">
+              <Select value={source} onChange={(e) => setSource(e.target.value)}>
+                <option value="">{accounts.length ? 'Elegir…' : 'No hay cuentas bancarias'}</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} · saldo {rd(account.balance)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field
             label={method === 'cash' ? 'Referencia (opcional)' : 'Número de transferencia o cheque'}
           >
@@ -204,14 +224,19 @@ export function DisbursementDetailPage() {
         </div>
         {short ? (
           <Alert tone="warning">
-            La cuenta elegida no tiene fondos suficientes: no se permite sobregiro.
+            {method === 'cash'
+              ? 'Tu caja no tiene efectivo suficiente: pide más fondo a la caja general.'
+              : 'La cuenta elegida no tiene fondos suficientes: no se permite sobregiro.'}
           </Alert>
+        ) : null}
+        {method === 'cash' && drawer && !drawer.branch_matches ? (
+          <Alert tone="warning">Tu caja abierta es de otra sucursal.</Alert>
         ) : null}
         {failure ? <Alert tone="danger">{errorMessage(failure)}</Alert> : null}
         <div className="flex justify-end">
           <Button
             onClick={() => run.mutate()}
-            disabled={!identity || !source || short || data.blockers.length > 0 || run.isPending}
+            disabled={!identity || !ready || short || data.blockers.length > 0 || run.isPending}
           >
             {run.isPending ? 'Desembolsando…' : `Desembolsar ${rd(sim.net_disbursed)}`}
           </Button>

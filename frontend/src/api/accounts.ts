@@ -13,6 +13,13 @@ export interface Me {
   company_status: 'trial' | 'active' | 'suspended' | 'closed' | null
   mfa_enabled: boolean
   mfa_required: boolean
+  location_consent?: boolean
+  /** Badges of the top bar (phase 4). */
+  unread_notifications?: number
+  pending_approvals?: number
+  closings_to_approve?: number
+  cash_session?: { id: string; number: string } | null
+  route_open?: boolean
 }
 
 export function getMe(): Promise<Me> {
@@ -31,6 +38,10 @@ export interface Branch {
   address: string
   phone: string
   is_active: boolean
+  /** Decision 035: cashiers and collectors work within these hours. */
+  opens_at?: string
+  closes_at?: string
+  workdays?: number[]
 }
 
 export function listBranches(): Promise<Paginated<Branch>> {

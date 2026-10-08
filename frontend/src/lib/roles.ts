@@ -25,6 +25,17 @@ export const ACCESS = {
   finance: [G, CT, AU],
   manageAccounts: [G, CT],
   adjustCapital: [G],
+  // Phase 4 (cobros y caja).
+  collect: [G, SU, CA, CO],
+  receipts: [G, SU, OF, CA, CO, CT, AU],
+  requestReversal: [G, SU, CA],
+  payoffLetters: [G, SU, OF, CA],
+  myCash: [SU, CA],
+  cashSessions: [G, SU, CT, AU],
+  myRoute: [CO],
+  routes: [G, SU],
+  delinquency: [G, SU, OF, CT, AU],
+  supervise: [G, SU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

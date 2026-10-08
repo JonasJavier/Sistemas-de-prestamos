@@ -61,8 +61,9 @@ export const dateOf = (value: string | null | undefined) =>
     : '—'
 
 /** Today as YYYY-MM-DD in local time (toISOString would give UTC's date). */
-export function todayISO() {
+export function todayISO(daysAhead = 0) {
   const now = new Date()
+  now.setDate(now.getDate() + daysAhead)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }

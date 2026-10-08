@@ -68,3 +68,23 @@ h3 {
   font-family: var(--font-display);
   letter-spacing: -0.015em;
 }
+
+/* Printing (doc 09): only the print area goes to paper, on a letter sheet or
+   an 80 mm thermal roll (lib/print.ts sets the page size). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+  #print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+  body {
+    background: #fff;
+  }
+}

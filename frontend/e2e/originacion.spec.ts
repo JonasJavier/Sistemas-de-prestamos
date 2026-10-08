@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { MODELO, sessionFor } from './helpers'
+import { ensureCashOpen, MODELO, sessionFor } from './helpers'
 
 /** Phase 3 demo (doc 10 - 1): the officer creates, the supervisor approves and
  * the cashier disburses. Nobody approves their own nor disburses what they
@@ -41,14 +41,15 @@ test('una solicitud viaja del oficial a la cajera y termina en préstamo', async
   await decision.getByRole('button', { name: 'Aprobar', exact: true }).last().click()
   await expect(supervisor.getByText('Aprobada').first()).toBeVisible()
 
-  // 3. Cashier disburses from the funded cash box.
+  // 3. Cashier disburses in cash from her open drawer (decision 055).
   const cashier = await sessionFor(browser, MODELO.cajera)
+  await ensureCashOpen(cashier)
   await cashier.goto('/desembolsos')
   await cashier
     .getByRole('link', { name: /María Gómez/ })
     .first()
     .click()
-  await cashier.getByLabel('Caja de origen').selectOption({ index: 1 })
+  await expect(cashier.getByText(/Tu caja .*-C-/)).toBeVisible()
   await cashier.getByText('Verifiqué la identidad del cliente').click()
   await cashier.getByRole('button', { name: /^Desembolsar RD\$/ }).click()
 

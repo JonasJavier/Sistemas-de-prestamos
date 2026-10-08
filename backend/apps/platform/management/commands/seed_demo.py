@@ -4,7 +4,10 @@ Creates, only if missing:
 - the platform owner;
 - «Financiera Modelo SRL» with one user per role, a funded cash box and
   three customers with valid cédulas;
-- «Préstamos del Cibao SRL», a second tenant to show the isolation.
+- «Préstamos del Cibao SRL», a second tenant to show the isolation;
+- a demo portfolio (phase 4): three disbursed loans — one in arrears, one
+  just overdue, one current — assigned to the collector, added once to a
+  demo company whose collector has no portfolio yet.
 
 Every account uses the same development password and a verified email, so
 the end-to-end tests and the phase demos can sign in. It refuses to run
@@ -12,6 +15,8 @@ against a non-DEBUG environment unless ``--allow-non-debug`` is given
 (staging demos), and it never touches existing companies.
 """
 
+import datetime as dt
+import uuid
 from decimal import Decimal
 
 from allauth.account.models import EmailAddress
@@ -26,6 +31,9 @@ from apps.core.tenancy import company_context
 from apps.customers.models import Customer
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount
+from apps.lending import applications as flow
+from apps.lending.disbursement import disburse
+from apps.lending.models import Installment, Loan, LoanProduct
 from apps.platform.services import register_company
 
 PASSWORD = "demo-cobradia-2026"  # noqa: S105 - fictitious, development only
@@ -84,6 +92,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(f"Dueño de la plataforma: {OWNER_EMAIL}")
         self._demo_company()
+        self._demo_portfolio()
         self._other_company()
         self.stdout.write(self.style.SUCCESS(f"Listo. Contraseña de todas las cuentas: {PASSWORD}"))
 
@@ -136,6 +145,80 @@ class Command(BaseCommand):
                     home_branch=reg.branch,
                 )
         self.stdout.write(f"«{DEMO_COMPANY}»: gerente@modelo.test y un usuario por rol.")
+
+    @transaction.atomic
+    def _demo_portfolio(self) -> None:
+        """Loans to collect in the phase 4 demo: through the real services
+        (application, approval, cash disbursement), then dated in the past."""
+        company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
+        if company is None:
+            return
+        with company_context(company.id):
+            if Loan.objects.filter(collector__email="cobrador@modelo.test").exists():
+                return
+            from apps.cash import services as cash
+
+            users = {u.email: u for u in User.objects.filter(company=company)}
+            officer, supervisor = users["oficial@modelo.test"], users["supervisor@modelo.test"]
+            cashier, collector = users["cajera@modelo.test"], users["cobrador@modelo.test"]
+            branch = Membership.objects.filter(user=cashier).first().branch
+            general = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH, holder=None)
+            session = cash.open_session(
+                user=cashier, branch=branch, amount=Decimal("60000"), fund_from=general
+            )
+            san = LoanProduct.objects.get(name="Personal San (semanal)")
+            fija = LoanProduct.objects.get(name="Cuota Fija (mensual)")
+            plan = [  # (customer last name, product, amount, installments, first due in days)
+                ("Gómez", san, Decimal("10000"), 8, -18),
+                ("Pérez Santana", fija, Decimal("25000"), 12, -5),
+                ("Rodríguez", san, Decimal("5000"), 4, 3),
+            ]
+            today = timezone.localdate()
+            for last_name, product, amount, count, first_due_in in plan:
+                customer = Customer.objects.get(last_name=last_name)
+                application = flow.create_application(
+                    user=officer,
+                    customer=customer,
+                    product=product,
+                    amount=amount,
+                    frequency=product.allowed_frequencies[-1],
+                    installments=count,
+                )
+                application.requirements.update(verified_by=officer, verified_at=timezone.now())
+                flow.submit(application, user=officer)
+                flow.approve(application, user=supervisor)
+                loan = disburse(
+                    application=application,
+                    user=cashier,
+                    source_account=None,
+                    method="cash",
+                    idempotency_key=uuid.uuid4().hex,
+                )
+                step = 7 if product == san else 30
+                first = today + dt.timedelta(days=first_due_in)
+                for inst in loan.installments.order_by("number"):
+                    due = first + dt.timedelta(days=step * (inst.number - 1))
+                    Installment.objects.filter(pk=inst.pk).update(
+                        due_date=due, original_due_date=due
+                    )
+                Loan.objects.filter(pk=loan.pk).update(
+                    disbursed_on=first - dt.timedelta(days=step),
+                    next_due_date=first,
+                    collector=collector if product == san else None,
+                )
+            expected = cash.expected_cash(session)
+            cash.close_session(
+                session=session,
+                user=cashier,
+                counts={"1000": int(expected // 1000), "1": int(expected % 1000)},
+                return_to=general,
+                return_amount=expected,
+            )
+            cash.approve_session(session=session, user=supervisor)
+            from apps.payments.tasks import run_nightly
+
+            run_nightly(company.id, today)
+        self.stdout.write("Cartera de demostración: 3 préstamos (uno atrasado) con cobrador.")
 
     @transaction.atomic
     def _other_company(self) -> None:

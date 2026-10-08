@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
+import { getMyCash } from '../api/cash'
 import { listApplications, listLoans } from '../api/origination'
 import { getMyCompany } from '../api/platform'
 import { Alert } from '../components/ui'
@@ -64,6 +65,15 @@ function Today({ me }: { me: Me }) {
     queryFn: () => listLoans({ status: 'active' }),
     enabled: reader,
   })
+  const cashier = hasRole(me, ACCESS.myCash)
+  const supervisor = hasRole(me, ACCESS.supervise)
+  const watchesArrears = hasRole(me, ACCESS.delinquency)
+  const cash = useQuery({ queryKey: ['my-cash'], queryFn: getMyCash, enabled: cashier })
+  const arrears = useQuery({
+    queryKey: ['loans', 'active', 'atraso'],
+    queryFn: () => listLoans({ status: 'active', tramo: 'atraso' }),
+    enabled: watchesArrears,
+  })
   if (!reader) return null
   return (
     <section aria-label="Tu trabajo de hoy" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -91,6 +101,48 @@ function Today({ me }: { me: Me }) {
           label="Por desembolsar"
           value={toDisburse.data?.count}
           hint="Aprobadas y vigentes"
+        />
+      ) : null}
+      {cashier ? (
+        <Tile
+          to="/caja"
+          label="Mi caja"
+          value={
+            cash.data ? (cash.data.session ? rd(cash.data.session.expected) : 'Cerrada') : undefined
+          }
+          hint={
+            cash.data?.session
+              ? `${cash.data.session.number} · ${cash.data.routes_to_settle.length} rendición(es) por recibir`
+              : 'Ábrela para cobrar y desembolsar en efectivo'
+          }
+        />
+      ) : null}
+      {supervisor ? (
+        <Tile
+          to="/avisos"
+          label="Por autorizar"
+          value={me.pending_approvals ?? 0}
+          hint="Reversos, condonaciones y descuentos"
+        />
+      ) : null}
+      {hasRole(me, ACCESS.cashSessions) && supervisor ? (
+        <Tile
+          to="/cajas"
+          label="Cierres por aprobar"
+          value={me.closings_to_approve ?? 0}
+          hint="Cajas cerradas que esperan tu visto bueno"
+        />
+      ) : null}
+      {watchesArrears ? (
+        <Tile
+          to="/atrasos"
+          label="En atraso"
+          value={arrears.data?.count}
+          hint={
+            arrears.data
+              ? `${rd(arrears.data.totals.principal_outstanding)} de capital en riesgo`
+              : 'Préstamos con cuotas vencidas'
+          }
         />
       ) : null}
       <Tile

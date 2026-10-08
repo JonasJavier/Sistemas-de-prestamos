@@ -275,6 +275,8 @@ export interface DisbursementPreview {
   financed_charges: string
   cash_charges: string
   accounts: { id: string; name: string; kind: 'cash' | 'bank'; balance: string }[]
+  /** Decision 055 (phase 4): cash leaves the disburser's open drawer. */
+  cash_session: { id: string; number: string; cash: string; branch_matches: boolean } | null
   blockers: string[]
 }
 
@@ -284,7 +286,7 @@ export const getDisbursementPreview = (id: string): Promise<DisbursementPreview>
 export const disburse = (
   id: string,
   data: {
-    source_account: string
+    source_account?: string | null
     method: 'cash' | 'transfer' | 'check'
     reference?: string
     idempotency_key: string
@@ -334,6 +336,10 @@ export interface LoanTerms {
 }
 
 export interface Loan extends LoanListItem {
+  collector: string | null
+  collector_name: string | null
+  closed_on: string | null
+  last_payment_on: string | null
   application: string | null
   application_number: string | null
   officer_name: string | null
@@ -386,6 +392,8 @@ export function listLoans(params: {
   status?: string
   q?: string
   customer?: string
+  collector?: string
+  tramo?: string
   page?: number
 }): Promise<Page<LoanListItem> & { totals: { principal_outstanding: string } }> {
   return api(`/api/v1/prestamos/${toQuery(params)}`)

@@ -1,13 +1,25 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
-import type { Me } from '../api/accounts'
+import { getMe, type Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
 import { ACCESS, hasRole } from '../lib/roles'
-import { CommandPalette } from './CommandPalette'
+import { CommandPalette, type PaletteIntent } from './CommandPalette'
 import { Modal } from './Modal'
-import { HomeIcon, LoanIcon, MenuIcon, MoonIcon, PeopleIcon, SearchIcon, SunIcon } from './icons'
+import {
+  BellIcon,
+  CashIcon,
+  CollectIcon,
+  HomeIcon,
+  LoanIcon,
+  MenuIcon,
+  MoonIcon,
+  PeopleIcon,
+  RouteIcon,
+  SearchIcon,
+  SunIcon,
+} from './icons'
 import { Brand, Button } from './ui'
 
 function ThemeToggle() {
@@ -39,6 +51,7 @@ function ThemeToggle() {
 interface NavItem {
   to: string
   label: string
+  badge?: number
 }
 
 interface NavGroup {
@@ -59,10 +72,20 @@ function navFor(me: Me): NavGroup[] {
   if (hasRole(me, ACCESS.disburse)) operation.push({ to: '/desembolsos', label: 'Desembolsos' })
   if (hasRole(me, ACCESS.loans)) operation.push({ to: '/prestamos', label: 'Préstamos' })
   if (hasRole(me, ACCESS.simulate)) operation.push({ to: '/simulador', label: 'Simulador' })
+  const onlyCollector = me.roles.length > 0 && me.roles.every((role) => role === 'Cobrador')
   const groups: NavGroup[] = [
-    { title: null, items: [{ to: '/', label: 'Inicio' }] },
+    { title: null, items: onlyCollector ? [] : [{ to: '/', label: 'Inicio' }] },
     { title: 'Operación', items: operation },
   ]
+  // Phase 4: collections and cash, by role (doc 06 matrix).
+  const collections: NavItem[] = []
+  if (hasRole(me, ACCESS.myRoute)) collections.push({ to: '/ruta', label: 'Mi ruta' })
+  if (hasRole(me, ACCESS.myCash)) collections.push({ to: '/caja', label: 'Mi caja' })
+  if (hasRole(me, ACCESS.delinquency)) collections.push({ to: '/atrasos', label: 'Atrasos' })
+  if (hasRole(me, ACCESS.routes)) collections.push({ to: '/rutas', label: 'Rutas' })
+  if (hasRole(me, ACCESS.cashSessions))
+    collections.push({ to: '/cajas', label: 'Cajas', badge: me.closings_to_approve })
+  if (collections.length) groups.push({ title: 'Cobros y caja', items: collections })
   if (hasRole(me, ACCESS.finance)) {
     groups.push({ title: 'Finanzas', items: [{ to: '/cuentas', label: 'Cuentas y bancos' }] })
   }
@@ -104,7 +127,14 @@ function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () 
               className={linkClasses}
               activeOptions={{ exact: item.to === '/' }}
             >
-              {item.label}
+              <span className="flex items-center justify-between gap-2">
+                {item.label}
+                {item.badge ? (
+                  <span className="rounded-full bg-gold-500 px-1.5 text-[11px] font-bold text-brand-950">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </span>
             </Link>
           ))}
         </div>
@@ -141,18 +171,34 @@ function CompanyBadge({ me }: { me: Me }) {
 const barItem =
   'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11.5px] font-medium text-muted outline-none focus-visible:bg-brand-100 [&.active]:text-brand-700'
 
-/** Phones get a bottom bar (decision 038): the frequent actions, search and «Más». */
-function MobileBar({ me, groups, onSearch }: { me: Me; groups: NavGroup[]; onSearch: () => void }) {
+/** Phones get a bottom bar (decision 038, doc 07 - 2): office «Inicio · Buscar ·
+ * Cobrar · Más», collector «Mi ruta · Buscar · Cobrar · Más». */
+function MobileBar({
+  me,
+  groups,
+  onSearch,
+}: {
+  me: Me
+  groups: NavGroup[]
+  onSearch: (intent?: PaletteIntent) => void
+}) {
   const [open, setOpen] = useState(false)
+  const collects = hasRole(me, ACCESS.collect)
   const quick = me.is_platform_admin
     ? [{ to: '/plataforma', label: 'Empresas', icon: <HomeIcon /> }]
-    : [
-        { to: '/', label: 'Inicio', icon: <HomeIcon /> },
-        { to: '/clientes', label: 'Clientes', icon: <PeopleIcon /> },
-        ...(hasRole(me, ACCESS.loans)
-          ? [{ to: '/prestamos', label: 'Préstamos', icon: <LoanIcon /> }]
-          : []),
-      ]
+    : hasRole(me, ACCESS.myRoute)
+      ? [{ to: '/ruta', label: 'Mi ruta', icon: <RouteIcon /> }]
+      : [
+          { to: '/', label: 'Inicio', icon: <HomeIcon /> },
+          ...(collects
+            ? hasRole(me, ACCESS.myCash)
+              ? [{ to: '/caja', label: 'Caja', icon: <CashIcon /> }]
+              : []
+            : [{ to: '/clientes', label: 'Clientes', icon: <PeopleIcon /> }]),
+          ...(!collects && hasRole(me, ACCESS.loans)
+            ? [{ to: '/prestamos', label: 'Préstamos', icon: <LoanIcon /> }]
+            : []),
+        ]
   return (
     <>
       {open ? (
@@ -199,6 +245,19 @@ function MobileBar({ me, groups, onSearch }: { me: Me; groups: NavGroup[]; onSea
             Buscar
           </button>
         ) : null}
+        {collects ? (
+          <button
+            type="button"
+            className={barItem}
+            onClick={() => {
+              setOpen(false)
+              onSearch('cobrar')
+            }}
+          >
+            <CollectIcon />
+            Cobrar
+          </button>
+        ) : null}
         <button
           type="button"
           aria-expanded={open}
@@ -213,9 +272,32 @@ function MobileBar({ me, groups, onSearch }: { me: Me; groups: NavGroup[]; onSea
   )
 }
 
+/** The bell (doc 07 - 2): unread notices and authorizations to decide. */
+function Bell({ me }: { me: Me }) {
+  const count = (me.unread_notifications ?? 0) + (me.pending_approvals ?? 0)
+  const label = count
+    ? `Avisos: ${count} pendiente${count === 1 ? '' : 's'}`
+    : 'Avisos y autorizaciones'
+  return (
+    <Link
+      to="/avisos"
+      title={label}
+      aria-label={label}
+      className="relative grid size-9 place-items-center rounded-lg border border-edge bg-surface text-muted outline-none hover:bg-brand-100 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500"
+    >
+      <BellIcon />
+      {count ? (
+        <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-danger-600 px-1 text-center text-[11px] font-bold leading-5 text-white">
+          {count > 99 ? '99+' : count}
+        </span>
+      ) : null}
+    </Link>
+  )
+}
+
 export function AppShell({
   user,
-  me,
+  me: initialMe,
   children,
 }: {
   user: SessionUser
@@ -224,8 +306,16 @@ export function AppShell({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [searching, setSearching] = useState(false)
-  const closeSearch = useCallback(() => setSearching(false), [])
+  // The badges stay fresh: Me is re-read every minute while the app is open.
+  const live = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+    initialData: initialMe,
+    refetchInterval: 60_000,
+  })
+  const me = live.data ?? initialMe
+  const [searching, setSearching] = useState<PaletteIntent | null>(null)
+  const closeSearch = useCallback(() => setSearching(null), [])
   const searchable = !me.is_platform_admin
 
   useEffect(() => {
@@ -233,7 +323,7 @@ export function AppShell({
     const onKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setSearching((value) => !value)
+        setSearching((value) => (value ? null : 'buscar'))
       }
     }
     window.addEventListener('keydown', onKey)
@@ -258,7 +348,9 @@ export function AppShell({
       >
         Saltar al contenido
       </a>
-      {searchable && searching ? <CommandPalette me={me} onClose={closeSearch} /> : null}
+      {searchable && searching ? (
+        <CommandPalette me={me} intent={searching} onClose={closeSearch} />
+      ) : null}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-5 overflow-y-auto bg-brand-950 p-4 sm:flex">
         <Link
           to="/"
@@ -278,7 +370,7 @@ export function AppShell({
           {!me.is_platform_admin ? (
             <button
               type="button"
-              onClick={() => setSearching(true)}
+              onClick={() => setSearching('buscar')}
               className="hidden h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface-2 px-3 text-sm text-muted outline-none hover:border-brand-700/40 focus-visible:ring-2 focus-visible:ring-accent-500 sm:flex"
             >
               <SearchIcon />
@@ -297,6 +389,7 @@ export function AppShell({
                 {roleText}
               </div>
             </div>
+            {!me.is_platform_admin ? <Bell me={me} /> : null}
             <ThemeToggle />
             <Button
               variant="secondary"
@@ -315,7 +408,7 @@ export function AppShell({
           {children}
         </main>
       </div>
-      <MobileBar me={me} groups={groups} onSearch={() => setSearching(true)} />
+      <MobileBar me={me} groups={groups} onSearch={(intent) => setSearching(intent ?? 'buscar')} />
     </div>
   )
 }

@@ -20,7 +20,14 @@ try {
 }
 
 /** Screens reachable without a session: a 401 there is part of their flow. */
-const PUBLIC_PATHS = ['/entrar', '/registro', '/recuperar', '/verificar-correo', '/invitacion']
+const PUBLIC_PATHS = [
+  '/entrar',
+  '/registro',
+  '/recuperar',
+  '/verificar-correo',
+  '/invitacion',
+  '/r/',
+]
 
 /** 401 inside the app = the session closed (30 min idle or 12 h, doc 06 - 6). */
 function onApiError(error: unknown) {
@@ -28,7 +35,12 @@ function onApiError(error: unknown) {
   const path = window.location.pathname
   if (PUBLIC_PATHS.some((prefix) => path.startsWith(prefix))) return
   queryClient.clear()
-  void router.navigate({ to: '/entrar', search: { motivo: 'sesion' } })
+  // Decision 035: outside the branch hours the session closes with its reason.
+  const code = (error.data as { code?: string } | null)?.code
+  void router.navigate({
+    to: '/entrar',
+    search: { motivo: code === 'outside_hours' ? 'horario' : 'sesion' },
+  })
 }
 
 declare module '@tanstack/react-query' {

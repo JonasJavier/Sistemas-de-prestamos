@@ -19,6 +19,7 @@ import { APPLICATION_TABS, type ApplicationsSearch, type ApplicationTab } from '
 import { ACCESS, hasRole } from './lib/roles'
 import type { NewApplicationSearch } from './pages/ApplicationNew'
 import { DashboardPage } from './pages/Dashboard'
+import type { LoansSearch } from './pages/Loans'
 import { LoginPage, type LoginSearch } from './pages/Login'
 
 // Every other screen is its own chunk, fetched on first visit and preloaded
@@ -38,6 +39,25 @@ const ApplicationsPage = lazyRouteComponent(
   'ApplicationsPage',
 )
 const BranchesPage = lazyRouteComponent(() => import('./pages/Branches'), 'BranchesPage')
+const CashSessionDetailPage = lazyRouteComponent(
+  () => import('./pages/CashSessions'),
+  'CashSessionDetailPage',
+)
+const CashSessionsPage = lazyRouteComponent(
+  () => import('./pages/CashSessions'),
+  'CashSessionsPage',
+)
+const CollectPage = lazyRouteComponent(() => import('./pages/Collect'), 'CollectPage')
+const DelinquencyPage = lazyRouteComponent(() => import('./pages/Delinquency'), 'DelinquencyPage')
+const MyCashPage = lazyRouteComponent(() => import('./pages/MyCash'), 'MyCashPage')
+const MyRoutePage = lazyRouteComponent(() => import('./pages/MyRoute'), 'MyRoutePage')
+const NoticesPage = lazyRouteComponent(() => import('./pages/Notices'), 'NoticesPage')
+const PublicReceiptPage = lazyRouteComponent(
+  () => import('./pages/PublicReceipt'),
+  'PublicReceiptPage',
+)
+const ReceiptPage = lazyRouteComponent(() => import('./pages/Receipt'), 'ReceiptPage')
+const RoutesPage = lazyRouteComponent(() => import('./pages/Routes'), 'RoutesPage')
 const CustomerDetailPage = lazyRouteComponent(
   () => import('./pages/CustomerDetail'),
   'CustomerDetailPage',
@@ -163,6 +183,10 @@ const indexRoute = createRoute({
   beforeLoad: ({ context }) => {
     const me = context.queryClient.getQueryData<Me>(['me'])
     if (me?.is_platform_admin) throw redirect({ to: '/plataforma' })
+    // Doc 07 - P10: the collector goes straight to «Mi ruta».
+    if (me?.roles.length && me.roles.every((role) => role === 'Cobrador')) {
+      throw redirect({ to: '/ruta' })
+    }
   },
   component: withMe(DashboardPage),
 })
@@ -268,8 +292,72 @@ const disbursementDetailRoute = createRoute({
 const loansRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/prestamos',
+  validateSearch: (search: Record<string, unknown>): LoansSearch =>
+    typeof search.cobrador === 'string' ? { cobrador: search.cobrador } : {},
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.loans),
-  component: LoansPage,
+  component: withMe(LoansPage),
+})
+
+const collectRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cobrar/$numero',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.collect),
+  component: withMe(CollectPage),
+})
+
+const receiptRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/recibos/$numero',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.receipts),
+  component: withMe(ReceiptPage),
+})
+
+const myCashRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/caja',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.myCash),
+  component: MyCashPage,
+})
+
+const cashSessionsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cajas',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.cashSessions),
+  component: CashSessionsPage,
+})
+
+const cashSessionDetailRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cajas/$id',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.cashSessions),
+  component: CashSessionDetailPage,
+})
+
+const myRouteRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ruta',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.myRoute),
+  component: MyRoutePage,
+})
+
+const routesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/rutas',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.routes),
+  component: RoutesPage,
+})
+
+const delinquencyRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/atrasos',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.delinquency),
+  component: withMe(DelinquencyPage),
+})
+
+const noticesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/avisos',
+  component: withMe(NoticesPage),
 })
 
 const loanDetailRoute = createRoute({
@@ -345,7 +433,7 @@ const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/entrar',
   validateSearch: (search: Record<string, unknown>): LoginSearch =>
-    search.motivo === 'sesion' ? { motivo: 'sesion' } : {},
+    search.motivo === 'sesion' || search.motivo === 'horario' ? { motivo: search.motivo } : {},
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(sessionQuery)
     if (user) throw redirect({ to: '/' })
@@ -383,6 +471,13 @@ const invitationRoute = createRoute({
   component: InvitationAcceptPage,
 })
 
+/** The receipt shared by WhatsApp: public, outside the app (decision 024). */
+const publicReceiptRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/r/$token',
+  component: PublicReceiptPage,
+})
+
 const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
@@ -394,6 +489,15 @@ const routeTree = rootRoute.addChildren([
     disbursementDetailRoute,
     loansRoute,
     loanDetailRoute,
+    collectRoute,
+    receiptRoute,
+    myCashRoute,
+    cashSessionsRoute,
+    cashSessionDetailRoute,
+    myRouteRoute,
+    routesRoute,
+    delinquencyRoute,
+    noticesRoute,
     accountsRoute,
     productsRoute,
     holidaysRoute,
@@ -413,6 +517,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   verifyEmailRoute,
   invitationRoute,
+  publicReceiptRoute,
 ])
 
 export function buildRouter(queryClient: QueryClient) {

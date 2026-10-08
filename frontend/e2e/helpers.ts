@@ -27,3 +27,20 @@ export async function sessionFor(browser: Browser, email: string) {
   await signIn(page, email)
   return page
 }
+
+/** The cashier's drawer open with a fund (F7 step 1): cash leaves and
+ * enters only through an open session from phase 4 on. */
+export async function ensureCashOpen(page: Page, fund = '50000') {
+  await page.goto('/caja')
+  await expect(page.getByRole('heading', { name: 'Mi caja' })).toBeVisible()
+  const open = page.getByRole('button', { name: 'Abrir caja' })
+  await expect(open.or(page.getByText('Esperado en caja'))).toBeVisible()
+  if (await open.isVisible()) {
+    await page.getByLabel('Fondo que recibes (RD$)').fill(fund)
+    await open.click()
+  }
+  await expect(page.getByText('Esperado en caja')).toBeVisible()
+}
+
+/** «RD$ 5,400.00» -> 5400 */
+export const amountOf = (text: string) => Number(text.replace(/[^\d.]/g, ''))

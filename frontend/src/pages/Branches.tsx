@@ -4,10 +4,95 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { createBranch, listBranches, updateBranch } from '../api/accounts'
+import { createBranch, listBranches, updateBranch, type Branch } from '../api/accounts'
 import { ApiError } from '../api/client'
+import { Modal } from '../components/Modal'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
 import { errorMessage } from '../lib/format'
+
+const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+function hoursText(branch: Branch) {
+  const days = branch.workdays ?? []
+  const span =
+    days.length && days.every((d, i) => i === 0 || d === days[i - 1] + 1)
+      ? `${DAYS[days[0]]}–${DAYS[days[days.length - 1]]}`
+      : days.map((d) => DAYS[d]).join(', ')
+  return `${span} · ${branch.opens_at?.slice(0, 5)}–${branch.closes_at?.slice(0, 5)}`
+}
+
+/** Decision 035: the hours within which cashiers and collectors work. */
+function HoursDialog({ branch, onClose }: { branch: Branch; onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [opens, setOpens] = useState(branch.opens_at?.slice(0, 5) ?? '08:00')
+  const [closes, setCloses] = useState(branch.closes_at?.slice(0, 5) ?? '18:00')
+  const [days, setDays] = useState<number[]>(branch.workdays ?? [0, 1, 2, 3, 4, 5])
+  const save = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () =>
+      updateBranch(branch.id, { opens_at: opens, closes_at: closes, workdays: days }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['branches'] })
+      onClose()
+    },
+  })
+  return (
+    <Modal onClose={onClose} labelledBy="hours-title">
+      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+        <h2 id="hours-title" className="text-lg font-semibold">
+          Horario de {branch.name}
+        </h2>
+        <p className="text-sm text-muted">
+          Cajeros y cobradores solo entran en este horario; al terminar, su sesión se cierra. El
+          supervisor puede extenderlo por un rato desde Rutas.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Abre">
+            <Input type="time" value={opens} onChange={(e) => setOpens(e.target.value)} />
+          </Field>
+          <Field label="Cierra">
+            <Input type="time" value={closes} onChange={(e) => setCloses(e.target.value)} />
+          </Field>
+        </div>
+        <fieldset className="space-y-1">
+          <legend className="text-[12.5px] font-medium text-muted">Días laborables</legend>
+          <div className="flex flex-wrap gap-2">
+            {DAYS.map((label, index) => (
+              <label
+                key={label}
+                className="flex items-center gap-1 rounded-lg border border-edge px-2 py-1 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={days.includes(index)}
+                  onChange={(e) =>
+                    setDays((current) =>
+                      e.target.checked
+                        ? [...current, index].sort((a, b) => a - b)
+                        : current.filter((d) => d !== index),
+                    )
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {save.error instanceof ApiError ? (
+          <Alert tone="danger">{errorMessage(save.error.data)}</Alert>
+        ) : null}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={!days.length || save.isPending}>
+            Guardar horario
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 const schema = z.object({
   code: z
@@ -25,6 +110,7 @@ type FormData = z.infer<typeof schema>
 export function BranchesPage() {
   const queryClient = useQueryClient()
   const [message, setMessage] = useState<string | null>(null)
+  const [hoursFor, setHoursFor] = useState<Branch | null>(null)
   const branches = useQuery({ queryKey: ['branches'], queryFn: listBranches })
   const form = useForm<FormData>({ resolver: zodResolver(schema) })
 
@@ -110,6 +196,7 @@ export function BranchesPage() {
                 <th className="py-2 pr-3">Código</th>
                 <th className="py-2 pr-3">Nombre</th>
                 <th className="py-2 pr-3">Dirección</th>
+                <th className="py-2 pr-3">Horario</th>
                 <th className="py-2 pr-3">Estado</th>
                 <th className="py-2" />
               </tr>
@@ -120,6 +207,15 @@ export function BranchesPage() {
                   <td className="py-2 pr-3 font-medium tabular-nums">{branch.code}</td>
                   <td className="py-2 pr-3">{branch.name}</td>
                   <td className="py-2 pr-3 text-muted">{branch.address || '—'}</td>
+                  <td className="py-2 pr-3">
+                    <button
+                      type="button"
+                      className="text-left text-brand-700 hover:underline"
+                      onClick={() => setHoursFor(branch)}
+                    >
+                      {hoursText(branch)}
+                    </button>
+                  </td>
                   <td className="py-2 pr-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
@@ -146,6 +242,7 @@ export function BranchesPage() {
           </table>
         ) : null}
       </Card>
+      {hoursFor ? <HoursDialog branch={hoursFor} onClose={() => setHoursFor(null)} /> : null}
     </>
   )
 }

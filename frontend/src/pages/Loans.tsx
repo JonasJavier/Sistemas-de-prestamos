@@ -1,10 +1,15 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import type { Me } from '../api/accounts'
+import { ApiError } from '../api/client'
 import { listLoans } from '../api/origination'
+import { assignCollector, listCollectors } from '../api/routes'
 import {
+  Alert,
   Badge,
+  Button,
   EmptyState,
   PageHeader,
   Pagination,
@@ -14,22 +19,58 @@ import {
   Select,
   Spinner,
 } from '../components/ui'
-import { day, LOAN_STATUS, rd } from '../lib/format'
+import { day, errorMessage, LOAN_STATUS, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
+import { ACCESS, hasRole } from '../lib/roles'
+import { notify } from '../lib/toast'
 
-/** P31: loans with filters; the totals respect the filters (doc 07 - 5). */
-export function LoansPage() {
+export interface LoansSearch {
+  /** A collector's id, or «none» for the loans without one (P45). */
+  cobrador?: string
+}
+
+/** P31: loans with filters; the totals respect the filters (doc 07 - 5).
+ * Supervisors assign the portfolio to collectors from here (P45). */
+export function LoansPage({ me }: { me: Me }) {
+  const search = useSearch({ from: '/app/prestamos' })
+  const navigate = useNavigate({ from: '/prestamos' })
+  const queryClient = useQueryClient()
+  const supervisor = hasRole(me, ACCESS.supervise)
   const [status, setStatus] = useState('active')
+  const [tramo, setTramo] = useState('')
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
+  const [selected, setSelected] = useState<string[]>([])
+  const [target, setTarget] = useState('')
+  const collector = search.cobrador ?? ''
   const term = useDebounced(q.trim(), 300)
   const query = useQuery({
-    queryKey: ['loans', status, term, page],
-    queryFn: () => listLoans({ status, q: term, page }),
+    queryKey: ['loans', status, term, page, collector, tramo],
+    queryFn: () => listLoans({ status, q: term, page, collector, tramo }),
     placeholderData: keepPreviousData,
+  })
+  const collectors = useQuery({
+    queryKey: ['collectors'],
+    queryFn: listCollectors,
+    enabled: supervisor,
+  })
+  const assign = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () =>
+      assignCollector({ loans: selected, collector: target === 'none' ? null : target }),
+    onSuccess: (result) => {
+      notify(`${result.changed} préstamo(s) reasignados.`, 'success')
+      setSelected([])
+      void queryClient.invalidateQueries({ queryKey: ['loans'] })
+      void queryClient.invalidateQueries({ queryKey: ['routes'] })
+    },
   })
   const rows = query.data?.results ?? []
   const count = query.data?.count ?? 0
+  const toggle = (number: string) =>
+    setSelected((current) =>
+      current.includes(number) ? current.filter((n) => n !== number) : [...current, number],
+    )
 
   return (
     <>
@@ -37,7 +78,7 @@ export function LoansPage() {
         title="Préstamos"
         subtitle="Cartera de tu alcance, por número, cliente o cédula."
       />
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_220px]">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_180px_160px] lg:grid-cols-[1fr_180px_160px_200px]">
         <SearchInput
           value={q}
           onChange={(e) => {
@@ -61,7 +102,61 @@ export function LoansPage() {
             </option>
           ))}
         </Select>
+        <Select
+          aria-label="Atraso"
+          value={tramo}
+          onChange={(e) => {
+            setTramo(e.target.value)
+            setPage(1)
+          }}
+        >
+          <option value="">Con y sin atraso</option>
+          <option value="al_dia">Al día</option>
+          <option value="atraso">En atraso</option>
+        </Select>
+        {supervisor ? (
+          <Select
+            aria-label="Cobrador"
+            value={collector}
+            onChange={(e) => {
+              setPage(1)
+              setSelected([])
+              void navigate({ search: e.target.value ? { cobrador: e.target.value } : {} })
+            }}
+          >
+            <option value="">Todos los cobradores</option>
+            <option value="none">Sin cobrador</option>
+            {collectors.data?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        ) : null}
       </div>
+      {supervisor && selected.length ? (
+        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-brand-700/40 bg-brand-100 px-4 py-2 text-sm">
+          <span className="font-semibold">{selected.length} seleccionado(s)</span>
+          <Select aria-label="Asignar a" value={target} onChange={(e) => setTarget(e.target.value)}>
+            <option value="">Asignar a…</option>
+            <option value="none">Quitar el cobrador</option>
+            {collectors.data?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+          <Button onClick={() => assign.mutate()} disabled={!target || assign.isPending}>
+            Asignar
+          </Button>
+          <Button variant="secondary" onClick={() => setSelected([])}>
+            Cancelar
+          </Button>
+          {assign.error instanceof ApiError ? (
+            <Alert tone="danger">{errorMessage(assign.error.data)}</Alert>
+          ) : null}
+        </div>
+      ) : null}
       {query.isPending ? (
         <Spinner />
       ) : rows.length > 0 ? (
@@ -70,16 +165,29 @@ export function LoansPage() {
             {rows.map((loan) => {
               const s = LOAN_STATUS[loan.status]
               return (
-                <li key={loan.id}>
+                <li key={loan.id} className="flex items-stretch">
+                  {supervisor && loan.status === 'active' ? (
+                    <label className="flex items-center pl-4">
+                      <input
+                        type="checkbox"
+                        aria-label={`Seleccionar ${loan.number}`}
+                        checked={selected.includes(loan.number)}
+                        onChange={() => toggle(loan.number)}
+                      />
+                    </label>
+                  ) : null}
                   <Link
                     to="/prestamos/$numero"
                     params={{ numero: loan.number }}
-                    className={rowLinkClass}
+                    className={`${rowLinkClass} flex-1`}
                   >
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold tabular-nums">{loan.number}</span>
                         <Badge tone={s?.tone}>{s?.label ?? loan.status}</Badge>
+                        {loan.status === 'active' && loan.days_past_due > 0 ? (
+                          <Badge tone="danger">{loan.days_past_due} días de atraso</Badge>
+                        ) : null}
                       </div>
                       <div className="truncate text-sm">
                         {loan.customer_name}{' '}

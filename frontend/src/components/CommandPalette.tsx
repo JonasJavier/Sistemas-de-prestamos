@@ -17,9 +17,21 @@ interface Option {
   run: () => void
 }
 
+/** «buscar»: Ctrl+K; «cobrar»: the Cobrar button picks the loan to collect. */
+export type PaletteIntent = 'buscar' | 'cobrar'
+
 /** Ctrl+K global search (decision 017; P10): customers, loans and quick actions.
  * The shell mounts it while open, so every opening starts clean. */
-export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void }) {
+export function CommandPalette({
+  me,
+  intent = 'buscar',
+  onClose,
+}: {
+  me: Me
+  intent?: PaletteIntent
+  onClose: () => void
+}) {
+  const [mode, setMode] = useState<PaletteIntent>(intent)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const debounced = useDebounced(q, 250)
@@ -37,18 +49,27 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
     navigate({ to, params })
   }
   const originator = hasRole(me, ACCESS.originate)
+  const collector = hasRole(me, ACCESS.collect)
+  const collecting = mode === 'cobrar'
 
-  const loanOptions: Option[] = (results.data?.loans ?? []).map((loan) => ({
-    key: `loan-${loan.number}`,
-    label: (
-      <>
-        <span className="font-medium tabular-nums">Préstamo {loan.number}</span>
-        <span className="ml-2 text-muted">{loan.customer_name}</span>
-      </>
-    ),
-    hint: rd(loan.principal_outstanding),
-    run: () => go('/prestamos/$numero', { numero: loan.number }),
-  }))
+  const loanOptions: Option[] = (results.data?.loans ?? [])
+    .filter((loan) => !collecting || loan.status === 'active')
+    .map((loan) => ({
+      key: `loan-${loan.number}`,
+      label: (
+        <>
+          <span className="font-medium tabular-nums">
+            {collecting ? 'Cobrar' : 'Préstamo'} {loan.number}
+          </span>
+          <span className="ml-2 text-muted">{loan.customer_name}</span>
+        </>
+      ),
+      hint: rd(loan.principal_outstanding),
+      run: () =>
+        collecting
+          ? go('/cobrar/$numero', { numero: loan.number })
+          : go('/prestamos/$numero', { numero: loan.number }),
+    }))
   const customerOptions: Option[] = (results.data?.customers ?? []).map((customer) => ({
     key: `customer-${customer.id}`,
     label: <span className="font-medium">{customer.display_name}</span>,
@@ -60,8 +81,25 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
     loan.number.toLowerCase().includes(term.toLowerCase()),
   )
   const options: Option[] = [
-    ...(byNumber ? [...loanOptions, ...customerOptions] : [...customerOptions, ...loanOptions]),
-    ...(originator
+    ...(collecting
+      ? loanOptions
+      : byNumber
+        ? [...loanOptions, ...customerOptions]
+        : [...customerOptions, ...loanOptions]),
+    ...(collector && !collecting
+      ? [
+          {
+            key: 'collect',
+            label: 'Cobrar un préstamo…',
+            action: true,
+            run: () => {
+              setMode('cobrar')
+              setActive(0)
+            },
+          },
+        ]
+      : []),
+    ...(originator && !collecting
       ? [
           {
             key: 'new-customer',
@@ -91,8 +129,12 @@ export function CommandPalette({ me, onClose }: { me: Me; onClose: () => void })
             setQ(event.target.value)
             setActive(0)
           }}
-          placeholder="Buscar cliente, cédula, teléfono o número de préstamo…"
-          aria-label="Buscar"
+          placeholder={
+            collecting
+              ? 'Préstamo o cliente a cobrar…'
+              : 'Buscar cliente, cédula, teléfono o número de préstamo…'
+          }
+          aria-label={collecting ? 'Préstamo a cobrar' : 'Buscar'}
           className="w-full border-b border-edge bg-surface px-4 py-3 text-sm text-ink outline-none"
           onKeyDown={(event) => {
             if (event.key === 'ArrowDown') {

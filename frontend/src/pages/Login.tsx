@@ -17,8 +17,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export interface LoginSearch {
-  /** «sesion»: the API answered 401 inside the app (idle or 12-hour limit). */
-  motivo?: 'sesion'
+  /** «sesion»: the API answered 401 inside the app (idle or 12-hour limit);
+   * «horario»: a cashier or collector outside the branch hours (decision 035). */
+  motivo?: 'sesion' | 'horario'
 }
 
 export function LoginPage() {
@@ -136,6 +137,11 @@ export function LoginPage() {
           ) : motivo === 'sesion' ? (
             <Alert tone="info">
               Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.
+            </Alert>
+          ) : motivo === 'horario' ? (
+            <Alert tone="info">
+              Estás fuera del horario de tu sucursal. Si necesitas seguir trabajando, pídele una
+              extensión a tu supervisor.
             </Alert>
           ) : null}
           <Field label="Correo" error={form.formState.errors.email?.message}>
