@@ -64,7 +64,14 @@ warn_unused_ignores = true
 # The financial engine is checked strictly in CI (money never guesses types);
 # the Django apps join gradually as their request.user typing is cleaned up.
 [[tool.mypy.overrides]]
-module = ["engine.money", "engine.rates", "engine.schedule"]
+module = [
+    "engine.money",
+    "engine.rates",
+    "engine.schedule",
+    "engine.late_fees",
+    "engine.allocation",
+    "engine.payoff",
+]
 strict = true
 warn_unreachable = true
 

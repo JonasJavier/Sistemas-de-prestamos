@@ -14,7 +14,7 @@ interest-only up to its maturity; principal abonos re-version it later
   balance exactly, so it is never larger than the others.
 """
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_CEILING, ROUND_DOWN, Decimal, localcontext
@@ -268,6 +268,100 @@ def _amounts(
         target_total=lambda _balance, _interest: payment,
         interest_for=lambda balance: money(balance * periodic_rate),
     )
+
+
+def due_dates(
+    *,
+    installments: int,
+    frequency: Frequency,
+    start_after: date,
+    first_due: date,
+    is_non_working: Callable[[date], bool] = WORKING_EVERY_DAY,
+    semimonthly: bool = False,
+) -> list[tuple[date, date]]:
+    """(due_date, original_due_date) of ``installments`` periods from
+    ``first_due``; used when a loan's dates move (doc 03 - section 4)."""
+    theoretical = _theoretical_dates(
+        installments=installments,
+        frequency=frequency,
+        disbursed_on=start_after,
+        first_due=first_due,
+        semimonthly=semimonthly,
+    )
+    return _resolve_dates(
+        theoretical, frequency=frequency, disbursed_on=start_after, is_non_working=is_non_working
+    )
+
+
+class Prepayment(StrEnum):
+    """What a principal prepayment shortens (doc 03 - section 8.3)."""
+
+    REDUCE_TERM = "reduce_term"  # same installment, fewer of them (default)
+    REDUCE_PAYMENT = "reduce_payment"  # same count, smaller installment
+
+
+def reschedule(
+    *,
+    balance: Decimal,
+    periodic_rate: Decimal,
+    method: Method,
+    dates: Sequence[tuple[date, date]],
+    mode: Prepayment = Prepayment.REDUCE_TERM,
+    keep: Decimal | None = None,
+    rounding: Rounding = Rounding.CENT,
+) -> list[Installment]:
+    """The remaining schedule after a principal prepayment.
+
+    ``balance`` is the principal left for the installments being replaced
+    and ``dates`` their due dates. Reducing the term keeps ``keep`` — the
+    regular installment (fixed payment) or the regular principal part
+    (fixed principal) — and drops the installments no longer needed; the
+    last one closes the balance exactly. Interest-only and open loans keep
+    their dates: the interest simply runs on the new balance. The flat
+    method has no prepayment: its interest is fixed on the original
+    principal, so extra money advances installments instead.
+    """
+    if method == Method.FLAT:
+        raise ValueError(
+            "En el método plano el pago extra adelanta cuotas; para ahorrar interés, liquida."
+        )
+    if balance <= 0:
+        raise ValueError("El saldo que queda debe ser mayor que cero.")
+    if not dates:
+        raise ValueError("No quedan cuotas que reprogramar.")
+    balance = money(balance)
+    n = len(dates)
+    if method in INTEREST_ONLY_METHODS or mode == Prepayment.REDUCE_PAYMENT or keep is None:
+        amounts = _amounts(
+            principal=balance,
+            periodic_rate=periodic_rate,
+            installments=n,
+            method=method,
+            rounding_step=CENT if method in INTEREST_ONLY_METHODS else ROUNDING_STEP[rounding],
+        )
+    else:
+        amounts = []
+        remaining = balance
+        for k in range(n):
+            interest = money(remaining * periodic_rate)
+            target = keep - interest if method == Method.FIXED_PAYMENT else keep
+            part = remaining if k == n - 1 else min(max(target, Decimal("0.00")), remaining)
+            amounts.append((part, interest))
+            remaining -= part
+            if remaining == 0:
+                break
+    return [
+        Installment(
+            number=index + 1,
+            due_date=due,
+            original_due_date=original,
+            principal=part,
+            interest=interest,
+        )
+        for index, ((due, original), (part, interest)) in enumerate(
+            zip(dates[: len(amounts)], amounts, strict=True)
+        )
+    ]
 
 
 def generate_schedule(

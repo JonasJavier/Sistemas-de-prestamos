@@ -50,7 +50,7 @@ jobs:
       - name: Format
         run: uv run ruff format --check .
       - name: Types of the financial engine (strict)
-        run: uv run mypy engine/money.py engine/rates.py engine/schedule.py
+        run: uv run mypy engine/money.py engine/rates.py engine/schedule.py engine/late_fees.py engine/allocation.py engine/payoff.py
       - name: Check missing migrations
         run: uv run python manage.py makemigrations --check --dry-run --settings=config.settings.test
       - name: Known vulnerabilities (doc 06 - 8)
