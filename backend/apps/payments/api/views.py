@@ -295,6 +295,8 @@ class PaymentViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         params = self.request.query_params
         if params.get("loan"):
             queryset = queryset.filter(loan__number=params["loan"])
+        if params.get("customer"):
+            queryset = queryset.filter(customer_id=params["customer"])
         if params.get("cash_session"):
             queryset = queryset.filter(cash_session_id=params["cash_session"])
         if params.get("route_session"):

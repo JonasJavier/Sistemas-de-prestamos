@@ -14,6 +14,7 @@ import { CollateralTab } from './customer/CollateralTab'
 import { FamilyTab } from './customer/FamilyTab'
 import { FilesTab } from './customer/FilesTab'
 import { IncomeTab } from './customer/IncomeTab'
+import { PaymentsTab } from './customer/PaymentsTab'
 
 const TABS = [
   ['resumen', 'Resumen'],
@@ -22,6 +23,7 @@ const TABS = [
   ['garantias', 'Garantías'],
   ['archivos', 'Archivos'],
   ['prestamos', 'Préstamos y solicitudes'],
+  ['pagos', 'Pagos'],
 ] as const
 
 type TabKey = (typeof TABS)[number][0]
@@ -204,6 +206,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
       {tab === 'garantias' ? <CollateralTab customerId={id} /> : null}
       {tab === 'archivos' ? <FilesTab customerId={id} /> : null}
       {tab === 'prestamos' ? <LendingTab customerId={id} /> : null}
+      {tab === 'pagos' ? <PaymentsTab customerId={id} /> : null}
     </>
   )
 }

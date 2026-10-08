@@ -172,6 +172,15 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const active = data.status === 'active'
   const canVoid = active && hasRole(me, ACCESS.voidLoans)
   const more = [
+    {
+      label: 'Estado de cuenta (PDF)',
+      onSelect: () =>
+        window.open(
+          `/api/v1/prestamos/${encodeURIComponent(numero)}/estado-de-cuenta/`,
+          '_blank',
+          'noopener',
+        ),
+    },
     ...(active && hasRole(me, ACCESS.payoffLetters)
       ? [{ label: 'Carta de saldo', onSelect: () => setDialog('payoff') }]
       : []),

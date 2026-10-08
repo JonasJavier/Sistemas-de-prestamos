@@ -190,6 +190,7 @@ export const collect = (
 
 export const listPayments = (params: {
   loan?: string
+  customer?: string
   cash_session?: string
   route_session?: string
   date?: string

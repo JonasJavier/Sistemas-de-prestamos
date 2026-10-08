@@ -139,6 +139,25 @@ def test_payoff_letter_and_its_pdf(tenant) -> None:
     assert b"".join(pdf.streaming_content).startswith(b"%PDF")
 
 
+def test_account_statement_on_request(tenant) -> None:
+    loan = make_loan(tenant, first_due_in=-11)
+    pay(tenant, loan, "400")
+    pdf = tenant.client("oficial").get(f"/api/v1/prestamos/{loan.number}/estado-de-cuenta/")
+    assert pdf.status_code == 200
+    assert b"".join(pdf.streaming_content).startswith(b"%PDF")
+    again = tenant.client("oficial").get(f"/api/v1/prestamos/{loan.number}/estado-de-cuenta/")
+    assert again.status_code == 200
+    with company_context(tenant.company.id):
+        from apps.documents.models import GeneratedDocument
+
+        folios = sorted(
+            GeneratedDocument.objects.filter(kind="account_statement").values_list(
+                "folio", flat=True
+            )
+        )
+        assert folios == [f"{loan.number}-EC001", f"{loan.number}-EC002"]
+
+
 # --- Cash ---------------------------------------------------------------------------------------
 
 

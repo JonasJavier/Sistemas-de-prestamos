@@ -1,0 +1,74 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Estado de cuenta{% endblock %}
+{% block heading %}ESTADO DE CUENTA{% endblock %}
+{% block number %}Préstamo {{ loan.number }} · al {{ as_of|dmy }}{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div>
+    <table class="kv">
+      <tr><td>Cliente</td><td>{{ customer.display_name }}</td></tr>
+      <tr><td>Documento</td><td>{{ customer.document_number|doc }}</td></tr>
+      <tr><td>Desembolso</td><td>{{ loan.disbursed_on|dmy }}</td></tr>
+      <tr><td>Estado</td><td>{{ loan.get_status_display }}{% if loan.days_past_due %} · {{ loan.days_past_due }} días de atraso{% endif %}</td></tr>
+    </table>
+  </div>
+  <div>
+    <table class="kv">
+      <tr><td>Condiciones vigentes</td><td>versión {{ terms.version }} desde {{ terms.effective_from|dmy }}</td></tr>
+      <tr><td>Capital de esta versión</td><td class="num">{{ terms.principal|rd }}</td></tr>
+      <tr><td>Cuotas</td><td class="num">{{ terms.installments }} {{ frequency_plural }}</td></tr>
+      <tr><td>Tasa por período</td><td class="num">{{ periodic_rate_pct|pct:4 }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2>Calendario y pagos aplicados</h2>
+<table class="grid">
+  <thead>
+    <tr><th>#</th><th>Vence</th><th class="num">Cuota</th><th class="num">Pagado</th><th class="num">Condonado</th><th class="num">Mora pendiente</th><th class="num">Debe</th></tr>
+  </thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td>{{ row.number }}</td>
+      <td>{{ row.due_date|dmy }}{% if row.days_late %} <span class="muted">({{ row.days_late }} d)</span>{% endif %}</td>
+      <td class="num">{{ row.due|num }}</td>
+      <td class="num">{{ row.paid|num }}</td>
+      <td class="num">{% if row.waived %}{{ row.waived|num }}{% endif %}</td>
+      <td class="num">{% if row.late_fee %}{{ row.late_fee|num }}{% endif %}</td>
+      <td class="num">{{ row.owed|num }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td colspan="2">Totales</td><td class="num">{{ totals.due|num }}</td><td class="num">{{ totals.paid|num }}</td><td class="num">{{ totals.waived|num }}</td><td class="num">{{ totals.late_fee|num }}</td><td class="num">{{ totals.owed|num }}</td></tr>
+  </tfoot>
+</table>
+
+<div class="two-col" style="margin-top:12px">
+  <div>
+    <h2>Pagos recibidos</h2>
+    <table class="grid">
+      <thead><tr><th>Recibo</th><th>Fecha</th><th class="num">Monto</th></tr></thead>
+      <tbody>
+      {% for payment in payments %}
+        <tr><td>{{ payment.number }}{% if payment.status == "reversed" %} <span class="muted">(reversado)</span>{% endif %}</td><td>{{ payment.value_date|dmy }}</td><td class="num">{{ payment.amount|num }}</td></tr>
+      {% empty %}
+        <tr><td colspan="3" class="muted">Sin pagos.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Saldos al {{ as_of|dmy }}</h2>
+    <table class="kv">
+      <tr><td>Capital pendiente</td><td class="num">{{ summary.principal|rd }}</td></tr>
+      <tr><td>Vencido (con mora)</td><td class="num">{{ summary.overdue|rd }}</td></tr>
+      <tr><td>Mora pendiente</td><td class="num">{{ summary.late_fee|rd }}</td></tr>
+      <tr><td>Total por cuotas</td><td class="num">{{ summary.total_owed|rd }}</td></tr>
+      <tr><td>Saldo para saldar hoy</td><td class="num">{{ payoff_total|rd }}</td></tr>
+    </table>
+    <p class="muted" style="margin-top:6px">El saldo para saldar condona el interés futuro según el producto; la carta de saldo indica hasta cuándo vale.</p>
+  </div>
+</div>
+{% endblock %}

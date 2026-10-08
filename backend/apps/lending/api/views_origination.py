@@ -630,6 +630,27 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
             }
         )
 
+    @action(detail=True, methods=["get"], url_path="estado-de-cuenta")
+    def account_statement(self, request: Request, number: str | None = None) -> Response:
+        """Doc 09: issued on request, registered, and opened as a PDF."""
+        from apps.documents.services import issue_account_statement
+
+        loan = self.get_object()
+        document = issue_account_statement(loan, issued_by=request.user)
+        SensitiveAccessLog.objects.create(
+            company_id=loan.company_id,
+            user=request.user,
+            action=SensitiveAccessLog.Action.DOCUMENT,
+            target_type="generated_document",
+            target_id=document.id,
+            detail=f"Estado de cuenta {document.folio}",
+        )
+        return FileResponse(
+            document.file.open("rb"),
+            content_type="application/pdf",
+            filename=f"{document.folio}.pdf",
+        )
+
     @action(detail=True, methods=["get"], url_path=r"documentos/(?P<doc_id>[0-9a-f-]+)")
     def documento(self, request: Request, number: str | None = None, doc_id: str = "") -> Response:
         loan = self.get_object()

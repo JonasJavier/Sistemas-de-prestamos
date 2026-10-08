@@ -19,6 +19,7 @@ class GeneratedDocument(CompanyScopedModel):
         PAYOFF_FINAL = "payoff_final", "Carta de saldo final"
         CASH_CLOSE = "cash_close", "Cierre de caja"
         ROUTE_SETTLEMENT = "route_settlement", "Rendición del cobrador"
+        ACCOUNT_STATEMENT = "account_statement", "Estado de cuenta"
 
     kind = models.CharField(max_length=30, choices=Kind)
     template_version = models.CharField(max_length=20)

@@ -348,3 +348,66 @@ def issue_payoff_final(payment, *, issued_by) -> GeneratedDocument:
         },
         issued_by=issued_by,
     )
+
+
+def issue_account_statement(loan, *, issued_by) -> GeneratedDocument:
+    """«Estado de cuenta» on request (doc 09): the conditions in force, the
+    schedule with what was paid, the pending late fee and today's balances.
+    Each request is a new issue in the register, frozen as of that day."""
+    from apps.payments import portfolio
+    from apps.payments.letters import compute
+
+    today = timezone.localdate()
+    lines = portfolio.position(loan, today)
+    summary = portfolio.summarize(lines, today)
+    terms = portfolio.current_terms(loan)
+    zero = Decimal("0.00")
+    rows = []
+    for line in lines:
+        inst = line.installment
+        paid = inst.principal_paid + inst.interest_paid + inst.charges_paid + inst.late_fee_paid
+        rows.append(
+            {
+                "number": inst.number,
+                "due_date": inst.due_date,
+                "days_late": line.days_late,
+                "due": inst.principal_due + inst.interest_due + inst.charges_due,
+                "paid": paid,
+                "waived": inst.late_fee_waived + inst.interest_waived,
+                "late_fee": line.late_fee,
+                "owed": line.total,
+            }
+        )
+    totals = {
+        key: sum((row[key] for row in rows), zero)
+        for key in ("due", "paid", "waived", "late_fee", "owed")
+    }
+    payoff_total = compute(loan, today)[0].total if loan.status == "active" else zero
+    count = GeneratedDocument.objects.filter(
+        target_type="lending.loan",
+        target_id=loan.pk,
+        kind=GeneratedDocument.Kind.ACCOUNT_STATEMENT,
+    ).count()
+    return issue(
+        company=Company.objects.get(pk=loan.company_id),
+        kind=GeneratedDocument.Kind.ACCOUNT_STATEMENT,
+        target=loan,
+        folio=f"{loan.number}-EC{count + 1:03d}",
+        template="documents/account_statement.html",
+        context={
+            "loan": loan,
+            "branch": loan.branch,
+            "customer": loan.customer,
+            "terms": terms,
+            "as_of": today,
+            "rows": rows,
+            "totals": totals,
+            "summary": summary,
+            "payoff_total": payoff_total,
+            "payments": list(loan.payments.order_by("value_date", "paid_at")),
+            "frequency_plural": FREQUENCY_LABELS[terms.frequency][1],
+            "periodic_rate_pct": terms.periodic_rate * 100,
+        },
+        issued_by=issued_by,
+        legal_status="validated",  # a statement of facts, not a legal template
+    )
