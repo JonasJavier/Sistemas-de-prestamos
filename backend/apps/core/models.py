@@ -6,11 +6,14 @@ of the apps inherit from; PostgreSQL row-level security is layered on top
 of it in the phase 1 RLS migration.
 """
 
+import datetime as dt
 import uuid
 from decimal import Decimal
 
 import pghistory
+from django.conf import settings
 from django.db import models
+from django.db.models import F, Q
 
 from apps.core.tenancy import TenantManager
 
@@ -52,6 +55,10 @@ class Company(TimeStampedModel):
     capacity_alert_ratio = models.DecimalField(
         max_digits=4, decimal_places=3, default=Decimal("0.400")
     )
+    # F6 control: above this cash in hand the supervisor is warned (**Validar**).
+    collector_cash_limit = models.DecimalField(
+        max_digits=14, decimal_places=2, default=Decimal("25000.00")
+    )
 
     def __str__(self) -> str:
         return self.trade_name or self.legal_name
@@ -72,6 +79,10 @@ class CompanyScopedModel(TimeStampedModel):
         abstract = True
 
 
+def default_workdays() -> list[int]:
+    return [0, 1, 2, 3, 4, 5]  # Monday to Saturday (Python weekday numbers)
+
+
 @pghistory.track()
 class Branch(CompanyScopedModel):
     """A branch office; its code prefixes document numbers (decision 030)."""
@@ -81,6 +92,10 @@ class Branch(CompanyScopedModel):
     address = models.CharField(max_length=300, blank=True)
     phone = models.CharField(max_length=30, blank=True)
     is_active = models.BooleanField(default=True)
+    # Decision 035: cashiers and collectors only work within these hours.
+    opens_at = models.TimeField(default=dt.time(8, 0))
+    closes_at = models.TimeField(default=dt.time(18, 0))
+    workdays = models.JSONField(default=default_workdays)
 
     class Meta:
         constraints = [
@@ -140,6 +155,65 @@ class Reason(CompanyScopedModel):
 
     def __str__(self) -> str:
         return self.text
+
+
+class ApprovalRequest(CompanyScopedModel):
+    """One mechanism for every authorization (doc 05 - 4.1, doc 06 - 4.6).
+
+    Whoever is above their limit asks from the same screen; another person
+    within the limit decides from their own session. A reversal runs when
+    it is approved; a waiver or a discount is approved first and then used
+    by the requester's payment, once.
+    """
+
+    class Kind(models.TextChoices):
+        WAIVE_LATE_FEE = "waive_late_fee", "Condonar mora"
+        PAYOFF_DISCOUNT = "payoff_discount", "Descuento en liquidación"
+        REVERSAL = "reversal", "Reverso de pago"
+        CORRECTION = "correction", "Corrección de pago"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pendiente"
+        APPROVED = "approved", "Aprobada"
+        REJECTED = "rejected", "Rechazada"
+        CANCELLED = "cancelled", "Cancelada"
+        USED = "used", "Usada"
+        EXPIRED = "expired", "Vencida"
+
+    kind = models.CharField(max_length=20, choices=Kind)
+    status = models.CharField(max_length=10, choices=Status, default=Status.PENDING)
+    branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="+")
+    target_type = models.CharField(max_length=50)
+    target_id = models.UUIDField()
+    target_label = models.CharField(max_length=60)  # «SD-000125» or «SD-R-000031»
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    reason = models.ForeignKey(Reason, null=True, blank=True, on_delete=models.PROTECT)
+    note = models.TextField()
+    payload = models.JSONField(default=dict, blank=True)
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decision_note = models.TextField(blank=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="approval_amount_positive"),
+            # Nobody approves what they asked for (doc 06 - section 4, rule 1).
+            models.CheckConstraint(
+                condition=Q(decided_by__isnull=True) | ~Q(decided_by=F("requested_by")),
+                name="approval_not_self_decided",
+            ),
+        ]
+        indexes = [models.Index(fields=["company", "status", "kind"])]
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()} {self.target_label}"
 
 
 class Sequence(CompanyScopedModel):

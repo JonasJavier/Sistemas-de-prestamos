@@ -1,0 +1,77 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Cierre de caja{% endblock %}
+{% block heading %}CIERRE DE CAJA{% endblock %}
+{% block number %}{{ session.number }} · {{ session.business_date|dmy }}{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div>
+    <table class="kv">
+      <tr><td>Cajero</td><td>{{ cashier_name }}</td></tr>
+      <tr><td>Apertura</td><td>{{ session.opened_at|date:"d/m/Y H:i" }}</td></tr>
+      <tr><td>Cierre</td><td>{{ session.closed_at|date:"d/m/Y H:i" }}</td></tr>
+    </table>
+  </div>
+  <div>
+    <table class="kv">
+      <tr><td>Estado</td><td>{{ session.get_status_display }}</td></tr>
+      <tr><td>Aprobó</td><td>{{ approver_name|default:"Pendiente" }}</td></tr>
+      <tr><td>Aprobado el</td><td>{{ session.approved_at|date:"d/m/Y H:i"|default:"—" }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2>Efectivo de la sesión</h2>
+<table class="grid">
+  <thead><tr><th>Concepto</th><th class="num">Entradas</th><th class="num">Salidas</th></tr></thead>
+  <tbody>
+    <tr><td>Quedó en la caja del día anterior</td><td class="num">{{ session.carried_over|num }}</td><td></td></tr>
+    {% for row in movements %}
+    <tr><td>{{ row.label }} <span class="muted">({{ row.count }})</span></td><td class="num">{% if row.debit %}{{ row.debit|num }}{% endif %}</td><td class="num">{% if row.credit %}{{ row.credit|num }}{% endif %}</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td>Esperado en caja</td><td class="num" colspan="2">{{ session.expected|rd }}</td></tr>
+  </tfoot>
+</table>
+
+{% if other_methods %}
+<h2>Cobros por otros medios (no entran en la caja)</h2>
+<table class="grid">
+  <thead><tr><th>Medio</th><th class="num">Cobros</th><th class="num">Monto</th></tr></thead>
+  <tbody>
+  {% for row in other_methods %}
+    <tr><td>{{ row.label }}</td><td class="num">{{ row.count }}</td><td class="num">{{ row.amount|num }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2>Arqueo</h2>
+<table class="grid">
+  <thead><tr><th>Denominación</th><th class="num">Cantidad</th><th class="num">Subtotal</th></tr></thead>
+  <tbody>
+  {% for count in counts %}
+    <tr><td>RD$ {{ count.denomination|num }}</td><td class="num">{{ count.quantity }}</td><td class="num">{{ count.subtotal|num }}</td></tr>
+  {% empty %}
+    <tr><td colspan="3" class="muted">Sin efectivo contado.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td>Contado</td><td></td><td class="num">{{ session.counted|rd }}</td></tr>
+  </tfoot>
+</table>
+
+<table class="kv" style="margin-top:10px">
+  <tr><td>Esperado</td><td class="num">{{ session.expected|rd }}</td></tr>
+  <tr><td>Contado</td><td class="num">{{ session.counted|rd }}</td></tr>
+  <tr><td>Diferencia</td><td class="num">{{ session.difference|rd }}{% if session.difference %} ({% if session.difference < 0 %}faltante{% else %}sobrante{% endif %}){% endif %}</td></tr>
+  {% if session.difference %}<tr><td>Motivo</td><td>{{ session.difference_reason.text }}: {{ session.difference_note }}</td></tr>{% endif %}
+  {% if session.returned_amount %}<tr><td>Trasladado al cerrar</td><td class="num">{{ session.returned_amount|rd }} a {{ session.returned_to.name }}</td></tr>{% endif %}
+  <tr><td>Queda como fondo</td><td class="num">{{ fund_left|rd }}</td></tr>
+</table>
+
+<div class="signatures">
+  <div class="signature">Cajero: {{ cashier_name }}</div>
+  <div class="signature">Supervisor: {{ approver_name|default:"" }}</div>
+</div>
+{% endblock %}

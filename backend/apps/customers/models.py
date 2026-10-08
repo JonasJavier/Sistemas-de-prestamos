@@ -237,3 +237,16 @@ class CollateralFile(PrivateFileBase):
 
     collateral = models.ForeignKey(Collateral, on_delete=models.CASCADE, related_name="files")
     kind = models.CharField(max_length=20, choices=Kind)
+
+
+class BranchAccessGrant(CompanyScopedModel):
+    """Serving a customer of another branch (decision 033 and 059): asked
+    with a reason, logged, and valid only for the rest of the day."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="access_grants")
+    note = models.CharField(max_length=300)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "user", "expires_at"])]

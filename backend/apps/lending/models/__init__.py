@@ -9,6 +9,7 @@ from apps.lending.models.applications import (
     ApplicationRequirement,
 )
 from apps.lending.models.loans import (
+    CollectorAssignment,
     Disbursement,
     Installment,
     Loan,
@@ -33,6 +34,7 @@ __all__ = [
     "ApplicationFile",
     "ApplicationGuarantor",
     "ApplicationRequirement",
+    "CollectorAssignment",
     "Disbursement",
     "Installment",
     "LateFeePolicy",

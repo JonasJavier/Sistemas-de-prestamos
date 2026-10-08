@@ -15,6 +15,10 @@ class GeneratedDocument(CompanyScopedModel):
     class Kind(models.TextChoices):
         PROMISSORY_NOTE = "promissory_note", "Pagaré"
         PAYMENT_SCHEDULE = "payment_schedule", "Tabla de pagos"
+        PAYOFF_LETTER = "payoff_letter", "Carta de saldo"
+        PAYOFF_FINAL = "payoff_final", "Carta de saldo final"
+        CASH_CLOSE = "cash_close", "Cierre de caja"
+        ROUTE_SETTLEMENT = "route_settlement", "Rendición del cobrador"
 
     kind = models.CharField(max_length=30, choices=Kind)
     template_version = models.CharField(max_length=20)

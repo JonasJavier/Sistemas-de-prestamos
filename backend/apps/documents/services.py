@@ -138,6 +138,7 @@ def _loan_context(loan: Loan) -> dict:
     unit = RateUnit(terms.rate_unit)
     return {
         "loan": loan,
+        "branch": loan.branch,
         "customer": loan.customer,
         "terms": terms,
         "schedule": schedule,
@@ -190,3 +191,160 @@ def ensure_loan_documents(loan: Loan, *, issued_by) -> list[GeneratedDocument]:
                 issued_by=issued_by,
             )
     return [existing[kind] for kind, _template, _suffix in LOAN_DOCUMENTS]
+
+
+# --- Phase 4: cash, settlements and payoff letters (doc 09 - section 2) ----------
+
+MOVEMENT_LABELS = {
+    "payments.payment": "Cobros en efectivo",
+    "payments.reversal": "Reversos de cobros",
+    "lending.disbursement": "Desembolsos en efectivo",
+    "cash.settlement": "Rendiciones de cobradores",
+    "cash.funding": "Fondo de apertura",
+    "cash.transfer": "Traslados y depósitos",
+    "cash.difference": "Diferencia del arqueo",
+}
+
+
+def _person(user) -> str:
+    return (user.get_full_name() or user.email) if user else ""
+
+
+def cash_close_context(session) -> dict:
+    from apps.ledger.models import JournalLine
+    from apps.payments.models import Payment
+
+    rows: dict[str, dict] = {}
+    lines = JournalLine.objects.filter(
+        cash_session=session, financial_account_id=session.drawer_id
+    ).select_related("entry")
+    for line in lines:
+        key = line.entry.source_type
+        if line.entry.reversal_of_id and key == "payments.payment":
+            key = "payments.reversal"
+        row = rows.setdefault(
+            key,
+            {
+                "label": MOVEMENT_LABELS.get(key, key),
+                "debit": Decimal("0"),
+                "credit": Decimal("0"),
+                "count": 0,
+            },
+        )
+        row["debit"] += line.debit
+        row["credit"] += line.credit
+        row["count"] += 1
+    others: dict[str, dict] = {}
+    for payment in Payment.objects.filter(cash_session=session).exclude(method="cash"):
+        row = others.setdefault(
+            payment.method,
+            {"label": payment.get_method_display(), "count": 0, "amount": Decimal("0")},
+        )
+        row["count"] += 1
+        row["amount"] += payment.amount
+    counted = session.counted or Decimal("0")
+    return {
+        "session": session,
+        "branch": session.branch,
+        "cashier_name": _person(session.cashier),
+        "approver_name": _person(session.approved_by),
+        "movements": list(rows.values()),
+        "other_methods": list(others.values()),
+        "counts": list(session.counts.order_by("-denomination")),
+        "fund_left": counted - session.returned_amount,
+    }
+
+
+def issue_cash_close(session, *, issued_by) -> GeneratedDocument:
+    """Issued once the supervisor approves the closing (F7 step 6)."""
+    existing = GeneratedDocument.objects.filter(
+        target_type="cash.cashsession", target_id=session.pk
+    ).first()
+    if existing is not None:
+        return existing
+    return issue(
+        company=Company.objects.get(pk=session.company_id),
+        kind=GeneratedDocument.Kind.CASH_CLOSE,
+        target=session,
+        folio=session.number,
+        template="documents/cash_close.html",
+        context=cash_close_context(session),
+        issued_by=issued_by,
+        legal_status="validated",  # an internal report, not a legal template
+    )
+
+
+def route_settlement_context(route) -> dict:
+    return {
+        "route": route,
+        "branch": route.branch,
+        "collector_name": _person(route.collector),
+        "receiver_name": _person(route.received_by),
+        "payments": list(route.payments.select_related("loan", "customer").order_by("paid_at")),
+    }
+
+
+def issue_route_settlement(route, *, issued_by) -> GeneratedDocument:
+    existing = GeneratedDocument.objects.filter(
+        target_type="cash.routesession", target_id=route.pk
+    ).first()
+    if existing is not None:
+        return existing
+    index = route.cash_session.settlements.filter(settled_at__lte=route.settled_at).count()
+    return issue(
+        company=Company.objects.get(pk=route.company_id),
+        kind=GeneratedDocument.Kind.ROUTE_SETTLEMENT,
+        target=route,
+        folio=f"{route.cash_session.number}-REN{index}",
+        template="documents/route_settlement.html",
+        context=route_settlement_context(route),
+        issued_by=issued_by,
+        legal_status="validated",
+    )
+
+
+def issue_payoff_letter(quote, *, issued_by) -> GeneratedDocument:
+    loan = quote.loan
+    return issue(
+        company=Company.objects.get(pk=quote.company_id),
+        kind=GeneratedDocument.Kind.PAYOFF_LETTER,
+        target=quote,
+        folio=quote.number,
+        template="documents/payoff_letter.html",
+        context={
+            "loan": loan,
+            "branch": loan.branch,
+            "customer": loan.customer,
+            "quote": quote,
+            "b": quote.breakdown,
+            "total_words": amount_in_words(quote.total),
+            "final": False,
+        },
+        issued_by=issued_by,
+    )
+
+
+def issue_payoff_final(payment, *, issued_by) -> GeneratedDocument:
+    """F10: the «saldado» letter once a payoff closes the loan."""
+    loan = payment.loan
+    existing = GeneratedDocument.objects.filter(
+        target_type="lending.loan", target_id=loan.pk, kind=GeneratedDocument.Kind.PAYOFF_FINAL
+    ).first()
+    if existing is not None:
+        return existing
+    return issue(
+        company=Company.objects.get(pk=loan.company_id),
+        kind=GeneratedDocument.Kind.PAYOFF_FINAL,
+        target=loan,
+        folio=f"{loan.number}-CSF",
+        template="documents/payoff_letter.html",
+        context={
+            "loan": loan,
+            "branch": loan.branch,
+            "customer": loan.customer,
+            "payment": payment,
+            "collaterals": [c.collateral for c in loan.collaterals.select_related("collateral")],
+            "final": True,
+        },
+        issued_by=issued_by,
+    )

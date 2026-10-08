@@ -20,10 +20,15 @@ SYSTEM_ACCOUNTS = [
     ("late_fee_income", "4102", "Ingresos por mora", INCOME, True),
     ("charge_income", "4103", "Ingresos por cargos", INCOME, True),
     ("write_off_expense", "5101", "Gasto por castigo de cartera", EXPENSE, True),
+    # Cash differences (F7 step 5; **Validar con el contador**): a shortage
+    # is owed by the cashier, an overage is extraordinary income.
+    ("cash_shortage", "1301", "Faltantes de caja por cobrar", ASSET, True),
+    ("cash_overage", "4201", "Sobrantes de caja", INCOME, True),
 ]
 
 # Financial accounts get their own ledger account under these codes:
-# 1101-01 «Caja general», 1102-01 «Banco Popular ••1234»...
-FINANCIAL_ACCOUNT_PREFIX = {"cash": "1101", "bank": "1102"}
+# 1101-01 «Caja general», 1102-01 «Banco Popular ••1234», 1103-01 «Caja de
+# Carmen» (a cashier's drawer), 1104-01 «Efectivo de Luis» (a collector)...
+FINANCIAL_ACCOUNT_PREFIX = {"cash": "1101", "bank": "1102", "drawer": "1103", "route": "1104"}
 
 DEFAULT_CASH_ACCOUNT_NAME = "Caja general"

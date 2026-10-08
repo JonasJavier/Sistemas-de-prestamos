@@ -22,6 +22,7 @@ from rest_framework.response import Response
 from apps.accounts import authz
 from apps.accounts.api.permissions import role_required
 from apps.audit.models import DomainEvent, SensitiveAccessLog
+from apps.cash.services import expected_cash, open_session_of
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.customers.api.views_expediente import SIGNED_FILE_MODELS, _PrivateFileViewSet
 from apps.documents.models import GeneratedDocument
@@ -345,9 +346,10 @@ class ApplicationViewSet(
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        accounts = FinancialAccount.objects.filter(is_active=True).filter(
-            Q(branch__isnull=True) | Q(branch_id=application.branch_id)
-        )
+        accounts = FinancialAccount.objects.filter(
+            is_active=True, kind=FinancialAccount.Kind.BANK
+        ).filter(Q(branch__isnull=True) | Q(branch_id=application.branch_id))
+        session = open_session_of(request.user)
         return Response(
             {
                 "simulation": _simulation_payload(quote.simulation),
@@ -365,6 +367,14 @@ class ApplicationViewSet(
                         "kind", "name"
                     )
                 ],
+                "cash_session": None
+                if session is None
+                else {
+                    "id": str(session.id),
+                    "number": session.number,
+                    "cash": str(expected_cash(session)),
+                    "branch_matches": session.branch_id == application.branch_id,
+                },
                 "blockers": [
                     message
                     for condition, message in (

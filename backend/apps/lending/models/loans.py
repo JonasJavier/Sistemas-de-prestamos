@@ -9,6 +9,8 @@
   each operation and reconciled against the ledger every night.
 """
 
+from decimal import Decimal
+
 import pghistory
 import pgtrigger
 from django.conf import settings
@@ -126,6 +128,9 @@ class LoanTerms(CompanyScopedModel):
     collect_holidays = models.BooleanField()
     payoff_full_current_period = models.BooleanField()
     payoff_future_interest_pct = models.DecimalField(max_digits=5, decimal_places=4)
+    # Installments this version replaced (prepayment, date change, or the
+    # reversal of either): enough to restore them exactly.
+    replaced_installments = models.JSONField(default=list, blank=True)
 
     # Copy of the late-fee policy (doc 05: «se copia al préstamo»).
     late_fee_grace_days = models.PositiveSmallIntegerField()
@@ -174,6 +179,8 @@ class Installment(CompanyScopedModel):
     late_fee_paid = models.DecimalField(**MONEY, default=0)
     late_fee_waived = models.DecimalField(**MONEY, default=0)
     late_fee_accrued = models.DecimalField(**MONEY, default=0)  # nightly cache
+    # Future interest forgiven by an early payoff (doc 03 - section 9).
+    interest_waived = models.DecimalField(**MONEY, default=0)
 
     status = models.CharField(max_length=10, choices=Status, default=Status.PENDING)
     paid_on = models.DateField(null=True, blank=True)
@@ -184,7 +191,7 @@ class Installment(CompanyScopedModel):
             # Doc 05 - section 7, rule 4: paid never exceeds due, per component.
             models.CheckConstraint(
                 condition=Q(principal_paid__lte=F("principal_due"))
-                & Q(interest_paid__lte=F("interest_due"))
+                & Q(interest_paid__lte=F("interest_due") - F("interest_waived"))
                 & Q(charges_paid__lte=F("charges_due")),
                 name="installment_paid_within_due",
             ),
@@ -197,7 +204,8 @@ class Installment(CompanyScopedModel):
                 & Q(charges_paid__gte=0)
                 & Q(late_fee_paid__gte=0)
                 & Q(late_fee_waived__gte=0)
-                & Q(late_fee_accrued__gte=0),
+                & Q(late_fee_accrued__gte=0)
+                & Q(interest_waived__gte=0),
                 name="installment_amounts_non_negative",
             ),
         ]
@@ -209,6 +217,22 @@ class Installment(CompanyScopedModel):
     @property
     def total_due(self):
         return self.principal_due + self.interest_due + self.charges_due
+
+    @property
+    def principal_outstanding(self):
+        return self.principal_due - self.principal_paid
+
+    @property
+    def interest_outstanding(self):
+        return self.interest_due - self.interest_paid - self.interest_waived
+
+    @property
+    def charges_outstanding(self):
+        return self.charges_due - self.charges_paid
+
+    @property
+    def late_fee_outstanding(self):
+        return max(self.late_fee_accrued - self.late_fee_paid - self.late_fee_waived, Decimal(0))
 
 
 class LoanCharge(CompanyScopedModel):
@@ -271,6 +295,13 @@ class Disbursement(CompanyScopedModel):
     source_account = models.ForeignKey(
         FinancialAccount, on_delete=models.PROTECT, related_name="disbursements"
     )
+    cash_session = models.ForeignKey(
+        "cash.CashSession",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="disbursements",
+    )
     method = models.CharField(max_length=10, choices=Method)
     reference = models.CharField(max_length=60, blank=True)
     gross = models.DecimalField(**MONEY)  # approved amount
@@ -303,6 +334,24 @@ class Disbursement(CompanyScopedModel):
                 name="disbursement_net_consistent",
             ),
         ]
+
+
+class CollectorAssignment(CompanyScopedModel):
+    """Who collected a loan and when (doc 05 - 4.4): commissions and trail."""
+
+    loan = models.ForeignKey(Loan, on_delete=models.PROTECT, related_name="collector_history")
+    collector = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    since = models.DateField()
+    until = models.DateField(null=True, blank=True)
+    note = models.CharField(max_length=300, blank=True)
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "collector", "until"])]
 
 
 class LoanFile(PrivateFileBase):

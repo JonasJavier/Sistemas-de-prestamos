@@ -59,8 +59,8 @@
   <div>
     <div class="company-name">{{ company.legal_name }}</div>
     <div class="company-meta">
-      {% if company.rnc %}RNC {{ company.rnc }} · {% endif %}{{ loan.branch.name }}{% if loan.branch.address %} · {{ loan.branch.address }}{% endif %}
-      {% if company.phone or loan.branch.phone %}<br>Tel. {{ loan.branch.phone|default:company.phone }}{% endif %}{% if company.email %} · {{ company.email }}{% endif %}
+      {% if company.rnc %}RNC {{ company.rnc }} · {% endif %}{{ branch.name }}{% if branch.address %} · {{ branch.address }}{% endif %}
+      {% if company.phone or branch.phone %}<br>Tel. {{ branch.phone|default:company.phone }}{% endif %}{% if company.email %} · {{ company.email }}{% endif %}
     </div>
   </div>
   <div class="doc-title">

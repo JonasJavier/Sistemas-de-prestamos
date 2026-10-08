@@ -58,6 +58,10 @@ class User(AbstractUser):
         related_name="users",
     )
     is_platform_admin = models.BooleanField(default=False)
+    # Decision 031: a collector accepts the location tracking, once, with
+    # the date and the exact text accepted.
+    location_consent_at = models.DateTimeField(null=True, blank=True)
+    location_consent_text = models.TextField(blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS: list[str] = []
@@ -196,3 +200,28 @@ class Invitation(models.Model):
 
     def __str__(self) -> str:
         return f"{self.email} ({self.role})"
+
+
+class HoursExtension(models.Model):
+    """A supervisor lets a cashier or collector work past the branch hours
+    (decision 035); temporary and audited."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    company = models.ForeignKey("core.Company", on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hours_extensions")
+    until = models.DateTimeField()
+    note = models.CharField(max_length=300)
+    granted_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = TenantManager()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~Q(granted_by=models.F("user")), name="hours_extension_not_self_granted"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user} hasta {self.until:%d/%m %H:%M}"

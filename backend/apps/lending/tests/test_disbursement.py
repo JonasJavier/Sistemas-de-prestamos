@@ -11,6 +11,7 @@ from decimal import Decimal
 import pytest
 from django.utils import timezone
 
+from apps.conftest import cash_total, funded_bank, open_cash
 from apps.core.models import Reason
 from apps.core.tenancy import company_context
 from apps.customers.models import Collateral
@@ -56,12 +57,10 @@ def _approved(
 
 
 def _disburse(tenant, app_id, role="cajero", key=None, **overrides):
-    body = {
-        "source_account": str(tenant.cash.id),
-        "method": "cash",
-        "idempotency_key": key or uuid.uuid4().hex,
-        **overrides,
-    }
+    """Cash leaves the cashier's open drawer (decision 055, phase 4)."""
+    body = {"method": "cash", "idempotency_key": key or uuid.uuid4().hex, **overrides}
+    if body["method"] == "cash" and role == "cajero":
+        open_cash(tenant, role)
     return tenant.client(role).post(
         f"/api/v1/solicitudes/{app_id}/desembolsar/", body, format="json"
     )
@@ -112,10 +111,12 @@ def test_e7_discounted_disbursement_entry(tenant) -> None:
         }
         assert lines == {
             "loan_portfolio": (D("1000.00"), D("0.00")),
-            "1101-01": (D("0.00"), D("980.00")),
+            "1103-01": (D("0.00"), D("980.00")),  # the cashier's drawer
             "charge_income": (D("0.00"), D("20.00")),
         }
-        assert ledger.balance_of(tenant.cash.ledger_account) == D("499020.00")
+        drawer_line = entry.lines.get(account__code="1103-01")
+        assert drawer_line.cash_session == loan.disbursement.cash_session
+        assert cash_total(tenant) == D("499020.00")
         disbursement = loan.disbursement
         assert (disbursement.gross, disbursement.net) == (D("1000.00"), D("980.00"))
         # E1 schedule: 4 x 350.00, frozen as terms version 1.
@@ -139,7 +140,7 @@ def test_e7_financed_charge_raises_the_base(tenant) -> None:
         assert loan.principal == D("1020.00")
         assert sum(r.principal_due for r in loan.installments.all()) == D("1020.00")
         assert loan.disbursement.net == D("1000.00")
-        assert ledger.balance_of(tenant.cash.ledger_account) == D("499000.00")
+    assert cash_total(tenant) == D("499000.00")
     _books_balance(tenant)
 
 
@@ -151,8 +152,8 @@ def test_cash_mode_charge_is_collected_apart(tenant) -> None:
         loan = Loan.objects.get()
         assert loan.disbursement.net == D("1000.00")
         assert loan.disbursement.cash_charges == D("20.00")
-        # 1,000 out, 20 in: the box nets -980 and the income shows the 20.
-        assert ledger.balance_of(tenant.cash.ledger_account) == D("499020.00")
+        # 1,000 out, 20 in: the drawer nets -980 and the income shows the 20.
+        assert cash_total(tenant) == D("499020.00")
         income = ledger.system_account(tenant.company.id, "charge_income")
         assert ledger.balance_of(income) == D("20.00")
     _books_balance(tenant)
@@ -196,10 +197,12 @@ def test_whoever_approved_does_not_disburse(tenant) -> None:
         officer.post(f"/api/v1/solicitud-requisitos/{req['id']}/verificar/")
     officer.post(f"/api/v1/solicitudes/{app_id}/enviar/")
     tenant.client("gerente").post(f"/api/v1/solicitudes/{app_id}/aprobar/", {})
-    response = _disburse(tenant, app_id, role="gerente")
+    bank = str(funded_bank(tenant).id)
+    response = _disburse(tenant, app_id, role="gerente", method="transfer", source_account=bank)
     assert response.status_code == 403
     assert "aprobó" in response.json()["detail"]
-    assert _disburse(tenant, app_id, role="gerente2").status_code == 201
+    second = _disburse(tenant, app_id, role="gerente2", method="transfer", source_account=bank)
+    assert second.status_code == 201
 
 
 def test_only_g_ca_ct_disburse(tenant) -> None:
@@ -207,7 +210,11 @@ def test_only_g_ca_ct_disburse(tenant) -> None:
     assert _disburse(tenant, app_id, role="oficial").status_code == 403
     assert _disburse(tenant, app_id, role="cobrador").status_code == 403
     assert _disburse(tenant, app_id, role="supervisor").status_code == 403
-    assert _disburse(tenant, app_id, role="contabilidad").status_code == 201
+    bank = str(funded_bank(tenant).id)
+    by_accounting = _disburse(
+        tenant, app_id, role="contabilidad", method="transfer", source_account=bank
+    )
+    assert by_accounting.status_code == 201
 
 
 def test_no_overdraft_on_disbursement(tenant) -> None:
@@ -233,16 +240,29 @@ def test_expired_approval_cannot_be_disbursed(tenant) -> None:
     assert response.json()["code"] == "expired"
 
 
-def test_cash_comes_from_a_box_and_transfers_from_a_bank(tenant) -> None:
+def test_cash_leaves_the_open_drawer_and_transfers_a_bank(tenant) -> None:
+    """Decision 055: from phase 4 the cash comes out of the cashier's session."""
     app_id = _approved(tenant)
     with company_context(tenant.company.id):
         bank = ledger.create_financial_account(
             company_id=tenant.company.id, name="Popular", kind="bank", bank_name="Popular"
         )
-    wrong = _disburse(tenant, app_id, source_account=str(bank.id), method="cash")
-    assert wrong.status_code == 400
+    body = {"method": "cash", "idempotency_key": uuid.uuid4().hex}
+    no_drawer = tenant.client("cajero").post(
+        f"/api/v1/solicitudes/{app_id}/desembolsar/", body, format="json"
+    )
+    assert no_drawer.json()["code"] == "no_session"
+    general = _disburse(tenant, app_id, source_account=str(tenant.cash.id), method="transfer")
+    assert general.status_code == 400  # a transfer needs a bank, not a cash box
     empty_bank = _disburse(tenant, app_id, source_account=str(bank.id), method="transfer")
     assert empty_bank.json()["code"] == "insufficient_funds"
+    preview = tenant.client("cajero").get(f"/api/v1/solicitudes/{app_id}/desembolso/").json()
+    assert preview["cash_session"] is None
+    assert _disburse(tenant, app_id).status_code == 201
+    with company_context(tenant.company.id):
+        disbursement = Disbursement.objects.get()
+        assert disbursement.cash_session is not None
+        assert disbursement.source_account == disbursement.cash_session.drawer
 
 
 def test_collateral_is_pledged_and_released_by_void(tenant) -> None:
@@ -297,9 +317,9 @@ def test_collateral_is_pledged_and_released_by_void(tenant) -> None:
         loan = Loan.objects.get(number=number)
         assert loan.disbursement.reversal_entry.reversal_of == loan.disbursement.journal_entry
         assert set(loan.charges.values_list("status", flat=True)) == {"reversed"}
-        assert ledger.balance_of(tenant.cash.ledger_account) == D("500000.00")
         portfolio = ledger.system_account(tenant.company.id, "loan_portfolio")
         assert ledger.balance_of(portfolio) == D("0.00")
+    assert cash_total(tenant) == D("500000.00")
     _books_balance(tenant)
     # Cashiers do not void (doc 06 matrix).
     assert (

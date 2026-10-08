@@ -362,8 +362,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class DisburseSerializer(serializers.Serializer):
+    # Cash always leaves the cashier's open drawer (decision 055, phase 4).
     source_account = serializers.PrimaryKeyRelatedField(
-        queryset=FinancialAccount.objects.filter(is_active=True)
+        queryset=FinancialAccount.objects.filter(is_active=True), required=False, allow_null=True
     )
     charge_account = serializers.PrimaryKeyRelatedField(
         queryset=FinancialAccount.objects.filter(is_active=True), required=False, allow_null=True
@@ -373,14 +374,13 @@ class DisburseSerializer(serializers.Serializer):
     idempotency_key = serializers.CharField(min_length=8, max_length=64)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        kind = attrs["source_account"].kind
-        if attrs["method"] == Disbursement.Method.CASH and kind != FinancialAccount.Kind.CASH:
+        if attrs["method"] == Disbursement.Method.CASH:
+            attrs["source_account"] = None
+            return attrs
+        source = attrs.get("source_account")
+        if source is None or source.kind != FinancialAccount.Kind.BANK:
             raise serializers.ValidationError(
-                {"method": "El efectivo sale de una caja, no de un banco."}
-            )
-        if attrs["method"] != Disbursement.Method.CASH and kind != FinancialAccount.Kind.BANK:
-            raise serializers.ValidationError(
-                {"method": "La transferencia o el cheque salen de una cuenta bancaria."}
+                {"source_account": "La transferencia o el cheque salen de una cuenta bancaria."}
             )
         return attrs
 

@@ -103,6 +103,49 @@ def build_tenant(name: str, email_domain: str) -> Tenant:
     return Tenant(reg=reg, users=users, branch=reg.branch, cash=cash, customer=customer)
 
 
+def open_cash(tenant: Tenant, role: str = "cajero", amount: str = "100000"):
+    """The role's cash session, funded from the general cash (F7 step 1)."""
+    from apps.cash import services as cash
+
+    with company_context(tenant.company.id):
+        user = tenant.users[role]
+        session = cash.open_session_of(user)
+        if session is None:
+            session = cash.open_session(
+                user=user, branch=tenant.branch, amount=Decimal(amount), fund_from=tenant.cash
+            )
+    return session
+
+
+def cash_total(tenant: Tenant) -> Decimal:
+    """All the company's cash: general boxes, drawers and collectors."""
+    with company_context(tenant.company.id):
+        return sum(
+            (
+                ledger.balance_of(account.ledger_account)
+                for account in FinancialAccount.objects.exclude(kind=FinancialAccount.Kind.BANK)
+            ),
+            Decimal("0.00"),
+        )
+
+
+def funded_bank(tenant: Tenant, amount: str = "200000") -> FinancialAccount:
+    with company_context(tenant.company.id):
+        bank = ledger.create_financial_account(
+            company_id=tenant.company.id, name="Banco Popular", kind="bank", bank_name="Popular"
+        )
+        ledger.transfer(
+            source=tenant.cash,
+            target=bank,
+            amount=Decimal(amount),
+            branch=tenant.branch,
+            on=timezone.localdate(),
+            note="",
+            created_by=tenant.users["gerente"],
+        )
+    return bank
+
+
 @pytest.fixture
 def tenant(db) -> Tenant:
     return build_tenant("Financiera Uno SRL", "uno.do")

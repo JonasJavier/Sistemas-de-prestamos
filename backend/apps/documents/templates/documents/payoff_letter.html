@@ -1,0 +1,34 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Carta de saldo{% endblock %}
+{% block heading %}{% if final %}CARTA DE SALDO FINAL{% else %}CARTA DE SALDO{% endif %}{% endblock %}
+{% block number %}{% if final %}Préstamo {{ loan.number }}{% else %}{{ quote.number }}{% endif %}{% endblock %}
+{% block content %}
+<table class="kv">
+  <tr><td>Cliente</td><td>{{ customer.display_name }}</td></tr>
+  <tr><td>Documento</td><td>{{ customer.document_number|doc }}</td></tr>
+  <tr><td>Préstamo</td><td>{{ loan.number }} · desembolsado el {{ loan.disbursed_on|dmy }}</td></tr>
+</table>
+
+{% if final %}
+<p style="margin-top:14px">Hacemos constar que el préstamo <strong>{{ loan.number }}</strong> quedó <strong>totalmente saldado</strong> el {{ loan.closed_on|dmy }} con el recibo {{ payment.number }}, por un pago de {{ payment.amount|rd }}. A esa fecha, el cliente no adeuda suma alguna por este préstamo.</p>
+{% if collaterals %}<p>Las garantías que lo respaldaban quedan liberadas: {% for c in collaterals %}{{ c.description }}{% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+{% else %}
+<p style="margin-top:14px">Al {{ quote.as_of|dmy }}, el saldo para saldar el préstamo <strong>{{ loan.number }}</strong> es de <strong>{{ quote.total|rd }}</strong> ({{ total_words }}), con este desglose:</p>
+<table class="grid">
+  <tbody>
+    <tr><td>Capital pendiente</td><td class="num">{{ b.principal|num }}</td></tr>
+    {% if b.overdue_interest != "0.00" %}<tr><td>Interés vencido sin pagar</td><td class="num">{{ b.overdue_interest|num }}</td></tr>{% endif %}
+    <tr><td>Interés del período en curso</td><td class="num">{{ b.current_interest|num }}</td></tr>
+    {% if b.future_interest != "0.00" %}<tr><td>Interés futuro que se cobra</td><td class="num">{{ b.future_interest|num }}</td></tr>{% endif %}
+    {% if b.late_fees != "0.00" %}<tr><td>Mora a la fecha</td><td class="num">{{ b.late_fees|num }}</td></tr>{% endif %}
+    {% if b.charges != "0.00" %}<tr><td>Cargos pendientes</td><td class="num">{{ b.charges|num }}</td></tr>{% endif %}
+  </tbody>
+  <tfoot><tr><td>Saldo para saldar</td><td class="num">{{ quote.total|rd }}</td></tr></tfoot>
+</table>
+<p class="muted" style="margin-top:8px">Se condonan {{ b.interest_waived|rd }} de intereses futuros. Este saldo es válido hasta el <strong>{{ quote.valid_until|dmy }}</strong>; después de esa fecha se recalcula.</p>
+{% endif %}
+
+<div class="signatures">
+  <div class="signature">Por {{ company.legal_name }}</div>
+</div>
+{% endblock %}

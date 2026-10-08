@@ -145,12 +145,26 @@ def _freeze_terms(
     )
 
 
+def _cash_session(user: User, today: dt.date):
+    from apps.cash.services import open_session_of  # cash builds on the ledger and lending
+
+    session = open_session_of(user)
+    if session is None:
+        raise DisbursementError("Abre tu caja para desembolsar en efectivo.", code="no_session")
+    if session.business_date < today:
+        raise DisbursementError(
+            "Tu caja de un día anterior sigue abierta: ciérrala y abre la de hoy.",
+            code="stale_session",
+        )
+    return session
+
+
 @transaction.atomic
 def disburse(
     *,
     application: Application,
     user: User,
-    source_account: FinancialAccount,
+    source_account: FinancialAccount | None,
     method: str,
     idempotency_key: str,
     reference: str = "",
@@ -182,7 +196,18 @@ def disburse(
     customer: Customer = application.customer
     if customer.status == Customer.Status.BLOCKED:
         raise DisbursementError("El cliente está bloqueado.", code="customer_blocked")
-    _check_account(source_account, application, "origen")
+    session = None
+    if method == Disbursement.Method.CASH:
+        session = _cash_session(user, today)
+        source_account = session.drawer
+        if session.branch_id != application.branch_id:
+            raise DisbursementError("Tu caja abierta es de otra sucursal.", code="account")
+    elif source_account is None or source_account.kind != FinancialAccount.Kind.BANK:
+        raise DisbursementError(
+            "La transferencia o el cheque salen de una cuenta bancaria.", code="account"
+        )
+    else:
+        _check_account(source_account, application, "origen")
 
     # Lock the assets too: two loans can never pledge the same one.
     collaterals = list(
@@ -211,8 +236,10 @@ def disburse(
     if sim.net_disbursed <= 0:
         raise DisbursementError("Los cargos descontados superan el monto.", code="charges")
     charge_account = charge_account or source_account
-    if quote.cash:
+    if quote.cash and charge_account != source_account:
         _check_account(charge_account, application, "cargos")
+        if charge_account.is_personal:
+            raise DisbursementError("Los cargos en caja entran en tu caja abierta.", code="account")
 
     branch = application.branch
     loan = Loan.objects.create(
@@ -273,15 +300,19 @@ def disburse(
 
     company_id = loan.company_id
     dims = {"loan_id": loan.id, "customer_id": customer.id}
+    drawer_dims = {"cash_session_id": session.id} if session else {}
     charge_income = ledger.system_account(company_id, "charge_income")
     lines = [
         ledger.debit(ledger.system_account(company_id, "loan_portfolio"), sim.principal, **dims),
-        ledger.cash_line(source_account, credit_amount=sim.net_disbursed, **dims),
+        ledger.cash_line(source_account, credit_amount=sim.net_disbursed, **dims, **drawer_dims),
         ledger.credit(charge_income, quote.discounted + quote.financed, **dims),
     ]
     if quote.cash:
+        same = charge_account == source_account
         lines += [
-            ledger.cash_line(charge_account, debit_amount=quote.cash, **dims),
+            ledger.cash_line(
+                charge_account, debit_amount=quote.cash, **dims, **(drawer_dims if same else {})
+            ),
             ledger.credit(charge_income, quote.cash, **dims),
         ]
     try:
@@ -305,6 +336,7 @@ def disburse(
                 loan=loan,
                 disbursed_on=today,
                 source_account=source_account,
+                cash_session=session,
                 method=method,
                 reference=reference,
                 gross=sim.requested_amount,
@@ -343,6 +375,41 @@ def disburse(
     return loan
 
 
+def _void_redirect(disbursement: Disbursement, user: User) -> dict:
+    """Cash handed out from a drawer that already closed comes back through
+    the voider's open drawer, or else the branch's general cash."""
+    from apps.cash.models import CashSession
+    from apps.cash.services import open_session_of
+
+    session = disbursement.cash_session
+    if session is None or session.status == CashSession.Status.OPEN:
+        return {}
+    current = open_session_of(user)
+    if current is not None:
+        return {
+            disbursement.source_account_id: (
+                current.drawer,
+                {"cash_session_id": current.id, "route_session_id": None},
+            )
+        }
+    general = (
+        FinancialAccount.objects.filter(
+            kind=FinancialAccount.Kind.CASH, is_active=True, branch_id=disbursement.loan.branch_id
+        ).first()
+        or FinancialAccount.objects.filter(
+            kind=FinancialAccount.Kind.CASH, is_active=True, branch__isnull=True
+        ).first()
+    )
+    if general is None:
+        raise DisbursementError("No hay una caja que reciba el efectivo.", code="account")
+    return {
+        disbursement.source_account_id: (
+            general,
+            {"cash_session_id": None, "route_session_id": None},
+        )
+    }
+
+
 @transaction.atomic
 def void_loan(loan: Loan, *, user: User, reason: Reason, note: str) -> Loan:
     """F14: only without payments; reverses money and charges (defect #31)."""
@@ -371,6 +438,7 @@ def void_loan(loan: Loan, *, user: User, reason: Reason, note: str) -> Loan:
             on=today,
             description=f"Anulación del préstamo {loan.number}: {reason.text}",
             created_by=user,
+            redirect=_void_redirect(disbursement, user),
         )
     except ledger.InsufficientFunds as exc:
         raise DisbursementError(str(exc), code="insufficient_funds") from exc

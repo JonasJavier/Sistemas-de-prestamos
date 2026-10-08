@@ -47,6 +47,8 @@ class Line:
     financial_account: FinancialAccount | None = None
     loan_id: UUID | None = None
     customer_id: UUID | None = None
+    cash_session_id: UUID | None = None
+    route_session_id: UUID | None = None
 
 
 def system_account(company_id: UUID, key: str) -> LedgerAccount:
@@ -121,6 +123,8 @@ def post_entry(
             financial_account=line.financial_account,
             loan_id=line.loan_id,
             customer_id=line.customer_id,
+            cash_session_id=line.cash_session_id,
+            route_session_id=line.route_session_id,
         )
         for line in lines
     )
@@ -153,23 +157,45 @@ def post_entry(
 
 @transaction.atomic
 def reverse_entry(
-    entry: JournalEntry, *, on: date, description: str, created_by=None
+    entry: JournalEntry,
+    *,
+    on: date,
+    description: str,
+    created_by=None,
+    redirect: dict[UUID, tuple[FinancialAccount, dict]] | None = None,
 ) -> JournalEntry:
-    """The inverse entry, linked to the original (nothing is deleted)."""
+    """The inverse entry, linked to the original (nothing is deleted).
+
+    ``redirect`` maps a financial account of the original to the one (and
+    the session dimensions) the money goes back through: a payment taken
+    in a cash session that is already closed is reversed in the session
+    open today (doc 03 - section 10).
+    """
     if JournalEntry.objects.filter(reversal_of=entry).exists():
         raise LedgerError("Ese asiento ya fue revertido.")
-    lines = [
-        Line(
-            account=line.account,
-            debit=line.credit,
-            credit=line.debit,
-            memo=line.memo,
-            financial_account=line.financial_account,
-            loan_id=line.loan_id,
-            customer_id=line.customer_id,
+    redirect = redirect or {}
+    lines = []
+    for line in entry.lines.select_related("account", "financial_account"):
+        account, financial_account = line.account, line.financial_account
+        sessions = {
+            "cash_session_id": line.cash_session_id,
+            "route_session_id": line.route_session_id,
+        }
+        if financial_account is not None and financial_account.id in redirect:
+            financial_account, sessions = redirect[financial_account.id]
+            account = financial_account.ledger_account
+        lines.append(
+            Line(
+                account=account,
+                debit=line.credit,
+                credit=line.debit,
+                memo=line.memo,
+                financial_account=financial_account,
+                loan_id=line.loan_id,
+                customer_id=line.customer_id,
+                **sessions,
+            )
         )
-        for line in entry.lines.select_related("account", "financial_account")
-    ]
     return post_entry(
         company_id=entry.company_id,
         branch=entry.branch,
@@ -236,6 +262,7 @@ def create_financial_account(
     branch: Branch | None = None,
     bank_name: str = "",
     account_number: str = "",
+    holder=None,
 ) -> FinancialAccount:
     prefix = chart.FINANCIAL_ACCOUNT_PREFIX[kind]
     siblings = LedgerAccount.objects.filter(company_id=company_id, code__startswith=f"{prefix}-")
@@ -259,7 +286,13 @@ def create_financial_account(
         bank_name=bank_name,
         account_number_last4=digits[-4:],  # stored masked (doc 06 - section 7)
         ledger_account=ledger_account,
+        holder=holder,
     )
+
+
+PERSONAL_ACCOUNT_ERROR = (
+    "Las cajas de los cajeros y el efectivo de los cobradores solo se mueven desde sus sesiones."
+)
 
 
 def capital_movement(
@@ -273,6 +306,8 @@ def capital_movement(
     created_by,
 ) -> JournalEntry:
     """Owner's contribution or withdrawal against equity (P53 «Ajuste»)."""
+    if account.is_personal:
+        raise LedgerError(PERSONAL_ACCOUNT_ERROR)
     equity = system_account(account.company_id, "owner_equity")
     amount = money(amount)
     if amount <= 0:
@@ -307,6 +342,8 @@ def transfer(
 ) -> JournalEntry:
     if source.id == target.id:
         raise LedgerError("Elige dos cuentas distintas.")
+    if source.is_personal or target.is_personal:
+        raise LedgerError(PERSONAL_ACCOUNT_ERROR)
     amount = money(amount)
     if amount <= 0:
         raise LedgerError("El monto debe ser mayor que cero.")

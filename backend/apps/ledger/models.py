@@ -121,6 +121,10 @@ class FinancialAccount(CompanyScopedModel):
     class Kind(models.TextChoices):
         CASH = "cash", "Caja"
         BANK = "bank", "Banco"
+        # Phase 4: one per cashier and per collector, moved only through
+        # their sessions (cash and route), never by hand (F6, F7).
+        DRAWER = "drawer", "Caja de cajero"
+        ROUTE = "route", "Efectivo de cobrador"
 
     name = models.CharField(max_length=100)
     kind = models.CharField(max_length=10, choices=Kind)
@@ -133,6 +137,9 @@ class FinancialAccount(CompanyScopedModel):
     ledger_account = models.OneToOneField(
         LedgerAccount, on_delete=models.PROTECT, related_name="financial_account"
     )
+    holder = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -140,7 +147,23 @@ class FinancialAccount(CompanyScopedModel):
             models.UniqueConstraint(
                 fields=["company", "name"], name="financial_account_name_unique"
             ),
+            # A drawer or a collector's cash belongs to exactly one person.
+            models.CheckConstraint(
+                condition=Q(kind__in=["drawer", "route"], holder__isnull=False)
+                | (~Q(kind__in=["drawer", "route"]) & Q(holder__isnull=True)),
+                name="financial_account_holder_by_kind",
+            ),
+            models.UniqueConstraint(
+                fields=["holder", "branch", "kind"],
+                condition=Q(holder__isnull=False),
+                name="financial_account_one_per_holder",
+            ),
         ]
+
+    @property
+    def is_personal(self) -> bool:
+        """Drawers and collectors' cash move only through their sessions."""
+        return self.holder_id is not None
 
     def __str__(self) -> str:
         if self.account_number_last4:
@@ -196,6 +219,14 @@ class JournalLine(CompanyScopedModel):
     customer = models.ForeignKey(
         "customers.Customer", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
+    # A cashier's or collector's day (doc 05 - 4.6): the expected cash of a
+    # session is the sum of its lines, so it can never disagree with the books.
+    cash_session = models.ForeignKey(
+        "cash.CashSession", null=True, blank=True, on_delete=models.PROTECT, related_name="lines"
+    )
+    route_session = models.ForeignKey(
+        "cash.RouteSession", null=True, blank=True, on_delete=models.PROTECT, related_name="lines"
+    )
 
     class Meta:
         constraints = [
@@ -210,5 +241,7 @@ class JournalLine(CompanyScopedModel):
         indexes = [
             models.Index(fields=["company", "account", "entry"]),
             models.Index(fields=["company", "loan"]),
+            models.Index(fields=["company", "cash_session"]),
+            models.Index(fields=["company", "route_session"]),
         ]
         triggers = [_append_only("journal_line_append_only"), BALANCED_ENTRY_TRIGGER]

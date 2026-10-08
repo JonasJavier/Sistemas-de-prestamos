@@ -1,0 +1,41 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Rendición del cobrador{% endblock %}
+{% block heading %}RENDICIÓN DEL COBRADOR{% endblock %}
+{% block number %}{{ route.business_date|dmy }} · Caja {{ route.cash_session.number }}{% endblock %}
+{% block content %}
+<table class="kv">
+  <tr><td>Cobrador</td><td>{{ collector_name }}</td></tr>
+  <tr><td>Recibió</td><td>{{ receiver_name }} ({{ route.settled_at|date:"d/m/Y H:i" }})</td></tr>
+</table>
+
+<h2>Cobros del día</h2>
+<table class="grid">
+  <thead><tr><th>Recibo</th><th>Préstamo</th><th>Cliente</th><th>Medio</th><th class="num">Monto</th></tr></thead>
+  <tbody>
+  {% for payment in payments %}
+    <tr>
+      <td>{{ payment.number }}{% if payment.status == "reversed" %} <span class="muted">(reversado)</span>{% endif %}</td>
+      <td>{{ payment.loan.number }}</td>
+      <td>{{ payment.customer.display_name }}</td>
+      <td>{{ payment.get_method_display }}</td>
+      <td class="num">{{ payment.amount|num }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="muted">Sin cobros.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<table class="kv" style="margin-top:10px">
+  <tr><td>Efectivo a entregar</td><td class="num">{{ route.expected|rd }}</td></tr>
+  <tr><td>Entregado</td><td class="num">{{ route.delivered|rd }}</td></tr>
+  <tr><td>Diferencia</td><td class="num">{{ route.difference|rd }}</td></tr>
+  {% if route.difference %}<tr><td>Motivo</td><td>{{ route.difference_reason.text }}: {{ route.difference_note }}</td></tr>{% endif %}
+</table>
+<p class="muted" style="margin-top:8px">Los cobros por transferencia, depósito o cheque van directo a la cuenta bancaria y no forman parte del efectivo a entregar.</p>
+
+<div class="signatures">
+  <div class="signature">Cobrador: {{ collector_name }}</div>
+  <div class="signature">Cajero: {{ receiver_name }}</div>
+</div>
+{% endblock %}
