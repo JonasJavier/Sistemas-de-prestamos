@@ -24,6 +24,8 @@ SYSTEM_ACCOUNTS = [
     # is owed by the cashier, an overage is extraordinary income.
     ("cash_shortage", "1301", "Faltantes de caja por cobrar", ASSET, True),
     ("cash_overage", "4201", "Sobrantes de caja", INCOME, True),
+    # F16: the portfolio brought from the previous system enters against it.
+    ("opening_balance", "3201", "Saldos de apertura (migración)", EQUITY, True),
 ]
 
 # Financial accounts get their own ledger account under these codes:

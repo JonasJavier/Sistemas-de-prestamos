@@ -25,6 +25,7 @@ def test_signup_seeds_chart_and_cash_box(tenant) -> None:
             "write_off_expense",
             "cash_shortage",
             "cash_overage",
+            "opening_balance",
         }
         assert tenant.cash.name == "Caja general"
         assert tenant.cash.ledger_account.code == "1101-01"

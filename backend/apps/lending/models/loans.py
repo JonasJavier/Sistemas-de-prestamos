@@ -65,6 +65,7 @@ class Loan(CompanyScopedModel):
     )
     is_restructured = models.BooleanField(default=False)
     is_migrated = models.BooleanField(default=False)
+    legacy_number = models.CharField(max_length=40, blank=True)  # F16: number in the old system
     closed_on = models.DateField(null=True, blank=True)
     written_off_on = models.DateField(null=True, blank=True)
     voided_on = models.DateField(null=True, blank=True)
