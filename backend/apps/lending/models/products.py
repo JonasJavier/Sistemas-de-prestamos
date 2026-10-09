@@ -144,6 +144,10 @@ class ProductCharge(CompanyScopedModel):
     basis = models.CharField(max_length=10, choices=Basis)
     value = models.DecimalField(max_digits=14, decimal_places=6)
     mode = models.CharField(max_length=12, choices=Mode, default=Mode.DISCOUNTED)
+    # Decision 075: interest is ITBIS-exempt (art. 344 of the Tax Code), but
+    # a charge that is not the financial service itself (a resold insurance,
+    # a GPS) may carry the 18 %: its amount then includes the tax.
+    taxed = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:

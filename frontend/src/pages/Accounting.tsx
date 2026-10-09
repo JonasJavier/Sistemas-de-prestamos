@@ -19,6 +19,7 @@ import {
 } from '../api/accounting'
 import { ApiError } from '../api/client'
 import { Modal } from '../components/Modal'
+import { MonthCloseTab } from '../components/MonthCloseTab'
 import { ReconciliationTab } from '../components/ReconciliationTab'
 import {
   Alert,
@@ -38,7 +39,8 @@ import { day, errorMessage, rd, todayISO } from '../lib/format'
 import { printArea } from '../lib/print'
 import { notify } from '../lib/toast'
 
-type Tab = 'cuentas' | 'diario' | 'mayor' | 'balanza' | 'resultados' | 'balance' | 'conciliacion'
+type Tab =
+  'cuentas' | 'diario' | 'mayor' | 'balanza' | 'resultados' | 'balance' | 'conciliacion' | 'cierre'
 
 const TABS = [
   ['cuentas', 'Plan de cuentas'],
@@ -48,6 +50,7 @@ const TABS = [
   ['resultados', 'Resultados'],
   ['balance', 'Balance'],
   ['conciliacion', 'Conciliación'],
+  ['cierre', 'Cierre de mes'],
 ] as const
 
 const firstOfMonth = () => `${todayISO().slice(0, 8)}01`
@@ -77,7 +80,7 @@ export function AccountingPage({ me }: { me: Me }) {
         }
       />
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
-      {tab !== 'cuentas' && tab !== 'conciliacion' ? (
+      {tab !== 'cuentas' && tab !== 'conciliacion' && tab !== 'cierre' ? (
         <div className="flex flex-wrap items-end gap-3">
           {showRange ? (
             <>
@@ -137,6 +140,7 @@ export function AccountingPage({ me }: { me: Me }) {
       {tab === 'resultados' ? <IncomeTab range={range} /> : null}
       {tab === 'balance' ? <BalanceTab range={range} /> : null}
       {tab === 'conciliacion' ? <ReconciliationTab canWork={canEditChart} /> : null}
+      {tab === 'cierre' ? <MonthCloseTab /> : null}
     </>
   )
 }

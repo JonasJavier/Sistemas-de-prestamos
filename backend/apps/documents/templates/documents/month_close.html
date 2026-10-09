@@ -1,0 +1,48 @@
+{% extends "documents/base.html" %}{% load money %}
+{% block title %}Cierre de mes{% endblock %}
+{% block heading %}CIERRE DE MES{% endblock %}
+{% block number %}{{ period.month|stringformat:"02d" }}/{{ period.year }} · del {{ first|dmy }} al {{ last|dmy }}{% endblock %}
+{% block content %}
+<div class="two-col">
+  <div>
+    <h2>Estado de resultados del mes</h2>
+    <table class="grid">
+      <thead><tr><th>Cuenta</th><th class="num">Monto</th></tr></thead>
+      <tbody>
+        <tr><td colspan="2" class="muted">Ingresos</td></tr>
+        {% for account, amount in statement.income.rows %}<tr><td>{{ account.code }} {{ account.name }}</td><td class="num">{{ amount|num }}</td></tr>{% endfor %}
+        <tr><td><strong>Total de ingresos</strong></td><td class="num"><strong>{{ statement.income.total|num }}</strong></td></tr>
+        <tr><td colspan="2" class="muted">Gastos</td></tr>
+        {% for account, amount in statement.expenses.rows %}<tr><td>{{ account.code }} {{ account.name }}</td><td class="num">{{ amount|num }}</td></tr>{% endfor %}
+        <tr><td><strong>Total de gastos</strong></td><td class="num"><strong>{{ statement.expenses.total|num }}</strong></td></tr>
+      </tbody>
+      <tfoot><tr><td>{% if statement.result >= 0 %}Ganancia{% else %}Pérdida{% endif %} del mes</td><td class="num">{{ statement.result|rd }}</td></tr></tfoot>
+    </table>
+  </div>
+  <div>
+    <h2>Balance general al {{ last|dmy }}</h2>
+    <table class="grid">
+      <thead><tr><th>Cuenta</th><th class="num">Saldo</th></tr></thead>
+      <tbody>
+        <tr><td colspan="2" class="muted">Activos</td></tr>
+        {% for account, amount in sheet.assets.rows %}<tr><td>{{ account.code }} {{ account.name }}</td><td class="num">{{ amount|num }}</td></tr>{% endfor %}
+        <tr><td><strong>Total de activos</strong></td><td class="num"><strong>{{ sheet.assets.total|num }}</strong></td></tr>
+        <tr><td colspan="2" class="muted">Pasivos</td></tr>
+        {% for account, amount in sheet.liabilities.rows %}<tr><td>{{ account.code }} {{ account.name }}</td><td class="num">{{ amount|num }}</td></tr>{% endfor %}
+        <tr><td colspan="2" class="muted">Patrimonio</td></tr>
+        {% for account, amount in sheet.equity.rows %}<tr><td>{{ account.code }} {{ account.name }}</td><td class="num">{{ amount|num }}</td></tr>{% endfor %}
+        <tr><td>Resultados de años anteriores</td><td class="num">{{ sheet.retained|num }}</td></tr>
+        <tr><td>Resultado del año</td><td class="num">{{ sheet.current|num }}</td></tr>
+      </tbody>
+      <tfoot><tr><td>Pasivos + patrimonio</td><td class="num">{{ liabilities_and_equity|rd }}</td></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<h2>Verificación del cierre</h2>
+<table class="kv">
+  {% for check in checks %}<tr><td>{% if check.ok %}✓{% else %}✗{% endif %} {{ check.label }}</td><td>{{ check.detail }}</td></tr>{% endfor %}
+  <tr><td>Devengo de intereses no cobrados (préstamos con hasta 90 días de atraso)</td><td class="num">{{ accrual.total|rd }}</td></tr>
+</table>
+<p class="muted" style="margin-top:6px">El devengo se asienta al último día del mes y se reversa solo el primer día del siguiente; los cobros siguen registrándose como ingreso al cobrarse. Desde este cierre, el mes no admite movimientos con su fecha.</p>
+{% endblock %}

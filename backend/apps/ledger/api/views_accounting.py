@@ -372,3 +372,94 @@ class PeriodsView(APIView):
             )
             year, month = (year - 1, 12) if month == 1 else (year, month - 1)
         return Response(months)
+
+
+class MonthCloseView(APIView):
+    """F15: the checklist of a month, and closing or reopening it (G)."""
+
+    permission_classes = [CanReadBooks, CompanyNotSuspendedOrReadOnly]
+    verb = ""
+
+    def get(self, request: Request, year: int, month: int) -> Response:
+        from apps.ledger import closing
+
+        if not 1 <= month <= 12:
+            raise ValidationError({"month": "Mes inválido."})
+        period = AccountingPeriod.objects.filter(year=year, month=month).first()
+        _, last = accounting.month_bounds(year, month)
+        preview = sum((item.amount for item in closing.accrual(last)), Decimal("0"))
+        from apps.documents.models import GeneratedDocument
+
+        document = (
+            GeneratedDocument.objects.filter(
+                target_type="ledger.accountingperiod", target_id=period.pk
+            )
+            .order_by("-created_at")
+            .first()
+            if period
+            else None
+        )
+        return Response(
+            {
+                "year": year,
+                "month": month,
+                "status": period.status if period else AccountingPeriod.Status.OPEN,
+                "closed_at": period.closed_at if period else None,
+                "closed_by_name": person(period.closed_by)
+                if period and period.closed_by_id
+                else None,
+                "reopen_reason": period.reopen_reason if period else "",
+                "checklist": closing.checklist(year, month).as_dict(),
+                "accrual_preview": str(preview),
+                "accrual": (period.checklist or {}).get("accrual") if period else None,
+                "document": None if document is None else str(document.id),
+                "can_close": authz.has_any_role(request.user, G),
+            }
+        )
+
+    def post(self, request: Request, year: int, month: int) -> Response:
+        from apps.ledger import closing
+
+        try:
+            if self.verb == "cerrar":
+                closing.close_month(year=year, month=month, user=request.user)
+            elif self.verb == "reabrir":
+                closing.reopen_month(
+                    year=year,
+                    month=month,
+                    user=request.user,
+                    reason=str(request.data.get("reason", "")),
+                )
+        except closing.ClosingError as exc:
+            response = fail(exc)
+            if exc.checklist is not None:
+                response.data["checklist"] = exc.checklist.as_dict()
+            return response
+        return self.get(request, year, month)
+
+
+class MonthClosePdfView(APIView):
+    permission_classes = [CanReadBooks]
+
+    def get(self, request: Request, year: int, month: int):
+        from django.http import FileResponse, Http404
+
+        from apps.documents.models import GeneratedDocument
+
+        period = AccountingPeriod.objects.filter(year=year, month=month).first()
+        document = (
+            GeneratedDocument.objects.filter(
+                target_type="ledger.accountingperiod", target_id=period.pk
+            )
+            .order_by("-created_at")
+            .first()
+            if period
+            else None
+        )
+        if document is None:
+            raise Http404
+        return FileResponse(
+            document.file.open("rb"),
+            content_type="application/pdf",
+            filename=f"{document.folio}.pdf",
+        )

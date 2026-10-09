@@ -257,6 +257,7 @@ class LoanCharge(CompanyScopedModel):
     value = models.DecimalField(max_digits=14, decimal_places=6)
     mode = models.CharField(max_length=12, choices=ProductCharge.Mode)
     amount = models.DecimalField(**MONEY)
+    taxed = models.BooleanField(default=False)  # the amount includes 18 % ITBIS (075)
     status = models.CharField(max_length=10, choices=Status, default=Status.APPLIED)
 
     class Meta:

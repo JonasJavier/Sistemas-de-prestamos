@@ -222,3 +222,37 @@ export const statementLineAction = (
   body: { book?: string; counterpart?: string; description?: string } = {},
 ): Promise<Reconciliation> =>
   api(`/api/v1/conciliaciones/${id}/lineas/${lineId}/${verb}/`, { method: 'POST', body })
+
+// --- Month-end close (F15, decision 084) ------------------------------------------------------
+
+export interface MonthClose {
+  year: number
+  month: number
+  status: 'open' | 'closed'
+  closed_at: string | null
+  closed_by_name: string | null
+  reopen_reason: string
+  checklist: {
+    ready: boolean
+    checks: { key: string; label: string; ok: boolean; detail: string; blocking: boolean }[]
+  }
+  accrual_preview: string
+  accrual: { total: string } | null
+  document: string | null
+  can_close: boolean
+}
+
+export const getMonthClose = (year: number, month: number): Promise<MonthClose> =>
+  api(`/api/v1/contabilidad/cierre/${year}/${month}/`)
+
+export const closeMonth = (year: number, month: number): Promise<MonthClose> =>
+  api(`/api/v1/contabilidad/cierre/${year}/${month}/cerrar/`, { method: 'POST' })
+
+export const reopenMonth = (year: number, month: number, reason: string): Promise<MonthClose> =>
+  api(`/api/v1/contabilidad/cierre/${year}/${month}/reabrir/`, {
+    method: 'POST',
+    body: { reason },
+  })
+
+export const monthClosePdfUrl = (year: number, month: number) =>
+  `/api/v1/contabilidad/cierre/${year}/${month}/pdf/`

@@ -7,6 +7,8 @@ export interface ProductCharge {
   basis: 'percent' | 'fixed'
   value: string
   mode: 'discounted' | 'financed' | 'cash'
+  /** The amount includes 18 % ITBIS (decision 075); interest never does. */
+  taxed: boolean
   is_active: boolean
 }
 

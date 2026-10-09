@@ -430,3 +430,38 @@ def issue_account_statement(loan, *, issued_by) -> GeneratedDocument:
         issued_by=issued_by,
         legal_status="validated",  # a statement of facts, not a legal template
     )
+
+
+def issue_month_close(period, *, issued_by) -> GeneratedDocument:
+    """The closing pack of F15: the month's income statement, the balance
+    sheet at its last day, the checklist and the accrual (decision 084)."""
+    from apps.ledger import accounting
+
+    first, last = accounting.month_bounds(period.year, period.month)
+    from apps.core.models import Branch
+
+    company = Company.objects.get(pk=period.company_id)
+    branch = Branch.objects.filter(company_id=company.id).order_by("created_at").first()
+    issued = GeneratedDocument.objects.filter(
+        target_type="ledger.accountingperiod", target_id=period.pk
+    ).count()
+    return issue(
+        company=company,
+        kind=GeneratedDocument.Kind.MONTH_CLOSE,
+        target=period,
+        folio=f"CM-{period.year}{period.month:02d}-{issued + 1}",
+        template="documents/month_close.html",
+        context={
+            "period": period,
+            "branch": branch,
+            "first": first,
+            "last": last,
+            "statement": accounting.income_statement(first, last),
+            "sheet": (sheet := accounting.balance_sheet(last)),
+            "liabilities_and_equity": sheet.liabilities.total + sheet.equity_total,
+            "checks": period.checklist.get("checks", []),
+            "accrual": period.checklist.get("accrual", {}),
+        },
+        issued_by=issued_by,
+        legal_status="validated",  # an internal report
+    )

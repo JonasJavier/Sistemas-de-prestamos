@@ -20,6 +20,7 @@ class GeneratedDocument(CompanyScopedModel):
         CASH_CLOSE = "cash_close", "Cierre de caja"
         ROUTE_SETTLEMENT = "route_settlement", "Rendición del cobrador"
         ACCOUNT_STATEMENT = "account_statement", "Estado de cuenta"
+        MONTH_CLOSE = "month_close", "Cierre de mes"
 
     kind = models.CharField(max_length=30, choices=Kind)
     template_version = models.CharField(max_length=20)

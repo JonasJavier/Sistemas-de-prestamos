@@ -16,7 +16,14 @@ from django.utils import timezone
 from apps.accounts import authz
 from apps.accounts.models import ApprovalLimit, User
 from apps.audit.models import record_event
-from apps.cash.models import DENOMINATIONS, CashCount, CashSession, RouteHandover, RouteSession
+from apps.cash.models import (
+    DENOMINATIONS,
+    CashCount,
+    CashDifference,
+    CashSession,
+    RouteHandover,
+    RouteSession,
+)
 from apps.core.models import Branch, Company, Reason, Sequence
 from apps.core.tenancy import on_commit_in_tenant
 from apps.ledger import services as ledger
@@ -234,7 +241,8 @@ def _count_total(counts: dict[str, int]) -> Decimal:
 def _difference_lines(
     *, session_dims: dict, account: FinancialAccount, difference: Decimal
 ) -> list[ledger.Line]:
-    """Shortage: owed by the person (asset); overage: extraordinary income."""
+    """Shortage: owed by the person (asset); overage: awaiting a claim (a
+    liability for 30 days, then other income; decision 075)."""
     company_id = account.company_id
     if difference < 0:
         return [
@@ -253,8 +261,21 @@ def _difference_lines(
             financial_account=account,
             **session_dims,
         ),
-        ledger.credit(ledger.system_account(company_id, "cash_overage"), difference),
+        ledger.credit(ledger.system_account(company_id, "cash_overage_pending"), difference),
     ]
+
+
+def _record_difference(*, difference: Decimal, person, branch, day, **source) -> None:
+    """The open item the resolution flow and the reconciliation follow (075)."""
+    CashDifference.objects.create(
+        company_id=branch.company_id,
+        kind=CashDifference.Kind.SHORTAGE if difference < 0 else CashDifference.Kind.OVERAGE,
+        amount=abs(difference),
+        person=person,
+        branch=branch,
+        occurred_on=day,
+        **source,
+    )
 
 
 def _check_difference_reason(difference: Decimal, reason: Reason | None, note: str) -> None:
@@ -314,6 +335,13 @@ def close_session(
                 session_dims=dims, account=session.drawer, difference=difference
             ),
             created_by=user,
+        )
+        _record_difference(
+            difference=difference,
+            person=session.cashier,
+            branch=session.branch,
+            day=session.business_date,
+            cash_session=session,
         )
     if return_amount:
         ledger.post_entry(
@@ -526,7 +554,9 @@ def settle_route(
     if difference < 0:
         lines.append(ledger.debit(ledger.system_account(company_id, "cash_shortage"), -difference))
     elif difference > 0:
-        lines.append(ledger.credit(ledger.system_account(company_id, "cash_overage"), difference))
+        lines.append(
+            ledger.credit(ledger.system_account(company_id, "cash_overage_pending"), difference)
+        )
     if lines:
         route.settlement_entry = ledger.post_entry(
             company_id=company_id,
@@ -548,6 +578,14 @@ def settle_route(
     route.received_by = user
     route.cash_session = session
     route.save()
+    if difference:
+        _record_difference(
+            difference=difference,
+            person=route.collector,
+            branch=route.branch,
+            day=route.business_date,
+            route_session=route,
+        )
 
     summary = f"Rendición de {_person(route.collector)}: entregó RD$ {delivered:,.2f}"
     if difference:

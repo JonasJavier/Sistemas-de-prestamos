@@ -10,6 +10,8 @@ from apps.ledger.api.views_accounting import (
     IncomeStatementView,
     JournalView,
     ManualEntryView,
+    MonthClosePdfView,
+    MonthCloseView,
     PeriodsView,
     TrialBalanceView,
 )
@@ -34,6 +36,24 @@ urlpatterns = [
     path("contabilidad/balance/", BalanceSheetView.as_view(), name="balance-sheet"),
     path("contabilidad/asientos/", ManualEntryView.as_view(), name="manual-entry"),
     path("contabilidad/periodos/", PeriodsView.as_view(), name="periods"),
+    path(
+        "contabilidad/cierre/<int:year>/<int:month>/", MonthCloseView.as_view(), name="month-close"
+    ),
+    path(
+        "contabilidad/cierre/<int:year>/<int:month>/cerrar/",
+        MonthCloseView.as_view(verb="cerrar"),
+        name="month-close-do",
+    ),
+    path(
+        "contabilidad/cierre/<int:year>/<int:month>/reabrir/",
+        MonthCloseView.as_view(verb="reabrir"),
+        name="month-reopen",
+    ),
+    path(
+        "contabilidad/cierre/<int:year>/<int:month>/pdf/",
+        MonthClosePdfView.as_view(),
+        name="month-close-pdf",
+    ),
     path("conciliaciones/", ReconciliationsView.as_view(), name="reconciliations"),
     path("conciliaciones/<uuid:pk>/", ReconciliationView.as_view(), name="reconciliation"),
     path(

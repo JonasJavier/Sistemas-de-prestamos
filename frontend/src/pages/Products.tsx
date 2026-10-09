@@ -96,13 +96,15 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
   const [basis, setBasis] = useState<ProductCharge['basis']>('percent')
   const [value, setValue] = useState('')
   const [mode, setMode] = useState<ProductCharge['mode']>('discounted')
+  const [taxed, setTaxed] = useState(false)
   const add = useMutation({
     meta: { inlineError: true },
     mutationFn: () =>
-      createCharge({ product: product.id, name, basis, value, mode, is_active: true }),
+      createCharge({ product: product.id, name, basis, value, mode, taxed, is_active: true }),
     onSuccess: () => {
       setName('')
       setValue('')
+      setTaxed(false)
       onChange()
     },
   })
@@ -129,6 +131,7 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
               <span className={charge.is_active ? '' : 'text-muted line-through'}>
                 {charge.name} · {charge.basis === 'percent' ? pct(charge.value) : rd(charge.value)}{' '}
                 · {MODE[charge.mode]}
+                {charge.taxed ? ' · grava ITBIS 18 %' : ' · exento de ITBIS'}
               </span>
               <button
                 type="button"
@@ -190,6 +193,16 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
         <Button type="submit" variant="secondary" disabled={!name || !value || add.isPending}>
           Agregar
         </Button>
+        <label className="col-span-2 flex items-center gap-2 text-[12.5px] text-muted sm:col-span-5">
+          <input
+            type="checkbox"
+            checked={taxed}
+            onChange={(e) => setTaxed(e.target.checked)}
+            className="h-4 w-4 accent-brand-700"
+          />
+          Grava ITBIS 18 % (el monto lo incluye). Los intereses y los gastos de cierre del servicio
+          financiero son exentos; marca solo lo que revendes, como un seguro o un GPS.
+        </label>
       </form>
       {add.error instanceof ApiError ? (
         <Alert tone="danger">{errorMessage(add.error.data)}</Alert>

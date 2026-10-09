@@ -14,9 +14,11 @@ import {
   type MyCash,
   type RouteToSettle,
 } from '../api/cash'
+import type { Me } from '../api/accounts'
 import { ApiError } from '../api/client'
 import { listReasons } from '../api/origination'
 import { listPayments } from '../api/payments'
+import { CashDifferences } from '../components/CashDifferences'
 import { ExpenseDialog } from '../components/ExpenseDialog'
 import { Modal } from '../components/Modal'
 import {
@@ -474,7 +476,7 @@ function CloseDialog({
 
 /** P50: my drawer — open it with a fund, see the day, receive the collectors,
  * count and close (F7). */
-export function MyCashPage() {
+export function MyCashPage({ me }: { me: Me }) {
   const cash = useQuery({ queryKey: ['my-cash'], queryFn: getMyCash })
   const [dialog, setDialog] = useState<'move' | 'close' | 'petty' | null>(null)
   const [settling, setSettling] = useState<RouteToSettle | null>(null)
@@ -533,6 +535,8 @@ export function MyCashPage() {
               Gasto menor
             </Button>
           </div>
+
+          <CashDifferences me={me} mineOnly />
 
           <Card className="space-y-2">
             <h2 className="text-base font-semibold">Rendiciones por recibir</h2>

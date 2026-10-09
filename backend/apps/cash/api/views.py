@@ -1,6 +1,7 @@
 """P50-P52 and the settlement of F6: my cash, the branch's cash sessions,
 and the collectors' cash to receive."""
 
+import datetime as dt
 from decimal import Decimal
 
 from django.db.models import Count, Q, Sum
@@ -438,3 +439,120 @@ class RoutePdfView(APIView):
             content_type="application/pdf",
             filename=f"{document.folio}.pdf",
         )
+
+
+# --- Cash differences (decision 075) -------------------------------------------------------------
+
+
+def _difference_payload(difference, user) -> dict:
+    from apps.cash import differences
+
+    source = difference.cash_session or difference.route_session
+    return {
+        "id": str(difference.id),
+        "kind": difference.kind,
+        "kind_label": difference.get_kind_display(),
+        "amount": str(difference.amount),
+        "resolved": str(difference.resolved),
+        "outstanding": str(difference.outstanding),
+        "status": difference.status,
+        "status_label": difference.get_status_display(),
+        "person_name": person(difference.person),
+        "is_mine": difference.person_id == user.pk,
+        "branch_name": difference.branch.name,
+        "occurred_on": difference.occurred_on,
+        "source": (
+            f"Caja {source.number}"
+            if difference.cash_session_id
+            else f"Rendición del {difference.route_session.business_date:%d/%m/%Y}"
+        )
+        if source
+        else "",
+        "claim_until": difference.occurred_on + dt.timedelta(days=differences.CLAIM_DAYS)
+        if difference.kind == "overage"
+        else None,
+        "actions": [
+            {
+                "action": a.action,
+                "label": a.get_action_display(),
+                "amount": str(a.amount),
+                "user_name": person(a.user) if a.user_id else "Automático",
+                "note": a.note,
+                "at": a.created_at,
+            }
+            for a in difference.actions.select_related("user").order_by("created_at")
+        ],
+    }
+
+
+class DifferencesView(APIView):
+    """Shortages and overages to resolve: the branch's for G/Su, mine otherwise."""
+
+    permission_classes = [role_required(G, SU, CA, CO, read_any=False, read_roles=(CT, AU))]
+
+    def get(self, request: Request) -> Response:
+        from apps.cash.models import CashDifference
+
+        rows = CashDifference.objects.select_related(
+            "person", "branch", "cash_session", "route_session"
+        ).order_by("status", "-occurred_on")
+        user = request.user
+        if authz.has_any_role(user, G, CT, AU):
+            pass
+        elif authz.has_any_role(user, SU):
+            scope = authz.branch_scope(user)
+            if scope is not None:
+                rows = rows.filter(branch_id__in=scope)
+        else:
+            rows = rows.filter(person=user)
+        if request.query_params.get("estado") == "todas":
+            rows = rows[:200]
+        else:
+            rows = rows.filter(status=CashDifference.Status.OPEN)
+        return Response([_difference_payload(d, user) for d in rows])
+
+
+class DifferenceActionSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, allow_null=True
+    )
+    note = serializers.CharField(max_length=300, required=False, allow_blank=True, default="")
+
+
+class DifferenceActionView(APIView):
+    permission_classes = [role_required(G, SU, CA, read_any=False), CompanyNotSuspendedOrReadOnly]
+    verb = ""
+
+    def post(self, request: Request, pk) -> Response:
+        from apps.cash import differences
+        from apps.cash.models import CashDifference
+
+        difference = get_object_or_404(CashDifference, pk=pk)
+        serializer = DifferenceActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            if self.verb == "reponer":
+                differences.repay(
+                    difference=difference,
+                    user=request.user,
+                    amount=data.get("amount"),
+                    note=data["note"],
+                )
+            elif self.verb == "perdida":
+                differences.take_loss(difference=difference, user=request.user, note=data["note"])
+            elif self.verb == "aplicar":
+                differences.apply_overage(
+                    difference=difference,
+                    user=request.user,
+                    amount=data.get("amount"),
+                    note=data["note"],
+                )
+            elif self.verb == "ingreso":
+                differences.overage_to_income(
+                    difference=difference, user=request.user, note=data["note"]
+                )
+        except cash.CashError as exc:
+            return fail(exc)
+        difference.refresh_from_db()
+        return Response(_difference_payload(difference, request.user))

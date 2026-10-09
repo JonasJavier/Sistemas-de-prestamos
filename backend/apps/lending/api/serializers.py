@@ -18,7 +18,7 @@ class ProductChargeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductCharge
-        fields = ["id", "product", "name", "basis", "value", "mode", "is_active"]
+        fields = ["id", "product", "name", "basis", "value", "mode", "taxed", "is_active"]
 
     def create(self, validated_data: dict[str, Any]) -> ProductCharge:
         validated_data["company_id"] = self.context["request"].user.company_id

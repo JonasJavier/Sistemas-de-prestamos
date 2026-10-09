@@ -10,6 +10,8 @@ import {
   type CashSession,
 } from '../api/cash'
 import { ApiError } from '../api/client'
+import type { Me } from '../api/accounts'
+import { CashDifferences } from '../components/CashDifferences'
 import { buttonClass } from '../components/classes'
 import {
   Alert,
@@ -38,21 +40,25 @@ const TABS = [
   ['closed', 'Por aprobar'],
   ['open', 'Abiertas'],
   ['approved', 'Aprobadas'],
+  ['differences', 'Diferencias'],
 ] as const
 type Tab = (typeof TABS)[number][0]
 
 /** P52: the branch's cash sessions, closings to approve first. */
-export function CashSessionsPage() {
+export function CashSessionsPage({ me }: { me: Me }) {
   const [tab, setTab] = useState<Tab>('closed')
   const sessions = useQuery({
     queryKey: ['cash-sessions', tab],
-    queryFn: () => listSessions({ status: tab }),
+    queryFn: () => listSessions({ status: tab as CashSession['status'] }),
+    enabled: tab !== 'differences',
   })
   return (
     <>
       <PageHeader title="Cajas" subtitle="Cierres por aprobar, cajas abiertas e historial" />
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
-      {sessions.isPending ? (
+      {tab === 'differences' ? (
+        <CashDifferences me={me} />
+      ) : sessions.isPending ? (
         <Spinner />
       ) : sessions.data?.results.length ? (
         <RowList>

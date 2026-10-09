@@ -221,3 +221,89 @@ class RouteHandover(CompanyScopedModel):
                 name="route_handover_append_only", operation=pgtrigger.Update | pgtrigger.Delete
             )
         ]
+
+
+class CashDifference(CompanyScopedModel):
+    """A shortage or an overage found when counting (decision 075).
+
+    A shortage is owed by the person until repaid into a drawer or taken
+    as a loss by the manager; an overage awaits a claim for 30 days (it may
+    belong to a customer) and then becomes other income. ``resolved`` grows
+    with each action; the nightly reconciliation compares what is open with
+    the two ledger accounts.
+    """
+
+    class Kind(models.TextChoices):
+        SHORTAGE = "shortage", "Faltante"
+        OVERAGE = "overage", "Sobrante"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Por resolver"
+        RESOLVED = "resolved", "Resuelta"
+
+    kind = models.CharField(max_length=10, choices=Kind)
+    amount = models.DecimalField(**MONEY)
+    resolved = models.DecimalField(**MONEY, default=0)
+    status = models.CharField(max_length=10, choices=Status, default=Status.OPEN)
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="+")
+    cash_session = models.ForeignKey(
+        CashSession, null=True, blank=True, on_delete=models.PROTECT, related_name="differences"
+    )
+    route_session = models.ForeignKey(
+        RouteSession, null=True, blank=True, on_delete=models.PROTECT, related_name="differences"
+    )
+    occurred_on = models.DateField()
+    warned_at = models.DateTimeField(null=True, blank=True)  # a shortage open for 30 days
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="cash_difference_positive"),
+            models.CheckConstraint(
+                condition=Q(resolved__gte=0) & Q(resolved__lte=F("amount")),
+                name="cash_difference_resolved_range",
+            ),
+            models.CheckConstraint(
+                condition=~Q(status="resolved") | Q(resolved=F("amount")),
+                name="cash_difference_resolved_full",
+            ),
+        ]
+        indexes = [models.Index(fields=["company", "status", "kind"])]
+
+    @property
+    def outstanding(self):
+        return self.amount - self.resolved
+
+
+class CashDifferenceAction(CompanyScopedModel):
+    """One step resolving a difference, with its entry (append-only)."""
+
+    class Action(models.TextChoices):
+        REPAID = "repaid", "Repuesto por el responsable"
+        LOSS = "loss", "Asumido como pérdida"
+        APPLIED = "applied", "Aplicado (devuelto o cubre un pago)"
+        INCOME = "income", "Pasado a otros ingresos"
+
+    difference = models.ForeignKey(CashDifference, on_delete=models.PROTECT, related_name="actions")
+    action = models.CharField(max_length=10, choices=Action)
+    amount = models.DecimalField(**MONEY)
+    entry = models.OneToOneField(
+        JournalEntry, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    note = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(amount__gt=0), name="cash_difference_action_positive"
+            ),
+        ]
+        triggers = [
+            pgtrigger.Protect(
+                name="cash_difference_action_append_only",
+                operation=pgtrigger.Update | pgtrigger.Delete,
+            )
+        ]

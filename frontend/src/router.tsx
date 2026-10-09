@@ -324,14 +324,14 @@ const myCashRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/caja',
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.myCash),
-  component: MyCashPage,
+  component: withMe(MyCashPage),
 })
 
 const cashSessionsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/cajas',
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.cashSessions),
-  component: CashSessionsPage,
+  component: withMe(CashSessionsPage),
 })
 
 const cashSessionDetailRoute = createRoute({

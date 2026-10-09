@@ -41,6 +41,7 @@ from apps.lending.models import (
     LoanTerms,
     ProductCharge,
 )
+from engine.money import money
 from engine.rates import Frequency, RateUnit, period_rate
 
 ZERO = Decimal("0.00")
@@ -157,6 +158,18 @@ def _cash_session(user: User, today: dt.date):
             code="stale_session",
         )
     return session
+
+
+ITBIS_RATE = Decimal("0.18")
+
+
+def itbis_in(charges, modes) -> Decimal:
+    """The ITBIS inside the taxed charges of those modes (decision 075)."""
+    total = Decimal("0.00")
+    for line in charges:
+        if line.taxed and line.mode in modes:
+            total += line.amount - money(line.amount / (1 + ITBIS_RATE))
+    return total
 
 
 @transaction.atomic
@@ -281,6 +294,7 @@ def disburse(
             value=line.value,
             mode=line.mode,
             amount=line.amount,
+            taxed=line.taxed,
         )
         for line in sim.charges
     )
@@ -302,10 +316,17 @@ def disburse(
     dims = {"loan_id": loan.id, "customer_id": customer.id}
     drawer_dims = {"cash_session_id": session.id} if session else {}
     charge_income = ledger.system_account(company_id, "charge_income")
+    itbis_payable = ledger.system_account(company_id, "itbis_payable")
+    # Decision 075: a taxed charge carries 18 % ITBIS inside its amount.
+    itbis_withheld = itbis_in(
+        sim.charges, (ProductCharge.Mode.DISCOUNTED, ProductCharge.Mode.FINANCED)
+    )
+    itbis_cash = itbis_in(sim.charges, (ProductCharge.Mode.CASH,))
     lines = [
         ledger.debit(ledger.system_account(company_id, "loan_portfolio"), sim.principal, **dims),
         ledger.cash_line(source_account, credit_amount=sim.net_disbursed, **dims, **drawer_dims),
-        ledger.credit(charge_income, quote.discounted + quote.financed, **dims),
+        ledger.credit(charge_income, quote.discounted + quote.financed - itbis_withheld, **dims),
+        ledger.credit(itbis_payable, itbis_withheld, **dims),
     ]
     if quote.cash:
         same = charge_account == source_account
@@ -313,7 +334,8 @@ def disburse(
             ledger.cash_line(
                 charge_account, debit_amount=quote.cash, **dims, **(drawer_dims if same else {})
             ),
-            ledger.credit(charge_income, quote.cash, **dims),
+            ledger.credit(charge_income, quote.cash - itbis_cash, **dims),
+            ledger.credit(itbis_payable, itbis_cash, **dims),
         ]
     try:
         entry = ledger.post_entry(

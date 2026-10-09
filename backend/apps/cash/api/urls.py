@@ -2,6 +2,8 @@ from django.urls import path
 
 from apps.cash.api.views import (
     CloseView,
+    DifferenceActionView,
+    DifferencesView,
     HandoverView,
     MoveView,
     MyCashView,
@@ -24,4 +26,13 @@ urlpatterns = [
     path("rendiciones/<uuid:pk>/", SettleView.as_view(), name="route-settle"),
     path("rendiciones/<uuid:pk>/pdf/", RoutePdfView.as_view(), name="route-settle-pdf"),
     path("rendiciones/<uuid:pk>/entrega/", HandoverView.as_view(), name="route-handover"),
+    path("diferencias-caja/", DifferencesView.as_view(), name="cash-differences"),
+    *(
+        path(
+            f"diferencias-caja/<uuid:pk>/{verb}/",
+            DifferenceActionView.as_view(verb=verb),
+            name=f"cash-difference-{verb}",
+        )
+        for verb in ("reponer", "perdida", "aplicar", "ingreso")
+    ),
 ]

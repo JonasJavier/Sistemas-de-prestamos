@@ -37,6 +37,7 @@ class ChargeLine:
     charge_id: object = None  # ProductCharge pk, frozen into LoanCharge
     basis: str = ""
     value: Decimal = Decimal("0")
+    taxed: bool = False  # amount includes 18 % ITBIS (decision 075)
 
 
 @dataclass(frozen=True)
@@ -127,6 +128,7 @@ def simulate(
             charge_id=c.pk,
             basis=c.basis,
             value=c.value,
+            taxed=c.taxed,
         )
         for c in product.charges.filter(is_active=True).order_by("name")
     ]

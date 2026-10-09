@@ -124,3 +124,40 @@ export const receiveHandover = (
   api(`/api/v1/rendiciones/${routeId}/entrega/`, { method: 'POST', body: { amount } })
 
 export const settlementPdfUrl = (routeId: string) => `/api/v1/rendiciones/${routeId}/pdf/`
+
+// --- Cash differences (decision 075) --------------------------------------------------------
+
+export interface CashDifference {
+  id: string
+  kind: 'shortage' | 'overage'
+  kind_label: string
+  amount: string
+  resolved: string
+  outstanding: string
+  status: 'open' | 'resolved'
+  status_label: string
+  person_name: string | null
+  is_mine: boolean
+  branch_name: string
+  occurred_on: string
+  source: string
+  claim_until: string | null
+  actions: {
+    action: string
+    label: string
+    amount: string
+    user_name: string | null
+    note: string
+    at: string
+  }[]
+}
+
+export const listDifferences = (all = false): Promise<CashDifference[]> =>
+  api(`/api/v1/diferencias-caja/${all ? '?estado=todas' : ''}`)
+
+export const differenceAction = (
+  id: string,
+  verb: 'reponer' | 'perdida' | 'aplicar' | 'ingreso',
+  body: { amount?: string | null; note?: string },
+): Promise<CashDifference> =>
+  api(`/api/v1/diferencias-caja/${id}/${verb}/`, { method: 'POST', body })

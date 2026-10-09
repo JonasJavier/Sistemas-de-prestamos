@@ -55,6 +55,22 @@ def check(company_id: UUID) -> list[str]:
     payables = ledger.balance_of(ledger.system_account(company_id, "payables"))
     if owed != payables:
         problems.append(f"Cuentas por pagar: pendiente {owed}, libro {payables}.")
+    # Decision 075: open shortages and overages equal their two accounts.
+    from apps.cash.models import CashDifference
+
+    for kind, key in (("shortage", "cash_shortage"), ("overage", "cash_overage_pending")):
+        open_total = sum(
+            (
+                d.outstanding
+                for d in CashDifference.objects.filter(kind=kind, status=CashDifference.Status.OPEN)
+            ),
+            ZERO,
+        )
+        booked = ledger.balance_of(ledger.system_account(company_id, key))
+        if open_total != booked:
+            problems.append(
+                f"Diferencias de caja ({kind}): pendiente {open_total}, libro {booked}."
+            )
     for session in CashSession.objects.filter(status=CashSession.Status.OPEN).select_related(
         "drawer__ledger_account"
     ):

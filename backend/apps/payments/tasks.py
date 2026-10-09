@@ -62,6 +62,9 @@ def run_nightly(company_id, today: dt.date) -> dict:
     from apps.expenses.payables import recognize_due
 
     recognized = recognize_due(today)
+    from apps.cash.differences import nightly as differences_nightly
+
+    differences = differences_nightly(today)
     expired = reversals.expire_requests()
     stale_cash, stale_routes = cash.stale_sessions(today)
     for session in stale_cash:
@@ -99,6 +102,7 @@ def run_nightly(company_id, today: dt.date) -> dict:
         "broken_promises": len(broken),
         "escalated": escalated,
         "payables_recognized": recognized,
+        **differences,
     }
 
 
