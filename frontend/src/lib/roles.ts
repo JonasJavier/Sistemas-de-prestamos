@@ -47,6 +47,8 @@ export const ACCESS = {
   /** P54: see expenses and income (the cashier, his own). */
   expenses: [G, SU, CA, CT, AU],
   registerExpenses: [G, SU, CA, CT],
+  /** P55: payables. */
+  payables: [G, CT, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

@@ -58,6 +58,10 @@ def run_nightly(company_id, today: dt.date) -> dict:
     _notify_broken(company_id, broken)
     escalated = agenda.run_escalation(today)
     agenda.close_cured(today)
+    # Phase 6: series of payables that fell due become expense and debt.
+    from apps.expenses.payables import recognize_due
+
+    recognized = recognize_due(today)
     expired = reversals.expire_requests()
     stale_cash, stale_routes = cash.stale_sessions(today)
     for session in stale_cash:
@@ -94,6 +98,7 @@ def run_nightly(company_id, today: dt.date) -> dict:
         "problems": problems,
         "broken_promises": len(broken),
         "escalated": escalated,
+        "payables_recognized": recognized,
     }
 
 

@@ -91,6 +91,8 @@ function navFor(me: Me): NavGroup[] {
   const finance: NavItem[] = []
   if (hasRole(me, ACCESS.finance)) finance.push({ to: '/cuentas', label: 'Cuentas y bancos' })
   if (hasRole(me, ACCESS.expenses)) finance.push({ to: '/gastos', label: 'Gastos e ingresos' })
+  if (hasRole(me, ACCESS.payables))
+    finance.push({ to: '/cuentas-por-pagar', label: 'Cuentas por pagar' })
   if (hasRole(me, ACCESS.books)) finance.push({ to: '/contabilidad', label: 'Contabilidad' })
   if (finance.length) groups.push({ title: 'Finanzas', items: finance })
   if (me.is_manager) {

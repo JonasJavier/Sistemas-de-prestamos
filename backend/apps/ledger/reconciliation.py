@@ -40,6 +40,21 @@ def check(company_id: UUID) -> list[str]:
         net = by_loan.get(loan_id, ZERO)
         if net != outstanding:
             problems.append(f"Préstamo {number}: capital {outstanding}, cartera en el libro {net}.")
+    # Phase 6: what the payables say is owed equals «Cuentas por pagar».
+    from apps.expenses.models import Payable
+
+    owed = sum(
+        (
+            p.amount - p.paid
+            for p in Payable.objects.filter(recognized_entry__isnull=False).exclude(
+                status=Payable.Status.CANCELLED
+            )
+        ),
+        ZERO,
+    )
+    payables = ledger.balance_of(ledger.system_account(company_id, "payables"))
+    if owed != payables:
+        problems.append(f"Cuentas por pagar: pendiente {owed}, libro {payables}.")
     for session in CashSession.objects.filter(status=CashSession.Status.OPEN).select_related(
         "drawer__ledger_account"
     ):

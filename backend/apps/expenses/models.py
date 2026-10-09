@@ -142,3 +142,110 @@ class ExpenseFile(PrivateFileBase):
     """The supplier's receipt or invoice (PDF or photo), private."""
 
     expense = models.ForeignKey(Expense, on_delete=models.PROTECT, related_name="files")
+
+
+class PayableSeries(CompanyScopedModel):
+    """A recurring obligation (rent, a loan installment, a salary)."""
+
+    class Frequency(models.TextChoices):
+        WEEKLY = "weekly", "Semanal"
+        BIWEEKLY = "biweekly", "Quincenal"
+        MONTHLY = "monthly", "Mensual"
+
+    frequency = models.CharField(max_length=10, choices=Frequency)
+    count = models.PositiveSmallIntegerField()
+    start_on = models.DateField()
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+
+
+@pghistory.track()
+class Payable(CompanyScopedModel):
+    """What the company owes a supplier (F15, decision 082).
+
+    Accrual: the expense and the debt are recognized when the invoice
+    arrives (a single obligation) or when each occurrence of a series falls
+    due; payments, total or partial, lower the debt (#10).
+    """
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Abierta"
+        PARTIAL = "partial", "Pago parcial"
+        PAID = "paid", "Pagada"
+        CANCELLED = "cancelled", "Cancelada"
+
+    branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="+")
+    category = models.ForeignKey(ExpenseCategory, on_delete=models.PROTECT, related_name="+")
+    party_name = models.CharField(max_length=200)
+    party_document = models.CharField(max_length=11, blank=True)
+    ncf = models.CharField(max_length=13, blank=True)
+    description = models.CharField(max_length=300)
+    amount = models.DecimalField(**MONEY)
+    due_on = models.DateField()
+    series = models.ForeignKey(
+        PayableSeries, null=True, blank=True, on_delete=models.PROTECT, related_name="payables"
+    )
+    occurrence = models.PositiveSmallIntegerField(default=1)
+    status = models.CharField(max_length=10, choices=Status, default=Status.OPEN)
+    paid = models.DecimalField(**MONEY, default=0)
+    recognized_on = models.DateField(null=True, blank=True)
+    recognized_entry = models.OneToOneField(
+        JournalEntry, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancel_reason = models.CharField(max_length=300, blank=True)
+    cancel_entry = models.OneToOneField(
+        JournalEntry, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="payable_amount_positive"),
+            models.CheckConstraint(
+                condition=Q(paid__gte=0) & Q(paid__lte=F("amount")), name="payable_paid_range"
+            ),
+            models.CheckConstraint(
+                condition=~Q(status="paid") | Q(paid=F("amount")), name="payable_paid_is_full"
+            ),
+            models.CheckConstraint(
+                condition=Q(paid=0) | Q(recognized_entry__isnull=False),
+                name="payable_paid_after_recognized",
+            ),
+        ]
+        indexes = [models.Index(fields=["company", "status", "due_on"])]
+
+    @property
+    def outstanding(self):
+        return self.amount - self.paid
+
+    def __str__(self) -> str:
+        return f"{self.party_name}: {self.description}"
+
+
+class PayablePayment(CompanyScopedModel):
+    """A payment of an obligation, from a cash box or bank (append-only)."""
+
+    payable = models.ForeignKey(Payable, on_delete=models.PROTECT, related_name="payments")
+    amount = models.DecimalField(**MONEY)
+    date = models.DateField()
+    account = models.ForeignKey(FinancialAccount, on_delete=models.PROTECT, related_name="+")
+    method = models.CharField(
+        max_length=10, choices=Expense.Method, default=Expense.Method.TRANSFER
+    )
+    reference = models.CharField(max_length=100, blank=True)
+    entry = models.OneToOneField(JournalEntry, on_delete=models.PROTECT, related_name="+")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="payable_payment_positive"),
+        ]

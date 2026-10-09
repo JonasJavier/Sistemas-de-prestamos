@@ -28,6 +28,7 @@ const AccountPage = lazyRouteComponent(() => import('./pages/Account'), 'Account
 const AccountsPage = lazyRouteComponent(() => import('./pages/Accounts'), 'AccountsPage')
 const AccountingPage = lazyRouteComponent(() => import('./pages/Accounting'), 'AccountingPage')
 const ExpensesPage = lazyRouteComponent(() => import('./pages/Expenses'), 'ExpensesPage')
+const PayablesPage = lazyRouteComponent(() => import('./pages/Payables'), 'PayablesPage')
 const ApplicationDetailPage = lazyRouteComponent(
   () => import('./pages/ApplicationDetail'),
   'ApplicationDetailPage',
@@ -381,6 +382,13 @@ const loanDetailRoute = createRoute({
   component: withMe(LoanDetailPage),
 })
 
+const payablesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cuentas-por-pagar',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.payables),
+  component: PayablesPage,
+})
+
 const expensesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/gastos',
@@ -537,6 +545,7 @@ const routeTree = rootRoute.addChildren([
     accountsRoute,
     accountingRoute,
     expensesRoute,
+    payablesRoute,
     productsRoute,
     companySettingsRoute,
     holidaysRoute,
