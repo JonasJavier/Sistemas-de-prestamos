@@ -1,4 +1,4 @@
-"""F16, basic: load running loans from a CSV, validating row by row.
+"""F16: load running loans from a CSV or Excel file, validating row by row.
 
     manage.py migrar_prestamos prestamos.csv --usuario gerente@empresa.do
     manage.py migrar_prestamos prestamos.csv --usuario gerente@empresa.do --aplicar
@@ -10,7 +10,6 @@ cobrador, saldo_capital, pagos — «pagos» as «2026-01-05:1500;2026-02-05:150
 Rates are fractions (5 % = 0.05), dates are YYYY-MM-DD.
 """
 
-import csv
 import datetime as dt
 from decimal import Decimal, InvalidOperation
 
@@ -18,10 +17,20 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.accounts.models import User
+from apps.core.tabular import header, read_rows
 from apps.core.tenancy import company_context
 from apps.customers.models import Customer
 from apps.lending.migration import LegacyLoan, MigrationError, migrate_loan
 from apps.lending.models import LoanProduct
+
+# The template says it in Spanish (decision 107); the engine's names work too.
+FREQUENCIES = {
+    "diaria": "daily",
+    "interdiaria": "interdaily",
+    "semanal": "weekly",
+    "quincenal": "biweekly",
+    "mensual": "monthly",
+}
 
 
 class _DryRun(Exception):
@@ -61,7 +70,7 @@ def _row(raw: dict, company_users: dict[str, User]) -> LegacyLoan:
         product=product,
         amount=Decimal(raw["monto"]),
         rate=Decimal(raw["tasa"]),
-        frequency=raw["frecuencia"].strip(),
+        frequency=FREQUENCIES.get(header(raw["frecuencia"]), raw["frecuencia"].strip()),
         installments=int(raw["cuotas"]),
         disbursed_on=date("fecha_desembolso"),
         first_due=date("primera_cuota", required=False),
@@ -86,8 +95,7 @@ class Command(BaseCommand):
         user = User.objects.filter(email=options["usuario"].lower()).first()
         if user is None or user.company_id is None:
             raise CommandError("Ese usuario no existe o no pertenece a una empresa.")
-        with open(options["archivo"], encoding="utf-8-sig", newline="") as handle:
-            rows = list(csv.DictReader(handle))
+        rows = read_rows(options["archivo"])  # CSV or Excel (decision 107)
         if not rows:
             raise CommandError("El archivo no tiene filas.")
         ok = errors = 0

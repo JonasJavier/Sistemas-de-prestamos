@@ -2,7 +2,7 @@
 
 **Cobradía** (`cobradia.com`) es una plataforma SaaS multiempresa para que las financieras dominicanas administren préstamos, cobros y caja. Cada empresa se registra en línea con 30 días de prueba y trabaja con sus datos aislados de las demás (decisiones 041–045).
 
-**Estado (09/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; las fases 4 · Cobros y caja, 5 · Cobranza, 6 · Finanzas, 7 · Tablero y reportes, 8 · Renovación y legal y 9 · Comunicación y portal están construidas y esperan su aceptación (la validación contable y legal quedó en la decisión 075). Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
+**Estado (09/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; las fases 4 · Cobros y caja, 5 · Cobranza, 6 · Finanzas, 7 · Tablero y reportes, 8 · Renovación y legal y 9 · Comunicación y portal están construidas y esperan su aceptación, y la parte técnica de la fase 10 · Aceptación y lanzamiento está hecha; lo que falta para lanzar depende de Jonas y está en la [lista de lanzamiento](docs/operacion/lanzamiento.md) (la validación contable y legal quedó en la decisión 075). Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
 
 ## Estructura
 
@@ -12,6 +12,8 @@
 | `frontend/` | Aplicación web en React 19 + Vite + TypeScript, TanStack Router/Query y Tailwind 4 |
 | `site/` | Sitio de promoción de `cobradia.com`, estático, en Astro (decisión 100) |
 | `infra/` | Docker Compose para desarrollo (PostgreSQL, Redis y Mailpit) y, en `infra/production/`, el de producción con su manual (decisión 101) |
+| `docs/manual/` | Manuales por rol para capacitar a cada financiera |
+| `docs/operacion/` | Lanzamiento, respuesta a incidentes, revisión de seguridad y pruebas de carga |
 | `docs/proyecto/` | Las bases del proyecto (pasos 01–10) y el [registro de decisiones](docs/proyecto/decisiones.md): **la fuente de verdad** |
 | `docs/referencia/` | Estudio del sistema de referencia; solo material de consulta |
 

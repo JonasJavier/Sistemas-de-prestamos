@@ -393,6 +393,8 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
 Los pagos migrados no mueven la caja (paso 3, §11).
 
 > **Fase 4 (decisión 074):** migración básica con el comando `migrar_prestamos` (CSV que se ensaya por defecto); la fase 10 agrega las plantillas de Excel, los clientes y los ensayos con el cliente.
+>
+> **Fase 10 (decisión 107):** `plantillas_migracion`, `migrar_clientes` y la lectura de Excel están hechos; los saldos de las cuentas se cargan desde Cuentas y bancos. Los ensayos con el cliente dependen de tener su cartera ([lista de lanzamiento](../operacion/lanzamiento.md)).
 
 ## F17 · Usuarios y acceso
 
