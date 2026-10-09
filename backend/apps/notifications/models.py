@@ -22,6 +22,7 @@ class Notification(CompanyScopedModel):
         RECONCILIATION = "reconciliation", "Conciliación"
         ESCALATION = "escalation", "Escalamiento"
         PROMISES_BROKEN = "promises_broken", "Promesas incumplidas"
+        FRAUD_ALERT = "fraud_alert", "Alerta antifraude"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

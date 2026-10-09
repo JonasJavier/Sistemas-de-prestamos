@@ -85,7 +85,7 @@ def _indicators(today: dt.date, branches, picked, *, with_profit: bool) -> dict:
     return data
 
 
-def _operations(today: dt.date, branches) -> dict:
+def _operations(today: dt.date, branches, *, with_fraud: bool) -> dict:
     """Open drawers and today's routes: what a supervisor walks through."""
     from apps.cash.models import CashSession, RouteSession
     from apps.collections.models import RouteStop
@@ -103,7 +103,11 @@ def _operations(today: dt.date, branches) -> dict:
         visited=Count("id", filter=Q(visited_at__isnull=False)),
         paid=Count("id", filter=Q(payment__isnull=False)),
     )
+    from apps.audit import fraud
+
     return {
+        # Doc 07 P10: the manager's dashboard shows the open fraud alerts.
+        "fraud_alerts_open": fraud.open_count() if with_fraud else None,
         "open_cash_sessions": sessions.count(),
         "routes_open": routes.filter(status=RouteSession.Status.OPEN).count(),
         "routes_total": routes.count(),
@@ -198,7 +202,7 @@ class DashboardView(APIView):
             whole = authz.branch_scope(request.user) is None
             data["indicators"] = _indicators(today, branches, picked, with_profit=whole)
         if roles & {G, SU, AU}:
-            data["operations"] = _operations(today, branches)
+            data["operations"] = _operations(today, branches, with_fraud=bool(roles & {G, AU}))
         if roles & {G, CT, AU}:
             data["books"] = _books(today)
         if OF in roles:

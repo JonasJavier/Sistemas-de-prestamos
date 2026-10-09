@@ -5,6 +5,7 @@ link. Append-only from the application's point of view: rows are
 created, never edited.
 """
 
+import pghistory
 from django.conf import settings
 from django.db import models
 
@@ -75,3 +76,78 @@ def record_event(
         summary=summary,
         data=data or {},
     )
+
+
+class LoginEvent(CompanyScopedModel):
+    """Doc 06 §9 «Accesos»: every sign-in, with the device and whether it
+    was new for the person or outside their branch hours (decision 090)."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    at = models.DateTimeField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    new_device = models.BooleanField(default=False)
+    outside_hours = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "user", "-at"])]
+
+
+class FraudKind(models.TextChoices):
+    """Doc 06 §9 «Alertas antifraude» (decision 090)."""
+
+    REVERSALS = "reversals", "Reversos pedidos por una misma persona"
+    WAIVERS = "waivers", "Condonaciones y descuentos aprobados a una misma persona"
+    CASH_DIFFERENCES = "cash_differences", "Diferencias de caja de una misma persona"
+    OFF_HOURS = "off_hours", "Inicios de sesión fuera del horario de la sucursal"
+    NEW_DEVICE = "new_device", "Inicios de sesión desde un dispositivo nuevo"
+    OFF_ROUTE = "off_route", "Cobros fuera de la ruta del día"
+    CASH_LIMIT = "cash_limit", "Rutas que superaron el límite de efectivo"
+    PERMISSIONS = "permissions", "Cambios de roles, sucursales o límites"
+
+
+@pghistory.track()
+class FraudRule(CompanyScopedModel):
+    """One pattern, its threshold and its window; editable by the manager."""
+
+    kind = models.CharField(max_length=20, choices=FraudKind)
+    threshold = models.PositiveSmallIntegerField()
+    window_days = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["company", "kind"], name="fraud_rule_one_per_kind"),
+            models.CheckConstraint(
+                condition=models.Q(threshold__gte=1)
+                & models.Q(window_days__gte=1)
+                & models.Q(window_days__lte=90),
+                name="fraud_rule_sane",
+            ),
+        ]
+
+
+class FraudAlert(CompanyScopedModel):
+    """A pattern found by the nightly review; the manager reviews it."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Por revisar"
+        REVIEWED = "reviewed", "Revisada"
+
+    kind = models.CharField(max_length=20, choices=FraudKind)
+    subject = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    count = models.PositiveIntegerField()
+    threshold = models.PositiveSmallIntegerField()
+    window_days = models.PositiveSmallIntegerField()
+    detail = models.CharField(max_length=300)
+    status = models.CharField(max_length=10, choices=Status, default=Status.OPEN)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_note = models.TextField(blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "status", "-created_at"])]

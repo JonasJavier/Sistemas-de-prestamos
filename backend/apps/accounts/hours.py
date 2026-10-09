@@ -51,6 +51,19 @@ def outside_hours(user: User, now: dt.datetime | None = None) -> str | None:
     return f"Fuera del horario de tu sucursal ({hours}). Pide una extensión a tu supervisor."
 
 
+def beyond_branch_hours(user: User, at: dt.datetime) -> bool:
+    """Whether ``at`` falls outside the hours of every branch of the user,
+    whatever their roles (the fraud review, decision 090)."""
+    at = timezone.localtime(at)
+    branches = list(Branch.objects.filter(memberships__user=user).distinct())
+    if not branches:
+        return False
+    return not any(
+        at.weekday() in branch.workdays and branch.opens_at <= at.time() < branch.closes_at
+        for branch in branches
+    )
+
+
 def extend(*, user: User, granted_by: User, minutes: int, note: str) -> HoursExtension:
     if not authz.has_any_role(granted_by, authz.GERENTE, authz.SUPERVISOR):
         raise PermissionError("Solo el supervisor o el gerente extienden el horario.")

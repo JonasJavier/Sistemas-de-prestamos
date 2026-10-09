@@ -245,7 +245,7 @@ El gerente recibe un aviso cuando aparece un patrón inusual:
 - un cobrador que supera su límite de efectivo en mano;
 - cambios de permisos.
 
-Las reglas y sus umbrales son configurables.
+Las reglas y sus umbrales son configurables (valores de partida y revisión nocturna: decisión 090, fase 7).
 
 ## 10. Plataforma y modo soporte (decisión 046)
 

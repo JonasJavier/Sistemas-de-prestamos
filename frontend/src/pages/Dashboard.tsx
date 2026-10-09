@@ -285,6 +285,15 @@ function Operations({ data }: { data: Dashboard }) {
   return (
     <Section title="Operación de hoy">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {ops.fraud_alerts_open !== null ? (
+          <Kpi
+            label="Alertas antifraude"
+            value={String(ops.fraud_alerts_open)}
+            hint={ops.fraud_alerts_open ? 'Por revisar' : 'Nada por revisar'}
+            to="/ajustes/alertas"
+            tone={ops.fraud_alerts_open ? 'bad' : 'good'}
+          />
+        ) : null}
         <Kpi label="Cajas abiertas" value={String(ops.open_cash_sessions)} to="/cajas" />
         <Kpi
           label="Rutas en la calle"

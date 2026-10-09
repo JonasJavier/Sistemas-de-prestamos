@@ -106,6 +106,9 @@ function navFor(me: Me): NavGroup[] {
     reports.push({ to: '/reportes/clasificacion', label: 'Clasificación' })
   if (hasRole(me, ACCESS.commissions))
     reports.push({ to: '/reportes/comisiones', label: 'Comisiones' })
+  // P79 lives in Ajustes for the manager; audit reaches it from Reportes.
+  if (hasRole(me, ACCESS.fraud) && !me.is_manager)
+    reports.push({ to: '/ajustes/alertas', label: 'Alertas antifraude' })
   if (reports.length) groups.push({ title: 'Reportes', items: reports })
   if (me.is_manager) {
     groups.push({
@@ -117,6 +120,9 @@ function navFor(me: Me): NavGroup[] {
         { to: '/ajustes/numeraciones', label: 'Numeraciones' },
         { to: '/ajustes/sucursales', label: 'Sucursales' },
         { to: '/ajustes/usuarios', label: 'Usuarios' },
+        ...(hasRole(me, ACCESS.fraud)
+          ? [{ to: '/ajustes/alertas', label: 'Alertas antifraude' }]
+          : []),
         { to: '/ajustes/suscripcion', label: 'Suscripción' },
       ],
     })

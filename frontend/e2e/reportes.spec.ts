@@ -64,8 +64,10 @@ test('el gerente define una comisión y calcula el mes', async ({ browser }) => 
   const manager = await sessionFor(browser, MODELO.gerente)
   await manager.goto('/reportes/comisiones')
   await expect(manager.getByRole('heading', { name: 'Comisiones', level: 1 })).toBeVisible()
-  // The tours run again on the same data: reuse the rule if a run left it.
+  // The tours run again on the same data: reuse the rule if a run left it
+  // (once the rules have loaded, or the check would race the request).
   const existing = manager.getByText('Cobradores del recorrido')
+  await expect(existing.or(manager.getByText(/Sin reglas/)).first()).toBeVisible()
   if (!(await existing.count())) {
     await manager.getByRole('button', { name: 'Nueva regla' }).click()
     const dialog = manager.getByRole('dialog')
@@ -79,6 +81,7 @@ test('el gerente define una comisión y calcula el mes', async ({ browser }) => 
       .getByRole('listitem')
       .filter({ hasText: 'Cobradores del recorrido' })
       .getByRole('button', { name: 'Editar' })
+      .first()
       .click()
     await manager.getByRole('dialog').getByLabel('Activa').check()
     await manager.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
@@ -92,8 +95,25 @@ test('el gerente define una comisión y calcula el mes', async ({ browser }) => 
     .getByRole('listitem')
     .filter({ hasText: 'Cobradores del recorrido' })
     .getByRole('button', { name: 'Editar' })
+    .first()
     .click()
   await manager.getByRole('dialog').getByLabel('Activa').uncheck()
   await manager.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
   await expect(manager.getByText('Inactiva')).toBeVisible()
+})
+
+test('el gerente ajusta una regla antifraude', async ({ browser }) => {
+  const manager = await sessionFor(browser, MODELO.gerente)
+  await manager.goto('/ajustes/alertas')
+  await expect(manager.getByRole('heading', { name: 'Alertas antifraude' })).toBeVisible()
+  await manager.getByRole('tab', { name: 'Reglas' }).click()
+  const row = manager.getByRole('listitem').filter({ hasText: 'Cobros fuera de la ruta del día' })
+  // Repeatable: move the threshold to whichever of 6 and 7 it is not.
+  const field = row.getByLabel('Umbral')
+  await expect(field).toBeVisible()
+  const target = (await field.inputValue()) === '6' ? '7' : '6'
+  await field.fill(target)
+  await row.getByRole('button', { name: 'Guardar' }).click()
+  await expect(manager.getByText('Regla guardada.')).toBeVisible()
+  await expect(row.getByText(`Avisa con ${target} o más`, { exact: false })).toBeVisible()
 })

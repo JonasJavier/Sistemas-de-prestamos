@@ -33,6 +33,8 @@ export interface Dashboard {
     profit_month?: { income: string; expenses: string; result: string }
   }
   operations?: {
+    /** Only for the manager and audit (null for the supervisor). */
+    fraud_alerts_open: number | null
     open_cash_sessions: number
     routes_open: number
     routes_total: number
