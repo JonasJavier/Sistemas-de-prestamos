@@ -56,6 +56,8 @@ export const ACCESS = {
   reports: [G, SU, OF, CT, AU],
   /** P62: the customers' classification. */
   scores: [G, SU, OF, AU],
+  /** P63: commissions (audit reads them). */
+  commissions: [G, CT, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

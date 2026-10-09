@@ -89,7 +89,17 @@ export function getPortfolioReport(filters: PortfolioFilters): Promise<Portfolio
 // --- P64 «Centro de reportes» (decision 087) ---------------------------------
 
 export type FilterKind =
-  'date' | 'from' | 'to' | 'branch' | 'collector' | 'product' | 'method' | 'cut' | 'bucket'
+  | 'date'
+  | 'from'
+  | 'to'
+  | 'month'
+  | 'branch'
+  | 'collector'
+  | 'product'
+  | 'method'
+  | 'cut'
+  | 'bucket'
+  | 'grade'
 
 export interface ReportSpec {
   key: string
@@ -204,4 +214,84 @@ export function listScores(params: {
   page?: number
 }): Promise<ScorePage> {
   return api(`/api/v1/clasificacion/${toQuery(params)}`)
+}
+
+// --- P63 «Comisiones» (decision 089) -------------------------------------------
+
+export type CommissionBase = 'income_collected' | 'total_collected' | 'disbursed'
+export type CommissionRole = 'Cobrador' | 'Oficial de crédito'
+
+export const COMMISSION_BASES: { value: CommissionBase; label: string; role: CommissionRole }[] = [
+  { value: 'income_collected', label: 'Interés y mora cobrados', role: 'Cobrador' },
+  { value: 'total_collected', label: 'Total cobrado', role: 'Cobrador' },
+  { value: 'disbursed', label: 'Monto desembolsado (colocación)', role: 'Oficial de crédito' },
+]
+
+export interface CommissionRule {
+  id: string
+  name: string
+  role: CommissionRole
+  user: string | null
+  user_name: string
+  base: CommissionBase
+  base_label: string
+  rate: string
+  goal: string
+  is_active: boolean
+}
+
+export interface CommissionRun {
+  id: string
+  year: number
+  month: number
+  status: 'draft' | 'approved'
+  status_label: string
+  total: string
+  computed_at: string
+  computed_by: string
+  approved_at: string | null
+  approved_by: string
+  lines: {
+    id: string
+    user: string
+    role: CommissionRole
+    rule: string
+    base_label: string
+    base_amount: string
+    rate: string
+    goal: string
+    reached_goal: boolean
+    amount: string
+    payable: { id: string; status: string } | null
+  }[]
+}
+
+export interface CommissionMonth {
+  year: number
+  month: number
+  run: CommissionRun | null
+}
+
+export function listCommissionRules(): Promise<CommissionRule[]> {
+  return api('/api/v1/comisiones/reglas/')
+}
+
+export function saveCommissionRule(
+  rule: Partial<CommissionRule> & { id?: string },
+): Promise<CommissionRule> {
+  return rule.id
+    ? api(`/api/v1/comisiones/reglas/${rule.id}/`, { method: 'PATCH', body: rule })
+    : api('/api/v1/comisiones/reglas/', { method: 'POST', body: rule })
+}
+
+export function getCommissions(year: number, month: number): Promise<CommissionMonth> {
+  return api(`/api/v1/comisiones/${toQuery({ anio: year, mes: month })}`)
+}
+
+export function calculateCommissions(year: number, month: number): Promise<CommissionMonth> {
+  return api('/api/v1/comisiones/', { method: 'POST', body: { anio: year, mes: month } })
+}
+
+export function approveCommissions(id: string): Promise<CommissionMonth> {
+  return api(`/api/v1/comisiones/${id}/aprobar/`, { method: 'POST' })
 }

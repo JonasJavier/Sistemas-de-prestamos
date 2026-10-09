@@ -104,6 +104,8 @@ function navFor(me: Me): NavGroup[] {
   if (hasRole(me, ACCESS.indicators)) reports.push({ to: '/reportes/cartera', label: 'Cartera' })
   if (hasRole(me, ACCESS.scores))
     reports.push({ to: '/reportes/clasificacion', label: 'Clasificación' })
+  if (hasRole(me, ACCESS.commissions))
+    reports.push({ to: '/reportes/comisiones', label: 'Comisiones' })
   if (reports.length) groups.push({ title: 'Reportes', items: reports })
   if (me.is_manager) {
     groups.push({

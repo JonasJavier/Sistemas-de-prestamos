@@ -59,3 +59,41 @@ test('el oficial ve la clasificación y su porqué', async ({ browser }) => {
     officer.getByText(/Cuotas pagadas a tiempo|Sin cuotas vencidas/).first(),
   ).toBeVisible()
 })
+
+test('el gerente define una comisión y calcula el mes', async ({ browser }) => {
+  const manager = await sessionFor(browser, MODELO.gerente)
+  await manager.goto('/reportes/comisiones')
+  await expect(manager.getByRole('heading', { name: 'Comisiones', level: 1 })).toBeVisible()
+  // The tours run again on the same data: reuse the rule if a run left it.
+  const existing = manager.getByText('Cobradores del recorrido')
+  if (!(await existing.count())) {
+    await manager.getByRole('button', { name: 'Nueva regla' }).click()
+    const dialog = manager.getByRole('dialog')
+    await dialog.getByLabel('Nombre').fill('Cobradores del recorrido')
+    await dialog.getByRole('combobox', { name: /^Rol/ }).selectOption('Cobrador')
+    await dialog.getByLabel('Porcentaje').fill('10')
+    await dialog.getByRole('button', { name: 'Guardar' }).click()
+    await expect(manager.getByText('Regla guardada.')).toBeVisible()
+  } else {
+    await manager
+      .getByRole('listitem')
+      .filter({ hasText: 'Cobradores del recorrido' })
+      .getByRole('button', { name: 'Editar' })
+      .click()
+    await manager.getByRole('dialog').getByLabel('Activa').check()
+    await manager.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
+  }
+  await manager.getByRole('button', { name: /^(Calcular|Recalcular)$/ }).click()
+  await expect(manager.getByText('Comisiones calculadas.')).toBeVisible()
+  await expect(manager.getByRole('cell', { name: /Carlos Cobrador/ })).toBeVisible()
+
+  // Leave no active rule: the month-end close of other tours needs none pending.
+  await manager
+    .getByRole('listitem')
+    .filter({ hasText: 'Cobradores del recorrido' })
+    .getByRole('button', { name: 'Editar' })
+    .click()
+  await manager.getByRole('dialog').getByLabel('Activa').uncheck()
+  await manager.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
+  await expect(manager.getByText('Inactiva')).toBeVisible()
+})

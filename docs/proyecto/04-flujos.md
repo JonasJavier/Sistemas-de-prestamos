@@ -378,7 +378,7 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
 > - **Cuentas por pagar:** se registran por devengo. Una factura entra con su fecha; las cuotas de una serie entran al vencer o al pagarse antes. Admiten pagos parciales, y cancelar lo pendiente revierte su parte del gasto.
 > - **Conciliación:** el extracto en CSV o Excel se empareja automáticamente (mismo monto y hasta 3 días de diferencia) o a mano, y los cargos del banco se registran desde su línea. Se cierra cuando todo cuadra.
 > - **Cierre de mes:**
->   - Lista de verificación: meses anteriores cerrados, mes terminado, cajas cerradas, rutas rendidas, bancos conciliados y ningún gasto por aprobar. Las comisiones llegan en la fase 7.
+>   - Lista de verificación: meses anteriores cerrados, mes terminado, cajas cerradas, rutas rendidas, bancos conciliados, ningún gasto por aprobar y, si hay reglas de comisión activas, las comisiones del mes aprobadas (fase 7, decisión 089).
 >   - Al cerrar se asienta el devengo y su reverso, se bloquea el mes (también en la base de datos) y se emite el PDF del cierre.
 >   - Se reabre solo el último mes cerrado, con motivo, y eso anula su devengo.
 

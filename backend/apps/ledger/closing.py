@@ -259,15 +259,11 @@ def checklist(year: int, month: int) -> Checklist:
     result.checks.append(
         Check("expenses", "Ningún gasto del mes espera aprobación", not pending, ", ".join(pending))
     )
-    result.checks.append(
-        Check(
-            "commissions",
-            "Comisiones calculadas",
-            True,
-            "Las comisiones llegan con los reportes (fase 7).",
-            blocking=False,
-        )
-    )
+    # Phase 7 (decision 089): with commission rules, the month's run is approved.
+    from apps.reports.commissions import is_settled
+
+    settled, detail = is_settled(year, month)
+    result.checks.append(Check("commissions", "Comisiones del mes aprobadas", settled, detail))
     return result
 
 

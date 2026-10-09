@@ -32,6 +32,7 @@ const PayablesPage = lazyRouteComponent(() => import('./pages/Payables'), 'Payab
 const ResultsPage = lazyRouteComponent(() => import('./pages/Results'), 'ResultsPage')
 const ReportsPage = lazyRouteComponent(() => import('./pages/Reports'), 'ReportsPage')
 const ScoresPage = lazyRouteComponent(() => import('./pages/Scores'), 'ScoresPage')
+const CommissionsPage = lazyRouteComponent(() => import('./pages/Commissions'), 'CommissionsPage')
 const PortfolioReportPage = lazyRouteComponent(
   () => import('./pages/PortfolioReport'),
   'PortfolioReportPage',
@@ -407,6 +408,13 @@ const reportsRoute = createRoute({
   component: ReportsPage,
 })
 
+const commissionsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/reportes/comisiones',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.commissions),
+  component: withMe(CommissionsPage),
+})
+
 const scoresRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/reportes/clasificacion',
@@ -596,6 +604,7 @@ const routeTree = rootRoute.addChildren([
     portfolioReportRoute,
     reportsRoute,
     scoresRoute,
+    commissionsRoute,
     fiscalRoute,
     productsRoute,
     companySettingsRoute,

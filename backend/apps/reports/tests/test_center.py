@@ -46,9 +46,11 @@ def test_each_role_sees_its_reports(tenant) -> None:
         "caja",
         "gestiones",
         "resultados",
+        "comisiones",
         "clasificacion",
     ]
     assert "resultados" not in keys(tenant, "supervisor")
+    assert "comisiones" not in keys(tenant, "supervisor")
     assert keys(tenant, "contabilidad") == manager[:-1]  # doc 07: P62 is G, Su, O and Au
     assert keys(tenant, "oficial") == ["atrasos", "clasificacion"]
     assert keys(tenant, "cobrador") == []

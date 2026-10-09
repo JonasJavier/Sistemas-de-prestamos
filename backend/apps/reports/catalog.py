@@ -100,7 +100,8 @@ class Table:
 class Filter:
     key: str
     label: str
-    kind: str  # date · from · to · branch · collector · product · method · cut · bucket · grade
+    # date · from · to · month · branch · collector · product · method · cut · bucket · grade
+    kind: str
 
 
 @dataclass(frozen=True)
@@ -164,6 +165,17 @@ class Params:
             raise ReportError("desde", "El período no puede pasar de un año.")
         self.parts.append(f"Del {date_from:%d/%m/%Y} al {date_to:%d/%m/%Y}")
         return date_from, date_to
+
+    def month(self) -> tuple[int, int]:
+        today = timezone.localdate()
+        raw = self.text("mes") or f"{today:%Y-%m}"
+        try:
+            year, month = (int(part) for part in raw.split("-"))
+            dt.date(year, month, 1)
+        except ValueError as exc:
+            raise ReportError("mes", "Mes inválido (AAAA-MM).") from exc
+        self.parts.append(f"Mes: {month:02d}/{year}")
+        return year, month
 
     def scope(self) -> None:
         self.parts.append(f"Sucursal: {scope_label(self.branches)}")
@@ -836,6 +848,54 @@ def _scores(p: Params) -> Table:
     )
 
 
+def _commissions(p: Params) -> Table:
+    from apps.reports.models import CommissionRun
+
+    year, month = p.month()
+    run = CommissionRun.objects.filter(year=year, month=month).first()
+    lines = (
+        run.lines.select_related("user", "rule").order_by("-amount", "user__first_name")
+        if run
+        else []
+    )
+    rows = [
+        {
+            "user": _person(line.user),
+            "role": line.rule.role,
+            "rule": line.rule.name,
+            "base_label": line.rule.get_base_display(),
+            "base": line.base_amount,
+            "rate": line.rate,
+            "goal": line.goal,
+            "amount": line.amount,
+        }
+        for line in lines
+    ]
+    status = run.get_status_display() if run else "Sin calcular"
+    return Table(
+        title="Comisiones",
+        filters_line=p.line + f" · {status}",
+        columns=[
+            Column("user", "Empleado"),
+            Column("role", "Rol"),
+            Column("rule", "Regla"),
+            Column("base_label", "Base"),
+            Column("base", "Monto base", "money", total=True),
+            Column("rate", "Porcentaje", "pct"),
+            Column("goal", "Meta", "money"),
+            Column("amount", "Comisión", "money", total=True),
+        ],
+        rows=rows,
+        summary=[
+            {"label": "Total de comisiones", "value": run.total if run else ZERO, "kind": "money"},
+            {"label": "Estado", "value": status, "kind": "text"},
+        ],
+        note="Con meta, la comisión se gana sobre toda la base solo si la base llega a la meta. "
+        "Un reverso resta en el mes en que se hace; un desembolso anulado no cuenta.",
+        landscape=True,
+    )
+
+
 OPERATIONAL = frozenset({G, SU, CT, AU})
 FINANCIAL = frozenset({G, CT, AU})
 PERIOD = (Filter("desde", "Desde", "from"), Filter("hasta", "Hasta", "to"))
@@ -914,6 +974,15 @@ REPORTS: dict[str, Report] = {
             FINANCIAL,
             (*PERIOD, BRANCH),
             _results,
+            group="Finanzas",
+        ),
+        Report(
+            "comisiones",
+            "Comisiones",
+            "Cálculo del mes por empleado, con su regla.",
+            frozenset({G, CT, AU}),
+            (Filter("mes", "Mes", "month"),),
+            _commissions,
             group="Finanzas",
         ),
         Report(

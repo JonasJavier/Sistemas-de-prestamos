@@ -73,6 +73,18 @@ function FilterField({
       </Field>
     )
   }
+  if (spec.kind === 'month') {
+    return (
+      <Field label={spec.label}>
+        <Input
+          type="month"
+          max={todayISO().slice(0, 7)}
+          value={value || todayISO().slice(0, 7)}
+          onChange={(e) => onChange(spec.key, e.target.value)}
+        />
+      </Field>
+    )
+  }
   const choices = options[spec.kind] ?? []
   if (spec.kind === 'branch' && choices.length < 2) return null
   return (
