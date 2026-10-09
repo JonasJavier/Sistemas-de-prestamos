@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { listBranches, type Me } from '../api/accounts'
 import { listProducts } from '../api/lending'
 import { getPortfolioReport, type PortfolioCut, type PortfolioFilters } from '../api/reports'
+import { ExportButtons } from '../components/ExportButtons'
 import { Kpi } from '../components/Kpi'
 import {
   Button,
@@ -45,9 +46,14 @@ export function PortfolioReportPage({ me }: { me: Me }) {
         title="Cartera"
         subtitle="Capital pendiente de los préstamos activos, su antigüedad y la cartera en riesgo, con cortes por sucursal, cobrador y producto."
         actions={
-          <Button variant="secondary" onClick={() => printArea('letter')}>
-            Imprimir
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => printArea('letter')}>
+              Imprimir
+            </Button>
+            {hasRole(me, ['Gerente', 'Supervisor', 'Contabilidad', 'Auditoría']) ? (
+              <ExportButtons report="cartera" filters={{ ...filters }} />
+            ) : null}
+          </div>
         }
       />
       <div className="flex flex-wrap items-end gap-3">

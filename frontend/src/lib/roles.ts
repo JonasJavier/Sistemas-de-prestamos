@@ -52,6 +52,8 @@ export const ACCESS = {
   // Phase 7 (tablero y reportes, decision 086).
   /** Indicators and the portfolio report (P10, P60). */
   indicators: [G, SU, CT, AU],
+  /** P64: the report center (the officer reads his branches' arrears). */
+  reports: [G, SU, OF, CT, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

@@ -19,3 +19,7 @@ REST_FRAMEWORK = {  # noqa: F405
 }
 
 INTERNAL_IPS = ["127.0.0.1"]
+
+# Without a worker running, tasks (report exports) run in the request's
+# process right after it commits; CELERY_EAGER=false to try a real worker.
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_EAGER", default=True)

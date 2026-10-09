@@ -85,3 +85,82 @@ export interface PortfolioReport {
 export function getPortfolioReport(filters: PortfolioFilters): Promise<PortfolioReport> {
   return api(`/api/v1/reportes/cartera/${toQuery({ ...filters })}`)
 }
+
+// --- P64 «Centro de reportes» (decision 087) ---------------------------------
+
+export type FilterKind =
+  'date' | 'from' | 'to' | 'branch' | 'collector' | 'product' | 'method' | 'cut' | 'bucket'
+
+export interface ReportSpec {
+  key: string
+  title: string
+  description: string
+  group: string
+  filters: { key: string; label: string; kind: FilterKind }[]
+}
+
+export interface Option {
+  value: string
+  label: string
+}
+
+export interface ReportCatalog {
+  reports: ReportSpec[]
+  options: Partial<Record<FilterKind, Option[]>>
+  can_export: boolean
+  exports_personal: boolean
+}
+
+export type ColumnKind = 'text' | 'money' | 'int' | 'date' | 'pct'
+
+export interface ReportTable {
+  title: string
+  filters_line: string
+  columns: { key: string; label: string; kind: ColumnKind; personal: boolean }[]
+  rows: Record<string, string | number | null>[]
+  count: number
+  truncated: boolean
+  totals: Record<string, string>
+  summary: { label: string; value: string | number | null; kind: ColumnKind; hint?: string }[]
+  note: string
+}
+
+export type Filters = Record<string, string | undefined>
+
+export interface ExportJob {
+  id: string
+  report: string
+  title: string
+  filters_line: string
+  format: 'pdf' | 'xlsx'
+  format_label: string
+  status: 'pending' | 'running' | 'done' | 'failed' | 'expired'
+  status_label: string
+  personal: boolean
+  rows: number
+  error: string
+  created_at: string
+  finished_at: string | null
+}
+
+export function getReportCatalog(): Promise<ReportCatalog> {
+  return api('/api/v1/reportes/')
+}
+
+export function getReport(key: string, filters: Filters): Promise<ReportTable> {
+  return api(`/api/v1/reportes/${key}/datos/${toQuery(filters)}`)
+}
+
+export function requestExport(
+  key: string,
+  format: ExportJob['format'],
+  filters: Filters,
+): Promise<ExportJob> {
+  return api(`/api/v1/reportes/${key}/exportar/`, { method: 'POST', body: { format, filters } })
+}
+
+export function listMyExports(): Promise<ExportJob[]> {
+  return api('/api/v1/exportaciones/')
+}
+
+export const exportFileUrl = (id: string) => `/api/v1/exportaciones/${id}/archivo/`

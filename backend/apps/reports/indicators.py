@@ -55,7 +55,7 @@ DEFINITIONS = {
 }
 
 
-def _ratio(part: Decimal, whole: Decimal) -> Decimal | None:
+def ratio(part: Decimal, whole: Decimal) -> Decimal | None:
     return (part / whole).quantize(Decimal("0.0001")) if whole else None
 
 
@@ -123,15 +123,15 @@ class Portfolio:
 
     @property
     def par7(self) -> Decimal | None:
-        return _ratio(self.at_risk7, self.principal)
+        return ratio(self.at_risk7, self.principal)
 
     @property
     def par30(self) -> Decimal | None:
-        return _ratio(self.at_risk30, self.principal)
+        return ratio(self.at_risk30, self.principal)
 
     @property
     def par90(self) -> Decimal | None:
-        return _ratio(self.at_risk90, self.principal)
+        return ratio(self.at_risk90, self.principal)
 
     def as_dict(self) -> dict:
         return {
@@ -293,7 +293,7 @@ def expected(day: dt.date, *, branches: Branches = None) -> Decimal:
 def day_collection(day: dt.date, *, branches: Branches = None) -> dict:
     got = collected(day, branches=branches)
     owed = expected(day, branches=branches)
-    return {"date": day, "collected": got, "expected": owed, "recovery": _ratio(got, owed)}
+    return {"date": day, "collected": got, "expected": owed, "recovery": ratio(got, owed)}
 
 
 # --- Period figures ---------------------------------------------------------------------------
@@ -326,7 +326,7 @@ def promise_compliance(date_from: dt.date, date_to: dt.date, *, branches: Branch
         broken=Count("id", filter=Q(status=PaymentPromise.Status.BROKEN)),
     )
     kept, broken = counts["kept"], counts["broken"]
-    return {"kept": kept, "broken": broken, "rate": _ratio(Decimal(kept), Decimal(kept + broken))}
+    return {"kept": kept, "broken": broken, "rate": ratio(Decimal(kept), Decimal(kept + broken))}
 
 
 def cash_differences(date_from: dt.date, date_to: dt.date, *, branches: Branches = None) -> dict:

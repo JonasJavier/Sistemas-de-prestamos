@@ -1,0 +1,31 @@
+{% extends "documents/base.html" %}
+{% block title %}{{ table.title }}{% endblock %}
+{% block heading %}{{ table.title|upper }}{% endblock %}
+{% block number %}{{ issued_at|date:"d/m/Y H:i" }}{% endblock %}
+{% block content %}
+{% if table.landscape %}<style>@page { size: letter landscape; }</style>{% endif %}
+<style>
+  .filters { font-size: 8.5pt; color: #4a5a52; margin-bottom: 10px; }
+  .summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .summary > div { border: 1px solid #d5ddd8; border-radius: 4px; padding: 4px 8px; min-width: 110px; }
+  .summary .label { font-size: 7.5pt; color: #4a5a52; }
+  .summary .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .summary .hint { font-size: 7pt; color: #5b6b63; }
+  table.grid { font-size: 8pt; }
+  table.grid tr.total td { font-weight: 700; border-top: 1.5px solid #15402F; border-bottom: none; }
+  .note { margin-top: 10px; font-size: 7.5pt; color: #5b6b63; }
+</style>
+<div class="filters">{{ table.filters_line }}</div>
+{% if summary %}<div class="summary">{% for item in summary %}<div><div class="label">{{ item.label }}</div><div class="value">{{ item.text }}</div>{% if item.hint %}<div class="hint">{{ item.hint }}</div>{% endif %}</div>{% endfor %}</div>{% endif %}
+{% if body %}
+<table class="grid">
+  <thead><tr>{% for label, right in head %}<th{% if right %} class="num"{% endif %}>{{ label }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in body %}<tr>{% for text, right in row %}<td{% if right %} class="num"{% endif %}>{{ text }}</td>{% endfor %}</tr>{% endfor %}
+  {# The totals close the last page: a tfoot would repeat on every page. #}
+  {% if foot %}<tr class="total">{% for text, right in foot %}<td{% if right %} class="num"{% endif %}>{% if forloop.first and not text %}Total{% else %}{{ text }}{% endif %}</td>{% endfor %}</tr>{% endif %}</tbody>
+</table>
+{% else %}
+<p class="muted">Sin datos con estos filtros.</p>
+{% endif %}
+{% if table.note %}<p class="note">{{ table.note }}</p>{% endif %}
+{% endblock %}

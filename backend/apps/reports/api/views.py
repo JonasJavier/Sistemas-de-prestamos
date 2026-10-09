@@ -12,15 +12,14 @@ from uuid import UUID
 
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts import authz
 from apps.accounts.api.permissions import role_required
-from apps.core.models import Branch
-from apps.reports import indicators
+from apps.reports import catalog, indicators
 
 G, SU, OF, CT, AU = (
     authz.GERENTE,
@@ -66,22 +65,10 @@ def _date(request: Request, key: str, default: dt.date) -> dt.date:
 
 def scope_of(request: Request) -> tuple[frozenset[UUID] | None, UUID | None]:
     """The branches a figure covers, and the one picked (if any)."""
-    scope = authz.branch_scope(request.user)
-    picked = _uuid(request, "sucursal")
-    if picked is None:
-        return scope, None
-    if scope is not None and picked not in scope:
-        raise NotFound("Sucursal fuera de tu alcance.")
-    if not Branch.objects.filter(pk=picked).exists():
-        raise NotFound("Sucursal no encontrada.")
-    return frozenset({picked}), picked
+    return catalog.resolve_branches(request.user, _uuid(request, "sucursal"))
 
 
-def scope_label(branches: frozenset[UUID] | None) -> str:
-    if branches is None:
-        return "Toda la empresa"
-    names = sorted(Branch.objects.filter(id__in=branches).values_list("name", flat=True))
-    return ", ".join(names) or "Sin sucursal"
+scope_label = catalog.scope_label
 
 
 def _indicators(today: dt.date, branches, picked, *, with_profit: bool) -> dict:

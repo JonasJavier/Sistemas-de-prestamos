@@ -85,6 +85,10 @@ def run_nightly(company_id, today: dt.date) -> dict:
             link="/rutas",
         )
     purged = purge_pings(today)
+    # Phase 7: exported report files live a few days (decision 087).
+    from apps.reports.exports import purge as purge_exports
+
+    exports_expired = purge_exports(today)
     problems = reconciliation.check(company_id)
     if problems:
         notify(
@@ -102,6 +106,7 @@ def run_nightly(company_id, today: dt.date) -> dict:
         "broken_promises": len(broken),
         "escalated": escalated,
         "payables_recognized": recognized,
+        "exports_expired": exports_expired,
         **differences,
     }
 

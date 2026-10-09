@@ -8,7 +8,7 @@
     size: letter;
     margin: 20mm 18mm 26mm 18mm;
     @bottom-left {
-      content: "Folio {{ folio }} · Emitido por {{ issuer_label }} el {{ issued_at|date:'d/m/Y H:i' }}";
+      content: "{% if folio %}Folio {{ folio }} · {% endif %}Emitido por {{ issuer_label }} el {{ issued_at|date:'d/m/Y H:i' }}";
       font: 7.5pt "Inter", "Segoe UI", Arial, sans-serif; color: #5b6b63;
     }
     @bottom-right {
@@ -59,7 +59,7 @@
   <div>
     <div class="company-name">{{ company.legal_name }}</div>
     <div class="company-meta">
-      {% if company.rnc %}RNC {{ company.rnc }} · {% endif %}{{ branch.name }}{% if branch.address %} · {{ branch.address }}{% endif %}
+      {% if company.rnc %}RNC {{ company.rnc }}{% if branch.name %} · {% endif %}{% endif %}{{ branch.name }}{% if branch.address %} · {{ branch.address }}{% endif %}
       {% if company.phone or branch.phone %}<br>Tel. {{ branch.phone|default:company.phone }}{% endif %}{% if company.email %} · {{ company.email }}{% endif %}
     </div>
   </div>
