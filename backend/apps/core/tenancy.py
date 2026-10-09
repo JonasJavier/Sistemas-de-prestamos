@@ -132,8 +132,8 @@ class TenantMiddleware:
     """Binds the request's database session to the user's company.
 
     Must run after AuthenticationMiddleware. Platform-admin users have no
-    company: they operate only on global tables unless a support-access
-    flow explicitly sets a company for them (phase 7).
+    company: they operate only on global tables, except inside a support
+    grant, which binds them to that company read-only (decision 091).
     """
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
@@ -143,6 +143,18 @@ class TenantMiddleware:
         company_id = (
             getattr(request.user, "company_id", None) if request.user.is_authenticated else None
         )
+        request.support_grant = None  # type: ignore[attr-defined]
+        if company_id is None and request.user.is_authenticated:
+            # PT4 (decision 091): the platform owner inside a support grant
+            # reads that company, read-only (apps.platform.middleware).
+            from apps.platform import support
+
+            access = support.current(request)
+            if access is not None:
+                company_id = access.company_id
+                request.support_grant = access  # type: ignore[attr-defined]
+                request.user.support_grant = access
+                request.user.company_id = company_id  # in memory only; saving is refused
         request.company_id = company_id  # type: ignore[attr-defined]
         if company_id is None:
             return self.get_response(request)

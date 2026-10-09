@@ -206,10 +206,12 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | `GeneratedDocument` | Documento emitido | Tipo, versión de plantilla, `legal_status` al emitir, objeto relacionado, folio, archivo, `sha256`, quién lo emitió (`verification_token` en la fase 9) | Solo admite inserciones (disparador); se reimprime idéntico y se verifica con QR (fase 9) |
 | `ExportJob` | Exportación en segundo plano | Usuario, reporte, filtros, formato, estado, archivo | Usa los mismos filtros que la pantalla |
 | `CustomerScore` | Clasificación (fase 7) | Cliente, puntuación, grado, factores, cuándo | Explicable (#38) |
-| `CommissionRule`, `CommissionRun`, `CommissionLine` | Comisiones (fase 7) | Regla, período, cálculo, aprobación | — |
+| `CommissionRule`, `CommissionRun`, `CommissionLine` | Comisiones (fase 7) | Regla por rol o persona (base, porcentaje, meta), cálculo del mes, aprobación | Al aprobar, cada monto pasa a cuentas por pagar (089) |
 | `Notification` | Aviso interno | Usuario, tipo, texto, enlace, leído | — |
 | `MessageTemplate`, `OutboundMessage`, `OptOut` | Mensajería (fase 9) | Canal, destinatario, texto, estado, proveedor, error | Registro de cada envío |
 | `DomainEvent` | Hecho de negocio | Tipo (`loan.disbursed`, `payment.posted`…), objeto, actor, datos, cuándo | Alimenta la cronología del cliente y del préstamo |
+| `LoginEvent` | Inicio de sesión (fase 7) | Usuario, hora, IP, navegador, dispositivo nuevo, fuera de horario | Alimenta las alertas antifraude (decisión 090) |
+| `FraudRule`, `FraudAlert` | Alertas antifraude (fase 7) | Patrón, umbral, ventana; alerta por persona con su revisión | Revisión nocturna; no se repite dentro de la ventana (090) |
 
 pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, la IP y el motivo.
 

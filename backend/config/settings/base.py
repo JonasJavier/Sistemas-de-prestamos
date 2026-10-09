@@ -67,6 +67,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "apps.accounts.middleware.SessionTimeoutMiddleware",
     "apps.core.tenancy.TenantMiddleware",
+    "apps.platform.middleware.SupportReadOnlyMiddleware",
     "apps.accounts.middleware.WorkingHoursMiddleware",
     "apps.accounts.middleware.MFARequiredMiddleware",
     "pghistory.middleware.HistoryMiddleware",

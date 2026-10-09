@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { getMe, type Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
-import { ACCESS, hasRole } from '../lib/roles'
+import { ACCESS, hasRole, platformView } from '../lib/roles'
 import { CommandPalette, type PaletteIntent } from './CommandPalette'
 import { Modal } from './Modal'
 import {
@@ -21,6 +21,7 @@ import {
   SunIcon,
 } from './icons'
 import { Brand, Button } from './ui'
+import { SupportBanner } from './Support'
 
 function ThemeToggle() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
@@ -61,7 +62,7 @@ interface NavGroup {
 
 /** Grouped navigation (decision 038): only what the role can use. */
 function navFor(me: Me): NavGroup[] {
-  if (me.is_platform_admin) {
+  if (platformView(me)) {
     return [
       { title: null, items: [{ to: '/plataforma', label: 'Empresas' }] },
       { title: null, items: [{ to: '/cuenta', label: 'Mi cuenta' }] },
@@ -209,7 +210,7 @@ function MobileBar({
 }) {
   const [open, setOpen] = useState(false)
   const collects = hasRole(me, ACCESS.collect)
-  const quick = me.is_platform_admin
+  const quick = platformView(me)
     ? [{ to: '/plataforma', label: 'Empresas', icon: <HomeIcon /> }]
     : hasRole(me, ACCESS.myRoute)
       ? [{ to: '/ruta', label: 'Mi ruta', icon: <RouteIcon /> }]
@@ -257,7 +258,7 @@ function MobileBar({
             {item.label}
           </Link>
         ))}
-        {!me.is_platform_admin ? (
+        {!platformView(me) ? (
           <button
             type="button"
             className={barItem}
@@ -341,7 +342,7 @@ export function AppShell({
   const me = live.data ?? initialMe
   const [searching, setSearching] = useState<PaletteIntent | null>(null)
   const closeSearch = useCallback(() => setSearching(null), [])
-  const searchable = !me.is_platform_admin
+  const searchable = !platformView(me)
 
   useEffect(() => {
     if (!searchable) return
@@ -364,7 +365,11 @@ export function AppShell({
 
   const groups = navFor(me)
   const name = [me.first_name, me.last_name].filter(Boolean).join(' ') || user.email
-  const roleText = me.is_platform_admin ? 'Dueño de la plataforma' : me.roles.join(' · ')
+  const roleText = platformView(me)
+    ? 'Dueño de la plataforma'
+    : me.support
+      ? 'Soporte de Cobradía · solo lectura'
+      : me.roles.join(' · ')
   return (
     <div className="flex min-h-screen">
       <a
@@ -388,11 +393,12 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <SupportBanner me={me} />
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-edge bg-surface/95 px-4 backdrop-blur">
           <span className="sm:hidden">
             <Brand className="text-lg" />
           </span>
-          {!me.is_platform_admin ? (
+          {!platformView(me) ? (
             <button
               type="button"
               onClick={() => setSearching('buscar')}
@@ -414,7 +420,7 @@ export function AppShell({
                 {roleText}
               </div>
             </div>
-            {!me.is_platform_admin ? <Bell me={me} /> : null}
+            {!platformView(me) ? <Bell me={me} /> : null}
             <ThemeToggle />
             <Button
               variant="secondary"

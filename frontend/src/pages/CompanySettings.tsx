@@ -10,6 +10,7 @@ import {
   uploadCompanyLogo,
 } from '../api/company'
 import { EscalationRulesCard } from '../components/EscalationRulesCard'
+import { CompanySupportCard } from '../components/Support'
 import {
   Alert,
   Button,
@@ -32,6 +33,8 @@ export function CompanySettingsPage() {
         title="Empresa"
         subtitle="Los datos que encabezan recibos, pagarés y reportes, y los valores con que opera tu financiera."
       />
+      {/* Doc 06 §10: support access is visible here, with its history. */}
+      <CompanySupportCard />
       {settings.data ? (
         // Remount when the saved data changes so every field starts from it.
         <CompanyForm key={JSON.stringify(settings.data)} data={settings.data} />

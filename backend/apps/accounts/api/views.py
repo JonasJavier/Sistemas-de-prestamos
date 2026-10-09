@@ -77,11 +77,8 @@ class MeView(APIView):
 
         user = request.user
         mfa_enabled = Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).exists()
-        roles: list[str] = []
-        if user.company_id:
-            roles = sorted(
-                Membership.objects.filter(user=user).values_list("role__name", flat=True).distinct()
-            )
+        roles: list[str] = sorted(authz.role_names(user)) if user.company_id else []
+        access = getattr(request, "support_grant", None)
         return Response(
             {
                 "id": str(user.id),
@@ -98,7 +95,11 @@ class MeView(APIView):
                 "mfa_enabled": mfa_enabled,
                 "mfa_required": settings.REQUIRE_MFA,
                 "location_consent": user.location_consent_at is not None,
-                **(_badges(user) if user.company_id else {}),
+                **(_badges(user) if user.company_id and access is None else {}),
+                # PT4 (decision 091): the platform owner reading a company.
+                "support": None
+                if access is None
+                else {"grant": str(access.id), "ends_at": access.ends_at, "reason": access.reason},
             }
         )
 

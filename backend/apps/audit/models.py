@@ -20,6 +20,7 @@ class SensitiveAccessLog(CompanyScopedModel):
         DOCUMENT = "document", "Documento emitido"
         OTHER_BRANCH = "other_branch", "Cliente de otra sucursal"
         LOCATION_MAP = "location_map", "Mapa de cobradores"
+        SUPPORT_READ = "support_read", "Lectura del soporte de Cobradía"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     action = models.CharField(max_length=20, choices=Action)

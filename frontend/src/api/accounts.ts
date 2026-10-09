@@ -22,6 +22,8 @@ export interface Me {
   route_open?: boolean
   /** Phase 5: my promises and follow-ups due by today (P44). */
   agenda_today?: number
+  /** PT4 (decision 091): the platform owner reading a company, read-only. */
+  support?: { grant: string; ends_at: string; reason: string } | null
 }
 
 export function getMe(): Promise<Me> {

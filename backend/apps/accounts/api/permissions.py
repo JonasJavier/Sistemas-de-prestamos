@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+from apps.accounts import authz
 from apps.accounts.models import Membership
 
 if TYPE_CHECKING:
@@ -71,9 +72,7 @@ def role_required(
                 cache = request._role_cache = {}  # noqa: SLF001 - request-local cache
             allowed = cache.get(wanted)
             if allowed is None:
-                allowed = Membership.objects.filter(
-                    user=request.user, role__name__in=wanted
-                ).exists()
+                allowed = bool(authz.role_names(request.user) & wanted)
                 cache[wanted] = allowed
             return allowed
 

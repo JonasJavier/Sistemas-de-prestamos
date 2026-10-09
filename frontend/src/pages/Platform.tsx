@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { usePrompt } from '../components/Dialog'
 
 import {
+  getPlatformDashboard,
   listCompanies,
   reactivateCompany,
   recordPayment,
@@ -10,13 +11,88 @@ import {
   type PaymentPayload,
   type PlatformCompany,
 } from '../api/platform'
+import { Kpi } from '../components/Kpi'
+import { SupportDialog } from '../components/Support'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
-import { day, STATUS_BADGES, todayISO } from '../lib/format'
+import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
+
+/** PT2 (decision 091): companies, conversion, payments due and usage
+ * counts; never a customer, a loan or an amount of a company. */
+function PlatformDashboard() {
+  const board = useQuery({ queryKey: ['platform-dashboard'], queryFn: getPlatformDashboard })
+  const data = board.data
+  if (!data) return null
+  const c = data.companies
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi
+          label="Empresas activas"
+          value={String(c.active_paid)}
+          hint={`${c.active} activas · ${c.suspended} suspendidas`}
+          help={data.definitions.active}
+        />
+        <Kpi
+          label="En prueba"
+          value={String(c.trial)}
+          hint={`${data.trials_ending.length} terminan en 7 días`}
+        />
+        <Kpi
+          label={`Conversión de la prueba (${data.conversion.days} días)`}
+          value={pct(data.conversion.rate, 0)}
+          hint={`${data.conversion.converted} de ${data.conversion.ended} pruebas terminadas`}
+          help={data.definitions.conversion}
+        />
+        <Kpi
+          label={`Uso (${data.usage.days} días)`}
+          value={`${data.usage.totals.active_users} usuarios`}
+          hint={`${data.usage.totals.active_loans} préstamos activos · ${data.usage.totals.payments} cobros`}
+          help={data.definitions.usage}
+        />
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card className="space-y-2">
+          <h2 className="text-base font-semibold">Pagos por vencer o vencidos</h2>
+          {data.payments_due.length ? (
+            <ul className="divide-y divide-edge text-sm">
+              {data.payments_due.map((row) => (
+                <li key={row.id} className="flex justify-between gap-2 py-1.5">
+                  <span>
+                    {row.name} <span className="text-muted">· {row.plan}</span>
+                  </span>
+                  <span className={row.overdue ? 'text-danger-600' : 'text-muted'}>
+                    {row.paid_until ? `pagada hasta ${day(row.paid_until)}` : 'sin pago'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Nada por vencer esta semana.</p>
+          )}
+        </Card>
+        <Card className="space-y-2">
+          <h2 className="text-base font-semibold">Registros recientes</h2>
+          <ul className="divide-y divide-edge text-sm">
+            {data.recent.map((row) => (
+              <li key={row.id} className="flex justify-between gap-2 py-1.5">
+                <span>{row.name}</span>
+                <span className="text-muted">
+                  {STATUS_BADGES[row.status].text} · {day(row.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  )
+}
 
 export function PlatformPage() {
   const [dialog, ask] = usePrompt()
   const queryClient = useQueryClient()
   const [paying, setPaying] = useState<PlatformCompany | null>(null)
+  const [helping, setHelping] = useState<PlatformCompany | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const companies = useQuery({ queryKey: ['platform-companies'], queryFn: listCompanies })
 
@@ -44,10 +120,11 @@ export function PlatformPage() {
     <>
       {dialog}
       <PageHeader
-        title="Empresas de la plataforma"
-        subtitle="Estado, prueba y suscripción de cada empresa registrada."
+        title="Tablero de la plataforma"
+        subtitle="Empresas, prueba, suscripciones y uso agregado. Nunca datos de clientes ni montos de una empresa."
       />
       {message ? <Alert tone="info">{message}</Alert> : null}
+      <PlatformDashboard />
 
       <Card>
         {companies.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
@@ -84,6 +161,9 @@ export function PlatformPage() {
                     </td>
                     <td className="py-2 text-right">
                       <div className="flex justify-end gap-2">
+                        <Button variant="secondary" onClick={() => setHelping(company)}>
+                          Soporte
+                        </Button>
                         <Button variant="secondary" onClick={() => setPaying(company)}>
                           Registrar pago
                         </Button>
@@ -128,6 +208,7 @@ export function PlatformPage() {
         ) : null}
       </Card>
 
+      {helping ? <SupportDialog company={helping} onClose={() => setHelping(null)} /> : null}
       {paying ? (
         <PaymentForm
           company={paying}

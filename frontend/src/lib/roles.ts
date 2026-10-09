@@ -64,3 +64,7 @@ export const ACCESS = {
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>
   Boolean(me?.roles?.some((role) => roles.includes(role)))
+
+/** The platform's own screens: its owner, unless inside a support grant
+ * (then the company's screens, read-only, decision 091). */
+export const platformView = (me: Me | undefined) => Boolean(me?.is_platform_admin && !me.support)

@@ -35,6 +35,10 @@ def _cached(user: User, key: str, compute: Any) -> Any:
 
 
 def role_names(user: User) -> frozenset[str]:
+    # PT4 (decision 091): inside a support grant the platform owner reads
+    # with the «Auditoría» lens; the middleware keeps it read-only.
+    if getattr(user, "support_grant", None) is not None:
+        return frozenset({AUDITORIA})
     return _cached(
         user,
         "roles",

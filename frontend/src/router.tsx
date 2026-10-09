@@ -16,7 +16,7 @@ import { AppShell } from './components/AppShell'
 import { PublicPage } from './components/ui'
 import { buttonClass } from './components/classes'
 import { APPLICATION_TABS, type ApplicationsSearch, type ApplicationTab } from './lib/applications'
-import { ACCESS, hasRole } from './lib/roles'
+import { ACCESS, hasRole, platformView } from './lib/roles'
 import type { NewApplicationSearch } from './pages/ApplicationNew'
 import { DashboardPage } from './pages/Dashboard'
 import type { LoansSearch } from './pages/Loans'
@@ -203,7 +203,7 @@ const indexRoute = createRoute({
   path: '/',
   beforeLoad: ({ context }) => {
     const me = context.queryClient.getQueryData<Me>(['me'])
-    if (me?.is_platform_admin) throw redirect({ to: '/plataforma' })
+    if (platformView(me)) throw redirect({ to: '/plataforma' })
     // Doc 07 - P10: the collector goes straight to «Mi ruta».
     if (me?.roles.length && me.roles.every((role) => role === 'Cobrador')) {
       throw redirect({ to: '/ruta' })
