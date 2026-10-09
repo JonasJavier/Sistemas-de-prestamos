@@ -1,6 +1,6 @@
 /** P56 «Contabilidad» (decision 080): the chart, the books and manual entries. */
 
-import { api, toQuery, type Page } from './client'
+import { api, apiUpload, toQuery, type Page } from './client'
 
 export type AccountType = 'asset' | 'liability' | 'equity' | 'income' | 'expense'
 
@@ -150,3 +150,75 @@ export interface Period {
 }
 
 export const listPeriods = (): Promise<Period[]> => api('/api/v1/contabilidad/periodos/')
+
+// --- Bank reconciliation (decision 083) ---------------------------------------------------------
+
+export interface BookLine {
+  id: string
+  date: string
+  entry: string
+  description: string
+  amount: string
+}
+
+export interface Reconciliation {
+  id: string
+  account: string
+  account_name: string
+  year: number
+  month: number
+  status: 'draft' | 'closed'
+  status_label: string
+  closed_at: string | null
+  closed_by_name: string | null
+  summary: {
+    book_balance: string
+    in_transit: string
+    expected_statement: string
+    statement_closing: string
+    difference: string
+    unmatched_statement: number
+    can_close: boolean
+  }
+  lines: {
+    id: string
+    date: string
+    description: string
+    reference: string
+    amount: string
+    matched: BookLine | null
+  }[]
+  in_transit: BookLine[]
+  imported?: { added: number; skipped: number }
+  matched?: number
+}
+
+export const startReconciliation = (body: {
+  account: string
+  year: number
+  month: number
+  statement_closing: string
+}): Promise<Reconciliation> => api('/api/v1/conciliaciones/', { method: 'POST', body })
+
+export const getReconciliation = (id: string): Promise<Reconciliation> =>
+  api(`/api/v1/conciliaciones/${id}/`)
+
+export function importStatement(id: string, file: File): Promise<Reconciliation> {
+  const form = new FormData()
+  form.append('file', file)
+  return apiUpload(`/api/v1/conciliaciones/${id}/extracto/`, form)
+}
+
+export const autoMatch = (id: string): Promise<Reconciliation> =>
+  api(`/api/v1/conciliaciones/${id}/emparejar/`, { method: 'POST' })
+
+export const closeReconciliation = (id: string): Promise<Reconciliation> =>
+  api(`/api/v1/conciliaciones/${id}/cerrar/`, { method: 'POST' })
+
+export const statementLineAction = (
+  id: string,
+  lineId: string,
+  verb: 'emparejar' | 'desemparejar' | 'registrar',
+  body: { book?: string; counterpart?: string; description?: string } = {},
+): Promise<Reconciliation> =>
+  api(`/api/v1/conciliaciones/${id}/lineas/${lineId}/${verb}/`, { method: 'POST', body })

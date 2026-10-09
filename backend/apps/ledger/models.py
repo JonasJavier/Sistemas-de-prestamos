@@ -309,3 +309,62 @@ class AccountingPeriod(CompanyScopedModel):
 
     def __str__(self) -> str:
         return f"{self.month:02d}/{self.year}"
+
+
+class BankReconciliation(CompanyScopedModel):
+    """A bank account's month checked against its statement (F15, 083)."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "En curso"
+        CLOSED = "closed", "Conciliada"
+
+    account = models.ForeignKey(
+        FinancialAccount, on_delete=models.PROTECT, related_name="reconciliations"
+    )
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    statement_closing = models.DecimalField(max_digits=16, decimal_places=2)
+    status = models.CharField(max_length=10, choices=Status, default=Status.DRAFT)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "year", "month"], name="bank_reconciliation_unique"
+            ),
+            models.CheckConstraint(
+                condition=Q(status="draft") | Q(closed_at__isnull=False),
+                name="bank_reconciliation_closed_has_time",
+            ),
+        ]
+
+
+class BankStatementLine(CompanyScopedModel):
+    """One line of the imported statement and what it was matched to."""
+
+    reconciliation = models.ForeignKey(
+        BankReconciliation, on_delete=models.CASCADE, related_name="lines"
+    )
+    date = models.DateField()
+    description = models.CharField(max_length=300)
+    reference = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)  # + deposit, - withdrawal
+    matched_line = models.OneToOneField(
+        JournalLine, null=True, blank=True, on_delete=models.PROTECT, related_name="statement_line"
+    )
+    matched_at = models.DateTimeField(null=True, blank=True)
+    matched_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=~Q(amount=0), name="statement_line_not_zero"),
+        ]
+        indexes = [models.Index(fields=["company", "reconciliation", "date"])]
