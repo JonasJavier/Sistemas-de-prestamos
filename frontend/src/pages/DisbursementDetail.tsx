@@ -125,8 +125,10 @@ export function DisbursementDetailPage() {
   const drawer = data.cash_session
   const available =
     method === 'cash' ? (drawer ? Number(drawer.cash) : 0) : Number(chosen?.balance ?? 0)
+  // F11 (decision 092): a renewal hands over only what the old loan's payoff leaves.
+  const handOver = data.renewal ? data.renewal.net : sim.net_disbursed
   const short =
-    (method === 'cash' ? Boolean(drawer) : Boolean(chosen)) && available < Number(sim.net_disbursed)
+    (method === 'cash' ? Boolean(drawer) : Boolean(chosen)) && available < Number(handOver)
   const ready = method === 'cash' ? Boolean(drawer?.branch_matches) : Boolean(source)
   const failure = run.error instanceof ApiError ? run.error.data : null
 
@@ -160,7 +162,14 @@ export function DisbursementDetailPage() {
                 : undefined
           }
         />
-        <Stat label="Neto a entregar" value={rd(sim.net_disbursed)} emphasis />
+        <Stat
+          label="Neto a entregar"
+          value={rd(handOver)}
+          emphasis
+          hint={
+            data.renewal ? `liquida ${data.renewal.loan}: ${rd(data.renewal.payoff)}` : undefined
+          }
+        />
         <Stat
           label="Primera cuota"
           value={day(sim.schedule[0]?.due_date)}
@@ -238,7 +247,7 @@ export function DisbursementDetailPage() {
             onClick={() => run.mutate()}
             disabled={!identity || !ready || short || data.blockers.length > 0 || run.isPending}
           >
-            {run.isPending ? 'Desembolsando…' : `Desembolsar ${rd(sim.net_disbursed)}`}
+            {run.isPending ? 'Desembolsando…' : `Desembolsar ${rd(handOver)}`}
           </Button>
         </div>
       </Card>

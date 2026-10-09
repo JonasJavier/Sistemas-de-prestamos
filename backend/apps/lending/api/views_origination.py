@@ -71,6 +71,7 @@ CA, CO, CT, AU = authz.CAJERO, authz.COBRADOR, authz.CONTABILIDAD, authz.AUDITOR
 CanOriginate = role_required(G, SU, OF, read_any=False, read_roles=(CA, CT, AU))
 CanDecide = role_required(G, SU, read_any=False)
 CanDisburse = role_required(G, CA, CT, read_any=False)
+CanOriginateLoans = role_required(G, SU, OF, read_any=False)
 # Loans: everyone but the administrator reads (the collector, only his own).
 CanReadLoans = role_required(G, SU, read_any=False, read_roles=(OF, CA, CO, CT, AU))
 CanHandleSignedNote = role_required(G, SU, OF, CA, CT, read_any=False)
@@ -137,6 +138,12 @@ def _evaluation_payload(evaluation: flow.Evaluation) -> dict:
         "collaterals": evaluation.collaterals,
         "alerts": evaluation.alerts,
         "simulation": simulation_payload(sim),
+        "renewal": None
+        if evaluation.renewal is None
+        else {
+            key: str(value) if isinstance(value, Decimal) else value
+            for key, value in evaluation.renewal.items()
+        },
     }
 
 
@@ -365,9 +372,20 @@ class ApplicationViewSet(
             is_active=True, kind=FinancialAccount.Kind.BANK
         ).filter(Q(branch__isnull=True) | Q(branch_id=application.branch_id))
         session = open_session_of(request.user)
+        renewal = None
+        if application.renews_id:  # F11 (decision 092): the old loan's payoff
+            from apps.lending.renewal import payoff_today
+
+            payoff = payoff_today(application.renews)
+            renewal = {
+                "loan": application.renews.number,
+                "payoff": str(payoff),
+                "net": str(quote.simulation.net_disbursed - payoff),
+            }
         return Response(
             {
                 "simulation": simulation_payload(quote.simulation),
+                "renewal": renewal,
                 "discounted_charges": str(quote.discounted),
                 "financed_charges": str(quote.financed),
                 "cash_charges": str(quote.cash),
@@ -729,6 +747,18 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
             return _fail(exc)
         loan.refresh_from_db()
         return Response(LoanSerializer(loan).data)
+
+    @action(detail=True, methods=["post"], permission_classes=[CanOriginateLoans])
+    def renovar(self, request: Request, number: str | None = None) -> Response:
+        """F11: an application prefilled from the loan; disbursing it pays this one off."""
+        from apps.lending.renewal import start
+
+        loan = self.get_object()
+        try:
+            application = start(loan, user=request.user)
+        except flow.ApplicationError as exc:
+            return _fail(exc)
+        return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], permission_classes=[CanDecide])
     def anular(self, request: Request, number: str | None = None) -> Response:

@@ -69,6 +69,22 @@ export function EvaluationPanel({
     <Card className="space-y-4">
       <h2 className="text-base font-semibold">Evaluación</h2>
       {evaluation?.classification ? <ClassificationNote value={evaluation.classification} /> : null}
+      {evaluation?.renewal ? (
+        <div className="grid grid-cols-2 gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm sm:grid-cols-3">
+          <div>
+            <div className="text-[12.5px] text-muted">Renueva</div>
+            <div className="font-semibold">{evaluation.renewal.loan}</div>
+          </div>
+          <div>
+            <div className="text-[12.5px] text-muted">Saldo para saldar hoy</div>
+            <div className="font-semibold tabular-nums">{rd(evaluation.renewal.payoff)}</div>
+          </div>
+          <div>
+            <div className="text-[12.5px] text-muted">Neto a entregar (estimado)</div>
+            <div className="font-semibold tabular-nums">{rd(evaluation.renewal.net)}</div>
+          </div>
+        </div>
+      ) : null}
       {evaluation ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

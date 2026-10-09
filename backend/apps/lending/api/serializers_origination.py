@@ -96,6 +96,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
         source="decision_reason.text", read_only=True, default=None
     )
     loan_number = serializers.SerializerMethodField()
+    # F11 (decision 092): the loan this application renews.
+    renews_number = serializers.CharField(source="renews.number", read_only=True, default=None)
 
     class Meta:
         model = Application
@@ -119,6 +121,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "first_due",
             "purpose",
             "notes",
+            "renews_number",
             "created_by",
             "created_by_name",
             "submitted_at",
@@ -464,6 +467,7 @@ class DisbursementSerializer(serializers.ModelSerializer):
             "financed_charges",
             "cash_charges",
             "net",
+            "renewal_payoff",
             "disbursed_by_name",
             "entry_number",
             "created_at",
@@ -488,6 +492,11 @@ class LoanSerializer(LoanListSerializer):
     )
     collector_name = serializers.SerializerMethodField()
     closed_on = serializers.DateField(read_only=True)
+    # F11 (decision 092): the renewal chain, both ways.
+    renewed_from_number = serializers.CharField(
+        source="renewed_from.number", read_only=True, default=None
+    )
+    renewed_by_number = serializers.SerializerMethodField()
 
     class Meta(LoanListSerializer.Meta):
         fields = [
@@ -512,7 +521,14 @@ class LoanSerializer(LoanListSerializer):
             "disbursement",
             "guarantors",
             "collaterals",
+            "renewed_from_number",
+            "renewed_by_number",
         ]
+
+    def get_renewed_by_number(self, obj: Loan) -> str | None:
+        return (
+            obj.renewals.exclude(status=Loan.Status.VOIDED).values_list("number", flat=True).first()
+        )
 
     def get_officer_name(self, obj: Loan) -> str | None:
         return _person(obj.officer)

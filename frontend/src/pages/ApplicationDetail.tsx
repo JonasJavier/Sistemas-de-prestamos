@@ -231,6 +231,19 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
       />
 
       <StatusNotice application={data} />
+      {data.renews_number ? (
+        <Alert tone="info">
+          Renovación del préstamo{' '}
+          <Link
+            to="/prestamos/$numero"
+            params={{ numero: data.renews_number }}
+            className="font-semibold underline"
+          >
+            {data.renews_number}
+          </Link>
+          : al desembolsarla se liquida con el monto nuevo y se entrega solo el neto.
+        </Alert>
+      ) : null}
       {data.customer_status === 'blocked' ? (
         <Alert tone="danger">El cliente está bloqueado: la solicitud no puede aprobarse.</Alert>
       ) : null}

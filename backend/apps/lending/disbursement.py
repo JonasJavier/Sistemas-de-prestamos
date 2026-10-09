@@ -172,6 +172,44 @@ def itbis_in(charges, modes) -> Decimal:
     return total
 
 
+def _pay_off_renewed(application: Application, user: User, today: dt.date):
+    """The old loan's payoff, as an internal «Renovación» payment funded by
+    the new disbursement (E15). Late fees ride along: the approver saw them
+    in the evaluation. Returns the old loan and the amount, or (None, 0)."""
+    if application.renews_id is None:
+        return None, ZERO
+    from apps.payments import portfolio
+    from apps.payments import services as payments
+    from apps.payments.models import Payment
+
+    old = Loan.objects.select_for_update().get(pk=application.renews_id)
+    if old.status != Loan.Status.ACTIVE or old.customer_id != application.customer_id:
+        raise DisbursementError(
+            f"El préstamo {old.number} ya no está activo: no se puede renovar.", code="renewal"
+        )
+    lines = portfolio.position(old, today)
+    terms = portfolio.current_terms(old)
+    _, amount = payments.plan_payoff(old, lines, terms, today, ZERO)
+    try:
+        payments.post_payment(
+            loan=old,
+            user=user,
+            amount=amount,
+            method=Payment.Method.RENEWAL,
+            kind=Payment.Kind.PAYOFF,
+            idempotency_key=f"renewal-{application.pk}",
+            reference=f"Renovación (solicitud {application.number})",
+            renewal=True,
+        )
+    except payments.PaymentError as exc:
+        raise DisbursementError(str(exc), code="renewal") from exc
+    old.refresh_from_db()
+    old.status = Loan.Status.RENEWED
+    old.closed_on = today
+    old.save(update_fields=["status", "closed_on", "updated_at"])
+    return old, amount
+
+
 @transaction.atomic
 def disburse(
     *,
@@ -222,6 +260,10 @@ def disburse(
     else:
         _check_account(source_account, application, "origen")
 
+    # F11 (decision 092): a renewal first pays the old loan off through the
+    # bridge account; its released assets may be pledged again just below.
+    renewed, payoff_amount = _pay_off_renewed(application, user, today)
+
     # Lock the assets too: two loans can never pledge the same one.
     collaterals = list(
         application.collaterals.select_related("collateral").select_for_update(
@@ -248,6 +290,13 @@ def disburse(
     sim = quote.simulation
     if sim.net_disbursed <= 0:
         raise DisbursementError("Los cargos descontados superan el monto.", code="charges")
+    net = sim.net_disbursed - payoff_amount
+    if net <= 0:
+        raise DisbursementError(
+            f"El monto nuevo no cubre el saldo del préstamo anterior (RD$ {payoff_amount:,.2f}) "
+            "y los cargos.",
+            code="renewal_amount",
+        )
     charge_account = charge_account or source_account
     if quote.cash and charge_account != source_account:
         _check_account(charge_account, application, "cargos")
@@ -266,6 +315,7 @@ def disburse(
         currency=application.currency,
         disbursed_on=today,
         officer_id=application.created_by_id,
+        renewed_from=renewed,
         principal_outstanding=sim.principal,
         interest_outstanding=sim.total_interest,
         next_due_date=sim.schedule[0].due_date,
@@ -324,10 +374,13 @@ def disburse(
     itbis_cash = itbis_in(sim.charges, (ProductCharge.Mode.CASH,))
     lines = [
         ledger.debit(ledger.system_account(company_id, "loan_portfolio"), sim.principal, **dims),
-        ledger.cash_line(source_account, credit_amount=sim.net_disbursed, **dims, **drawer_dims),
+        ledger.cash_line(source_account, credit_amount=net, **dims, **drawer_dims),
         ledger.credit(charge_income, quote.discounted + quote.financed - itbis_withheld, **dims),
         ledger.credit(itbis_payable, itbis_withheld, **dims),
     ]
+    if payoff_amount:
+        bridge = ledger.system_account(company_id, "renewal_clearing")
+        lines.append(ledger.credit(bridge, payoff_amount, **dims))
     if quote.cash:
         same = charge_account == source_account
         lines += [
@@ -368,13 +421,18 @@ def disburse(
                 discounted_charges=quote.discounted,
                 financed_charges=quote.financed,
                 cash_charges=quote.cash,
-                net=sim.net_disbursed,
+                net=net,
+                renewal_payoff=payoff_amount,
                 charge_account=charge_account if quote.cash else None,
                 idempotency_key=idempotency_key,
                 journal_entry=entry,
                 disbursed_by=user,
             )
-    except IntegrityError as exc:  # a concurrent request won the same key
+    except IntegrityError as exc:
+        # A concurrent request that won the same key; any other broken rule
+        # is a defect and must surface as such, not as a double click.
+        if not Disbursement.objects.filter(idempotency_key=idempotency_key).exists():
+            raise
         raise DisbursementError("Este desembolso ya se registró.", code="idempotency") from exc
 
     application.status = Application.Status.DISBURSED
@@ -386,7 +444,8 @@ def disburse(
         actor=user,
         summary=(
             f"Desembolsado {loan.number}: RD$ {sim.requested_amount:,.2f} "
-            f"(neto RD$ {sim.net_disbursed:,.2f}) desde {source_account}"
+            f"(neto RD$ {net:,.2f}) desde {source_account}"
+            + (f"; liquida el préstamo {renewed.number}" if renewed else "")
         ),
         data={"application": application.number, "entry": entry.number},
     )
@@ -476,6 +535,15 @@ def void_loan(loan: Loan, *, user: User, reason: Reason, note: str) -> Loan:
     for item in loan.collaterals.select_related("collateral"):
         item.collateral.status = Collateral.Status.RELEASED
         item.collateral.save(update_fields=["status", "updated_at"])
+    if loan.renewed_from_id:
+        # The renewal is undone too: the loan it paid off is open again.
+        from apps.payments.reversals import undo_renewal_payoff
+        from apps.payments.services import PaymentError
+
+        try:
+            undo_renewal_payoff(loan.renewed_from, user=user, note=note)
+        except PaymentError as exc:
+            raise DisbursementError(str(exc), code="renewal") from exc
     loan.status = Loan.Status.VOIDED
     loan.voided_on = today
     loan.void_reason = reason

@@ -136,6 +136,23 @@ def _require_editor(user: User, application_branch_id) -> None:
 
 
 @transaction.atomic
+def _check_renewable(loan: Loan, customer: Customer) -> None:
+    if loan.customer_id != customer.pk:
+        raise ApplicationError("Solo se renueva un préstamo del mismo cliente.", code="renewal")
+    if loan.status != Loan.Status.ACTIVE:
+        raise ApplicationError("Solo se renueva un préstamo activo.", code="renewal")
+    open_states = [
+        Application.Status.DRAFT,
+        Application.Status.IN_REVIEW,
+        Application.Status.RETURNED,
+        Application.Status.APPROVED,
+    ]
+    if Application.objects.filter(renews=loan, status__in=open_states).exists():
+        raise ApplicationError(
+            f"El préstamo {loan.number} ya tiene una renovación en curso.", code="renewal"
+        )
+
+
 def create_application(
     *,
     user: User,
@@ -148,9 +165,12 @@ def create_application(
     first_due: dt.date | None = None,
     purpose: str = "",
     notes: str = "",
+    renews: Loan | None = None,
 ) -> Application:
     # The application lives in the customer's branch (decision 033 scope).
     branch = customer.home_branch
+    if renews is not None:
+        _check_renewable(renews, customer)
     if authz.has_any_role(user, *EDITOR_ROLES) and not authz.in_scope(user, branch.id):
         raise ApplicationError(
             f"El cliente pertenece a la sucursal {branch.code} ({branch.name}) y tu rol no "
@@ -182,6 +202,7 @@ def create_application(
         first_due=first_due,
         purpose=purpose,
         notes=notes,
+        renews=renews,
         created_by=user,
     )
     _sync_requirements(application)
@@ -247,13 +268,16 @@ class Evaluation:
     guarantors: int
     collaterals: int
     alerts: list[dict[str, str]] = field(default_factory=list)
+    # F11 (decision 092): the loan it renews, its payoff today and the net.
+    renewal: dict | None = None
 
     def blocking(self, *codes: str) -> list[dict[str, str]]:
         return [alert for alert in self.alerts if alert["code"] in codes]
 
 
-SUBMIT_BLOCKERS = ("guarantee_missing", "coverage_insufficient")
+SUBMIT_BLOCKERS = ("guarantee_missing", "coverage_insufficient", "renewal_short")
 APPROVE_BLOCKERS = (
+    "renewal_short",
     "customer_blocked",
     "guarantee_missing",
     "coverage_insufficient",
@@ -386,6 +410,32 @@ def evaluate(
         )
     if not evaluation.has_bureau:
         alerts.append({"code": "bureau_missing", "message": "Falta la consulta al buró."})
+    if application.renews_id:
+        from apps.lending.renewal import payoff_today
+
+        old = application.renews
+        payoff = payoff_today(old)
+        net = sim.net_disbursed - payoff
+        evaluation.renewal = {
+            "loan": old.number,
+            "status": old.status,
+            "payoff": payoff,
+            "net": net,
+        }
+        if old.status != Loan.Status.ACTIVE:
+            alerts.append(
+                {"code": "renewal_short", "message": f"El préstamo {old.number} ya no está activo."}
+            )
+        elif net <= 0:
+            alerts.append(
+                {
+                    "code": "renewal_short",
+                    "message": (
+                        f"El monto no cubre el saldo para saldar del préstamo {old.number} "
+                        f"(RD$ {payoff:,.2f}) y los cargos."
+                    ),
+                }
+            )
     return evaluation
 
 

@@ -41,7 +41,7 @@ DEFINITIONS = {
     "entre la cartera activa. PAR7 y PAR90 usan 7 y 90 días.",
     "buckets": "Conteo y capital pendiente de los préstamos según su cuota impaga más antigua.",
     "collected": "Suma de lo aplicado en los pagos del día; un reverso resta el día en que se "
-    "hace. No cuenta los saldos migrados.",
+    "hace. No cuenta los saldos migrados ni las liquidaciones por renovación (no entra dinero).",
     "expected": "Cuotas que vencen ese día más lo vencido de los préstamos con promesa para ese "
     "día, a valor exigible (con la mora) al empezar la jornada.",
     "recovery": "Cobrado del día entre esperado del día.",
@@ -222,14 +222,16 @@ def collected(day: dt.date, *, branches: Branches = None) -> Decimal:
     from apps.payments.models import Payment, PaymentReversal
 
     payments = in_branches(
-        Payment.objects.filter(value_date=day).exclude(kind=Payment.Kind.MIGRATED),
+        Payment.objects.filter(value_date=day)
+        .exclude(kind=Payment.Kind.MIGRATED)
+        .exclude(method=Payment.Method.RENEWAL),
         "branch_id",
         branches,
     )
     reversals = in_branches(
-        PaymentReversal.objects.filter(reversed_on=day).exclude(
-            payment__kind=Payment.Kind.MIGRATED
-        ),
+        PaymentReversal.objects.filter(reversed_on=day)
+        .exclude(payment__kind=Payment.Kind.MIGRATED)
+        .exclude(payment__method=Payment.Method.RENEWAL),
         "payment__branch_id",
         branches,
     )

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
@@ -11,6 +11,7 @@ import {
   getLoanEvents,
   listReasons,
   loanDocumentUrl,
+  renewLoan,
   uploadSignedNote,
   voidLoan,
 } from '../api/origination'
@@ -149,6 +150,13 @@ export function LoanDetailPage({ me }: { me: Me }) {
     enabled: tab === 'cronologia',
   })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['loan', numero] })
+  const navigate = useNavigate()
+  const renewal = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => renewLoan(numero),
+    onSuccess: (application) =>
+      void navigate({ to: '/solicitudes/$id', params: { id: application.id } }),
+  })
   const [signed, setSigned] = useState<File | null>(null)
   const upload = useMutation({
     meta: { inlineError: true },
@@ -178,6 +186,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
     },
     ...(active && hasRole(me, ACCESS.payoffLetters)
       ? [{ label: 'Carta de saldo', onSelect: () => setDialog('payoff') }]
+      : []),
+    ...(active && hasRole(me, ACCESS.originate)
+      ? [{ label: 'Renovar', onSelect: () => renewal.mutate() }]
       : []),
     ...(active && hasRole(me, ACCESS.supervise)
       ? [
@@ -246,6 +257,37 @@ export function LoanDetailPage({ me }: { me: Me }) {
         }
       />
 
+      {renewal.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(renewal.error.data)}</Alert>
+      ) : null}
+      {data.renewed_by_number ? (
+        <Alert tone="info">
+          Renovado por el préstamo{' '}
+          <Link
+            to="/prestamos/$numero"
+            params={{ numero: data.renewed_by_number }}
+            className="font-semibold underline"
+          >
+            {data.renewed_by_number}
+          </Link>
+          , que lo liquidó al desembolsarse.
+        </Alert>
+      ) : null}
+      {data.renewed_from_number ? (
+        <Alert tone="info">
+          Renueva el préstamo{' '}
+          <Link
+            to="/prestamos/$numero"
+            params={{ numero: data.renewed_from_number }}
+            className="font-semibold underline"
+          >
+            {data.renewed_from_number}
+          </Link>
+          {data.disbursement && Number(data.disbursement.renewal_payoff)
+            ? `: le liquidó ${rd(data.disbursement.renewal_payoff)}.`
+            : '.'}
+        </Alert>
+      ) : null}
       {data.status === 'voided' ? (
         <Alert tone="warning">
           Anulado el {day(data.voided_on)}: {data.void_reason_text}. {data.void_note}

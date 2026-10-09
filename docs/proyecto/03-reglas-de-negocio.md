@@ -312,6 +312,7 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
   - El anterior queda como «Renovado» y enlazado al nuevo.
   - La mora pendiente se paga o, con permiso, se incluye.
 - **E15** · Se renueva el préstamo E12 con uno nuevo de 1,500.00 y gastos de cierre del 2 %: 1,500.00 − 850.00 − 30.00 = **620.00** a entregar.
+  - **Fase 8 (decisión 092):** la liquidación del anterior es un cobro interno «Renovación» contra una cuenta puente que el desembolso salda; no es dinero que entra, y anular el préstamo nuevo reabre el anterior.
 - **Reestructuración:**
   - Crea una nueva versión del calendario en el mismo préstamo: plazo, tasa o cuota.
   - Requiere aprobación.

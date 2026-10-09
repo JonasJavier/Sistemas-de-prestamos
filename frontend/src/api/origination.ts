@@ -87,6 +87,8 @@ export interface Application {
   first_due: string | null
   purpose: string
   notes: string
+  /** F11 (decision 092): the loan this application renews. */
+  renews_number?: string | null
   created_by_name: string | null
   submitted_at: string | null
   assigned_approver_name: string | null
@@ -118,7 +120,12 @@ export interface Alert {
   message: string
 }
 
+export const renewLoan = (numero: string): Promise<Application> =>
+  api(`/api/v1/prestamos/${encodeURIComponent(numero)}/renovar/`, { method: 'POST' })
+
 export interface Evaluation {
+  /** F11 (decision 092): the old loan's payoff today and the net it leaves. */
+  renewal?: { loan: string; status: string; payoff: string; net: string } | null
   monthly_income: string
   monthly_expenses: string
   available: string
@@ -280,6 +287,8 @@ export interface DisbursementPreview {
   accounts: { id: string; name: string; kind: 'cash' | 'bank'; balance: string }[]
   /** Decision 055 (phase 4): cash leaves the disburser's open drawer. */
   cash_session: { id: string; number: string; cash: string; branch_matches: boolean } | null
+  /** F11 (decision 092): the old loan paid off from the new amount. */
+  renewal?: { loan: string; payoff: string; net: string } | null
   blockers: string[]
 }
 
@@ -339,6 +348,9 @@ export interface LoanTerms {
 }
 
 export interface Loan extends LoanListItem {
+  /** F11 (decision 092): the renewal chain. */
+  renewed_from_number?: string | null
+  renewed_by_number?: string | null
   collector: string | null
   collector_name: string | null
   closed_on: string | null
@@ -363,6 +375,7 @@ export interface Loan extends LoanListItem {
     financed_charges: string
     cash_charges: string
     net: string
+    renewal_payoff?: string
     disbursed_by_name: string | null
     entry_number: string
   } | null

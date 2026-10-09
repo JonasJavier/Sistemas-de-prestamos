@@ -64,6 +64,8 @@ class Payment(CompanyScopedModel):
         TRANSFER = "transfer", "Transferencia"
         DEPOSIT = "deposit", "Depósito"
         CHECK = "check", "Cheque"
+        # Decision 092: the old loan paid off by its renewal, never by hand.
+        RENEWAL = "renewal", "Renovación"
 
     class Kind(models.TextChoices):
         REGULAR = "regular", "Cobro"

@@ -37,6 +37,11 @@ SYSTEM_ACCOUNTS = [
     ("owner_withdrawals", "3102", "Retiros del dueño", EQUITY, True),
     ("other_income", "4202", "Otros ingresos", INCOME, True),
     ("cash_shortage_loss", "5301", "Pérdidas por faltantes de caja", EXPENSE, True),
+    # Phase 8 (decisions 092 and 094): a renewal pays the old loan off through
+    # a bridge that always nets to zero, and what is collected on a
+    # written-off loan is recovery, reported apart.
+    ("renewal_clearing", "2104", "Liquidaciones por renovación (puente)", LIABILITY, True),
+    ("recovery_income", "4203", "Recuperación de cartera castigada", INCOME, True),
 ]
 
 # System accounts that keep a subsidiary record (loans, payables, cash
@@ -50,6 +55,7 @@ SUBLEDGER_KEYS = frozenset(
         "cash_shortage",
         "cash_overage_pending",
         "opening_balance",
+        "renewal_clearing",
     }
 )
 

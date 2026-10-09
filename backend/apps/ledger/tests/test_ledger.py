@@ -34,6 +34,9 @@ def test_signup_seeds_chart_and_cash_box(tenant) -> None:
             "owner_withdrawals",
             "other_income",
             "cash_shortage_loss",
+            # Phase 8 (092, 094).
+            "renewal_clearing",
+            "recovery_income",
         }
         assert tenant.cash.name == "Caja general"
         assert tenant.cash.ledger_account.code == "1101-01"

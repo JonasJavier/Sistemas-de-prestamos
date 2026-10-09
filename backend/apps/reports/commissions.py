@@ -127,9 +127,11 @@ def base_of(
         ).aggregate(total=Sum("gross"), count=Count("id"))
         total = rows["total"] or ZERO
         return total, {"disbursements": rows["count"] or 0}
-    payments = Payment.objects.filter(
-        collected_by=person, value_date__gte=first, value_date__lte=last
-    ).exclude(kind=Payment.Kind.MIGRATED)
+    payments = (
+        Payment.objects.filter(collected_by=person, value_date__gte=first, value_date__lte=last)
+        .exclude(kind=Payment.Kind.MIGRATED)
+        .exclude(method=Payment.Method.RENEWAL)
+    )
     reversed_ids = PaymentReversal.objects.filter(
         payment__collected_by=person, reversed_on__gte=first, reversed_on__lte=last
     ).values("payment_id")

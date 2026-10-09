@@ -78,6 +78,11 @@ def check_reversible(payment: Payment) -> None:
         raise PaymentError("Ese pago ya fue reversado.", "state")
     if payment.kind == Payment.Kind.MIGRATED:
         raise PaymentError("Los pagos migrados no se reversan desde aquí.", "migrated")
+    if payment.method == Payment.Method.RENEWAL:
+        raise PaymentError(
+            "Esta liquidación la hizo una renovación: se deshace anulando el préstamo nuevo.",
+            "renewal",
+        )
     last = last_standing(payment.loan)
     if last is not None and last.pk != payment.pk:
         raise PaymentError(
@@ -532,3 +537,65 @@ def expire_requests() -> int:
         status__in=[ApprovalRequest.Status.PENDING, ApprovalRequest.Status.APPROVED],
         expires_at__lte=timezone.now(),
     ).update(status=ApprovalRequest.Status.EXPIRED)
+
+
+def undo_renewal_payoff(old: Loan, *, user: User, note: str) -> Payment:
+    """F14 on a renewal (decision 092): voiding the new loan reopens the one
+    it paid off. Its internal payoff is reversed against the bridge account
+    (no cash moves) and its assets are pledged again."""
+    old = Loan.objects.select_for_update().get(pk=old.pk)
+    payment = (
+        Payment.objects.select_related("journal_entry")
+        .filter(loan=old, method=Payment.Method.RENEWAL, status=Payment.Status.POSTED)
+        .order_by("-paid_at")
+        .first()
+    )
+    if payment is None or old.status != Loan.Status.RENEWED:
+        raise PaymentError("El préstamo renovado ya no puede reabrirse.", "renewal")
+    today = timezone.localdate()
+    ledger.reverse_entry(
+        payment.journal_entry,
+        on=today,
+        description=f"Se deshace la liquidación {payment.number} por anulación de la renovación",
+        created_by=user,
+    )
+    pieces: dict = {}
+    for row in PaymentAllocation.objects.filter(payment=payment):
+        pieces.setdefault(row.installment_id, {})[row.component] = row.amount
+    _apply_to_installments(
+        [Applied(key=key, **components) for key, components in pieces.items()], sign=-1
+    )
+    old.installments.filter(interest_waived__gt=0).update(interest_waived=ZERO)
+    for item in old.collaterals.select_related("collateral"):
+        collateral = item.collateral
+        if collateral.status == Collateral.Status.RELEASED:
+            collateral.status = Collateral.Status.PLEDGED
+            collateral.save(update_fields=["status", "updated_at"])
+        elif collateral.status != Collateral.Status.PLEDGED:
+            raise PaymentError(
+                f"La garantía «{collateral.description}» ya no está disponible.", "collateral"
+            )
+    payment.status = Payment.Status.REVERSED
+    payment.save(update_fields=["status", "updated_at"])
+    old.status = Loan.Status.ACTIVE
+    old.closed_on = None
+    old.last_payment_on = (
+        Payment.objects.filter(loan=old, status=Payment.Status.POSTED)
+        .order_by("-value_date")
+        .values_list("value_date", flat=True)
+        .first()
+    )
+    old.save(update_fields=["status", "closed_on", "last_payment_on", "updated_at"])
+    portfolio.refresh(old, today)
+    from apps.ledger import fiscal
+
+    fiscal.on_reversal("payments.payment", payment.id, today)
+    record_event(
+        company_id=old.company_id,
+        type="payment.reversed",
+        target=old,
+        actor=user,
+        summary=f"Reabierto: se anuló su renovación. {note}"[:300],
+        data={"payment": str(payment.id)},
+    )
+    return payment

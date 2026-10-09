@@ -316,6 +316,8 @@ class Disbursement(CompanyScopedModel):
     financed_charges = models.DecimalField(**MONEY, default=0)
     cash_charges = models.DecimalField(**MONEY, default=0)
     net = models.DecimalField(**MONEY)  # what the customer receives
+    # Decision 092: the old loan's payoff kept from the gross of a renewal.
+    renewal_payoff = models.DecimalField(**MONEY, default=0)
     charge_account = models.ForeignKey(
         FinancialAccount, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
@@ -337,7 +339,10 @@ class Disbursement(CompanyScopedModel):
                 fields=["company", "idempotency_key"], name="disbursement_idempotency_unique"
             ),
             models.CheckConstraint(
-                condition=Q(net__gt=0) & Q(net=F("gross") - F("discounted_charges")),
+                # Decision 092: a renewal also keeps the old loan's payoff.
+                condition=Q(net__gt=0)
+                & Q(renewal_payoff__gte=0)
+                & Q(net=F("gross") - F("discounted_charges") - F("renewal_payoff")),
                 name="disbursement_net_consistent",
             ),
         ]

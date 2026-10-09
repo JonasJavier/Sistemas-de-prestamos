@@ -52,6 +52,10 @@ class Application(CompanyScopedModel):
     first_due = models.DateField(null=True, blank=True)
     purpose = models.CharField(max_length=300, blank=True)
     notes = models.TextField(blank=True)
+    # F11 (decision 092): a renewal pays this loan off when it is disbursed.
+    renews = models.ForeignKey(
+        "lending.Loan", null=True, blank=True, on_delete=models.PROTECT, related_name="renewal_apps"
+    )
 
     status = models.CharField(max_length=10, choices=Status, default=Status.DRAFT)
     created_by = models.ForeignKey(

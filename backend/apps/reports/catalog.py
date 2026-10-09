@@ -421,14 +421,14 @@ def _payments(p: Params) -> Table:
         return qs
 
     payments = scoped(
-        Payment.objects.filter(value_date__gte=date_from, value_date__lte=date_to).exclude(
-            kind=Payment.Kind.MIGRATED
-        )
+        Payment.objects.filter(value_date__gte=date_from, value_date__lte=date_to)
+        .exclude(kind=Payment.Kind.MIGRATED)
+        .exclude(method=Payment.Method.RENEWAL)
     ).select_related("loan", "customer", "collected_by")
     reversals = scoped(
-        PaymentReversal.objects.filter(
-            reversed_on__gte=date_from, reversed_on__lte=date_to
-        ).exclude(payment__kind=Payment.Kind.MIGRATED),
+        PaymentReversal.objects.filter(reversed_on__gte=date_from, reversed_on__lte=date_to)
+        .exclude(payment__kind=Payment.Kind.MIGRATED)
+        .exclude(payment__method=Payment.Method.RENEWAL),
         "payment__",
     ).select_related("payment__loan", "payment__customer", "payment__collected_by")
     ids = {pay.id for pay in payments} | {rev.payment_id for rev in reversals}

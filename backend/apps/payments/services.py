@@ -78,7 +78,7 @@ def check_can_collect(user: User, loan: Loan) -> None:
 
 @dataclass(frozen=True)
 class Destination:
-    account: FinancialAccount
+    account: FinancialAccount | None  # None: a renewal's bridge account (092)
     branch: Branch
     cash_session: CashSession | None = None
     route: RouteSession | None = None
@@ -405,15 +405,22 @@ def new_version(
 def _ledger_lines(payment_amount: Decimal, applied: list[Applied], dest: Destination, loan: Loan):
     company_id = loan.company_id
     dims = {"loan_id": loan.id, "customer_id": loan.customer_id}
-    lines = [
-        ledger.Line(
-            account=dest.account.ledger_account,
-            debit=payment_amount,
-            financial_account=dest.account,
-            **dims,
-            **dest.dims,
-        )
-    ]
+    if dest.account is None:  # renewal: the new loan's disbursement funds it
+        lines = [
+            ledger.debit(
+                ledger.system_account(company_id, "renewal_clearing"), payment_amount, **dims
+            )
+        ]
+    else:
+        lines = [
+            ledger.Line(
+                account=dest.account.ledger_account,
+                debit=payment_amount,
+                financial_account=dest.account,
+                **dims,
+                **dest.dims,
+            )
+        ]
     for component, key in COMPONENT_ACCOUNTS.items():
         total = sum((getattr(piece, component) for piece in applied), ZERO)
         if total:
@@ -469,7 +476,10 @@ def post_payment(
     prepayment_mode: str = "",
     latitude: Decimal | None = None,
     longitude: Decimal | None = None,
+    renewal: bool = False,
 ) -> Payment:
+    """``renewal`` is internal (decision 092): the payoff of a loan by the
+    disbursement of its renewal, through the bridge account, no cash."""
     loan = Loan.objects.select_for_update().select_related("branch").get(pk=loan.pk)
     existing = Payment.objects.filter(idempotency_key=idempotency_key).first()
     if existing is not None:
@@ -478,7 +488,10 @@ def post_payment(
         return existing
     if loan.status != Loan.Status.ACTIVE:
         raise PaymentError("Solo se cobra un préstamo activo.", "state")
-    check_can_collect(user, loan)
+    if (method == Payment.Method.RENEWAL) != renewal:
+        raise PaymentError("La renovación liquida el préstamo al desembolsarse.", "method")
+    if not renewal:
+        check_can_collect(user, loan)
     today = timezone.localdate()
     amount = money(amount)
     if amount <= 0:
@@ -492,7 +505,11 @@ def post_payment(
         raise PaymentError("Lo recibido no alcanza para el monto a pagar.", "received")
     if method != Payment.Method.CASH and not reference.strip():
         raise PaymentError("Escribe el número de referencia del pago.", "reference")
-    dest = destination(user, loan, method, bank_account, today)
+    dest = (
+        Destination(account=None, branch=loan.branch)
+        if renewal
+        else destination(user, loan, method, bank_account, today)
+    )
 
     terms = portfolio.current_terms(loan)
     lines = portfolio.position(loan, today)
