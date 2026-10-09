@@ -88,9 +88,10 @@ function navFor(me: Me): NavGroup[] {
   if (hasRole(me, ACCESS.cashSessions))
     collections.push({ to: '/cajas', label: 'Cajas', badge: me.closings_to_approve })
   if (collections.length) groups.push({ title: 'Cobros y caja', items: collections })
-  if (hasRole(me, ACCESS.finance)) {
-    groups.push({ title: 'Finanzas', items: [{ to: '/cuentas', label: 'Cuentas y bancos' }] })
-  }
+  const finance: NavItem[] = []
+  if (hasRole(me, ACCESS.finance)) finance.push({ to: '/cuentas', label: 'Cuentas y bancos' })
+  if (hasRole(me, ACCESS.books)) finance.push({ to: '/contabilidad', label: 'Contabilidad' })
+  if (finance.length) groups.push({ title: 'Finanzas', items: finance })
   if (me.is_manager) {
     groups.push({
       title: 'Ajustes',

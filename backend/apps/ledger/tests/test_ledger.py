@@ -26,6 +26,14 @@ def test_signup_seeds_chart_and_cash_box(tenant) -> None:
             "cash_shortage",
             "cash_overage",
             "opening_balance",
+            # Phase 6 (075, 080).
+            "interest_receivable",
+            "payables",
+            "itbis_payable",
+            "cash_overage_pending",
+            "owner_withdrawals",
+            "other_income",
+            "cash_shortage_loss",
         }
         assert tenant.cash.name == "Caja general"
         assert tenant.cash.ledger_account.code == "1101-01"

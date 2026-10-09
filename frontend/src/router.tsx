@@ -26,6 +26,7 @@ import { LoginPage, type LoginSearch } from './pages/Login'
 // when the pointer rests on a link to it (defaultPreload: 'intent').
 const AccountPage = lazyRouteComponent(() => import('./pages/Account'), 'AccountPage')
 const AccountsPage = lazyRouteComponent(() => import('./pages/Accounts'), 'AccountsPage')
+const AccountingPage = lazyRouteComponent(() => import('./pages/Accounting'), 'AccountingPage')
 const ApplicationDetailPage = lazyRouteComponent(
   () => import('./pages/ApplicationDetail'),
   'ApplicationDetailPage',
@@ -379,6 +380,13 @@ const loanDetailRoute = createRoute({
   component: withMe(LoanDetailPage),
 })
 
+const accountingRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/contabilidad',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.books),
+  component: withMe(AccountingPage),
+})
+
 const accountsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/cuentas',
@@ -519,6 +527,7 @@ const routeTree = rootRoute.addChildren([
     delinquencyRoute,
     noticesRoute,
     accountsRoute,
+    accountingRoute,
     productsRoute,
     companySettingsRoute,
     holidaysRoute,

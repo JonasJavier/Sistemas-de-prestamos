@@ -87,6 +87,9 @@ def post_entry(
     created_by=None,
     reversal_of: JournalEntry | None = None,
 ) -> JournalEntry:
+    from apps.ledger.accounting import ensure_open
+
+    ensure_open(company_id, on)  # a closed month refuses entries (080)
     lines = [line for line in lines if line.debit or line.credit]
     if len(lines) < 2:
         raise LedgerError("Un asiento necesita al menos dos líneas.")

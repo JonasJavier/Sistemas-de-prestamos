@@ -87,6 +87,7 @@ def build_tenant(name: str, email_domain: str) -> Tenant:
         "cajero": add_user(reg, f"cajero@{email_domain}", "Cajero"),
         "contabilidad": add_user(reg, f"conta@{email_domain}", "Contabilidad"),
         "cobrador": add_user(reg, f"cobrador@{email_domain}", "Cobrador"),
+        "auditoria": add_user(reg, f"auditoria@{email_domain}", "Auditoría"),
     }
     with company_context(reg.company.id):
         cash = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH)

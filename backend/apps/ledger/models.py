@@ -11,6 +11,7 @@ from it. PostgreSQL enforces the rules even if application code fails
 10. amounts are never negative: the side gives the sign.
 """
 
+import pghistory
 import pgtrigger
 from django.conf import settings
 from django.db import models
@@ -52,6 +53,29 @@ BALANCED_ENTRY_TRIGGER = pgtrigger.Trigger(
 )
 
 
+# A closed month refuses entries even if code forgets to ask (decision 080):
+# the period row is read under the entry's own company, like the balance check.
+CLOSED_PERIOD_TRIGGER = pgtrigger.Trigger(
+    name="entry_period_open",
+    when=pgtrigger.Before,
+    operation=pgtrigger.Insert,
+    func="""
+        IF EXISTS (
+            SELECT 1 FROM ledger_accountingperiod
+             WHERE company_id = NEW.company_id
+               AND year = EXTRACT(YEAR FROM NEW.date)
+               AND month = EXTRACT(MONTH FROM NEW.date)
+               AND status = 'closed'
+        ) THEN
+            RAISE EXCEPTION 'El mes de % está cerrado: no admite asientos.',
+                to_char(NEW.date, 'MM/YYYY')
+                USING ERRCODE = 'check_violation';
+        END IF;
+        RETURN NEW;
+    """,
+)
+
+
 def _append_only(name: str) -> pgtrigger.Protect:
     return pgtrigger.Protect(name=name, operation=pgtrigger.Update | pgtrigger.Delete)
 
@@ -67,6 +91,10 @@ class LedgerAccount(CompanyScopedModel):
     code = models.CharField(max_length=20)
     name = models.CharField(max_length=150)
     type = models.CharField(max_length=10, choices=Type)
+    # Phase 6: optional grouping for the statements (doc 05 - 4.9).
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="children"
+    )
     system_key = models.CharField(max_length=30, blank=True)
     is_system = models.BooleanField(default=False)
     allows_negative = models.BooleanField(default=True)
@@ -193,7 +221,7 @@ class JournalEntry(CompanyScopedModel):
             models.Index(fields=["company", "date"]),
             models.Index(fields=["company", "source_type", "source_id"]),
         ]
-        triggers = [_append_only("journal_entry_append_only")]
+        triggers = [_append_only("journal_entry_append_only"), CLOSED_PERIOD_TRIGGER]
 
     def __str__(self) -> str:
         return f"{self.number} {self.description}"
@@ -245,3 +273,39 @@ class JournalLine(CompanyScopedModel):
             models.Index(fields=["company", "route_session"]),
         ]
         triggers = [_append_only("journal_line_append_only"), BALANCED_ENTRY_TRIGGER]
+
+
+@pghistory.track()
+class AccountingPeriod(CompanyScopedModel):
+    """A month of the books (F15): open, or closed and locked."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Abierto"
+        CLOSED = "closed", "Cerrado"
+
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    status = models.CharField(max_length=10, choices=Status, default=Status.OPEN)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    checklist = models.JSONField(default=dict, blank=True)  # what was verified at closing
+    reopen_reason = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "year", "month"], name="accounting_period_unique"
+            ),
+            models.CheckConstraint(
+                condition=Q(month__gte=1) & Q(month__lte=12), name="accounting_period_month"
+            ),
+            models.CheckConstraint(
+                condition=Q(status="open") | Q(closed_at__isnull=False),
+                name="accounting_period_closed_has_time",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.month:02d}/{self.year}"

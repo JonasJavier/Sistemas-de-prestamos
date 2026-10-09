@@ -41,6 +41,9 @@ export const ACCESS = {
   manageCollections: [G, SU, OF, CO],
   /** Assign loans to collection agents. */
   assignAgents: [G, SU],
+  // Phase 6 (finanzas, decision 080).
+  /** The books: chart, journal, ledger and statements. */
+  books: [G, CT, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>
