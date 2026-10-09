@@ -13,6 +13,12 @@
       "runtimeArgs": ["-C", "frontend", "dev"],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "site", "dev"],
+      "port": 4321
     }
   ]
 }

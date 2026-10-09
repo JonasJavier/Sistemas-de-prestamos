@@ -1,0 +1,75 @@
+---
+import '@fontsource-variable/inter'
+import '@fontsource-variable/sora'
+import '../styles/site.css'
+
+import Brand from '../components/Brand.astro'
+import { CONTACT_EMAIL, SIGN_IN, SIGN_UP } from '../config'
+
+interface Props {
+  title: string
+  description: string
+  /** Structured data for search engines, already an object. */
+  jsonLd?: Record<string, unknown>
+}
+
+const { title, description, jsonLd } = Astro.props
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const year = new Date().getFullYear()
+---
+
+<!doctype html>
+<html lang="es-DO">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#15402f" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_DO" />
+    <meta property="og:site_name" content="Cobradía" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    {jsonLd ? <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} /> : null}
+  </head>
+  <body>
+    <a class="skip" href="#contenido">Saltar al contenido</a>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a href="/" aria-label="Cobradía, inicio"><Brand /></a>
+        <nav aria-label="Secciones" class="nav">
+          <a href="/#funciones">Funciones</a>
+          <a href="/#como-funciona">Cómo funciona</a>
+          <a href="/#precios">Precios</a>
+          <a href="/#preguntas">Preguntas</a>
+        </nav>
+        <div class="topbar-actions">
+          <a class="link-quiet" href={SIGN_IN}>Entrar</a>
+          <a class="btn btn-primary" href={SIGN_UP}>Prueba gratis</a>
+        </div>
+      </div>
+    </header>
+    <main id="contenido">
+      <slot />
+    </main>
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <div>
+          <Brand tone="light" />
+          <p>Préstamos, cobros y caja para financieras dominicanas.</p>
+        </div>
+        <ul>
+          <li><a href={SIGN_UP}>Crear cuenta</a></li>
+          <li><a href={SIGN_IN}>Entrar</a></li>
+          <li><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+        </ul>
+      </div>
+      <div class="wrap footer-legal">© {year} Cobradía · cobradia.com</div>
+    </footer>
+  </body>
+</html>

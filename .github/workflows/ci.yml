@@ -88,6 +88,29 @@ jobs:
       - name: Build
         run: pnpm build
 
+  # cobradia.com: the static promotion site (doc 01, decision 100).
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Known vulnerabilities (doc 06 - 8)
+        run: pnpm audit --prod
+      - name: Build
+        run: pnpm build
+
   # The phase demos as a user lives them (doc 10 - 2): the real API, the
   # production build and a browser, over the demo seed.
   e2e:

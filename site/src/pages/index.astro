@@ -1,0 +1,301 @@
+---
+import Base from '../layouts/Base.astro'
+import { CONTACT_EMAIL, SIGN_UP, TRIAL_DAYS } from '../config'
+
+const title = 'Cobradía · Sistema de préstamos y cobros para financieras en RD'
+const description =
+  'Administra préstamos, cobros, caja y contabilidad de tu financiera desde el navegador y el celular. ' +
+  `Hecho para República Dominicana. Prueba gratis ${TRIAL_DAYS} días, sin tarjeta.`
+
+/** One stroke icon per feature (24×24, currentColor). */
+const ICONS: Record<string, string> = {
+  solicitud: 'M9 4h6l1 2h3v14H5V6h3zM9 11h6M9 15h4',
+  caja: 'M3 7h18v12H3zM3 11h18M7 15h3',
+  ruta: 'M6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
+  mora: 'M12 8v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+  libro: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7M8 11h7',
+  reportes: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  mensajes: 'M4 5h16v11H8l-4 4zM8 9h8M8 12h5',
+  portal: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2',
+}
+
+const FEATURES = [
+  {
+    icon: 'solicitud',
+    title: 'Solicitudes y desembolsos',
+    text: 'Simula, evalúa y aprueba por montos según el rol. Al desembolsar se generan el pagaré y la tabla de pagos con el número definitivo del préstamo.',
+  },
+  {
+    icon: 'caja',
+    title: 'Cobros y caja que cuadran',
+    text: 'Cobra varias cuotas a la vez, con mora calculada al centavo. Cada cajero cuadra su caja y los faltantes y sobrantes quedan registrados.',
+  },
+  {
+    icon: 'ruta',
+    title: 'Mi ruta, en el celular',
+    text: 'Tus cobradores ven su ruta del día, cobran en la calle, anotan gestiones y promesas de pago, y el supervisor sigue el avance de cada ruta.',
+  },
+  {
+    icon: 'mora',
+    title: 'Mora y cobranza',
+    text: 'Atrasos por antigüedad, avisos, renovaciones, reestructuraciones, castigo de cartera y seguimiento de los casos en la vía legal.',
+  },
+  {
+    icon: 'libro',
+    title: 'Contabilidad incluida',
+    text: 'Cada desembolso, cobro y gasto entra solo al libro diario. Cierres de mes, balanza, estado de resultados y balance general, siempre cuadrados.',
+  },
+  {
+    icon: 'reportes',
+    title: 'Reportes e indicadores',
+    text: 'Tablero con la salud de la cartera, reportes exportables a Excel y PDF, clasificación de clientes y comisiones de cobradores y oficiales.',
+  },
+  {
+    icon: 'mensajes',
+    title: 'Mensajes automáticos',
+    text: 'Recordatorios antes del vencimiento, avisos de atraso y confirmación de cada pago con su recibo, por correo, WhatsApp o SMS.',
+  },
+  {
+    icon: 'portal',
+    title: 'Portal para tus clientes',
+    text: 'Tus clientes consultan su saldo, su calendario, sus recibos y su estado de cuenta, con un código de acceso que les llega a ellos.',
+  },
+  {
+    icon: 'qr',
+    title: 'Documentos con QR',
+    text: 'Recibos, contratos y cartas llevan un código QR que cualquiera puede escanear para comprobar que son auténticos.',
+  },
+]
+
+const FAQ = [
+  {
+    q: '¿Necesito instalar algo?',
+    a: 'No. Cobradía funciona en el navegador de la computadora y del celular. Tus cobradores solo necesitan un teléfono con internet.',
+  },
+  {
+    q: '¿Puedo pasar los préstamos que ya tengo?',
+    a: 'Sí. Cargas cada préstamo en curso con su calendario original y los pagos que ya recibió, y desde ahí sigues cobrando en Cobradía.',
+  },
+  {
+    q: '¿Qué pasa cuando termina la prueba?',
+    a: `Durante ${TRIAL_DAYS} días usas todo sin pagar. Al terminar, tu cuenta queda en solo lectura hasta que actives tu suscripción: no pierdes ningún dato.`,
+  },
+  {
+    q: '¿Mis datos están seguros?',
+    a: 'Cada financiera tiene sus datos aislados de las demás. Todos los usuarios entran con verificación en dos pasos, cada rol ve solo lo que le toca y todo queda en la auditoría.',
+  },
+  {
+    q: '¿Sirve para varias sucursales?',
+    a: 'Sí. Manejas sucursales con su propia caja, sus horarios y sus usuarios, y ves la cartera completa o la de cada sucursal.',
+  },
+  {
+    q: '¿Está hecho para República Dominicana?',
+    a: 'Sí: pesos dominicanos, cédula y RNC validados, días feriados nacionales en los calendarios de pago y documentos en español.',
+  },
+]
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Cobradía',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  url: 'https://cobradia.com/',
+  description,
+  inLanguage: 'es-DO',
+  areaServed: 'DO',
+}
+---
+
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div>
+        <span class="eyebrow">Para financieras dominicanas</span>
+        <h1>Tu cartera al día, <em>cada día.</em></h1>
+        <p class="hero-lead">
+          Préstamos, cobros, caja y contabilidad en un solo lugar. Cuotas, intereses y mora calculados
+          al centavo, y una caja que siempre cuadra con el libro.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-gold" href={SIGN_UP}>Prueba gratis {TRIAL_DAYS} días</a>
+          <a class="btn btn-ghost" href="#funciones">Ver lo que hace</a>
+        </div>
+        <p class="hero-note">Sin tarjeta y sin instalar nada. Lista en minutos.</p>
+      </div>
+      <figure class="mock" aria-label="Ejemplo ilustrativo del tablero de Cobradía">
+        <div class="mock-head">
+          <strong>Hoy en tu cartera</strong>
+          <span>Ejemplo</span>
+        </div>
+        <div class="mock-stats">
+          <div class="mock-stat">
+            <small>Cartera activa</small>
+            <b>RD$ 4.85 M</b>
+          </div>
+          <div class="mock-stat">
+            <small>Cobrado hoy</small>
+            <b class="up">RD$ 182,400</b>
+          </div>
+        </div>
+        <ul class="mock-list">
+          <li><span>01-000231 · Cuota 4 de 12</span><span class="pill">Al día</span></li>
+          <li><span>01-000187 · Promesa para mañana</span><span class="pill pill-warn">3 días</span></li>
+          <li><span>02-000045 · Cobro en ruta</span><span class="pill">Pagado</span></li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="funciones">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Todo lo que tu financiera hace, en un solo sistema</h2>
+        <p>
+          Desde la solicitud hasta el último pago: sin hojas de cálculo, sin cuadres a mano y sin
+          perder de vista a ningún cliente.
+        </p>
+      </div>
+      <div class="grid grid-3">
+        {
+          FEATURES.map((feature) => (
+            <article class="card">
+              <span class="icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d={ICONS[feature.icon]} />
+                </svg>
+              </span>
+              <h3>{feature.title}</h3>
+              <p>{feature.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="como-funciona">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Empieza hoy mismo</h2>
+        <p>Tu financiera queda lista en tres pasos, sin llamadas ni contratos para probar.</p>
+      </div>
+      <ol class="steps">
+        <li class="card">
+          <h3>Registra tu financiera</h3>
+          <p>
+            Con tu correo y los datos de la empresa. Te llega la confirmación y empiezas tu prueba.
+          </p>
+        </li>
+        <li class="card">
+          <h3>Configura a tu manera</h3>
+          <p>
+            Sucursales, productos con sus tasas y moras, horarios y un usuario por persona con su
+            rol.
+          </p>
+        </li>
+        <li class="card">
+          <h3>Presta y cobra</h3>
+          <p>
+            Registra clientes, desembolsa y cobra en caja o en la calle. Los reportes se arman
+            solos.
+          </p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap band">
+      <div>
+        <span class="eyebrow">Seguridad</span>
+        <h2>Tu información, protegida y bajo control</h2>
+        <p class="band-lead">
+          Cobradía está construido para manejar dinero: cada movimiento deja huella y nadie hace más
+          de lo que su rol le permite.
+        </p>
+      </div>
+      <ul class="checks">
+        <li>Los datos de cada financiera, aislados de las demás.</li>
+        <li>Verificación en dos pasos obligatoria para todos los usuarios.</li>
+        <li>Permisos por rol: cajero, cobrador, oficial, supervisor, gerente y más.</li>
+        <li>Reversos con autorización y castigos reconfirmados con el segundo paso.</li>
+        <li>Auditoría de cada acción y alertas cuando algo se sale de lo normal.</li>
+        <li>Cajeros y cobradores entran solo en el horario de su sucursal.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="precios">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Precios</h2>
+        <p>Pruébalo completo antes de decidir. Pagas solo si te sirve.</p>
+      </div>
+      <div class="price">
+        <div class="card price-main">
+          <h3>Prueba completa</h3>
+          <div class="price-figure">{TRIAL_DAYS} días <small>gratis</small></div>
+          <p>Con todas las funciones y todos los usuarios que necesites.</p>
+          <ul class="checks">
+            <li>Sin tarjeta de crédito.</li>
+            <li>Tus datos se quedan contigo al terminar la prueba.</li>
+            <li>Puedes cargar tus préstamos actuales desde el primer día.</li>
+          </ul>
+          <div class="hero-cta">
+            <a class="btn btn-gold" href={SIGN_UP}>Crear mi cuenta</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Planes</h3>
+          <p>
+            Estamos por anunciar los planes mensuales. Escríbenos y te contamos cuál le conviene a tu
+            financiera.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href={`mailto:${CONTACT_EMAIL}?subject=Planes%20de%20Cobrad%C3%ADa`}
+              >Consultar planes</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="preguntas">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Preguntas frecuentes</h2>
+      </div>
+      <div class="faq">
+        {
+          FAQ.map((item) => (
+            <details>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="closing">
+      <h2>Ponle orden a tu cartera desde hoy</h2>
+      <p>Crea tu cuenta en minutos y prueba Cobradía con tus propios préstamos.</p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href={SIGN_UP}>Prueba gratis {TRIAL_DAYS} días</a>
+        <a class="btn btn-ghost" href={`mailto:${CONTACT_EMAIL}`}>Escríbenos</a>
+      </div>
+    </div>
+  </section>
+</Base>

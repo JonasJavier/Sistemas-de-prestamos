@@ -104,7 +104,7 @@ Todo es de código abierto. El costo real es el servidor, el dominio y, más ade
   - Next.js 16 añade un segundo servidor en Node, con su propia capa de lógica, que duplicaría a Django y complicaría las sesiones.
   - La SPA son archivos estáticos: una sola API, un solo dominio y cookies simples.
 - **Portal del cliente (fase 9):** vive en la misma SPA, con su propio acceso.
-- **Registro de empresas (decisión 045):** la página pública de registro (`/registro`) también vive en la SPA: son archivos estáticos y no necesita SEO. El **sitio de promoción** de `cobradia.com` (precios, funciones, contacto) sí necesita SEO y será una aplicación estática aparte (Astro), que enlaza al registro; se construye en la fase 9.
+- **Registro de empresas (decisión 045):** la página pública de registro (`/registro`) también vive en la SPA: son archivos estáticos y no necesita SEO. El **sitio de promoción** de `cobradia.com` (precios, funciones, contacto) sí necesita SEO y es una aplicación estática aparte (Astro, carpeta `site/`), que enlaza al registro; construida en la fase 9 (decisión 100).
 - **Descartado también, Django con plantillas y HTMX:** es más simple, pero el simulador, el cobro de varias cuotas, los filtros de cartera y «Mi ruta» en el celular salen mejor en React.
 
 ### D3. TanStack Router, no React Router

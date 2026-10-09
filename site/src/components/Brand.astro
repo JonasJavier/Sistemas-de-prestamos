@@ -1,0 +1,11 @@
+---
+/** The wordmark, as in the app: «Cobradía» with its golden í. */
+interface Props {
+  tone?: 'default' | 'light'
+}
+const { tone = 'default' } = Astro.props
+---
+
+<span class:list={['brand', { 'brand-light': tone === 'light' }]}>
+  Cobrad<span class="brand-i">í</span>a
+</span>

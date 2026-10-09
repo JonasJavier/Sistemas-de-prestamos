@@ -35,7 +35,7 @@ Con PostgreSQL, el backend (`runserver 127.0.0.1:8800`), el frontend (`pnpm -C .
 pnpm -C ../frontend e2e
 ```
 
-Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase 4 (la cajera abre caja, cobra con cambio, corrige un pago que autoriza el supervisor con su contraseña, cuadra y cierra; el cobrador cobra en su ruta desde el celular y la cajera recibe la rendición; el gerente ve atrasos y rutas), el acceso, el aislamiento entre empresas y el uso en el celular. En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Se pueden repetir: cada corrida crea un préstamo nuevo y cobra montos pequeños.
+Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase 4 (la cajera abre caja, cobra con cambio, corrige un pago que autoriza el supervisor con su contraseña, cuadra y cierra; el cobrador cobra en su ruta desde el celular y la cajera recibe la rendición; el gerente ve atrasos y rutas), el acceso, el aislamiento entre empresas, el uso en el celular y, desde la fase 9, los mensajes, el QR y el portal del cliente (que lee el código en Mailpit). En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Se pueden repetir: cada corrida crea un préstamo nuevo y cobra montos pequeños.
 
 ## Fase 4: cobros y caja
 
@@ -50,6 +50,12 @@ Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase
   ```
 
   Columnas: `documento, producto, monto, tasa, frecuencia, cuotas, fecha_desembolso, primera_cuota, numero_anterior, cobrador, saldo_capital, pagos` (tasa como fracción, fechas `AAAA-MM-DD`, pagos como `2026-01-05:1500;2026-02-05:1500`). Sin `--aplicar` solo ensaya; con una fila mala no guarda nada.
+
+## Fase 9: mensajes y portal del cliente
+
+- **Mensajes:** el correo sale por Mailpit (http://localhost:8025); WhatsApp y SMS se registran sin enviarse hasta configurar Twilio (`MESSAGING_WHATSAPP_PROVIDER=twilio`, `MESSAGING_SMS_PROVIDER=twilio` y las variables `TWILIO_*` en el `.env`, decisión 097). Ajustes · Mensajería tiene las plantillas, el registro y el mensaje de prueba.
+- **Portal del cliente** (decisión 099): en la ficha de un cliente, pestaña Mensajes, «Invitar al portal» muestra su enlace personal. Ábrelo en otra ventana privada, pide el código y léelo en Mailpit: los tres clientes de la demo tienen correo `@cliente.test`.
+- **Sitio de promoción** (decisión 100): `pnpm -C ../site dev` en http://localhost:4321; `PUBLIC_APP_URL=http://localhost:5173` hace que sus botones lleven a la app local.
 
 ## Probar en un celular
 
