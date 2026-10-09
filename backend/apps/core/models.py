@@ -267,6 +267,7 @@ class Sequence(CompanyScopedModel):
         CASH_SESSION = "cash_session", "Caja"
         PAYOFF_QUOTE = "payoff_quote", "Carta de saldo"
         EXPENSE = "expense", "Gasto"
+        INCOME = "income", "Ingreso"
         JOURNAL = "journal", "Asiento"
 
     # Letter between the branch code and the number; loans carry none.
@@ -277,6 +278,7 @@ class Sequence(CompanyScopedModel):
         DocType.CASH_SESSION: "C-",
         DocType.PAYOFF_QUOTE: "CS-",
         DocType.EXPENSE: "G-",
+        DocType.INCOME: "I-",
         DocType.JOURNAL: "A-",
     }
 

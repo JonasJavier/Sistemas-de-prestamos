@@ -17,6 +17,7 @@ import {
 import { ApiError } from '../api/client'
 import { listReasons } from '../api/origination'
 import { listPayments } from '../api/payments'
+import { ExpenseDialog } from '../components/ExpenseDialog'
 import { Modal } from '../components/Modal'
 import {
   Alert,
@@ -475,7 +476,7 @@ function CloseDialog({
  * count and close (F7). */
 export function MyCashPage() {
   const cash = useQuery({ queryKey: ['my-cash'], queryFn: getMyCash })
-  const [dialog, setDialog] = useState<'move' | 'close' | null>(null)
+  const [dialog, setDialog] = useState<'move' | 'close' | 'petty' | null>(null)
   const [settling, setSettling] = useState<RouteToSettle | null>(null)
   const session = cash.data?.session ?? null
   const payments = useQuery({
@@ -527,6 +528,9 @@ export function MyCashPage() {
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setDialog('move')}>
               Depositar o trasladar
+            </Button>
+            <Button variant="secondary" onClick={() => setDialog('petty')}>
+              Gasto menor
             </Button>
           </div>
 
@@ -621,6 +625,14 @@ export function MyCashPage() {
             )}
           </Card>
           {dialog === 'move' ? <MoveDialog data={data} onClose={() => setDialog(null)} /> : null}
+          {dialog === 'petty' ? (
+            <ExpenseDialog
+              kind="expense"
+              fromDrawer
+              branchId={session.branch}
+              onClose={() => setDialog(null)}
+            />
+          ) : null}
           {dialog === 'close' ? (
             <CloseDialog data={data} session={session} onClose={() => setDialog(null)} />
           ) : null}

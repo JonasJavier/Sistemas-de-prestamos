@@ -20,6 +20,7 @@ from apps.collections.defaults import seed_escalation_rules
 from apps.core.holidays import seed_year
 from apps.core.models import Branch, Company, Reason
 from apps.core.tenancy import company_context
+from apps.expenses.defaults import seed_expense_setup
 from apps.ledger.services import seed_chart
 from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
 from apps.platform.models import Plan, Subscription
@@ -114,6 +115,7 @@ def register_company(
         _seed_products(company)
         seed_chart(company, branch)
         seed_escalation_rules(company)
+        seed_expense_setup(company.id)
 
     return RegistrationResult(company=company, admin=admin, branch=branch)
 
