@@ -99,6 +99,9 @@ function navFor(me: Me): NavGroup[] {
     finance.push({ to: '/contabilidad', label: 'Contabilidad' })
   }
   if (finance.length) groups.push({ title: 'Finanzas', items: finance })
+  const reports: NavItem[] = []
+  if (hasRole(me, ACCESS.indicators)) reports.push({ to: '/reportes/cartera', label: 'Cartera' })
+  if (reports.length) groups.push({ title: 'Reportes', items: reports })
   if (me.is_manager) {
     groups.push({
       title: 'Ajustes',

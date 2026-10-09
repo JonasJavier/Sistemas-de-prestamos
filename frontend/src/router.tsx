@@ -30,6 +30,10 @@ const AccountingPage = lazyRouteComponent(() => import('./pages/Accounting'), 'A
 const ExpensesPage = lazyRouteComponent(() => import('./pages/Expenses'), 'ExpensesPage')
 const PayablesPage = lazyRouteComponent(() => import('./pages/Payables'), 'PayablesPage')
 const ResultsPage = lazyRouteComponent(() => import('./pages/Results'), 'ResultsPage')
+const PortfolioReportPage = lazyRouteComponent(
+  () => import('./pages/PortfolioReport'),
+  'PortfolioReportPage',
+)
 const FiscalDocumentsPage = lazyRouteComponent(
   () => import('./pages/FiscalDocuments'),
   'FiscalDocumentsPage',
@@ -394,6 +398,13 @@ const resultsRoute = createRoute({
   component: ResultsPage,
 })
 
+const portfolioReportRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/reportes/cartera',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.indicators),
+  component: withMe(PortfolioReportPage),
+})
+
 const fiscalRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/comprobantes',
@@ -566,6 +577,7 @@ const routeTree = rootRoute.addChildren([
     expensesRoute,
     payablesRoute,
     resultsRoute,
+    portfolioReportRoute,
     fiscalRoute,
     productsRoute,
     companySettingsRoute,

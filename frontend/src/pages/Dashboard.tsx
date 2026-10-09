@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 
-import type { Me } from '../api/accounts'
+import { listBranches, type Me } from '../api/accounts'
 import { getMyCash } from '../api/cash'
 import { listApplications, listLoans } from '../api/origination'
 import { getMyCompany } from '../api/platform'
-import { Alert } from '../components/ui'
+import { type Dashboard, getDashboard } from '../api/reports'
+import { Kpi } from '../components/Kpi'
+import { Alert, Field, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
-import { rd } from '../lib/format'
+import { pct, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 
 function Tile({
@@ -39,7 +41,7 @@ function Tile({
   )
 }
 
-/** Minimal P10 until phase 7: what is waiting for this role today. */
+/** P10, the work queue: what is waiting for this role today. */
 function Today({ me }: { me: Me }) {
   const decider = hasRole(me, ACCESS.decide)
   const originator = hasRole(me, ACCESS.originate)
@@ -60,14 +62,16 @@ function Today({ me }: { me: Me }) {
     queryFn: () => listApplications({ bandeja: 'por_desembolsar' }),
     enabled: disburser,
   })
+  // Who sees the indicators below gets the portfolio there, not twice.
+  const board = hasRole(me, ACCESS.indicators)
   const loans = useQuery({
     queryKey: ['loans', 'active', '', 1],
     queryFn: () => listLoans({ status: 'active' }),
-    enabled: reader,
+    enabled: reader && !board,
   })
   const cashier = hasRole(me, ACCESS.myCash)
   const supervisor = hasRole(me, ACCESS.supervise)
-  const watchesArrears = hasRole(me, ACCESS.delinquency)
+  const watchesArrears = hasRole(me, ACCESS.delinquency) && !board
   const cash = useQuery({ queryKey: ['my-cash'], queryFn: getMyCash, enabled: cashier })
   const arrears = useQuery({
     queryKey: ['loans', 'active', 'atraso'],
@@ -153,17 +157,253 @@ function Today({ me }: { me: Me }) {
           }
         />
       ) : null}
-      <Tile
-        to="/prestamos"
-        label="Préstamos activos"
-        value={loans.data?.count}
-        hint={
-          loans.data
-            ? `${rd(loans.data.totals.principal_outstanding)} de capital`
-            : 'Cartera de tu alcance'
-        }
-      />
+      {board ? null : (
+        <Tile
+          to="/prestamos"
+          label="Préstamos activos"
+          value={loans.data?.count}
+          hint={
+            loans.data
+              ? `${rd(loans.data.totals.principal_outstanding)} de capital`
+              : 'Cartera de tu alcance'
+          }
+        />
+      )}
     </section>
+  )
+}
+
+const ALL_BRANCHES = ['Gerente', 'Contabilidad', 'Auditoría']
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section aria-label={title} className="space-y-2">
+      <h2 className="text-sm font-semibold text-muted">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+/** P10 · indicators (decision 086): the same figures as the reports. */
+function Indicators({ data }: { data: Dashboard }) {
+  const ind = data.indicators
+  if (!ind) return null
+  const defs = data.definitions
+  const p = ind.portfolio
+  const promises = ind.promises_month
+  const resolved = promises.kept + promises.broken
+  const diffs = ind.cash_differences_month
+  const maxBucket = Math.max(...p.buckets.map((b) => Number(b.principal)), 1)
+  return (
+    <>
+      <Section title="Cartera y cobros">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Kpi
+            label="Cartera activa"
+            value={rd(p.principal)}
+            hint={`${p.count} préstamo(s)`}
+            help={defs.portfolio}
+            to="/reportes/cartera"
+          />
+          <Kpi
+            label="Cartera en riesgo (PAR30)"
+            value={pct(p.par30)}
+            hint={`PAR7 ${pct(p.par7)} · PAR90 ${pct(p.par90)}`}
+            help={defs.par30}
+            tone={Number(p.par30 ?? 0) > 0.1 ? 'bad' : undefined}
+          />
+          <Kpi
+            label="Cobrado hoy"
+            value={rd(ind.today.collected)}
+            hint={`de ${rd(ind.today.expected)} esperado · ${pct(ind.today.recovery, 0)}`}
+            help={`${defs.collected} Esperado: ${defs.expected}`}
+          />
+          <Kpi
+            label="Desembolsado del mes"
+            value={rd(ind.disbursed_month.total)}
+            hint={`${ind.disbursed_month.count} desembolso(s)`}
+            help={defs.disbursed}
+          />
+          {ind.profit_month ? (
+            <Kpi
+              label="Ganancia cobrada del mes"
+              value={rd(ind.profit_month.result)}
+              hint={`${rd(ind.profit_month.income)} cobrado − ${rd(ind.profit_month.expenses)} de gastos`}
+              help={defs.profit}
+              to="/reportes/resultados"
+              tone={Number(ind.profit_month.result) < 0 ? 'bad' : undefined}
+            />
+          ) : null}
+          <Kpi
+            label="Promesas cumplidas del mes"
+            value={pct(promises.rate, 0)}
+            hint={resolved ? `${promises.kept} de ${resolved} resueltas` : 'Ninguna resuelta aún'}
+            help={defs.promises}
+            to="/cobranza"
+          />
+          <Kpi
+            label="Diferencias de caja del mes"
+            value={rd(diffs.total)}
+            hint={
+              diffs.count
+                ? `Faltantes ${rd(diffs.shortage)} · sobrantes ${rd(diffs.overage)}`
+                : 'Ninguna: la meta es cero'
+            }
+            help={defs.cash_differences}
+            tone={Number(diffs.total) ? 'bad' : 'good'}
+          />
+        </div>
+      </Section>
+      <Section title="Mora por tramos">
+        <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm">
+          <p className="mb-3 text-[12px] text-muted">{defs.buckets}</p>
+          <ul className="space-y-2">
+            {p.buckets.map((b) => (
+              <li key={b.key} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3">
+                <span className="text-[13px]">{b.label}</span>
+                <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
+                  <span
+                    className={`block h-full rounded-full ${b.key === 'al_dia' ? 'bg-brand-700' : 'bg-warning-700'}`}
+                    style={{ width: `${(Number(b.principal) / maxBucket) * 100}%` }}
+                  />
+                </span>
+                <span className="text-right text-[13px] tabular-nums">
+                  {b.count} · {rd(b.principal)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Section>
+    </>
+  )
+}
+
+function Operations({ data }: { data: Dashboard }) {
+  const ops = data.operations
+  if (!ops) return null
+  return (
+    <Section title="Operación de hoy">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Cajas abiertas" value={String(ops.open_cash_sessions)} to="/cajas" />
+        <Kpi
+          label="Rutas en la calle"
+          value={`${ops.routes_open} de ${ops.routes_total}`}
+          hint="Abiertas de las de hoy"
+          to="/rutas"
+        />
+        <Kpi
+          label="Visitas de las rutas"
+          value={`${ops.stops.visited} de ${ops.stops.total}`}
+          hint={`${ops.stops.paid} con pago`}
+          to="/rutas"
+        />
+      </div>
+    </Section>
+  )
+}
+
+function Books({ data }: { data: Dashboard }) {
+  const books = data.books
+  if (!books) return null
+  const pending = books.reconciliations_pending
+  return (
+    <Section title="Dinero y obligaciones">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {books.accounts.map((account) => (
+          <Kpi
+            key={account.id}
+            label={account.name}
+            value={rd(account.balance)}
+            hint={account.kind === 'bank' ? 'Banco' : 'Caja'}
+            to="/cuentas"
+          />
+        ))}
+        <Kpi
+          label="Cuentas por pagar (7 días)"
+          value={rd(books.payables_due.total)}
+          hint={`${books.payables_due.count} por pagar · ${books.payables_due.overdue} vencida(s)`}
+          to="/cuentas-por-pagar"
+          tone={books.payables_due.overdue ? 'bad' : undefined}
+        />
+        <Kpi
+          label={`Conciliaciones de ${pending.month.slice(5)}/${pending.month.slice(0, 4)}`}
+          value={pending.accounts.length ? `${pending.accounts.length} pendiente(s)` : 'Al día'}
+          hint={pending.accounts.join(', ') || 'Todos los bancos conciliados'}
+          to="/contabilidad"
+          tone={pending.accounts.length ? 'bad' : 'good'}
+        />
+      </div>
+    </Section>
+  )
+}
+
+function Officer({ data }: { data: Dashboard }) {
+  const officer = data.officer
+  if (!officer) return null
+  return (
+    <Section title="Mi cartera">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {officer.applications.map((row) => (
+          <Kpi
+            key={row.status}
+            label={`Solicitudes: ${row.label.toLowerCase()}`}
+            value={String(row.count)}
+            to="/solicitudes"
+          />
+        ))}
+        <Kpi
+          label="Vencen en 3 días"
+          value={String(officer.due_soon)}
+          hint="Préstamos que originaste"
+          to="/prestamos"
+        />
+        <Kpi
+          label="En atraso"
+          value={String(officer.in_arrears)}
+          hint="Préstamos que originaste"
+          to="/atrasos"
+          tone={officer.in_arrears ? 'bad' : undefined}
+        />
+      </div>
+    </Section>
+  )
+}
+
+function Board({ me }: { me: Me }) {
+  const [branch, setBranch] = useState('')
+  const wide = hasRole(me, ALL_BRANCHES)
+  const branches = useQuery({ queryKey: ['branches'], queryFn: listBranches, enabled: wide })
+  const board = useQuery({
+    queryKey: ['dashboard', branch],
+    queryFn: () => getDashboard(branch || undefined),
+    refetchInterval: 60_000,
+  })
+  const data = board.data
+  if (!data || !(data.indicators || data.operations || data.books || data.officer)) return null
+  return (
+    <div className="space-y-5">
+      {wide && (branches.data?.results.length ?? 0) > 1 ? (
+        <div className="max-w-xs">
+          <Field label="Sucursal">
+            <Select value={branch} onChange={(e) => setBranch(e.target.value)}>
+              <option value="">Toda la empresa</option>
+              {branches.data?.results.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      ) : data.indicators ? (
+        <p className="text-[12.5px] text-muted">Alcance: {data.scope}</p>
+      ) : null}
+      <Indicators data={data} />
+      <Operations data={data} />
+      <Books data={data} />
+      <Officer data={data} />
+    </div>
   )
 }
 
@@ -231,6 +471,7 @@ export function DashboardPage({ me }: { me: Me }) {
       ) : null}
 
       <Today me={me} />
+      <Board me={me} />
     </>
   )
 }

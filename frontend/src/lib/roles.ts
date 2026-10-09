@@ -49,6 +49,9 @@ export const ACCESS = {
   registerExpenses: [G, SU, CA, CT],
   /** P55: payables. */
   payables: [G, CT, AU],
+  // Phase 7 (tablero y reportes, decision 086).
+  /** Indicators and the portfolio report (P10, P60). */
+  indicators: [G, SU, CT, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>
