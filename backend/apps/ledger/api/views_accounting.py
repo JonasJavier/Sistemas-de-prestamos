@@ -463,3 +463,36 @@ class MonthClosePdfView(APIView):
             content_type="application/pdf",
             filename=f"{document.folio}.pdf",
         )
+
+
+class ManagementResultsView(APIView):
+    """P61 · Resultados: what was collected minus operating expenses."""
+
+    permission_classes = [CanReadBooks]
+
+    def get(self, request: Request) -> Response:
+        date_from, date_to = _range(request)
+        report = accounting.management_results(date_from, date_to, branch_id=_branch(request))
+        return Response(
+            {
+                "date_from": date_from,
+                "date_to": date_to,
+                "income": [{"label": label, "amount": str(v)} for label, v in report.income],
+                "income_total": str(report.income_total),
+                "expenses": [{**_account(a), "amount": str(v)} for a, v in report.expenses],
+                "expense_total": str(report.expense_total),
+                "result": str(report.result),
+                "write_offs": str(report.write_offs),
+                "owner_withdrawals": str(report.owner_withdrawals),
+                "owner_capital": str(report.owner_capital),
+                "months": [
+                    {
+                        **m,
+                        "income": str(m["income"]),
+                        "expenses": str(m["expenses"]),
+                        "result": str(m["income"] - m["expenses"]),
+                    }
+                    for m in report.months
+                ],
+            }
+        )

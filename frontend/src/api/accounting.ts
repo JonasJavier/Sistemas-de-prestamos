@@ -256,3 +256,64 @@ export const reopenMonth = (year: number, month: number, reason: string): Promis
 
 export const monthClosePdfUrl = (year: number, month: number) =>
   `/api/v1/contabilidad/cierre/${year}/${month}/pdf/`
+
+// --- P61 · Management results and the e-CF queue (decision 085) -------------------------------
+
+export interface ManagementResults {
+  date_from: string
+  date_to: string
+  income: { label: string; amount: string }[]
+  income_total: string
+  expenses: (AccountRef & { amount: string })[]
+  expense_total: string
+  result: string
+  write_offs: string
+  owner_withdrawals: string
+  owner_capital: string
+  months: { year: number; month: number; income: string; expenses: string; result: string }[]
+}
+
+export const getManagementResults = (range: Range): Promise<ManagementResults> =>
+  api(`/api/v1/reportes/resultados/${toQuery({ ...range })}`)
+
+export interface FiscalDocument {
+  id: string
+  kind: 'E31' | 'E32' | 'E34'
+  kind_label: string
+  status: 'pending' | 'issued' | 'voided'
+  status_label: string
+  date: string
+  buyer_name: string
+  buyer_document: string
+  concept: string
+  exempt_amount: string
+  taxed_amount: string
+  itbis: string
+  total: string
+  ncf: string
+  modifies_ncf: string | null
+  issued_at: string | null
+  issued_by_name: string | null
+  void_reason: string
+}
+
+export interface FiscalPage extends Page<FiscalDocument> {
+  totals: { count: number; total: string; pending: number }
+}
+
+export const listFiscalDocuments = (params: {
+  estado: FiscalDocument['status']
+  page?: number
+}): Promise<FiscalPage> => api(`/api/v1/comprobantes/${toQuery({ ...params })}`)
+
+export const issueFiscalDocument = (id: string, ncf: string): Promise<FiscalDocument> =>
+  api(`/api/v1/comprobantes/${id}/emitir/`, { method: 'POST', body: { ncf } })
+
+export const voidFiscalDocument = (id: string, reason: string): Promise<FiscalDocument> =>
+  api(`/api/v1/comprobantes/${id}/anular/`, { method: 'POST', body: { reason } })
+
+export const fiscalExportUrl = (
+  kind: 'pendientes' | '606' | '607',
+  year?: number,
+  month?: number,
+) => `/api/v1/comprobantes/exportar/${kind}/${toQuery({ year, month })}`

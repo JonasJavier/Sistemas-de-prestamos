@@ -117,6 +117,14 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P45 | Rutas | `/rutas` | Asignación de cartera por cobrador, avance del día, **mapa de ubicación** (031), rendiciones pendientes | G Su | 4 |
 | P46 | Casos legales | `/legal` | Tabla y ficha de cada caso: abogado, alguacil, documentos, costas y estado | G | 8 |
 
+> **Construidas en la fase 6 (decisiones 080–085):**
+> - **P54 Gastos e ingresos:** tabla con filtros y totales, alta con comprobante, NCF y RNC, y un detalle con aprobación, anulación, archivos e historial. El «gasto menor» se registra desde P50.
+> - **P55 Cuentas por pagar:** abiertas, vencidas, próximas, pagadas y canceladas; alta única o recurrente; pagar y cancelar.
+> - **P56 Contabilidad:** plan de cuentas, diario, mayor, balanza, resultados y balance (imprimibles), conciliación bancaria y cierre de mes; el ajuste contable es del gerente.
+> - **P61 Resultados:** lo cobrado menos los gastos operativos, por mes, con castigos y movimientos del dueño aparte.
+> - **Comprobantes fiscales** (`/comprobantes`, pantalla nueva): la cola por emitir y el registro del e-NCF, con las exportaciones 606, 607 y de pendientes.
+> - **Diferencias de caja** en P52 y en «Mi caja», y la casilla de ITBIS en los cargos del producto (P74).
+>
 > **Construidas en la fase 5 (decisiones 076–079):**
 > - **P42:** el diálogo de gestión, igual en el préstamo, en Atrasos, en la agenda y como hoja inferior en «Mi ruta».
 > - **P43:** gestor, promesa pendiente y última gestión en cada fila; filtros «Mis préstamos» y con o sin promesa; selección para asignar gestor.

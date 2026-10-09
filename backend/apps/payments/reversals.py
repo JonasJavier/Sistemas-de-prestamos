@@ -318,6 +318,9 @@ def execute_reversal(
     from apps.collections.promises import evaluate
 
     evaluate(loan, today)  # the promise it kept may be pending (or broken) again
+    from apps.ledger import fiscal
+
+    fiscal.on_reversal("payments.payment", payment.id, today)
     record_event(
         company_id=payment.company_id,
         type="payment.reversed",

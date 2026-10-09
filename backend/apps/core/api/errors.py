@@ -18,3 +18,18 @@ def fail(exc: Exception) -> Response:
 
 def person(user) -> str | None:
     return (user.get_full_name() or user.email) if user else None
+
+
+def exception_handler(exc: Exception, context: dict) -> Response | None:
+    """DRF's handler, plus: a ledger rule nobody caught (no overdraft, a
+    closed month) answers 400 with its message instead of a 500, and the
+    request's transaction is rolled back like any refused request."""
+    from rest_framework.views import exception_handler as drf_handler
+    from rest_framework.views import set_rollback
+
+    from apps.ledger.services import LedgerError
+
+    if isinstance(exc, LedgerError):
+        set_rollback()
+        return fail(exc)
+    return drf_handler(exc, context)

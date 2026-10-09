@@ -53,7 +53,9 @@ Resumen y tabla en la misma página, totales al pie, filtros impresos en una lí
 | Cartera | Saldos por sucursal, cobrador y producto; antigüedad; PAR30 |
 | Atrasos | Por tramo, con días, monto vencido y gestor |
 | Gestiones y promesas | Actividad por gestor; cumplimiento de promesas |
-| Resultados (gasto-ingreso) | Ingresos cobrados por tipo menos gastos operativos; lo del dueño aparte |
+| Resultados (gasto-ingreso) | Ingresos cobrados por tipo menos gastos operativos; lo del dueño aparte (P61, fase 6: en pantalla e imprimible; PDF y Excel con el centro de reportes de la fase 7) |
+| Cierre de mes | PDF emitido al cerrar: estado de resultados del mes, balance al último día, la lista verificada y el devengo (fase 6) |
+| Formatos 606 y 607 | CSV con las columnas de la DGII: compras con NCF del mes (ITBIS llevado al costo) y comprobantes emitidos (ingresos financieros); se validan con la herramienta de la DGII (fase 6) |
 | Comisiones | Cálculo del período por empleado, con su regla |
 
 ### De la plataforma (fase 1; emite Cobradía, no la empresa)

@@ -42,6 +42,22 @@ async function ensureCsrf(): Promise<string> {
   return data.csrfToken
 }
 
+/** The server answers JSON; anything else (a proxy page, a crash) still
+ * reaches the screen as a readable message. */
+function parseBody(text: string, status: number): unknown {
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return {
+      detail:
+        status >= 500
+          ? `El servidor tuvo un problema (${status}). Inténtalo de nuevo; si se repite, avisa al soporte.`
+          : `Respuesta inesperada del servidor (${status}).`,
+    }
+  }
+}
+
 export async function apiUpload<T>(path: string, form: FormData, method = 'POST'): Promise<T> {
   const response = await fetch(path, {
     method,
@@ -49,8 +65,7 @@ export async function apiUpload<T>(path: string, form: FormData, method = 'POST'
     credentials: 'same-origin',
     body: form, // browser sets the multipart boundary
   })
-  const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : null
+  const data = parseBody(await response.text(), response.status)
   if (!response.ok) throw new ApiError(response.status, data)
   return data as T
 }
@@ -71,8 +86,7 @@ export async function api<T>(
     credentials: 'same-origin',
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   })
-  const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : null
+  const data = parseBody(await response.text(), response.status)
   if (!response.ok) throw new ApiError(response.status, data)
   return data as T
 }

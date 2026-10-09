@@ -370,6 +370,18 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
     - los reportes estén generados.
   - Después, el período se **bloquea**: nadie registra movimientos con fecha de un mes cerrado sin un permiso especial.
 
+> **Fase 6 (decisiones 080–085):**
+> - **Gasto:** un mismo registro sirve para un gasto o un ingreso. Lleva categoría operativa o del dueño (lo del dueño va al patrimonio), NCF o e-NCF, RNC o cédula validados, el ITBIS incluido para el 606 y los comprobantes adjuntos.
+>   - El gerente y contabilidad lo registran sin límite; el supervisor y el cajero, hasta su límite. Por encima, lo aprueba otra persona y solo entonces se mueve el dinero.
+>   - El cajero puede registrar un gasto menor desde su caja abierta.
+>   - Lo anula el gerente, con un asiento inverso fechado hoy.
+> - **Cuentas por pagar:** se registran por devengo. Una factura entra con su fecha; las cuotas de una serie entran al vencer o al pagarse antes. Admiten pagos parciales, y cancelar lo pendiente revierte su parte del gasto.
+> - **Conciliación:** el extracto en CSV o Excel se empareja automáticamente (mismo monto y hasta 3 días de diferencia) o a mano, y los cargos del banco se registran desde su línea. Se cierra cuando todo cuadra.
+> - **Cierre de mes:**
+>   - Lista de verificación: meses anteriores cerrados, mes terminado, cajas cerradas, rutas rendidas, bancos conciliados y ningún gasto por aprobar. Las comisiones llegan en la fase 7.
+>   - Al cerrar se asienta el devengo y su reverso, se bloquea el mes (también en la base de datos) y se emite el PDF del cierre.
+>   - Se reabre solo el último mes cerrado, con motivo, y eso anula su devengo.
+
 ## F16 · Migración inicial
 
 1. **Plantillas de Excel.** Hay una para cada tipo de dato: clientes, préstamos con sus calendarios, pagos históricos y saldos de las cuentas.

@@ -319,3 +319,107 @@ def journal(date_from: dt.date, date_to: dt.date, *, branch_id: UUID | None = No
     if branch_id:
         entries = entries.filter(Q(branch_id=branch_id) | Q(lines__branch_id=branch_id)).distinct()
     return entries.order_by("-date", "-created_at")
+
+
+# --- P61 · Management results (cash basis) -----------------------------------------------------
+
+ACCRUAL_SOURCES = ("ledger.accrual", "ledger.accrual_cancel")
+INCOME_GROUPS = (
+    ("interest_income", "Intereses cobrados"),
+    ("late_fee_income", "Mora cobrada"),
+    ("charge_income", "Cargos cobrados"),
+)
+
+
+@dataclass
+class ManagementResults:
+    date_from: dt.date
+    date_to: dt.date
+    income: list[tuple[str, Decimal]]
+    expenses: list[tuple[LedgerAccount, Decimal]]
+    write_offs: Decimal
+    owner_withdrawals: Decimal
+    owner_capital: Decimal
+    months: list[dict]
+
+    @property
+    def income_total(self) -> Decimal:
+        return sum((amount for _, amount in self.income), ZERO)
+
+    @property
+    def expense_total(self) -> Decimal:
+        return sum((amount for _, amount in self.expenses), ZERO)
+
+    @property
+    def result(self) -> Decimal:
+        return self.income_total - self.expense_total
+
+
+def management_results(
+    date_from: dt.date, date_to: dt.date, *, branch_id: UUID | None = None
+) -> ManagementResults:
+    """«Ganancia cobrada» (doc 09): interest, late fees and charges as they
+    were collected, other income, minus operating expenses. The month-end
+    accrual is left out (it is accounting, not cash) and the owner's
+    movements are shown apart (#12)."""
+    lines = (
+        _lines(branch_id)
+        .filter(entry__date__gte=date_from, entry__date__lte=date_to)
+        .exclude(entry__source_type__in=ACCRUAL_SOURCES)
+    )
+    totals = {
+        row["account_id"]: (row["d"] or ZERO, row["c"] or ZERO)
+        for row in lines.values("account_id").annotate(d=Sum("debit"), c=Sum("credit"))
+    }
+    accounts = {a.id: a for a in LedgerAccount.objects.filter(id__in=totals)}
+    by_key = {a.system_key: _natural(a, *totals[a.id]) for a in accounts.values() if a.system_key}
+    income = [(label, by_key.get(key, ZERO)) for key, label in INCOME_GROUPS]
+    grouped = {key for key, _ in INCOME_GROUPS}
+    others = sum(
+        (
+            _natural(a, *totals[a.id])
+            for a in accounts.values()
+            if a.type == LedgerAccount.Type.INCOME and a.system_key not in grouped
+        ),
+        ZERO,
+    )
+    income.append(("Otros ingresos", others))
+    expenses = sorted(
+        (
+            (a, _natural(a, *totals[a.id]))
+            for a in accounts.values()
+            if a.type == LedgerAccount.Type.EXPENSE and a.system_key != "write_off_expense"
+        ),
+        key=lambda row: row[0].code,
+    )
+    months = []
+    cursor = date_from.replace(day=1)
+    while cursor <= date_to:
+        first, last = month_bounds(cursor.year, cursor.month)
+        span = lines.filter(
+            entry__date__gte=max(first, date_from), entry__date__lte=min(last, date_to)
+        )
+        income_m = span.filter(account__type=LedgerAccount.Type.INCOME).aggregate(
+            d=Sum("debit"), c=Sum("credit")
+        )
+        expense_m = (
+            span.filter(account__type=LedgerAccount.Type.EXPENSE)
+            .exclude(account__system_key="write_off_expense")
+            .aggregate(d=Sum("debit"), c=Sum("credit"))
+        )
+        got = (income_m["c"] or ZERO) - (income_m["d"] or ZERO)
+        spent = (expense_m["d"] or ZERO) - (expense_m["c"] or ZERO)
+        months.append(
+            {"year": cursor.year, "month": cursor.month, "income": got, "expenses": spent}
+        )
+        cursor = last + dt.timedelta(days=1)
+    return ManagementResults(
+        date_from=date_from,
+        date_to=date_to,
+        income=income,
+        expenses=[row for row in expenses if row[1]],
+        write_offs=by_key.get("write_off_expense", ZERO),
+        owner_withdrawals=-by_key.get("owner_withdrawals", ZERO),
+        owner_capital=by_key.get("owner_equity", ZERO),
+        months=months,
+    )

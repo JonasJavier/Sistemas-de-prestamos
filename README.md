@@ -2,7 +2,7 @@
 
 **Cobradía** (`cobradia.com`) es una plataforma SaaS multiempresa para que las financieras dominicanas administren préstamos, cobros y caja. Cada empresa se registra en línea con 30 días de prueba y trabaja con sus datos aislados de las demás (decisiones 041–045).
 
-**Estado (08/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; la fase 4 · Cobros y caja está construida y espera su aceptación. Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
+**Estado (09/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; las fases 4 · Cobros y caja, 5 · Cobranza y 6 · Finanzas están construidas y esperan su aceptación (la validación contable y legal quedó en la decisión 075). Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
 
 ## Estructura
 
@@ -30,7 +30,7 @@ Nada entra a `main` en rojo. La integración continua (`.github/workflows/ci.yml
 
 - **Backend:** `ruff check`, `ruff format --check`, tipos estrictos del motor financiero (`mypy`), migraciones pendientes, `pip-audit` y `pytest` contra PostgreSQL con un rol sin privilegios (así RLS se prueba de verdad), incluida una semana simulada de cobros y caja que debe conciliar en cero cada noche.
 - **Frontend:** `oxlint`, formato, pruebas unitarias, `pnpm audit` y compilación.
-- **Extremo a extremo:** Playwright sobre el build de producción con los datos de `seed_demo`: las demos de las fases 3 y 4, el acceso, el aislamiento entre empresas y el celular.
+- **Extremo a extremo:** Playwright sobre el build de producción con los datos de `seed_demo`: las demos de las fases 3 a 6, el acceso, el aislamiento entre empresas y el celular.
 
 Las convenciones de trabajo (idiomas, dinero en `Decimal`, multiempresa, commits) están en [`CLAUDE.md`](CLAUDE.md) y en el [paso 10 §5](docs/proyecto/10-plan-de-construccion.md#5-convenciones-de-trabajo).
 

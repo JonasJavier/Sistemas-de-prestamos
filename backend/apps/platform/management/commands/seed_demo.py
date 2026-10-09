@@ -94,6 +94,7 @@ class Command(BaseCommand):
         self._demo_company()
         self._demo_portfolio()
         self._demo_collections()
+        self._demo_finance()
         self._other_company()
         self.stdout.write(self.style.SUCCESS(f"Listo. Contraseña de todas las cuentas: {PASSWORD}"))
 
@@ -267,6 +268,83 @@ class Command(BaseCommand):
                 follow_up_on=today,
             )
         self.stdout.write("Cobranza de demostración: 2 promesas y un seguimiento para hoy.")
+
+    def _demo_finance(self) -> None:
+        """Phase 6 demo: a bank funded from the general cash, two expenses
+        and a rent paid monthly (through the real services, only once)."""
+        company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
+        if company is None:
+            return
+        with company_context(company.id), transaction.atomic():
+            from apps.expenses import payables
+            from apps.expenses import services as expenses
+            from apps.expenses.models import Expense, ExpenseCategory
+            from apps.ledger import services as ledger
+
+            if Expense.objects.exists():
+                return
+            manager = User.objects.get(email="gerente@modelo.test")
+            branch = Membership.objects.filter(user=manager).first().branch
+            general = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH, holder=None)
+            bank = FinancialAccount.objects.filter(kind=FinancialAccount.Kind.BANK).first()
+            if bank is None:
+                bank = ledger.create_financial_account(
+                    company_id=company.id,
+                    name="Banco Popular",
+                    kind=FinancialAccount.Kind.BANK,
+                    bank_name="Banco Popular Dominicano",
+                    account_number="7801234567",
+                )
+            today = timezone.localdate()
+            ledger.transfer(
+                source=general,
+                target=bank,
+                amount=Decimal("50000"),
+                branch=branch,
+                on=today,
+                note="Depósito de la caja general",
+                created_by=manager,
+            )
+            categories = {c.name: c for c in ExpenseCategory.objects.all()}
+            expenses.register(
+                user=manager,
+                kind="expense",
+                date=today,
+                branch=branch,
+                category=categories["Luz, agua, teléfono e internet"],
+                description="Factura de luz",
+                amount=Decimal("3200"),
+                itbis=Decimal("488.14"),
+                method="transfer",
+                account=bank,
+                party_name="Edenorte Dominicana",
+                party_document="101821248",
+                ncf="B0100004567",
+            )
+            expenses.register(
+                user=manager,
+                kind="expense",
+                date=today,
+                branch=branch,
+                category=categories["Materiales de oficina"],
+                description="Resmas de papel y tinta",
+                amount=Decimal("1850"),
+                account=general,
+                party_name="Papelería La Económica",
+            )
+            payables.create(
+                user=manager,
+                branch=branch,
+                category=categories["Alquiler del local"],
+                party_name="Inmobiliaria del Cibao",
+                party_document="131234567",
+                description="Alquiler del local",
+                amount=Decimal("25000"),
+                due_on=today.replace(day=1) + dt.timedelta(days=32),
+                frequency="monthly",
+                count=6,
+            )
+        self.stdout.write("Finanzas de demostración: banco, dos gastos y el alquiler mensual.")
 
     @transaction.atomic
     def _other_company(self) -> None:

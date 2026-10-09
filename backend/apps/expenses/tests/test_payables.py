@@ -145,3 +145,38 @@ def test_payables_are_for_management_and_accounting(tenant, other_tenant) -> Non
     assert late.status_code == 201  # an old invoice in an open month is fine
     listing = tenant.client("gerente").get(f"{URL}?vista=abiertas").json()
     assert D(listing["totals"]["outstanding"]) == D("200.00")
+
+
+def test_paying_from_an_empty_account_says_so(tenant) -> None:
+    """No overdraft (#30): a clear 400, never a server error, and nothing kept."""
+    with company_context(tenant.company.id):
+        bank = ledger.create_financial_account(
+            company_id=tenant.company.id, name="Banco vacío", kind="bank"
+        )
+    created = (
+        tenant.client("gerente")
+        .post(
+            URL,
+            {
+                "branch": str(tenant.branch.id),
+                "category": rent(tenant),
+                "party_name": "Inmobiliaria",
+                "description": "Alquiler",
+                "amount": "1000",
+                "invoice_on": today().isoformat(),
+                "due_on": today().isoformat(),
+            },
+            format="json",
+        )
+        .json()[0]
+    )
+    refused = tenant.client("gerente").post(
+        f"{URL}{created['id']}/pagar/",
+        {"account": str(bank.id), "date": today().isoformat(), "amount": "1000"},
+        format="json",
+    )
+    assert refused.status_code == 400
+    assert refused.json()["code"] == "insufficient_funds"
+    assert "Fondos insuficientes" in refused.json()["detail"]
+    assert tenant.client("gerente").get(f"{URL}{created['id']}/").json()["paid"] == "0.00"
+    books_square(tenant)

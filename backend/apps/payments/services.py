@@ -658,6 +658,9 @@ def post_payment(
     from apps.collections.promises import evaluate
 
     evaluate(loan, today)  # a payment may keep the loan's promise (F8 step 4)
+    from apps.ledger import fiscal
+
+    fiscal.for_payment(payment)  # its e-CF waits «por emitir» (decision 085)
     if dest.route is not None and method == Payment.Method.CASH:
         cash.check_cash_limit(dest.route)
     record_event(

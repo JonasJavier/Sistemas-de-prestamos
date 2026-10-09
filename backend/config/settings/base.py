@@ -188,6 +188,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.core.api.pagination.Pagination",
+    "EXCEPTION_HANDLER": "apps.core.api.errors.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "registration": "5/hour",  # F19: public signup, per IP

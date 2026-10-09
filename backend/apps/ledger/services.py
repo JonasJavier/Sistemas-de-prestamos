@@ -35,7 +35,7 @@ class LedgerError(Exception):
 
 
 class InsufficientFunds(LedgerError):
-    pass
+    code = "insufficient_funds"
 
 
 @dataclass(frozen=True)

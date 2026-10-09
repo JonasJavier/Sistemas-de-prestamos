@@ -93,7 +93,11 @@ function navFor(me: Me): NavGroup[] {
   if (hasRole(me, ACCESS.expenses)) finance.push({ to: '/gastos', label: 'Gastos e ingresos' })
   if (hasRole(me, ACCESS.payables))
     finance.push({ to: '/cuentas-por-pagar', label: 'Cuentas por pagar' })
-  if (hasRole(me, ACCESS.books)) finance.push({ to: '/contabilidad', label: 'Contabilidad' })
+  if (hasRole(me, ACCESS.books)) {
+    finance.push({ to: '/comprobantes', label: 'Comprobantes fiscales' })
+    finance.push({ to: '/reportes/resultados', label: 'Resultados' })
+    finance.push({ to: '/contabilidad', label: 'Contabilidad' })
+  }
   if (finance.length) groups.push({ title: 'Finanzas', items: finance })
   if (me.is_manager) {
     groups.push({

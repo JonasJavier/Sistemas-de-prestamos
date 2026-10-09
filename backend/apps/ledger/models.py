@@ -15,7 +15,7 @@ import pghistory
 import pgtrigger
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Q
 
 from apps.core.models import Branch, CompanyScopedModel
 from apps.ledger import chart
@@ -368,3 +368,68 @@ class BankStatementLine(CompanyScopedModel):
             models.CheckConstraint(condition=~Q(amount=0), name="statement_line_not_zero"),
         ]
         indexes = [models.Index(fields=["company", "reconciliation", "date"])]
+
+
+class FiscalDocument(CompanyScopedModel):
+    """A sales receipt the company owes the DGII for its income (075, 085).
+
+    From 15/11/2026 every taxpayer issues e-CF (Ley 32-23). Each collection
+    with interest, late fee or charges, and each charge taken at
+    disbursement, leaves one here «por emitir»; the e-NCF is recorded when
+    it is issued (today by hand in the DGII's facturador; with a certified
+    provider, automatically). A reversed collection voids a pending receipt
+    or asks for a credit note (E34) on an issued one.
+    """
+
+    class Kind(models.TextChoices):
+        CREDIT = "E31", "Factura de crédito fiscal"
+        CONSUMER = "E32", "Factura de consumo"
+        CREDIT_NOTE = "E34", "Nota de crédito"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Por emitir"
+        ISSUED = "issued", "Emitido"
+        VOIDED = "voided", "Anulado"
+
+    kind = models.CharField(max_length=3, choices=Kind)
+    status = models.CharField(max_length=10, choices=Status, default=Status.PENDING)
+    customer = models.ForeignKey(
+        "customers.Customer", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    buyer_name = models.CharField(max_length=200)
+    buyer_document = models.CharField(max_length=11, blank=True)
+    date = models.DateField()
+    concept = models.CharField(max_length=300)
+    exempt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    taxed_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    itbis = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=2)
+    source_type = models.CharField(max_length=50)
+    source_id = models.UUIDField()
+    modifies = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="credit_notes"
+    )
+    ncf = models.CharField(max_length=13, blank=True)
+    issued_at = models.DateTimeField(null=True, blank=True)
+    issued_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    void_reason = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "ncf"], condition=~Q(ncf=""), name="fiscal_document_ncf_unique"
+            ),
+            models.CheckConstraint(
+                condition=~Q(status="issued") | ~Q(ncf=""), name="fiscal_document_issued_has_ncf"
+            ),
+            models.CheckConstraint(
+                condition=Q(total=F("exempt_amount") + F("taxed_amount") + F("itbis")),
+                name="fiscal_document_total_adds_up",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["company", "status", "date"]),
+            models.Index(fields=["company", "source_type", "source_id"]),
+        ]

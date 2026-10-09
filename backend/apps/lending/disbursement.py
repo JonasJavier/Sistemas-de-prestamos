@@ -350,6 +350,9 @@ def disburse(
         )
     except ledger.InsufficientFunds as exc:
         raise DisbursementError(str(exc), code="insufficient_funds") from exc
+    from apps.ledger import fiscal
+
+    fiscal.for_disbursement(loan, loan.charges.all(), today)  # its e-CF (decision 085)
 
     try:
         with transaction.atomic():
@@ -466,6 +469,9 @@ def void_loan(loan: Loan, *, user: User, reason: Reason, note: str) -> Loan:
         raise DisbursementError(str(exc), code="insufficient_funds") from exc
     disbursement.reversal_entry = reversal
     disbursement.save(update_fields=["reversal_entry", "updated_at"])
+    from apps.ledger import fiscal
+
+    fiscal.on_reversal("lending.disbursement", loan.id, today)
     loan.charges.update(status=LoanCharge.Status.REVERSED)
     for item in loan.collaterals.select_related("collateral"):
         item.collateral.status = Collateral.Status.RELEASED

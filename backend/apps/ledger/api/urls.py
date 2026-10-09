@@ -9,6 +9,7 @@ from apps.ledger.api.views_accounting import (
     ChartView,
     IncomeStatementView,
     JournalView,
+    ManagementResultsView,
     ManualEntryView,
     MonthClosePdfView,
     MonthCloseView,
@@ -20,6 +21,7 @@ from apps.ledger.api.views_banking import (
     ReconciliationView,
     StatementLineView,
 )
+from apps.ledger.api.views_fiscal import FiscalActionView, FiscalDocumentsView, FiscalExportView
 
 router = DefaultRouter()
 router.register("cuentas", FinancialAccountViewSet, basename="financial-account")
@@ -36,6 +38,19 @@ urlpatterns = [
     path("contabilidad/balance/", BalanceSheetView.as_view(), name="balance-sheet"),
     path("contabilidad/asientos/", ManualEntryView.as_view(), name="manual-entry"),
     path("contabilidad/periodos/", PeriodsView.as_view(), name="periods"),
+    path("reportes/resultados/", ManagementResultsView.as_view(), name="management-results"),
+    path("comprobantes/", FiscalDocumentsView.as_view(), name="fiscal-documents"),
+    path(
+        "comprobantes/<uuid:pk>/emitir/",
+        FiscalActionView.as_view(verb="emitir"),
+        name="fiscal-issue",
+    ),
+    path(
+        "comprobantes/<uuid:pk>/anular/",
+        FiscalActionView.as_view(verb="anular"),
+        name="fiscal-void",
+    ),
+    path("comprobantes/exportar/<str:kind>/", FiscalExportView.as_view(), name="fiscal-export"),
     path(
         "contabilidad/cierre/<int:year>/<int:month>/", MonthCloseView.as_view(), name="month-close"
     ),

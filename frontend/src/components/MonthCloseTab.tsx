@@ -80,6 +80,8 @@ function MonthDetail({ year, month }: { year: number; month: number }) {
   const after = (data: MonthClose | null) => {
     if (!data) return
     queryClient.setQueryData(['month-close', year, month], data)
+    // The closing PDF is issued after the commit: read it back.
+    void queryClient.invalidateQueries({ queryKey: ['month-close', year, month] })
     void queryClient.invalidateQueries({ queryKey: ['periods'] })
     void queryClient.invalidateQueries({ queryKey: ['chart'] })
   }

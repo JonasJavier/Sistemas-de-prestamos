@@ -245,6 +245,19 @@ pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, 
 | `Loan.agent`, `AgentAssignment` | El gestor del préstamo y el historial de cambios con motivo | F8 paso 6 (079) |
 | `RouteStop` | Motivo nuevo «promesa de hoy» | La promesa del día entra en la ruta |
 
+### 4.13 Lo que agregó la fase 6 (decisiones 080–085)
+
+| Dónde | Qué | Para qué |
+| --- | --- | --- |
+| `LedgerAccount` | `parent` (agrupación opcional); cuentas del sistema nuevas: intereses por cobrar `1105`, cuentas por pagar `2101`, ITBIS por pagar `2102`, sobrantes por aclarar `2103`, retiros del dueño `3102`, otros ingresos `4202`, pérdidas por faltantes `5301`; gastos operativos sembrados `5201`–`5299` | Estados financieros y operaciones nuevas (080) |
+| `AccountingPeriod` | Mes, estado, quién y cuándo cerró, la lista verificada y el devengo, motivo de reapertura; **disparador en la base** que rechaza asientos con fecha de un mes cerrado | Cierre de mes (084) |
+| `Expense` (un solo modelo con `kind`: gasto o ingreso), `ExpenseCategory` (`nature`: operativo o del dueño; `dgii_type` del 606), `ExpenseFile` | Lo que el doc 4.8 llamaba `Expense` e `Income`: mismo registro, misma aprobación y misma pantalla | P54 (081) |
+| `PayableSeries`, `Payable`, `PayablePayment` | Como en 4.8, con `recognized_entry` (devengo al registrar la factura o al vencer) y cancelación con asiento | P55 (082) |
+| `BankReconciliation`, `BankStatementLine` | Mes y cuenta, saldo del extracto, líneas importadas y su emparejado con una línea del libro | Conciliación (083) |
+| `CashDifference`, `CashDifferenceAction` | Faltantes y sobrantes con su saldo pendiente y las acciones que los resuelven | Decisión 075 |
+| `ProductCharge.taxed`, `LoanCharge.taxed` | El cargo incluye 18 % de ITBIS | Decisión 075 |
+| `FiscalDocument` | Comprobante E31, E32 o E34 por emitir o emitido, con montos exento, gravado e ITBIS, su origen y su e-NCF | e-CF y formatos 606 y 607 (085) |
+
 ## 5. Ciclos de vida
 
 ### 5.1 Solicitud

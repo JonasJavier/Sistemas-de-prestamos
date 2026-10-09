@@ -29,6 +29,11 @@ const AccountsPage = lazyRouteComponent(() => import('./pages/Accounts'), 'Accou
 const AccountingPage = lazyRouteComponent(() => import('./pages/Accounting'), 'AccountingPage')
 const ExpensesPage = lazyRouteComponent(() => import('./pages/Expenses'), 'ExpensesPage')
 const PayablesPage = lazyRouteComponent(() => import('./pages/Payables'), 'PayablesPage')
+const ResultsPage = lazyRouteComponent(() => import('./pages/Results'), 'ResultsPage')
+const FiscalDocumentsPage = lazyRouteComponent(
+  () => import('./pages/FiscalDocuments'),
+  'FiscalDocumentsPage',
+)
 const ApplicationDetailPage = lazyRouteComponent(
   () => import('./pages/ApplicationDetail'),
   'ApplicationDetailPage',
@@ -382,6 +387,20 @@ const loanDetailRoute = createRoute({
   component: withMe(LoanDetailPage),
 })
 
+const resultsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/reportes/resultados',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.books),
+  component: ResultsPage,
+})
+
+const fiscalRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/comprobantes',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.books),
+  component: FiscalDocumentsPage,
+})
+
 const payablesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/cuentas-por-pagar',
@@ -546,6 +565,8 @@ const routeTree = rootRoute.addChildren([
     accountingRoute,
     expensesRoute,
     payablesRoute,
+    resultsRoute,
+    fiscalRoute,
     productsRoute,
     companySettingsRoute,
     holidaysRoute,

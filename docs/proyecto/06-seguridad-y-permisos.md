@@ -90,6 +90,8 @@ Todo queda además limitado a la sucursal del usuario, salvo para G, Ct y Au (03
 | | Ajustes contables (con motivo) | ✓ | — | — | — | — | — | — | — |
 | | Conciliación bancaria | ✓ | — | — | — | — | — | ✓ | — |
 | | Cerrar el mes | ✓ | — | — | — | — | — | — | — |
+| | Comprobantes fiscales (registrar e-NCF, exportar 606 y 607) — fase 6 | ✓ | — | — | — | — | — | ✓ | L |
+| | Resolver diferencias de caja: reponer (en caja abierta) · aplicar sobrante · asumir pérdida — fase 6 | ✓ | — | ✓ | — | ✓ | — | — | — |
 | Reportes | Operativos (cartera, atrasos, caja) | ✓ | — | ✓ | P | P | P | ✓ | ✓ |
 | | Financieros (resultados, contabilidad) | ✓ | — | — | — | — | — | ✓ | ✓ |
 | | Exportar reportes | ✓ | — | ✓ | — | — | — | ✓ | ✓ |

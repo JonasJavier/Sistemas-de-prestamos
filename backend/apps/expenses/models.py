@@ -40,6 +40,10 @@ class ExpenseCategory(CompanyScopedModel):
     kind = models.CharField(max_length=10, choices=Kind)
     nature = models.CharField(max_length=10, choices=Nature, default=Nature.OPERATING)
     account = models.ForeignKey(LedgerAccount, on_delete=models.PROTECT, related_name="+")
+    # «Tipo de bienes y servicios comprados» of the DGII 606 (decision 085):
+    # 01 personal, 02 services and supplies, 03 rent, 06 other deductions,
+    # 07 financial expenses, 11 insurance...
+    dgii_type = models.CharField(max_length=2, default="02")
     is_active = models.BooleanField(default=True)
 
     class Meta:
