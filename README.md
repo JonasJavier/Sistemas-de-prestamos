@@ -2,7 +2,7 @@
 
 **Cobradía** (`cobradia.com`) es una plataforma SaaS multiempresa para que las financieras dominicanas administren préstamos, cobros y caja. Cada empresa se registra en línea con 30 días de prueba y trabaja con sus datos aislados de las demás (decisiones 041–045).
 
-**Estado (09/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; las fases 4 · Cobros y caja, 5 · Cobranza, 6 · Finanzas y 7 · Tablero y reportes están construidas y esperan su aceptación (la validación contable y legal quedó en la decisión 075). Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
+**Estado (09/10/2026):** fases 1 · Cimientos, 2 · Clientes y garantías y 3 · Originación aceptadas; las fases 4 · Cobros y caja, 5 · Cobranza, 6 · Finanzas, 7 · Tablero y reportes y 8 · Renovación y legal están construidas y esperan su aceptación (la validación contable y legal quedó en la decisión 075). Detalle en el [plan de construcción](docs/proyecto/10-plan-de-construccion.md).
 
 ## Estructura
 

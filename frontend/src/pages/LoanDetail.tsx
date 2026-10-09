@@ -587,6 +587,17 @@ export function LoanDetailPage({ me }: { me: Me }) {
                 {doc.label} · {doc.folio}
               </a>
             )) ?? <Spinner label="Preparando documentos…" />}
+            {documents.data?.documents
+              .filter((doc) => doc.kind === 'pledge_contract' || doc.kind === 'mortgage_contract')
+              .map((doc) => (
+                <a
+                  key={`${doc.id}-docx`}
+                  href={`/api/v1/prestamos/${encodeURIComponent(numero)}/contratos/${doc.kind}/docx/`}
+                  className="inline-flex h-11 items-center rounded-lg border border-dashed border-edge bg-surface px-4 text-sm font-semibold hover:bg-brand-100 sm:h-9"
+                >
+                  {doc.label} · DOCX editable
+                </a>
+              ))}
           </div>
           <p className="text-[12.5px] text-muted">
             Plantillas de fábrica pendientes de validación legal por el abogado de la empresa. La

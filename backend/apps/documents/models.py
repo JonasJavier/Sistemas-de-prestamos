@@ -26,6 +26,8 @@ class GeneratedDocument(CompanyScopedModel):
         PAYMENT_ORDER = "payment_order", "Mandamiento de pago"
         VOLUNTARY_SURRENDER = "voluntary_surrender", "Acto de entrega voluntaria"
         NOTARIAL_NOTE = "notarial_note", "Pagaré notarial"
+        PLEDGE_CONTRACT = "pledge_contract", "Contrato con garantía prendaria"
+        MORTGAGE_CONTRACT = "mortgage_contract", "Contrato con garantía hipotecaria"
 
     kind = models.CharField(max_length=30, choices=Kind)
     template_version = models.CharField(max_length=20)

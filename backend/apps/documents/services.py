@@ -205,7 +205,15 @@ def ensure_loan_documents(loan: Loan, *, issued_by) -> list[GeneratedDocument]:
                 context=context,
                 issued_by=issued_by,
             )
-    return [existing[kind] for kind, _template, _suffix in LOAN_DOCUMENTS]
+    # Doc 09 «Legales» (decision 096): the contract of each kind of asset in guarantee.
+    from apps.documents import legal
+
+    contracts = []
+    for kind in legal.contract_kinds(loan):
+        if kind not in existing:
+            existing[kind] = legal.issue_contract(loan, kind, issued_by=issued_by)
+        contracts.append(existing[kind])
+    return [existing[kind] for kind, _template, _suffix in LOAN_DOCUMENTS] + contracts
 
 
 # --- Phase 4: cash, settlements and payoff letters (doc 09 - section 2) ----------

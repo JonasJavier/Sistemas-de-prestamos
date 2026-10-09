@@ -257,6 +257,119 @@ def notarial_note(case: LegalCase) -> LegalText:
     )
 
 
+# --- Contracts of a loan with collateral (doc 09 «Legales») -----------------------------------
+
+
+def _guarantors_line(loan: Loan) -> str:
+    names = [
+        f"{g.customer.display_name} (cédula núm. {_doc(g.customer.document_number)})"
+        for g in loan.guarantors.select_related("customer")
+    ]
+    return ", ".join(names)
+
+
+def _contract(loan: Loan, *, title: str, kind_text: str, assets: list) -> LegalText:
+    from apps.payments import portfolio
+
+    terms = portfolio.current_terms(loan)
+    guarantors = _guarantors_line(loan)
+    paragraphs = [
+        f"Entre {_company_line(loan)}, en lo adelante EL ACREEDOR, y {_customer_line(loan)}, en "
+        "lo adelante EL DEUDOR, se ha convenido lo siguiente:",
+        f"PRIMERO: EL ACREEDOR otorga a EL DEUDOR un préstamo por {_money(loan.principal)}, "
+        f"núm. {loan.number}, desembolsado el {date_in_words(loan.disbursed_on)}, pagadero en "
+        f"{terms.installments} cuota(s) según la tabla de pagos anexa, que forma parte de este "
+        "contrato.",
+        f"SEGUNDO: En garantía del pago, EL DEUDOR otorga {kind_text} sobre el (los) bien(es) "
+        "siguiente(s), de su propiedad:",
+        *[f"— {_asset(asset)}" for asset in assets],
+        "TERCERO: EL DEUDOR se obliga a conservar el bien en buen estado, a no venderlo, gravarlo "
+        "ni trasladarlo sin la autorización escrita de EL ACREEDOR, y a mantenerlo asegurado si "
+        "así se le requiere.",
+        "CUARTO: La falta de pago de una o más cuotas a su vencimiento hace exigible la totalidad "
+        "de lo adeudado, con su mora, y faculta a EL ACREEDOR a ejecutar la garantía conforme a "
+        "la ley.",
+    ]
+    if guarantors:
+        paragraphs.append(
+            f"QUINTO: Intervienen como fiadores solidarios {guarantors}, quienes responden con "
+            "EL DEUDOR por todas las obligaciones de este contrato."
+        )
+    paragraphs.append(
+        "Para todo lo no previsto, las partes se remiten al derecho común y eligen domicilio en "
+        "las direcciones indicadas. Hecho y firmado en dos originales, a los "
+        f"{date_in_words(loan.disbursed_on)}."
+    )
+    return LegalText(
+        title=title,
+        paragraphs=paragraphs,
+        signatures=[
+            ("Por el acreedor", _company_line(loan).split(",")[0]),
+            (loan.customer.display_name, "El deudor"),
+            *[
+                (g.customer.display_name, "Fiador solidario")
+                for g in loan.guarantors.select_related("customer")
+            ],
+        ],
+    )
+
+
+def _assets(loan: Loan, kind: str) -> list:
+    return [
+        item.collateral
+        for item in loan.collaterals.select_related("collateral__vehicle", "collateral__property")
+        if item.collateral.type == kind
+    ]
+
+
+def pledge_contract(loan: Loan) -> LegalText:
+    assets = _assets(loan, "vehicle")
+    if not assets:
+        raise LegalDocumentError("El préstamo no tiene un vehículo en garantía.", "collateral")
+    return _contract(
+        loan,
+        title="CONTRATO DE PRÉSTAMO CON GARANTÍA PRENDARIA",
+        kind_text="prenda sin desapoderamiento",
+        assets=assets,
+    )
+
+
+def mortgage_contract(loan: Loan) -> LegalText:
+    assets = _assets(loan, "property")
+    if not assets:
+        raise LegalDocumentError("El préstamo no tiene un inmueble en garantía.", "collateral")
+    return _contract(
+        loan,
+        title="CONTRATO DE PRÉSTAMO CON GARANTÍA HIPOTECARIA",
+        kind_text="hipoteca en primer rango",
+        assets=assets,
+    )
+
+
+CONTRACTS = {
+    GeneratedDocument.Kind.PLEDGE_CONTRACT: (pledge_contract, "vehicle", "CPR"),
+    GeneratedDocument.Kind.MORTGAGE_CONTRACT: (mortgage_contract, "property", "CHI"),
+}
+
+
+def contract_kinds(loan: Loan) -> list[str]:
+    types = set(loan.collaterals.values_list("collateral__type", flat=True))
+    return [kind for kind, (_b, asset_type, _s) in CONTRACTS.items() if asset_type in types]
+
+
+def issue_contract(loan: Loan, kind: str, *, issued_by) -> GeneratedDocument:
+    builder, _type, suffix = CONTRACTS[kind]
+    return issue(
+        company=loan.company,
+        kind=kind,
+        target=loan,
+        folio=f"{loan.number}-{suffix}",
+        template="documents/legal.html",
+        context={"text": builder(loan), "branch": loan.branch},
+        issued_by=issued_by,
+    )
+
+
 BUILDERS = {
     GeneratedDocument.Kind.DEMAND_NOTICE: demand_notice,
     GeneratedDocument.Kind.PAYMENT_ORDER: payment_order,
@@ -291,14 +404,23 @@ def issue_legal(case: LegalCase, kind: str, *, issued_by) -> GeneratedDocument:
 
 def docx(case: LegalCase, kind: str) -> bytes:
     """The editable version for the lawyer or the notary."""
+    return render_docx(build(case, kind), case.company_id)
+
+
+def contract_docx(loan: Loan, kind: str) -> bytes:
+    if kind not in CONTRACTS:
+        raise LegalDocumentError("Contrato desconocido.", "kind")
+    return render_docx(CONTRACTS[kind][0](loan), loan.company_id)
+
+
+def render_docx(text: LegalText, company_id) -> bytes:
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.shared import Pt
 
     from apps.core.models import Company
 
-    text = build(case, kind)
-    company = Company.objects.get(pk=case.company_id)
+    company = Company.objects.get(pk=company_id)
     document = Document()
     style = document.styles["Normal"]
     style.font.name = "Arial"

@@ -681,6 +681,35 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
             filename=f"{document.folio}.pdf",
         )
 
+    @action(detail=True, methods=["get"], url_path=r"contratos/(?P<kind>[a-z_]+)/docx")
+    def contract_docx(
+        self, request: Request, number: str | None = None, kind: str = ""
+    ) -> Response:
+        """Doc 09 «Legales» (decision 096): the contract, editable for the lawyer."""
+        from django.http import HttpResponse
+
+        from apps.documents import legal as legal_docs
+
+        loan = self.get_object()
+        try:
+            content = legal_docs.contract_docx(loan, kind)
+        except legal_docs.LegalDocumentError as exc:
+            return _fail(exc)
+        SensitiveAccessLog.objects.create(
+            company_id=loan.company_id,
+            user=request.user,
+            action=SensitiveAccessLog.Action.DOCUMENT,
+            target_type="lending.loan",
+            target_id=loan.id,
+            detail=f"Contrato {kind} (DOCX editable) del préstamo {loan.number}",
+        )
+        response = HttpResponse(
+            content,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{loan.number}-{kind}.docx"'
+        return response
+
     @action(detail=True, methods=["get"], url_path=r"documentos/(?P<doc_id>[0-9a-f-]+)")
     def documento(self, request: Request, number: str | None = None, doc_id: str = "") -> Response:
         loan = self.get_object()
