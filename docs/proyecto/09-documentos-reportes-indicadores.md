@@ -79,7 +79,7 @@ Toda cifra sale del libro de movimientos o de las cuotas; nunca de una caché si
 | **Desembolsado del mes** | Suma de montos brutos de desembolsos del mes calendario |
 | **Ganancia cobrada del período** | Intereses + mora + cargos **cobrados** − gastos operativos del período. Es la cifra de gestión; el estado de resultados contable agrega el devengo del cierre de mes (decisión 075) |
 | **Cumplimiento de promesas** | Promesas `kept` ÷ promesas resueltas (`kept + broken`) del período |
-| **Clasificación del cliente (A/B/C/D)** | Puntuación explicable: % de cuotas pagadas a tiempo (peso 50), días promedio de atraso (30), antigüedad y número de préstamos saldados (20); los umbrales exactos se calibran en la fase 7 y se muestran los factores |
+| **Clasificación del cliente (A/B/C/D)** | Puntuación explicable: % de cuotas pagadas a tiempo (peso 50), días promedio de atraso (30), antigüedad y número de préstamos saldados (20). Calibrada en la fase 7 (decisión 088): A ≥ 85, B ≥ 70, C ≥ 50, D por debajo; con menos de 4 cuotas vencidas, entre B y C; castigo o más de 90 días de atraso actual, D; más de 30, como mucho C. Se muestran los factores |
 | **Diferencias de caja del período** | Suma absoluta de diferencias justificadas en cierres; meta: 0 |
 | **(Plataforma) Conversión de la prueba** | Empresas que pasaron a `activa` ÷ empresas cuya prueba terminó en el período |
 | **(Plataforma) Empresas activas** | Empresas `activa` con suscripción vigente a la fecha |

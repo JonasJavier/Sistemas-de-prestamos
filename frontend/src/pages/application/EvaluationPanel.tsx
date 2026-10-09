@@ -9,6 +9,7 @@ import {
   type BudgetItem,
   type Evaluation,
 } from '../../api/origination'
+import { ClassificationNote } from '../../components/Grade'
 import { Alert, Button, Card, Field, Input, Select } from '../../components/ui'
 import { errorMessage, pct, rd } from '../../lib/format'
 
@@ -67,6 +68,7 @@ export function EvaluationPanel({
   return (
     <Card className="space-y-4">
       <h2 className="text-base font-semibold">Evaluación</h2>
+      {evaluation?.classification ? <ClassificationNote value={evaluation.classification} /> : null}
       {evaluation ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

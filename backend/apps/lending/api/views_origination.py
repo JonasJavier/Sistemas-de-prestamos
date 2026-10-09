@@ -283,7 +283,12 @@ class ApplicationViewSet(
             evaluation = flow.evaluate(application)
         except flow.ApplicationError as exc:
             return _fail(exc)
-        return Response(_evaluation_payload(evaluation))
+        payload = _evaluation_payload(evaluation)
+        # F3 «historial interno» (doc 04): the customer's grade and why (088).
+        from apps.customers.api.serializers import CustomerSerializer
+
+        payload["classification"] = CustomerSerializer().get_classification(application.customer)
+        return Response(payload)
 
     @action(detail=True, methods=["get"])
     def eventos(self, request: Request, pk: str | None = None) -> Response:

@@ -1,4 +1,5 @@
 import { api, apiUpload, toQuery, type Page } from './client'
+import type { Classification } from './reports'
 import type { Simulation } from './lending'
 
 /* ---------- Applications (F3) ---------- */
@@ -139,6 +140,8 @@ export interface Evaluation {
   collaterals: number
   alerts: Alert[]
   simulation: Simulation
+  /** Decision 088: the customer's grade and why; null before the first night. */
+  classification?: Classification | null
 }
 
 export interface DomainEvent {

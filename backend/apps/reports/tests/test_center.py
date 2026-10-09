@@ -46,10 +46,11 @@ def test_each_role_sees_its_reports(tenant) -> None:
         "caja",
         "gestiones",
         "resultados",
+        "clasificacion",
     ]
     assert "resultados" not in keys(tenant, "supervisor")
-    assert keys(tenant, "contabilidad") == manager
-    assert keys(tenant, "oficial") == ["atrasos"]
+    assert keys(tenant, "contabilidad") == manager[:-1]  # doc 07: P62 is G, Su, O and Au
+    assert keys(tenant, "oficial") == ["atrasos", "clasificacion"]
     assert keys(tenant, "cobrador") == []
     assert keys(tenant, "cajero") == []
     assert tenant.client("oficial").get("/api/v1/reportes/cobros/datos/").status_code == 404

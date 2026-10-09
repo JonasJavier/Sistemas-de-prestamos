@@ -34,7 +34,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Customer]:
         queryset = access.scope_customers(
-            Customer.objects.select_related("home_branch").order_by("-created_at"),
+            Customer.objects.select_related("home_branch", "score").order_by("-created_at"),
             self.request.user,
         )
         q = self.request.query_params.get("q", "")

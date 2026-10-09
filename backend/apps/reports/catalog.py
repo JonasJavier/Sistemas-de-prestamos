@@ -100,7 +100,7 @@ class Table:
 class Filter:
     key: str
     label: str
-    kind: str  # date · from · to · branch · collector · product · method · cut · bucket
+    kind: str  # date · from · to · branch · collector · product · method · cut · bucket · grade
 
 
 @dataclass(frozen=True)
@@ -778,6 +778,64 @@ def _results(p: Params) -> Table:
     )
 
 
+def _scores(p: Params) -> Table:
+    from apps.reports import scoring
+    from apps.reports.api.views_scores import scores_for
+
+    p.scope()
+    grade = p.text("grado")
+    if grade and grade != "sin" and grade not in scoring.GRADE_LABELS:
+        raise ReportError("grado", "Grado inválido.")
+    if grade:
+        p.parts.append(f"Grado: {scoring.GRADE_LABELS.get(grade, 'Sin historial')}")
+    rows_qs, counts = scores_for(p.user, branch=p.picked, grade=grade)
+    rows = []
+    for score in rows_qs.select_related("customer__home_branch").order_by(
+        "grade", "-score", "customer__first_name"
+    ):
+        points = {f["key"]: f.get("points") for f in score.factors}
+        rows.append(
+            {
+                "customer": score.customer.display_name,
+                "branch": score.customer.home_branch.name,
+                "grade": score.grade or "—",
+                "label": scoring.GRADE_LABELS.get(score.grade, "Sin historial"),
+                "score": score.score,
+                "punctuality": points.get("punctuality"),
+                "days_late": points.get("days_late"),
+                "seniority": points.get("seniority"),
+                "paid_off": points.get("paid_off"),
+                "cap": " ".join(f["label"] for f in score.factors if f["key"] in {"cap", "short"}),
+            }
+        )
+    return Table(
+        title="Clasificación de clientes",
+        filters_line=p.line,
+        columns=[
+            Column("customer", "Cliente", personal=True),
+            Column("branch", "Sucursal"),
+            Column("grade", "Grado"),
+            Column("label", "Clasificación"),
+            Column("score", "Puntos", "text"),
+            Column("punctuality", "A tiempo (50)", "text"),
+            Column("days_late", "Atraso promedio (30)", "text"),
+            Column("seniority", "Antigüedad (10)", "text"),
+            Column("paid_off", "Saldados (10)", "text"),
+            Column("cap", "Tope"),
+        ],
+        rows=rows,
+        summary=[
+            {"label": f"{g} · {label}", "value": counts[g], "kind": "int"}
+            for g, _, label in scoring.GRADES
+        ]
+        + [{"label": "Sin historial", "value": counts["none"], "kind": "int"}],
+        note="A ≥ 85 · B ≥ 70 · C ≥ 50 · D por debajo, sobre 100 puntos. Con menos de 4 cuotas "
+        "vencidas queda entre B y C. Un préstamo castigado o un atraso actual de más de 90 días "
+        "deja al cliente en D; más de 30 días, como mucho en C.",
+        landscape=True,
+    )
+
+
 OPERATIONAL = frozenset({G, SU, CT, AU})
 FINANCIAL = frozenset({G, CT, AU})
 PERIOD = (Filter("desde", "Desde", "from"), Filter("hasta", "Hasta", "to"))
@@ -857,6 +915,15 @@ REPORTS: dict[str, Report] = {
             (*PERIOD, BRANCH),
             _results,
             group="Finanzas",
+        ),
+        Report(
+            "clasificacion",
+            "Clasificación de clientes",
+            "Grado A–D de cada cliente con sus puntos y el porqué.",
+            frozenset({G, SU, OF, AU}),
+            (BRANCH, Filter("grado", "Grado", "grade")),
+            _scores,
+            group="Clientes",
         ),
     ]
 }

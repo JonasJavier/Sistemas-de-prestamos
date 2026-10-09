@@ -47,3 +47,15 @@ test('la cartera tiene cortes y fecha', async ({ browser }) => {
   await accounting.getByLabel('Agrupar por').selectOption('producto')
   await expect(accounting.getByRole('heading', { name: 'Por producto' })).toBeVisible()
 })
+
+test('el oficial ve la clasificación y su porqué', async ({ browser }) => {
+  const officer = await sessionFor(browser, MODELO.oficial)
+  await officer.goto('/reportes/clasificacion')
+  await expect(officer.getByRole('heading', { name: 'Clasificación de clientes' })).toBeVisible()
+  await expect(officer.getByText('A · Excelente')).toBeVisible()
+  const why = officer.getByRole('button', { name: '¿Por qué?' }).first()
+  await why.click()
+  await expect(
+    officer.getByText(/Cuotas pagadas a tiempo|Sin cuotas vencidas/).first(),
+  ).toBeVisible()
+})

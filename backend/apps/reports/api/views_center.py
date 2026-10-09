@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from apps.accounts import authz
 from apps.accounts.models import Membership
 from apps.core.models import Branch
-from apps.reports import catalog, exports, indicators, render
+from apps.reports import catalog, exports, indicators, render, scoring
 from apps.reports.api.views import plain
 from apps.reports.models import ExportJob
 
@@ -52,6 +52,10 @@ def _options(user) -> dict:
             {"value": key, "label": label}
             for key, label in indicators.BUCKET_LABELS.items()
             if key != "al_dia"
+        ],
+        "grade": [
+            *({"value": g, "label": f"{g} · {label}"} for g, _, label in scoring.GRADES),
+            {"value": "sin", "label": "Sin historial"},
         ],
     }
 

@@ -95,6 +95,7 @@ class Command(BaseCommand):
         self._demo_portfolio()
         self._demo_collections()
         self._demo_finance()
+        self._demo_scores()
         self._other_company()
         self.stdout.write(self.style.SUCCESS(f"Listo. Contraseña de todas las cuentas: {PASSWORD}"))
 
@@ -268,6 +269,16 @@ class Command(BaseCommand):
                 follow_up_on=today,
             )
         self.stdout.write("Cobranza de demostración: 2 promesas y un seguimiento para hoy.")
+
+    def _demo_scores(self) -> None:
+        """Phase 7: the classification the night would compute (decision 088)."""
+        from apps.reports import scoring
+
+        scored = 0
+        for company in Company.objects.filter(legal_name=DEMO_COMPANY):
+            with company_context(company.id), transaction.atomic():
+                scored = scoring.refresh()
+        self.stdout.write(f"Clasificación de clientes calculada ({scored}).")
 
     def _demo_finance(self) -> None:
         """Phase 6 demo: a bank funded from the general cash, two expenses

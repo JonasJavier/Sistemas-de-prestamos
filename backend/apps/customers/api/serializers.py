@@ -53,6 +53,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
+    classification = serializers.SerializerMethodField()
     home_branch = serializers.PrimaryKeyRelatedField(
         queryset=Branch.objects.filter(is_active=True)  # RLS scopes it to the company
     )
@@ -94,9 +95,25 @@ class CustomerSerializer(serializers.ModelSerializer):
             "block_reason",
             "consent_at",
             "display_name",
+            "classification",
             "created_at",
         ]
         read_only_fields = ["id", "status", "block_reason", "display_name", "created_at"]
+
+    def get_classification(self, customer: Customer) -> dict | None:
+        """Decision 088: the nightly grade, with its points and factors."""
+        from apps.reports.scoring import GRADE_LABELS
+
+        score = getattr(customer, "score", None) if customer.pk else None
+        if score is None:
+            return None
+        return {
+            "grade": score.grade,
+            "label": GRADE_LABELS.get(score.grade, "Sin historial"),
+            "score": None if score.score is None else str(score.score),
+            "factors": score.factors,
+            "computed_at": score.computed_at,
+        }
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         instance = self.instance

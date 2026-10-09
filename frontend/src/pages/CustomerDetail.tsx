@@ -6,6 +6,7 @@ import { usePrompt } from '../components/Dialog'
 import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { listApplications, listLoans } from '../api/origination'
+import { ClassificationNote } from '../components/Grade'
 import { Alert, Badge, Button, Card, PageHeader, Tabs } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { APPLICATION_STATUS, dateOf, documentText, LOAN_STATUS, phoneText, rd } from '../lib/format'
@@ -181,6 +182,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
           Cliente bloqueado: {data.block_reason || 'sin motivo registrado'}.
         </Alert>
       ) : null}
+      {data.classification ? <ClassificationNote value={data.classification} /> : null}
 
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
 

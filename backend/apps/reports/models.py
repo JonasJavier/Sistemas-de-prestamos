@@ -42,3 +42,24 @@ class ExportJob(CompanyScopedModel):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.get_format_display()})"
+
+
+class CustomerScore(CompanyScopedModel):
+    """The customer's classification A–D with its factors (decision 088),
+    refreshed every night; ``grade`` empty means «Sin historial»."""
+
+    customer = models.OneToOneField(
+        "customers.Customer", on_delete=models.CASCADE, related_name="score"
+    )
+    score = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    grade = models.CharField(max_length=1, blank=True)
+    factors = models.JSONField(default=list, blank=True)
+    computed_at = models.DateTimeField()
+    previous_grade = models.CharField(max_length=1, blank=True)
+    grade_changed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "grade"])]
+
+    def __str__(self) -> str:
+        return f"{self.customer_id}: {self.grade or '—'}"

@@ -1,7 +1,7 @@
 /** Phase 7 (decision 086): the dashboard by role and the reports, every
  * figure from the same indicator service (doc 09 §3). */
 
-import { api, toQuery } from './client'
+import { api, toQuery, type Page } from './client'
 
 export interface Bucket {
   key: string
@@ -164,3 +164,44 @@ export function listMyExports(): Promise<ExportJob[]> {
 }
 
 export const exportFileUrl = (id: string) => `/api/v1/exportaciones/${id}/archivo/`
+
+// --- P62 «Clasificación de clientes» (decision 088) ---------------------------
+
+export type Grade = 'A' | 'B' | 'C' | 'D' | ''
+
+export interface ScoreFactor {
+  key: string
+  label: string
+  detail?: string
+  points?: string | null
+  max?: number
+}
+
+export interface Classification {
+  grade: Grade
+  label: string
+  score: string | null
+  factors: ScoreFactor[]
+  computed_at: string
+}
+
+export interface ScoreRow extends Omit<Classification, 'computed_at'> {
+  customer: { id: string; name: string; branch: string }
+  previous_grade: Grade
+  computed_at: string
+}
+
+export interface ScorePage extends Page<ScoreRow> {
+  counts: Record<'total' | 'A' | 'B' | 'C' | 'D' | 'none', number>
+  grades: { grade: Grade; label: string; min: number }[]
+  weights: Record<string, number>
+}
+
+export function listScores(params: {
+  grado?: string
+  sucursal?: string
+  q?: string
+  page?: number
+}): Promise<ScorePage> {
+  return api(`/api/v1/clasificacion/${toQuery(params)}`)
+}

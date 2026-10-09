@@ -1,4 +1,5 @@
 import { api, apiUpload, toQuery, type Page } from './client'
+import type { Classification } from './reports'
 
 export interface CustomerListItem {
   id: string
@@ -13,6 +14,8 @@ export interface CustomerListItem {
 }
 
 export interface Customer extends CustomerListItem {
+  /** Decision 088: the nightly grade with its factors; null before the first night. */
+  classification?: Classification | null
   first_name: string
   last_name: string
   birth_date: string | null
