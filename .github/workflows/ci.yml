@@ -36,7 +36,7 @@ jobs:
       CELERY_BROKER_URL: redis://localhost:6379/1
       CELERY_RESULT_BACKEND: redis://localhost:6379/2
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.14"
@@ -75,7 +75,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -101,7 +101,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: API image
         run: docker build --build-arg REGISTRY=mirror.gcr.io/library --tag cobradia-api:ci backend
       - name: The API image starts with production settings
@@ -122,7 +122,7 @@ jobs:
       run:
         working-directory: site
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -173,7 +173,7 @@ jobs:
       EMAIL_PORT: "1025"
       FRONTEND_URL: http://localhost:5173
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.14"
