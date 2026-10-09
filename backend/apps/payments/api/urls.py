@@ -12,6 +12,7 @@ from apps.payments.api.views import (
     PayoffLetterView,
     PublicReceiptView,
 )
+from apps.payments.api.views_write_off import SuggestedView, WriteOffView
 
 router = DefaultRouter()
 router.register("pagos", PaymentViewSet, basename="payment")
@@ -32,6 +33,8 @@ urlpatterns = [
         name="payoff-letter-file",
     ),
     path("atrasos/", DelinquencyView.as_view(), name="delinquency"),
+    path("castigos/sugeridos/", SuggestedView.as_view(), name="write-off-suggested"),
+    path("prestamos/<str:number>/castigar/", WriteOffView.as_view(), name="write-off"),
     path("publico/recibos/<str:token>/", PublicReceiptView.as_view(), name="public-receipt"),
     path("", include(router.urls)),
 ]

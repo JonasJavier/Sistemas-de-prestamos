@@ -56,6 +56,7 @@ class CompanySettingsSerializer(serializers.ModelSerializer):
             "collector_cash_limit",
             "max_effective_annual_rate",
             "legal_max_effective_annual_rate",
+            "write_off_days",
         ]
         extra_kwargs = {"logo": {"write_only": True, "required": False}}
 
@@ -101,6 +102,11 @@ class CompanySettingsSerializer(serializers.ModelSerializer):
     def validate_collector_cash_limit(self, value: Decimal) -> Decimal:
         if value < 0:
             raise serializers.ValidationError("No puede ser negativo.")
+        return value
+
+    def validate_write_off_days(self, value: int) -> int:
+        if not 90 <= value <= 720:
+            raise serializers.ValidationError("Entre 90 y 720 días de atraso.")
         return value
 
     def validate_max_effective_annual_rate(self, value: Decimal | None) -> Decimal | None:

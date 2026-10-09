@@ -425,6 +425,13 @@ def _ledger_lines(payment_amount: Decimal, applied: list[Applied], dest: Destina
                 **dest.dims,
             )
         ]
+    if loan.status == Loan.Status.WRITTEN_OFF:
+        # Decision 094: the loan left the books; all of it is recovery income.
+        recovered = sum((piece.total for piece in applied), ZERO)
+        lines.append(
+            ledger.credit(ledger.system_account(company_id, "recovery_income"), recovered, **dims)
+        )
+        return lines
     for component, key in COMPONENT_ACCOUNTS.items():
         total = sum((getattr(piece, component) for piece in applied), ZERO)
         if total:
@@ -490,8 +497,11 @@ def post_payment(
         if existing.loan_id != loan.pk:
             raise PaymentError("La clave de idempotencia ya se usó.", "idempotency")
         return existing
-    if loan.status != Loan.Status.ACTIVE:
+    recovery = loan.status == Loan.Status.WRITTEN_OFF
+    if loan.status != Loan.Status.ACTIVE and not recovery:
         raise PaymentError("Solo se cobra un préstamo activo.", "state")
+    if recovery and (kind != Payment.Kind.REGULAR or renewal):
+        raise PaymentError("De un préstamo castigado solo se reciben cobros.", "state")
     if (method == Payment.Method.RENEWAL) != renewal:
         raise PaymentError("La renovación liquida el préstamo al desembolsarse.", "method")
     if not renewal:
@@ -602,6 +612,7 @@ def post_payment(
                 longitude=longitude,
                 prepayment_mode=prepayment_mode if kind == Payment.Kind.PREPAYMENT else "",
                 collected_by=user,
+                is_recovery=recovery,
                 idempotency_key=idempotency_key,
                 journal_entry=entry,
                 receipt_token=secrets.token_urlsafe(24),

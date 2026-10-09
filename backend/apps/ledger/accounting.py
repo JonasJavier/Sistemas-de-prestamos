@@ -328,6 +328,7 @@ INCOME_GROUPS = (
     ("interest_income", "Intereses cobrados"),
     ("late_fee_income", "Mora cobrada"),
     ("charge_income", "Cargos cobrados"),
+    ("recovery_income", "Recuperación de cartera castigada"),
 )
 
 

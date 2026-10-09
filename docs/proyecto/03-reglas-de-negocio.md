@@ -319,8 +319,9 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
   - El préstamo queda marcado como «reestructurado» para los reportes y la clasificación.
   - **Fase 8 (decisión 093):** sobre el capital pendiente, desde hoy; el interés vencido y la mora (si no se condona) se reparten en el interés de las cuotas nuevas.
 - **Castigo:**
-  - Requiere aprobación del gerente. El sistema lo sugiere a partir de 180 días de atraso. **Validar**.
+  - Requiere aprobación del gerente. El sistema lo sugiere a partir de 180 días de atraso (ajustable por empresa).
   - El préstamo sale de la cartera activa; lo que se cobre después cuenta como recuperación.
+  - **Fase 8 (decisión 094):** los días para sugerirlo los fija cada empresa (180 por defecto); el gerente lo confirma con su segundo factor; lo cobrado después va completo a «Recuperación de cartera castigada».
 - **Anulación:** solo para préstamos sin pagos; revierte el desembolso y los cargos.
 - **Préstamos migrados** (ya comenzados en otro sistema):
   - Se cargan con su calendario original y sus pagos históricos, con las fechas reales y marcados como «migrados».

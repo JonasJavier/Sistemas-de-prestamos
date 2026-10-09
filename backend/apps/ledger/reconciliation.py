@@ -34,10 +34,13 @@ def check(company_id: UUID) -> list[str]:
         .annotate(debit=Sum("debit"), credit=Sum("credit"))
     )
     by_loan = {row["loan_id"]: row["debit"] - row["credit"] for row in totals}
-    for loan_id, number, outstanding in Loan.objects.values_list(
-        "id", "number", "principal_outstanding"
+    for loan_id, number, outstanding, status in Loan.objects.values_list(
+        "id", "number", "principal_outstanding", "status"
     ):
         net = by_loan.get(loan_id, ZERO)
+        # Decision 094: a written-off loan left the books; what it still owes is a memo.
+        if status == Loan.Status.WRITTEN_OFF:
+            outstanding = ZERO
         if net != outstanding:
             problems.append(f"Préstamo {number}: capital {outstanding}, cartera en el libro {net}.")
     # Phase 6: what the payables say is owed equals «Cuentas por pagar».

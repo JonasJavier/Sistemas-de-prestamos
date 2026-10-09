@@ -60,6 +60,9 @@ export const ACCESS = {
   commissions: [G, CT, AU],
   /** P79: fraud alerts (the manager reviews, audit reads). */
   fraud: [G, AU],
+  // Phase 8 (renovación y legal).
+  /** F13: write a loan off (the manager; audit reads the suggestions). */
+  writeOff: [G],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

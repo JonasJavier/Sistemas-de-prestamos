@@ -71,6 +71,7 @@ function CompanyForm({ data }: { data: CompanySettings }) {
         capacity_alert_ratio: form.capacity_alert_ratio,
         collector_cash_limit: form.collector_cash_limit,
         max_effective_annual_rate: form.max_effective_annual_rate || null,
+        write_off_days: Number(form.write_off_days),
       }),
     onSuccess: (next) => {
       notify('Datos de la empresa guardados.', 'success')
@@ -176,6 +177,17 @@ function CompanyForm({ data }: { data: CompanySettings }) {
                 inputMode="decimal"
                 value={form.collector_cash_limit}
                 onChange={(e) => set('collector_cash_limit', e.target.value)}
+              />
+            </Field>
+            <Field
+              label="Días de atraso para sugerir el castigo"
+              hint="Desde ahí el sistema propone castigar el préstamo; el gerente decide."
+              error={error('write_off_days')}
+            >
+              <Input
+                inputMode="numeric"
+                value={String(form.write_off_days)}
+                onChange={(e) => set('write_off_days', Number(e.target.value) || 0)}
               />
             </Field>
             <Field

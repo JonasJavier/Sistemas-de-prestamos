@@ -64,6 +64,8 @@ class Company(TimeStampedModel):
     max_effective_annual_rate = models.DecimalField(
         max_digits=12, decimal_places=4, null=True, blank=True
     )
+    # F13 (decision 094): past these days late the system suggests writing off.
+    write_off_days = models.PositiveSmallIntegerField(default=180)
 
     def __str__(self) -> str:
         return self.trade_name or self.legal_name

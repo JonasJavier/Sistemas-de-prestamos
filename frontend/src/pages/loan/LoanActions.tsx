@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { ApiError } from '../../api/client'
 import { listReasons } from '../../api/origination'
+import type { Me } from '../../api/accounts'
 import {
   changeLoanDates,
   getPayoffQuote,
@@ -11,6 +12,7 @@ import {
   previewRestructure,
   requestRestructure,
   type RestructureConditions,
+  writeOffLoan,
 } from '../../api/payments'
 import { assignCollector, listCollectors } from '../../api/routes'
 import { Modal } from '../../components/Modal'
@@ -362,6 +364,87 @@ export function RestructureDialog({
         </Button>
         <Button disabled={!plan || !note.trim() || ask.isPending} onClick={() => ask.mutate()}>
           Pedir la aprobación
+        </Button>
+      </div>
+    </Frame>
+  )
+}
+
+/** F13 (decision 094): the manager writes the loan off with a reason and his
+ * second factor; collection goes on and what comes in is recovery. */
+export function WriteOffDialog({
+  number,
+  me,
+  daysPastDue,
+  onClose,
+}: {
+  number: string
+  me: Me
+  daysPastDue: number
+  onClose: () => void
+}) {
+  const [reason, setReason] = useState('')
+  const [note, setNote] = useState('')
+  const [code, setCode] = useState('')
+  const reasons = useQuery({
+    queryKey: ['reasons', 'write_off'],
+    queryFn: () => listReasons('write_off'),
+  })
+  const run = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => writeOffLoan(number, { reason, note, second_factor: code }),
+    onSuccess: () => {
+      notify('Préstamo castigado: lo que se cobre de ahora en adelante es recuperación.', 'success')
+      onClose()
+    },
+  })
+  return (
+    <Frame title="Castigar el préstamo" onClose={onClose}>
+      <p className="text-sm text-muted">
+        Su capital sale de la cartera como gasto por castigo. La cobranza sigue y lo que se cobre
+        cuenta como recuperación. {daysPastDue} día(s) de atraso.
+      </p>
+      <Field label="Motivo">
+        <Select value={reason} onChange={(e) => setReason(e.target.value)}>
+          <option value="">Elegir…</option>
+          {reasons.data?.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.text}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Nota">
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+      </Field>
+      <Field
+        label={
+          me.mfa_enabled
+            ? 'Código de tu app autenticadora (o un código de respaldo)'
+            : 'Tu contraseña, para confirmar que eres tú'
+        }
+      >
+        <Input
+          type={me.mfa_enabled ? 'text' : 'password'}
+          inputMode={me.mfa_enabled ? 'numeric' : undefined}
+          autoComplete={me.mfa_enabled ? 'one-time-code' : 'current-password'}
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+        />
+      </Field>
+      {run.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button
+          variant="danger"
+          disabled={!reason || !note.trim() || !code.trim() || run.isPending}
+          onClick={() => run.mutate()}
+        >
+          Castigar
         </Button>
       </div>
     </Frame>

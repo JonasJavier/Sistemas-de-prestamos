@@ -87,7 +87,9 @@ def books_square(tenant) -> None:
             totals = JournalLine.objects.filter(account=portfolio, loan=loan).aggregate(
                 d=Sum("debit"), c=Sum("credit")
             )
-            assert (totals["d"] or 0) - (totals["c"] or 0) == loan.principal_outstanding, loan
+            # A written-off loan left the books (decision 094): its debt is a memo.
+            expected = 0 if loan.status == Loan.Status.WRITTEN_OFF else loan.principal_outstanding
+            assert (totals["d"] or 0) - (totals["c"] or 0) == expected, loan
 
 
 def _rows(tenant, loan):

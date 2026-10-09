@@ -463,7 +463,16 @@ def _payments(p: Params) -> Table:
         }
 
     rows = [
-        line(pay, pay.value_date, 1, "Reversado" if pay.status == Payment.Status.REVERSED else "")
+        line(
+            pay,
+            pay.value_date,
+            1,
+            "Reversado"
+            if pay.status == Payment.Status.REVERSED
+            else "Recuperación"
+            if pay.is_recovery
+            else "",
+        )
         for pay in payments
     ] + [line(rev.payment, rev.reversed_on, -1, "Reverso") for rev in reversals]
     rows.sort(key=lambda r: (r["date"], r["number"], r["status"] == "Reverso"))

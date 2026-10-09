@@ -256,7 +256,8 @@ def execute_reversal(
         "cash_session", "route_session", "journal_entry", "new_terms", "loan"
     ).get(pk=payment.pk)
     check_reversible(payment)
-    if loan.status not in (Loan.Status.ACTIVE, Loan.Status.PAID_OFF):
+    # A recovery on a written-off loan reverses too (decision 094).
+    if loan.status not in (Loan.Status.ACTIVE, Loan.Status.PAID_OFF, Loan.Status.WRITTEN_OFF):
         raise PaymentError("El préstamo ya no admite reversos.", "state")
     today = timezone.localdate()
     try:

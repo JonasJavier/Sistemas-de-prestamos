@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { Me } from '../api/accounts'
 import { ApiError } from '../api/client'
 import { assignAgent, listAgents } from '../api/collections'
-import { type DelinquencyRow, getDelinquency } from '../api/payments'
+import { type DelinquencyRow, getDelinquency, listWriteOffSuggestions } from '../api/payments'
 import { ActionDialog } from '../components/ActionDialog'
 import { useRefreshCollections } from '../lib/collections'
 import { buttonClass } from '../components/classes'
@@ -14,6 +14,7 @@ import {
   Alert,
   Badge,
   Button,
+  Card,
   EmptyState,
   Field,
   Input,
@@ -69,6 +70,7 @@ export function DelinquencyPage({ me }: { me: Me }) {
         title="Atrasos"
         subtitle="Préstamos en atraso por tramo. Mora y días se recalculan cada noche y en cada cobro."
       />
+      {hasRole(me, ACCESS.writeOff) ? <WriteOffSuggestions /> : null}
       <div role="tablist" aria-label="Tramos" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         {Object.entries(BUCKETS).map(([key, label]) => {
           const info = data?.buckets.find((b) => b.key === key)
@@ -307,5 +309,39 @@ function AssignDialog({
         </div>
       </div>
     </Modal>
+  )
+}
+
+/** F13 (decision 094): past the company's days late, the system suggests
+ * writing the loan off; the manager decides from the loan's file. */
+function WriteOffSuggestions() {
+  const suggested = useQuery({
+    queryKey: ['write-off-suggestions'],
+    queryFn: listWriteOffSuggestions,
+  })
+  if (!suggested.data?.length) return null
+  return (
+    <Card className="space-y-2 border-danger-600/30">
+      <h2 className="text-base font-semibold">Sugeridos para castigar</h2>
+      <p className="text-[12.5px] text-muted">
+        Superan los días de atraso que fijaste en Ajustes. Ábrelos y decide desde «Más» → Castigar.
+      </p>
+      <ul className="divide-y divide-edge text-sm">
+        {suggested.data.map((row) => (
+          <li key={row.number} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+            <Link
+              to="/prestamos/$numero"
+              params={{ numero: row.number }}
+              className="font-semibold text-brand-700 hover:underline"
+            >
+              {row.number}
+            </Link>
+            <span className="min-w-0 flex-1 truncate">{row.customer}</span>
+            <span className="tabular-nums text-muted">{row.days_past_due} días</span>
+            <span className="tabular-nums">{rd(row.principal_outstanding)}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }

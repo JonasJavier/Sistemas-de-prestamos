@@ -121,6 +121,8 @@ class Payment(CompanyScopedModel):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     off_route = models.BooleanField(default=False)  # a collector's payment outside today's route
+    # F13 (decision 094): collected on a written-off loan, reported as recovery.
+    is_recovery = models.BooleanField(default=False)
 
     prepayment_mode = models.CharField(max_length=15, blank=True)
     new_terms = models.OneToOneField(

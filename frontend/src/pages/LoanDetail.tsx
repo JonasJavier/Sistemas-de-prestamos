@@ -26,6 +26,7 @@ import {
   DateChangeDialog,
   PayoffLetterDialog,
   RestructureDialog,
+  WriteOffDialog,
 } from './loan/LoanActions'
 import {
   Alert,
@@ -132,9 +133,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<TabKey>('resumen')
   const [voiding, setVoiding] = useState(false)
-  const [dialog, setDialog] = useState<'payoff' | 'dates' | 'collector' | 'restructure' | null>(
-    null,
-  )
+  const [dialog, setDialog] = useState<
+    'payoff' | 'dates' | 'collector' | 'restructure' | 'writeoff' | null
+  >(null)
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
   const payments = useQuery({
     queryKey: ['loan', numero, 'payments'],
@@ -206,6 +207,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
           { label: 'Cambiar cobrador', onSelect: () => setDialog('collector') },
         ]
       : []),
+    ...(active && hasRole(me, ACCESS.writeOff)
+      ? [{ label: 'Castigar', onSelect: () => setDialog('writeoff'), danger: true }]
+      : []),
     ...(canVoid && !voiding
       ? [{ label: 'Anular', onSelect: () => setVoiding(true), danger: true }]
       : []),
@@ -258,7 +262,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
         actions={
           <>
             <MoreMenu items={more} />
-            {active && hasRole(me, ACCESS.collect) ? (
+            {(active || data.status === 'written_off') && hasRole(me, ACCESS.collect) ? (
               <Link to="/cobrar/$numero" params={{ numero }} className={buttonClass()}>
                 Cobrar
               </Link>
@@ -296,6 +300,12 @@ export function LoanDetailPage({ me }: { me: Me }) {
           {data.disbursement && Number(data.disbursement.renewal_payoff)
             ? `: le liquidó ${rd(data.disbursement.renewal_payoff)}.`
             : '.'}
+        </Alert>
+      ) : null}
+      {data.status === 'written_off' ? (
+        <Alert tone="warning">
+          Castigado el {day(data.written_off_on)}: salió de la cartera activa. La cobranza sigue y
+          lo que se cobre cuenta como recuperación.
         </Alert>
       ) : null}
       {data.status === 'voided' ? (
@@ -469,6 +479,17 @@ export function LoanDetailPage({ me }: { me: Me }) {
 
       {dialog === 'payoff' ? (
         <PayoffLetterDialog number={numero} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === 'writeoff' ? (
+        <WriteOffDialog
+          number={numero}
+          me={me}
+          daysPastDue={data.days_past_due}
+          onClose={() => {
+            setDialog(null)
+            refresh()
+          }}
+        />
       ) : null}
       {dialog === 'restructure' && terms ? (
         <RestructureDialog

@@ -17,6 +17,8 @@ export interface CompanySettings {
   max_effective_annual_rate: string | null
   /** The legal ceiling for every company, once the law sets one. */
   legal_max_effective_annual_rate: string | null
+  /** F13 (decision 094): days late from which a write-off is suggested. */
+  write_off_days: number
 }
 
 export type CompanySettingsChange = Partial<

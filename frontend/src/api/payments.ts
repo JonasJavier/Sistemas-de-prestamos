@@ -378,3 +378,22 @@ export const requestRestructure = (
     method: 'POST',
     body: data,
   })
+
+// --- F13 · Castigo y recuperación (decision 094) -----------------------------
+
+export interface WriteOffSuggestion {
+  number: string
+  customer: string
+  days_past_due: number
+  principal_outstanding: string
+  last_payment_on: string | null
+}
+
+export const listWriteOffSuggestions = (): Promise<WriteOffSuggestion[]> =>
+  api('/api/v1/castigos/sugeridos/')
+
+export const writeOffLoan = (
+  numero: string,
+  data: { reason: string; note: string; second_factor: string },
+): Promise<{ number: string; status: string }> =>
+  api(`/api/v1/prestamos/${encodeURIComponent(numero)}/castigar/`, { method: 'POST', body: data })

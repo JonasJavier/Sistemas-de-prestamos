@@ -513,6 +513,7 @@ class LoanSerializer(LoanListSerializer):
             "is_restructured",
             "is_migrated",
             "voided_on",
+            "written_off_on",
             "void_reason_text",
             "void_note",
             "promissory_note_signed_at",

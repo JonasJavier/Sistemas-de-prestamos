@@ -62,3 +62,22 @@ test('el oficial pide una reestructuración y el supervisor la rechaza', async (
   await decide.getByRole('button', { name: 'Rechazar' }).click()
   await expect(decide).toBeHidden()
 })
+
+/** F13 (decision 094): the manager's write-off asks for reason, note and his
+ * second factor. Opened and cancelled: the demo portfolio stays as it is. */
+test('el gerente ve el castigo con su confirmación', async ({ browser }) => {
+  const manager = await sessionFor(browser, MODELO.gerente)
+  await manager.goto('/prestamos')
+  await manager.getByPlaceholder('Buscar por número, cliente o cédula…').fill('María Gómez')
+  await manager
+    .getByRole('link', { name: /María Gómez/ })
+    .first()
+    .click()
+  await manager.getByRole('button', { name: 'Más ▾' }).click()
+  await manager.getByRole('button', { name: 'Castigar' }).click()
+  const dialog = manager.getByRole('dialog')
+  await expect(dialog.getByText(/sale de la cartera como gasto por castigo/)).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Castigar' })).toBeDisabled()
+  await dialog.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(dialog).toBeHidden()
+})

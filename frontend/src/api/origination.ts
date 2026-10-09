@@ -360,6 +360,7 @@ export interface Loan extends LoanListItem {
   officer_name: string | null
   late_fee_outstanding: string
   voided_on: string | null
+  written_off_on?: string | null
   void_reason_text: string | null
   void_note: string
   promissory_note_signed_at: string | null
