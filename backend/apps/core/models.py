@@ -184,6 +184,7 @@ class ApprovalRequest(CompanyScopedModel):
         PAYOFF_DISCOUNT = "payoff_discount", "Descuento en liquidación"
         REVERSAL = "reversal", "Reverso de pago"
         CORRECTION = "correction", "Corrección de pago"
+        RESTRUCTURE = "restructure", "Reestructuración"
 
     class Status(models.TextChoices):
         PENDING = "pending", "Pendiente"

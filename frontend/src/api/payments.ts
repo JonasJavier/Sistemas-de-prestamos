@@ -21,7 +21,7 @@ export interface DueLine {
 
 export interface Approval {
   id: string
-  kind: 'waive_late_fee' | 'payoff_discount' | 'reversal' | 'correction'
+  kind: 'waive_late_fee' | 'payoff_discount' | 'reversal' | 'correction' | 'restructure'
   kind_label: string
   status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'used' | 'expired'
   status_label: string
@@ -30,7 +30,15 @@ export interface Approval {
   amount: string
   reason_text: string | null
   note: string
-  payload: { correct_amount?: string }
+  payload: {
+    correct_amount?: string
+    /** Decision 093: a restructuring's new conditions. */
+    installments?: number
+    frequency?: string
+    rate?: string
+    first_due?: string | null
+    waive_late_fee?: boolean
+  }
   requested_by_name: string | null
   decided_by_name: string | null
   decided_at: string | null
@@ -325,3 +333,48 @@ export const changeLoanDates = (
   body: { first_due: string; reason: string; note: string },
 ): Promise<unknown> =>
   api(`/api/v1/prestamos/${encodeURIComponent(number)}/cambiar-fecha/`, { method: 'POST', body })
+
+// --- F11 · Reestructuración (decision 093) -----------------------------------
+
+export interface RestructureConditions {
+  installments: number
+  frequency: string
+  rate: string
+  first_due?: string | null
+  waive_late_fee: boolean
+}
+
+export interface RestructureProposal {
+  principal: string
+  carried_interest: string
+  carried_late_fee: string
+  carried_charges: string
+  waived_late_fee: string
+  total: string
+  installments: {
+    number: number
+    due_date: string
+    principal: string
+    interest: string
+    charges: string
+    total: string
+  }[]
+}
+
+export const previewRestructure = (
+  numero: string,
+  conditions: RestructureConditions,
+): Promise<RestructureProposal> =>
+  api(`/api/v1/prestamos/${encodeURIComponent(numero)}/reestructurar/vista-previa/`, {
+    method: 'POST',
+    body: conditions,
+  })
+
+export const requestRestructure = (
+  numero: string,
+  data: RestructureConditions & { note: string },
+): Promise<{ id: string; status: string; amount: string }> =>
+  api(`/api/v1/prestamos/${encodeURIComponent(numero)}/reestructurar/`, {
+    method: 'POST',
+    body: data,
+  })

@@ -365,9 +365,11 @@ def new_version(
     first_number: int,
     replaced: list[Installment],
     principal: Decimal,
+    changes: dict | None = None,
 ) -> LoanTerms:
     """A new immutable terms version with its installments; the replaced ones
-    are marked superseded (doc 05 - section 2: never modified, replaced)."""
+    are marked superseded (doc 05 - section 2: never modified, replaced).
+    ``changes`` sets other conditions of the version (a restructuring)."""
     terms = LoanTerms.objects.get(pk=base.pk)
     terms.pk = None
     terms.id = uuid.uuid7()
@@ -381,6 +383,8 @@ def new_version(
     terms.created_by = user
     terms.approved_by = None
     terms.replaced_installments = [str(inst.id) for inst in replaced]
+    for key, value in (changes or {}).items():
+        setattr(terms, key, value)
     terms.save(force_insert=True)
     Installment.objects.bulk_create(
         Installment(

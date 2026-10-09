@@ -48,6 +48,8 @@ OPERATION = {
     ApprovalRequest.Kind.PAYOFF_DISCOUNT: ApprovalLimit.Operation.PAYOFF_DISCOUNT,
     ApprovalRequest.Kind.REVERSAL: ApprovalLimit.Operation.AUTHORIZE_REVERSAL,
     ApprovalRequest.Kind.CORRECTION: ApprovalLimit.Operation.AUTHORIZE_REVERSAL,
+    # Decision 093: whoever may approve a credit of that size approves it.
+    ApprovalRequest.Kind.RESTRUCTURE: ApprovalLimit.Operation.APPROVE_APPLICATION,
 }
 REVERSAL_KINDS = (ApprovalRequest.Kind.REVERSAL, ApprovalRequest.Kind.CORRECTION)
 
@@ -82,6 +84,16 @@ def check_reversible(payment: Payment) -> None:
         raise PaymentError(
             "Esta liquidación la hizo una renovación: se deshace anulando el préstamo nuevo.",
             "renewal",
+        )
+    if (
+        payment.new_terms_id is None
+        and PaymentAllocation.objects.filter(
+            payment=payment, installment__status=Installment.Status.SUPERSEDED
+        ).exists()
+    ):
+        raise PaymentError(
+            "El calendario cambió después de este pago (reestructuración): ya no se reversa.",
+            "rescheduled",
         )
     last = last_standing(payment.loan)
     if last is not None and last.pk != payment.pk:
@@ -504,6 +516,12 @@ def decide(
             approval=request,
             correct_amount=Decimal(correct) if correct else None,
         )
+        request.status = ApprovalRequest.Status.USED
+        request.used_at = timezone.now()
+    if approve and request.kind == ApprovalRequest.Kind.RESTRUCTURE:
+        from apps.payments import restructure
+
+        restructure.execute(request, user=user)
         request.status = ApprovalRequest.Status.USED
         request.used_at = timezone.now()
     request.save()

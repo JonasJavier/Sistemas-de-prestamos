@@ -81,9 +81,14 @@ FORBIDDEN_CODES = {"forbidden", "out_of_scope"}
 SIGNED_FILE_MODELS["application_file"] = ApplicationFile
 
 
-def _fail(exc: flow.ApplicationError) -> Response:
-    code = status.HTTP_403_FORBIDDEN if exc.code in FORBIDDEN_CODES else status.HTTP_400_BAD_REQUEST
-    return Response({"detail": str(exc), "code": exc.code, "issues": exc.issues}, status=code)
+def _fail(exc: Exception) -> Response:
+    """An application's error, or a payment's (dates, restructuring): only
+    the former lists ``issues``."""
+    code = getattr(exc, "code", "invalid")
+    http = status.HTTP_403_FORBIDDEN if code in FORBIDDEN_CODES else status.HTTP_400_BAD_REQUEST
+    return Response(
+        {"detail": str(exc), "code": code, "issues": getattr(exc, "issues", [])}, status=http
+    )
 
 
 def _scoped(queryset: QuerySet, user) -> QuerySet:
@@ -759,6 +764,46 @@ class LoanViewSet(viewsets.ReadOnlyModelViewSet):
         except flow.ApplicationError as exc:
             return _fail(exc)
         return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="reestructurar/vista-previa",
+        permission_classes=[CanOriginateLoans],
+    )
+    def restructure_preview(self, request: Request, number: str | None = None) -> Response:
+        """F11 (decision 093): the new calendar before asking for it."""
+        from apps.payments import restructure
+        from apps.payments.services import PaymentError
+
+        loan = self.get_object()
+        try:
+            proposal = restructure.propose(
+                loan, **restructure.conditions_from(request.data), today=timezone.localdate()
+            )
+        except PaymentError as exc:
+            return _fail(exc)
+        return Response(proposal.as_dict())
+
+    @action(detail=True, methods=["post"], permission_classes=[CanOriginateLoans])
+    def reestructurar(self, request: Request, number: str | None = None) -> Response:
+        from apps.payments import restructure
+        from apps.payments.services import PaymentError
+
+        loan = self.get_object()
+        try:
+            approval = restructure.request(
+                loan=loan,
+                user=request.user,
+                conditions=restructure.conditions_from(request.data),
+                note=str(request.data.get("note", "")),
+            )
+        except PaymentError as exc:
+            return _fail(exc)
+        return Response(
+            {"id": str(approval.id), "status": approval.status, "amount": str(approval.amount)},
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=["post"], permission_classes=[CanDecide])
     def anular(self, request: Request, number: str | None = None) -> Response:

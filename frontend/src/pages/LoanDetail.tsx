@@ -21,7 +21,12 @@ import { CollectionTimeline } from '../components/CollectionTimeline'
 import { MoreMenu } from '../components/MoreMenu'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
-import { CollectorDialog, DateChangeDialog, PayoffLetterDialog } from './loan/LoanActions'
+import {
+  CollectorDialog,
+  DateChangeDialog,
+  PayoffLetterDialog,
+  RestructureDialog,
+} from './loan/LoanActions'
 import {
   Alert,
   Badge,
@@ -127,7 +132,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<TabKey>('resumen')
   const [voiding, setVoiding] = useState(false)
-  const [dialog, setDialog] = useState<'payoff' | 'dates' | 'collector' | null>(null)
+  const [dialog, setDialog] = useState<'payoff' | 'dates' | 'collector' | 'restructure' | null>(
+    null,
+  )
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
   const payments = useQuery({
     queryKey: ['loan', numero, 'payments'],
@@ -188,7 +195,10 @@ export function LoanDetailPage({ me }: { me: Me }) {
       ? [{ label: 'Carta de saldo', onSelect: () => setDialog('payoff') }]
       : []),
     ...(active && hasRole(me, ACCESS.originate)
-      ? [{ label: 'Renovar', onSelect: () => renewal.mutate() }]
+      ? [
+          { label: 'Renovar', onSelect: () => renewal.mutate() },
+          { label: 'Reestructurar', onSelect: () => setDialog('restructure') },
+        ]
       : []),
     ...(active && hasRole(me, ACCESS.supervise)
       ? [
@@ -459,6 +469,20 @@ export function LoanDetailPage({ me }: { me: Me }) {
 
       {dialog === 'payoff' ? (
         <PayoffLetterDialog number={numero} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === 'restructure' && terms ? (
+        <RestructureDialog
+          number={numero}
+          current={{
+            installments: terms.installments,
+            frequency: terms.frequency,
+            rate: terms.rate,
+          }}
+          onClose={() => {
+            setDialog(null)
+            refresh()
+          }}
+        />
       ) : null}
       {dialog === 'dates' ? (
         <DateChangeDialog number={numero} onClose={() => setDialog(null)} />

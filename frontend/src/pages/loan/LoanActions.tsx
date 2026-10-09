@@ -8,11 +8,23 @@ import {
   getPayoffQuote,
   issuePayoffLetter,
   payoffLetterUrl,
+  previewRestructure,
+  requestRestructure,
+  type RestructureConditions,
 } from '../../api/payments'
 import { assignCollector, listCollectors } from '../../api/routes'
 import { Modal } from '../../components/Modal'
-import { Alert, Button, Field, Input, Select, Spinner, Textarea } from '../../components/ui'
-import { day, errorMessage, rd, todayISO } from '../../lib/format'
+import {
+  Alert,
+  Button,
+  Field,
+  Input,
+  PercentInput,
+  Select,
+  Spinner,
+  Textarea,
+} from '../../components/ui'
+import { day, errorMessage, FREQUENCY_TEXT, rd, todayISO } from '../../lib/format'
 import { notify } from '../../lib/toast'
 
 function Frame({
@@ -225,6 +237,131 @@ export function CollectorDialog({
           disabled={save.isPending || target === (current ?? '')}
         >
           Guardar
+        </Button>
+      </div>
+    </Frame>
+  )
+}
+
+/** F11 · Reestructuración (decision 093): new conditions over what is owed,
+ * shown before asking; someone who could approve the credit decides. */
+export function RestructureDialog({
+  number,
+  current,
+  onClose,
+}: {
+  number: string
+  current: { installments: number; frequency: string; rate: string }
+  onClose: () => void
+}) {
+  const [form, setForm] = useState<RestructureConditions>({
+    installments: current.installments,
+    frequency: current.frequency,
+    rate: current.rate,
+    first_due: null,
+    waive_late_fee: false,
+  })
+  const [note, setNote] = useState('')
+  const set = (patch: Partial<RestructureConditions>) => {
+    setForm({ ...form, ...patch })
+    preview.reset()
+  }
+  const preview = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => previewRestructure(number, form),
+  })
+  const ask = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => requestRestructure(number, { ...form, note }),
+    onSuccess: () => {
+      notify('Reestructuración pedida: la autoriza el supervisor o el gerente.', 'success')
+      onClose()
+    },
+  })
+  const error = [preview.error, ask.error].find((e) => e instanceof ApiError)
+  const plan = preview.data
+  return (
+    <Frame title="Reestructurar el préstamo" onClose={onClose}>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Cuotas nuevas">
+          <Input
+            inputMode="numeric"
+            value={String(form.installments)}
+            onChange={(e) => set({ installments: Number(e.target.value) || 0 })}
+          />
+        </Field>
+        <Field label="Frecuencia">
+          <Select value={form.frequency} onChange={(e) => set({ frequency: e.target.value })}>
+            {Object.entries(FREQUENCY_TEXT).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Tasa por período">
+          <PercentInput value={form.rate} onChange={(value) => set({ rate: value })} />
+        </Field>
+        <Field label="Primera cuota (opcional)">
+          <Input
+            type="date"
+            min={todayISO(1)}
+            value={form.first_due ?? ''}
+            onChange={(e) => set({ first_due: e.target.value || null })}
+          />
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={form.waive_late_fee}
+          onChange={(e) => set({ waive_late_fee: e.target.checked })}
+        />
+        Condonar la mora acumulada (si no, se reparte en las cuotas nuevas)
+      </label>
+      <Button variant="secondary" disabled={preview.isPending} onClick={() => preview.mutate()}>
+        Ver el calendario nuevo
+      </Button>
+      {plan ? (
+        <div className="space-y-2 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+          <div>
+            Capital {rd(plan.principal)} · interés vencido {rd(plan.carried_interest)} · mora{' '}
+            {rd(plan.carried_late_fee)}
+            {Number(plan.waived_late_fee) ? ` (condona ${rd(plan.waived_late_fee)})` : ''}
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            <table className="w-full text-[12.5px]">
+              <thead>
+                <tr className="text-left text-muted">
+                  <th className="py-1">#</th>
+                  <th className="py-1">Vence</th>
+                  <th className="py-1 text-right">Cuota</th>
+                </tr>
+              </thead>
+              <tbody>
+                {plan.installments.map((row) => (
+                  <tr key={row.number}>
+                    <td className="py-0.5">{row.number}</td>
+                    <td className="py-0.5">{day(row.due_date)}</td>
+                    <td className="py-0.5 text-right tabular-nums">{rd(row.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="font-semibold">Total a pagar {rd(plan.total)}</div>
+        </div>
+      ) : null}
+      <Field label="Motivo">
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+      </Field>
+      {error instanceof ApiError ? <Alert tone="danger">{errorMessage(error.data)}</Alert> : null}
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button disabled={!plan || !note.trim() || ask.isPending} onClick={() => ask.mutate()}>
+          Pedir la aprobación
         </Button>
       </div>
     </Frame>

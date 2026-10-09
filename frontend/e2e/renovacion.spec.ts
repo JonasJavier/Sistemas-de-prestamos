@@ -26,3 +26,39 @@ test('el oficial renueva un préstamo desde su ficha', async ({ browser }) => {
     await expect(officer.getByText('Saldo para saldar hoy')).toBeVisible()
   }
 })
+
+/** F11 (decision 093): the officer asks for new conditions after seeing the
+ * new calendar; the supervisor decides. Rejected here, so the demo
+ * portfolio the other tours use keeps its schedule. */
+test('el oficial pide una reestructuración y el supervisor la rechaza', async ({ browser }) => {
+  const officer = await sessionFor(browser, MODELO.oficial)
+  await officer.goto('/prestamos')
+  await officer.getByPlaceholder('Buscar por número, cliente o cédula…').fill('María Gómez')
+  await officer
+    .getByRole('link', { name: /María Gómez/ })
+    .first()
+    .click()
+  await expect(officer).toHaveURL(/\/prestamos\/[^/]+$/)
+  await officer.getByRole('button', { name: 'Más ▾' }).click()
+  await officer.getByRole('button', { name: 'Reestructurar' }).click()
+  const dialog = officer.getByRole('dialog')
+  await dialog.getByRole('button', { name: 'Ver el calendario nuevo' }).click()
+  await expect(dialog.getByText(/Total a pagar/)).toBeVisible()
+  await dialog.getByLabel('Motivo').fill('Pide cuotas más pequeñas (recorrido)')
+  await dialog.getByRole('button', { name: 'Pedir la aprobación' }).click()
+  await expect(
+    officer
+      .getByText(/Reestructuración pedida/)
+      .or(officer.getByText(/Ya hay una reestructuración pendiente/))
+      .first(),
+  ).toBeVisible()
+
+  const supervisor = await sessionFor(browser, MODELO.supervisor)
+  await supervisor.goto('/avisos')
+  const item = supervisor.getByRole('listitem').filter({ hasText: 'Reestructuración' }).first()
+  await item.getByRole('button', { name: 'Rechazar' }).click()
+  const decide = supervisor.getByRole('dialog')
+  await decide.getByLabel('Por qué la rechazas').fill('Primero que abone lo vencido')
+  await decide.getByRole('button', { name: 'Rechazar' }).click()
+  await expect(decide).toBeHidden()
+})

@@ -317,6 +317,7 @@ Disponible en los métodos cuota fija, capital fijo, solo interés y abierto:
   - Crea una nueva versión del calendario en el mismo préstamo: plazo, tasa o cuota.
   - Requiere aprobación.
   - El préstamo queda marcado como «reestructurado» para los reportes y la clasificación.
+  - **Fase 8 (decisión 093):** sobre el capital pendiente, desde hoy; el interés vencido y la mora (si no se condona) se reparten en el interés de las cuotas nuevas.
 - **Castigo:**
   - Requiere aprobación del gerente. El sistema lo sugiere a partir de 180 días de atraso. **Validar**.
   - El préstamo sale de la cartera activa; lo que se cobre después cuenta como recuperación.

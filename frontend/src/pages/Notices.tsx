@@ -20,7 +20,7 @@ import {
   Tabs,
   Textarea,
 } from '../components/ui'
-import { errorMessage, moment, rd } from '../lib/format'
+import { errorMessage, installmentsText, moment, pct, rd } from '../lib/format'
 import { notify } from '../lib/toast'
 
 const TABS = [
@@ -83,6 +83,9 @@ function DecideDialog({
           {approval.target_label} · {rd(approval.amount)} · pedido por {approval.requested_by_name}
           {approval.payload.correct_amount
             ? ` · monto correcto ${rd(approval.payload.correct_amount)}`
+            : ''}
+          {approval.kind === 'restructure' && approval.payload.installments
+            ? ` · ${installmentsText(approval.payload.installments, approval.payload.frequency ?? '')} al ${pct(approval.payload.rate)}${approval.payload.waive_late_fee ? ' · condona la mora' : ''}`
             : ''}
         </p>
         <p className="text-sm text-muted">
