@@ -12,7 +12,7 @@ import {
   statementLineAction,
 } from '../api/accounting'
 import { api, ApiError } from '../api/client'
-import { day, errorMessage, rd, todayISO, plural } from '../lib/format'
+import { amountValue, day, errorMessage, plural, rd, todayISO } from '../lib/format'
 import { notify } from '../lib/toast'
 import { Alert, Badge, Button, Card, Field, Input, Select, Spinner, Stat } from './ui'
 
@@ -292,7 +292,7 @@ function LineActions({
           </optgroup>
         ) : null}
         <optgroup
-          label={Number(amount) < 0 ? 'Registrar como gasto en' : 'Registrar como ingreso en'}
+          label={amountValue(amount) < 0 ? 'Registrar como gasto en' : 'Registrar como ingreso en'}
         >
           {accounts.map((a) => (
             <option key={a.id} value={`account:${a.id}`}>

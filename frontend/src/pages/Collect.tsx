@@ -28,7 +28,7 @@ import {
   Spinner,
   Stat,
 } from '../components/ui'
-import { day, errorMessage, newIdempotencyKey, num, rd } from '../lib/format'
+import { day, errorMessage, newIdempotencyKey, num, rd, toAmount } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
@@ -46,10 +46,7 @@ const KINDS: [PaymentKind, string][] = [
   ['prepayment', 'Abono a capital'],
 ]
 
-const money = (value: string) => {
-  const clean = value.replace(/,/g, '').trim()
-  return clean && Number.isFinite(Number(clean)) ? Number(clean).toFixed(2) : ''
-}
+const money = toAmount
 
 /** The collector's phone sends where the payment happened (decision 031). */
 function usePosition(enabled: boolean) {

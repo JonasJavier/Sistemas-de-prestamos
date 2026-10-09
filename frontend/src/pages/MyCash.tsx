@@ -35,7 +35,7 @@ import {
   Stat,
   Textarea,
 } from '../components/ui'
-import { errorMessage, moment, num, plural, rd } from '../lib/format'
+import { amountValue, errorMessage, moment, num, plural, rd, toAmount } from '../lib/format'
 import { notify } from '../lib/toast'
 
 const METHOD_LABEL: Record<string, string> = {
@@ -45,10 +45,8 @@ const METHOD_LABEL: Record<string, string> = {
   check: 'Cheques',
 }
 
-const toMoney = (value: string) => {
-  const n = Number(value.replace(/,/g, ''))
-  return Number.isFinite(n) && n >= 0 ? n.toFixed(2) : ''
-}
+/** A drawer never takes a negative amount. */
+const toMoney = (value: string) => (amountValue(value) >= 0 ? toAmount(value) : '')
 
 function useRefreshCash() {
   const queryClient = useQueryClient()
@@ -66,7 +64,11 @@ function OpenForm({ data }: { data: MyCash }) {
   const open = useMutation({
     meta: { inlineError: true },
     mutationFn: () =>
-      openCash({ branch, amount: toMoney(amount) || '0', fund_from: Number(amount) ? from : null }),
+      openCash({
+        branch,
+        amount: toMoney(amount) || '0',
+        fund_from: amountValue(amount) ? from : null,
+      }),
     onSuccess: refresh,
   })
   return (
@@ -98,7 +100,11 @@ function OpenForm({ data }: { data: MyCash }) {
           />
         </Field>
         <Field label="Desde">
-          <Select value={from} onChange={(e) => setFrom(e.target.value)} disabled={!Number(amount)}>
+          <Select
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            disabled={!amountValue(amount)}
+          >
             {data.accounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -370,7 +376,7 @@ function CloseDialog({
         ),
         reason: diff ? reason : null,
         note,
-        return_to: Number(returnAmount) ? returnTo : null,
+        return_to: amountValue(returnAmount) ? returnTo : null,
         return_amount: toMoney(returnAmount) || '0',
       }),
     onSuccess: () => {
@@ -442,7 +448,7 @@ function CloseDialog({
             <Select
               value={returnTo}
               onChange={(e) => setReturnTo(e.target.value)}
-              disabled={!Number(returnAmount)}
+              disabled={!amountValue(returnAmount)}
             >
               {data.accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -454,7 +460,7 @@ function CloseDialog({
         </div>
         <p className="text-[12.5px] text-muted">
           Lo que no se traslada queda en tu caja como fondo de mañana:{' '}
-          {rd(Math.max(counted - (Number(returnAmount) || 0), 0))}.
+          {rd(Math.max(counted - amountValue(returnAmount), 0))}.
         </p>
         {close.error instanceof ApiError ? (
           <Alert tone="danger">{errorMessage(close.error.data)}</Alert>

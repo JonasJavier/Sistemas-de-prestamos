@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  amountValue,
   dateOf,
   deviceText,
   documentText,
@@ -13,6 +14,7 @@ import {
   percentToFraction,
   rd,
   splitAmount,
+  toAmount,
 } from './format'
 
 describe('rd (doc 09 - 1: RD$ 1,250.00)', () => {
@@ -122,5 +124,20 @@ describe('deviceText', () => {
     expect(deviceText(edge)).toBe('Edge en Windows')
     expect(deviceText(android)).toBe('Chrome en Android')
     expect(deviceText('curl/8.0')).toBe('Navegador en otro sistema')
+  })
+})
+
+describe('typed amounts («25,000» as people write them)', () => {
+  it('reads the thousands comma', () => {
+    expect(amountValue('25,000')).toBe(25000)
+    expect(amountValue(' 1,250.50 ')).toBe(1250.5)
+    expect(toAmount('25,000')).toBe('25000.00')
+  })
+
+  it('treats empty or unreadable as nothing', () => {
+    expect(amountValue('')).toBe(0)
+    expect(amountValue('abc')).toBe(0)
+    expect(toAmount('')).toBe('')
+    expect(toAmount('abc')).toBe('')
   })
 })

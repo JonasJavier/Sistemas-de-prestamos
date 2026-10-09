@@ -11,6 +11,27 @@ export const rd = (value: string | number | null | undefined) => {
   return number < 0 && text !== '0.00' ? `-RD$ ${text}` : `RD$ ${text}`
 }
 
+/** What a person typed in an amount field, as a number: «25,000» is 25000
+ * (the comma groups thousands, as every screen prints them); empty or
+ * unreadable is 0. */
+export function amountValue(text: string | null | undefined): number {
+  const value = Number(
+    String(text ?? '')
+      .replace(/,/g, '')
+      .trim(),
+  )
+  return Number.isFinite(value) ? value : 0
+}
+
+/** The typed amount ready for the API («25,000» → «25000.00»), or '' when
+ * it is empty or not a number (the server then explains what is missing). */
+export function toAmount(text: string | null | undefined): string {
+  const clean = String(text ?? '')
+    .replace(/,/g, '')
+    .trim()
+  return clean && Number.isFinite(Number(clean)) ? Number(clean).toFixed(2) : ''
+}
+
 /** 1,250.00 without the currency: for tables whose header already says
  * RD$, where «RD$» in every cell only pushes the columns off a phone. */
 export const num = (value: string | number | null | undefined) =>
