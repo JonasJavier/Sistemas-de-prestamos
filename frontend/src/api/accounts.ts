@@ -20,6 +20,8 @@ export interface Me {
   closings_to_approve?: number
   cash_session?: { id: string; number: string } | null
   route_open?: boolean
+  /** Phase 5: my promises and follow-ups due by today (P44). */
+  agenda_today?: number
 }
 
 export function getMe(): Promise<Me> {

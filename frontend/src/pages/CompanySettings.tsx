@@ -9,6 +9,7 @@ import {
   updateCompanySettings,
   uploadCompanyLogo,
 } from '../api/company'
+import { EscalationRulesCard } from '../components/EscalationRulesCard'
 import {
   Alert,
   Button,
@@ -203,6 +204,8 @@ function CompanyForm({ data }: { data: CompanySettings }) {
             Guardar cambios
           </Button>
         </div>
+
+        <EscalationRulesCard />
       </div>
 
       <Card className="h-fit space-y-3">

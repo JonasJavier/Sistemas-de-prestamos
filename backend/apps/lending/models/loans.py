@@ -60,6 +60,11 @@ class Loan(CompanyScopedModel):
     collector = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
+    # The collection agent (gestor, F8 step 6, decision 079): who follows up
+    # by phone and agenda; empty means the collector does.
+    agent = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     renewed_from = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="renewals"
     )

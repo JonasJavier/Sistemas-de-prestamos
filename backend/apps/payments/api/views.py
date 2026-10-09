@@ -9,7 +9,7 @@ import uuid
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Count, DecimalField, F, OuterRef, Q, Subquery, Sum, Value
+from django.db.models import Count, DecimalField, Exists, F, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -28,6 +28,7 @@ from apps.accounts.models import ApprovalLimit
 from apps.accounts.reauth import confirm_identity
 from apps.audit.models import SensitiveAccessLog
 from apps.cash import services as cash
+from apps.collections.models import CollectionAction, PaymentPromise
 from apps.core.api.errors import fail, person
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.core.models import ApprovalRequest, PublicLink
@@ -538,6 +539,18 @@ class DelinquencyView(APIView):
             base = base.filter(branch_id=params["branch"])
         if params.get("collector"):
             base = base.filter(collector_id=params["collector"])
+        # Phase 5: the agent's tray and the loans with or without a promise.
+        agent = params.get("gestor")
+        if agent:
+            agent_id = request.user.pk if agent == "mios" else agent
+            base = base.filter(Q(agent_id=agent_id) | Q(agent__isnull=True, collector_id=agent_id))
+        pending = PaymentPromise.objects.filter(
+            loan=OuterRef("pk"), status=PaymentPromise.Status.PENDING
+        )
+        if params.get("promesa") == "con":
+            base = base.filter(Exists(pending))
+        elif params.get("promesa") == "sin":
+            base = base.exclude(Exists(pending))
         for word in params.get("q", "").split():
             base = base.filter(
                 Q(number__icontains=word)
@@ -564,9 +577,16 @@ class DelinquencyView(APIView):
         rows = base.filter(days_past_due__gte=low)
         if high is not None:
             rows = rows.filter(days_past_due__lte=high)
+        last_action = CollectionAction.objects.filter(loan=OuterRef("pk")).order_by("-created_at")
         rows = (
-            rows.select_related("customer", "collector", "branch")
-            .annotate(overdue=Coalesce(Subquery(overdue, output_field=money_field), Value(ZERO)))
+            rows.select_related("customer", "collector", "agent", "branch")
+            .annotate(
+                overdue=Coalesce(Subquery(overdue, output_field=money_field), Value(ZERO)),
+                promise_on=Subquery(pending.values("promised_on")[:1]),
+                promise_amount=Subquery(pending.values("amount")[:1]),
+                last_action_at=Subquery(last_action.values("created_at")[:1]),
+                last_action_result=Subquery(last_action.values("result")[:1]),
+            )
             .order_by("-days_past_due", "number")
         )
         page = rows[:200]
@@ -586,6 +606,16 @@ class DelinquencyView(APIView):
                         "customer_phone": loan.customer.phone,
                         "branch_name": loan.branch.name,
                         "collector_name": person(loan.collector),
+                        "agent_name": person(loan.agent or loan.collector),
+                        "promise": None
+                        if loan.promise_on is None
+                        else {"on": loan.promise_on, "amount": str(loan.promise_amount)},
+                        "last_action": None
+                        if loan.last_action_at is None
+                        else {
+                            "at": loan.last_action_at,
+                            "result": CollectionAction.Result(loan.last_action_result).label,
+                        },
                         "days_past_due": loan.days_past_due,
                         "overdue": str(loan.overdue + loan.late_fee_outstanding),
                         "late_fee": str(loan.late_fee_outstanding),

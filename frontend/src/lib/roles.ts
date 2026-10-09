@@ -36,6 +36,11 @@ export const ACCESS = {
   routes: [G, SU],
   delinquency: [G, SU, OF, CT, AU],
   supervise: [G, SU],
+  // Phase 5 (cobranza, decisions 076-079).
+  /** Register actions and promises; the agenda (P42, P44). */
+  manageCollections: [G, SU, OF, CO],
+  /** Assign loans to collection agents. */
+  assignAgents: [G, SU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

@@ -281,6 +281,20 @@ flowchart LR
 
 En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los pasos 3 a 6.
 
+> **Fase 5 (decisiones 076–079).**
+> - **Gestión (P42):** llamada, visita o mensaje, con uno de estos resultados: prometió pagar, habló sin compromiso, no contestó, no estaba, número equivocado, se negó u otro (con nota). Puede programar el siguiente seguimiento (hasta 60 días), y cerrar una gestión responde a los seguimientos vencidos de esa persona en ese préstamo.
+> - **Promesa:**
+>   - Va de hoy a 30 días, por un monto que no supera lo que debe, y hay una sola pendiente por préstamo: la nueva reemplaza a la anterior.
+>   - Se cumple sola en cuanto los pagos hechos desde que se dio alcanzan el monto en su fecha o antes. Un reverso la vuelve a dejar pendiente, o incumplida si su día ya pasó.
+>   - La tarea nocturna marca las vencidas como incumplidas y deja un seguimiento en la agenda del gestor, con un aviso.
+>   - La promesa del día entra en la ruta del cobrador.
+> - **Escalamiento:** reglas editables en Ajustes → Empresa. Con más de 30 días de atraso, «revisar el caso» le toca al supervisor de la sucursal; con más de 60, «preparar la intimación» al gerente; con más de 90, «proponer la vía legal» también al gerente.
+>   - Cada regla salta una sola vez por episodio de atraso (desde el último día al día).
+>   - La tarea va al rol y no a una persona: la cierra quien tenga ese rol en la sucursal, escribiendo qué se decidió.
+>   - Si el préstamo se pone al día o se cierra, se cancela sola.
+>   - Los documentos de la intimación y el caso legal llegan en la fase 8.
+> - **Gestor:** cada préstamo puede tener un gestor (oficial, supervisor, gerente o cobrador) distinto de su cobrador. Sin gestor, gestiona el cobrador. Lo asignan el supervisor o el gerente desde Atrasos, con motivo, y queda en el historial.
+
 ## F9 · Vía legal (fase 8)
 
 1. **Abrir el caso.** El gerente aprueba enviar el préstamo a legal y se abre un **caso legal** con el abogado asignado.

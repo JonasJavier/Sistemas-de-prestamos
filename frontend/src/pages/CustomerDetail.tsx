@@ -15,6 +15,7 @@ import { FamilyTab } from './customer/FamilyTab'
 import { FilesTab } from './customer/FilesTab'
 import { IncomeTab } from './customer/IncomeTab'
 import { PaymentsTab } from './customer/PaymentsTab'
+import { CollectionTimeline } from '../components/CollectionTimeline'
 
 const TABS = [
   ['resumen', 'Resumen'],
@@ -24,6 +25,7 @@ const TABS = [
   ['archivos', 'Archivos'],
   ['prestamos', 'Préstamos y solicitudes'],
   ['pagos', 'Pagos'],
+  ['cobranza', 'Cobranza'],
 ] as const
 
 type TabKey = (typeof TABS)[number][0]
@@ -207,6 +209,9 @@ export function CustomerDetailPage({ me }: { me: Me }) {
       {tab === 'archivos' ? <FilesTab customerId={id} /> : null}
       {tab === 'prestamos' ? <LendingTab customerId={id} /> : null}
       {tab === 'pagos' ? <PaymentsTab customerId={id} /> : null}
+      {tab === 'cobranza' ? (
+        <CollectionTimeline customerId={id} customerName={data.display_name} canManage={false} />
+      ) : null}
     </>
   )
 }

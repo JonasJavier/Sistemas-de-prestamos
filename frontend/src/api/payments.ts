@@ -268,6 +268,10 @@ export interface DelinquencyRow {
   customer_phone: string
   branch_name: string
   collector_name: string | null
+  /** The collection agent, or the collector when none (decision 079). */
+  agent_name: string | null
+  promise: { on: string; amount: string } | null
+  last_action: { at: string; result: string } | null
   days_past_due: number
   overdue: string
   late_fee: string
@@ -287,6 +291,10 @@ export const getDelinquency = (params: {
   tramo?: string
   q?: string
   collector?: string
+  /** «mios» or an agent's id (phase 5). */
+  gestor?: string
+  /** «con» or «sin» a pending promise. */
+  promesa?: string
 }): Promise<Delinquency> => api(`/api/v1/atrasos/${toQuery(params)}`)
 
 export const listApprovals = (box: 'por_decidir' | 'mias'): Promise<Page<Approval>> =>

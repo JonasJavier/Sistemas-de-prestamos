@@ -315,6 +315,9 @@ def execute_reversal(
         .first()
     )
     portfolio.refresh(loan, today)
+    from apps.collections.promises import evaluate
+
+    evaluate(loan, today)  # the promise it kept may be pending (or broken) again
     record_event(
         company_id=payment.company_id,
         type="payment.reversed",

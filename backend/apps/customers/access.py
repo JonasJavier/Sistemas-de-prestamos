@@ -38,7 +38,9 @@ def scope_customers(queryset: QuerySet, user: User, *, field: str = "") -> Query
     """Customers (or rows pointing to one through ``field``) the user may see."""
     prefix = f"{field}__" if field else ""
     if only_collector(user):
-        return queryset.filter(**{f"{prefix}loans__collector": user}).distinct()
+        return queryset.filter(
+            Q(**{f"{prefix}loans__collector": user}) | Q(**{f"{prefix}loans__agent": user})
+        ).distinct()
     scope = authz.branch_scope(user)
     if scope is None:
         return queryset
@@ -49,8 +51,8 @@ def scope_customers(queryset: QuerySet, user: User, *, field: str = "") -> Query
 
 
 def scope_loans(queryset: QuerySet, user: User) -> QuerySet:
-    if only_collector(user):
-        return queryset.filter(collector=user)
+    if only_collector(user):  # his portfolio: collected or managed by him (079)
+        return queryset.filter(Q(collector=user) | Q(agent=user))
     scope = authz.branch_scope(user)
     if scope is None:
         return queryset

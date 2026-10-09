@@ -81,6 +81,7 @@ Todo queda además limitado a la sucursal del usuario, salvo para G, Ct y Au (03
 | | Ver el mapa de ubicación de los cobradores | ✓ | — | ✓ | — | — | — | — | — |
 | Cobranza | Registrar gestiones y promesas | ✓ | — | ✓ | ✓ | — | P | — | — |
 | | Asignar la cartera a gestores | ✓ | — | ✓ | — | — | — | — | — |
+| | Editar las reglas de escalamiento (fase 5) | ✓ | ✓ | L | — | — | — | — | — |
 | Legal | Llevar casos y emitir documentos legales | ✓ | — | — | — | — | — | — | — |
 | Finanzas | Registrar gastos | ✓ | — | L | — | L | — | ✓ | — |
 | | Aprobar gastos | ✓ | — | L | — | — | — | — | — |

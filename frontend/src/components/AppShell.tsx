@@ -81,6 +81,8 @@ function navFor(me: Me): NavGroup[] {
   const collections: NavItem[] = []
   if (hasRole(me, ACCESS.myRoute)) collections.push({ to: '/ruta', label: 'Mi ruta' })
   if (hasRole(me, ACCESS.myCash)) collections.push({ to: '/caja', label: 'Mi caja' })
+  if (hasRole(me, ACCESS.manageCollections))
+    collections.push({ to: '/cobranza', label: 'Agenda', badge: me.agenda_today })
   if (hasRole(me, ACCESS.delinquency)) collections.push({ to: '/atrasos', label: 'Atrasos' })
   if (hasRole(me, ACCESS.routes)) collections.push({ to: '/rutas', label: 'Rutas' })
   if (hasRole(me, ACCESS.cashSessions))

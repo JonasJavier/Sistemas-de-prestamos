@@ -49,6 +49,7 @@ const CashSessionsPage = lazyRouteComponent(
 )
 const CollectPage = lazyRouteComponent(() => import('./pages/Collect'), 'CollectPage')
 const DelinquencyPage = lazyRouteComponent(() => import('./pages/Delinquency'), 'DelinquencyPage')
+const AgendaPage = lazyRouteComponent(() => import('./pages/Agenda'), 'AgendaPage')
 const MyCashPage = lazyRouteComponent(() => import('./pages/MyCash'), 'MyCashPage')
 const MyRoutePage = lazyRouteComponent(() => import('./pages/MyRoute'), 'MyRoutePage')
 const NoticesPage = lazyRouteComponent(() => import('./pages/Notices'), 'NoticesPage')
@@ -351,6 +352,13 @@ const routesRoute = createRoute({
   component: RoutesPage,
 })
 
+const agendaRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/cobranza',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.manageCollections),
+  component: withMe(AgendaPage),
+})
+
 const delinquencyRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/atrasos',
@@ -507,6 +515,7 @@ const routeTree = rootRoute.addChildren([
     cashSessionDetailRoute,
     myRouteRoute,
     routesRoute,
+    agendaRoute,
     delinquencyRoute,
     noticesRoute,
     accountsRoute,

@@ -93,6 +93,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Dueño de la plataforma: {OWNER_EMAIL}")
         self._demo_company()
         self._demo_portfolio()
+        self._demo_collections()
         self._other_company()
         self.stdout.write(self.style.SUCCESS(f"Listo. Contraseña de todas las cuentas: {PASSWORD}"))
 
@@ -219,6 +220,53 @@ class Command(BaseCommand):
 
             run_nightly(company.id, today)
         self.stdout.write("Cartera de demostración: 3 préstamos (uno atrasado) con cobrador.")
+
+    def _demo_collections(self) -> None:
+        """Phase 5 demo: a promise for today, one that is coming and a
+        follow-up, through the real services (only once)."""
+        company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
+        if company is None:
+            return
+        with company_context(company.id), transaction.atomic():
+            from apps.collections import agenda
+            from apps.collections.models import CollectionAction, PaymentPromise
+
+            if PaymentPromise.objects.exists():
+                return
+            users = {u.email: u for u in User.objects.filter(company=company)}
+            officer, collector = users["oficial@modelo.test"], users["cobrador@modelo.test"]
+            late = Loan.objects.filter(collector=collector, days_past_due__gt=0).first()
+            current = Loan.objects.filter(status=Loan.Status.ACTIVE, collector=None).first()
+            if late is None or current is None:
+                return
+            today = timezone.localdate()
+            agenda.record_action(
+                loan=late,
+                user=collector,
+                kind=CollectionAction.Kind.VISIT,
+                result=CollectionAction.Result.PROMISED,
+                note="Cobra el viernes en el colmado",
+                promise_on=today,
+                promise_amount=Decimal("1000"),
+            )
+            agenda.record_action(
+                loan=current,
+                user=officer,
+                kind=CollectionAction.Kind.CALL,
+                result=CollectionAction.Result.PROMISED,
+                note="Adelanta la cuota con la quincena",
+                promise_on=today + dt.timedelta(days=3),
+                promise_amount=Decimal("2500"),
+            )
+            agenda.record_action(
+                loan=current,
+                user=officer,
+                kind=CollectionAction.Kind.MESSAGE,
+                result=CollectionAction.Result.CONTACTED,
+                note="Confirmar por WhatsApp que recibió el estado de cuenta",
+                follow_up_on=today,
+            )
+        self.stdout.write("Cobranza de demostración: 2 promesas y un seguimiento para hoy.")
 
     @transaction.atomic
     def _other_company(self) -> None:

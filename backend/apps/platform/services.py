@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from apps.accounts.authz import DEFAULT_APPROVAL_LIMITS
 from apps.accounts.models import ApprovalLimit, Membership, Role, User
+from apps.collections.defaults import seed_escalation_rules
 from apps.core.holidays import seed_year
 from apps.core.models import Branch, Company, Reason
 from apps.core.tenancy import company_context
@@ -112,6 +113,7 @@ def register_company(
         _seed_reasons(company)
         _seed_products(company)
         seed_chart(company, branch)
+        seed_escalation_rules(company)
 
     return RegistrationResult(company=company, admin=admin, branch=branch)
 

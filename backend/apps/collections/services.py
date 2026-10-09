@@ -13,7 +13,7 @@ from apps.accounts import authz
 from apps.accounts.models import Membership, User
 from apps.audit.models import record_event
 from apps.cash import services as cash
-from apps.collections.models import CollectionAction, LocationPing, RouteStop
+from apps.collections.models import CollectionAction, LocationPing, PaymentPromise, RouteStop
 from apps.lending.models import CollectorAssignment, Loan
 from apps.payments import portfolio
 
@@ -99,14 +99,22 @@ def _sort_key(loan: Loan, previous: dict) -> tuple:
 @transaction.atomic
 def build_route(collector: User, day: dt.date) -> list[RouteStop]:
     """Every loan of the collector with installments overdue or due on
-    ``day``; generated once per day, keeping yesterday's order if he set one."""
+    ``day``, or a promise for ``day`` (phase 5); generated once per day,
+    keeping yesterday's order if he set one."""
     existing = list(RouteStop.objects.filter(collector=collector, date=day).order_by("position"))
     if existing:
         return existing
+    promised = dict(
+        PaymentPromise.objects.filter(
+            loan__collector=collector,
+            status=PaymentPromise.Status.PENDING,
+            promised_on=day,
+        ).values_list("loan_id", "amount")
+    )
     loans = list(
-        Loan.objects.filter(
-            collector=collector, status=Loan.Status.ACTIVE, next_due_date__lte=day
-        ).select_related("customer__sector")
+        Loan.objects.filter(collector=collector, status=Loan.Status.ACTIVE)
+        .filter(Q(next_due_date__lte=day) | Q(id__in=promised))
+        .select_related("customer__sector")
     )
     last = (
         RouteStop.objects.filter(collector=collector, date__lt=day)
@@ -128,8 +136,15 @@ def build_route(collector: User, day: dt.date) -> list[RouteStop]:
         lines = portfolio.position(loan, day)
         overdue = [ln for ln in lines if ln.installment.due_date < day and ln.total > 0]
         today = [ln for ln in lines if ln.installment.due_date == day and ln.total > 0]
-        if not overdue and not today:
+        if not overdue and not today and loan.id not in promised:
             continue
+        reason = (
+            RouteStop.Reason.PROMISE
+            if loan.id in promised
+            else RouteStop.Reason.OVERDUE
+            if overdue
+            else RouteStop.Reason.DUE_TODAY
+        )
         stops.append(
             RouteStop(
                 company_id=loan.company_id,
@@ -137,8 +152,9 @@ def build_route(collector: User, day: dt.date) -> list[RouteStop]:
                 date=day,
                 loan=loan,
                 position=len(stops) + 1,
-                reason=RouteStop.Reason.OVERDUE if overdue else RouteStop.Reason.DUE_TODAY,
-                amount_due=sum((ln.total for ln in overdue + today), ZERO),
+                reason=reason,
+                amount_due=sum((ln.total for ln in overdue + today), ZERO)
+                or promised.get(loan.id, ZERO),
             )
         )
     RouteStop.objects.bulk_create(stops, ignore_conflicts=True)
@@ -162,9 +178,6 @@ def reorder(collector: User, day: dt.date, loan_ids: list) -> None:
 # --- Visits and location -----------------------------------------------------------------------
 
 
-VISIT_ROLES = (authz.GERENTE, authz.SUPERVISOR, authz.OFICIAL, authz.COBRADOR)
-
-
 def record_visit(
     *,
     loan: Loan,
@@ -174,44 +187,22 @@ def record_visit(
     kind: str = CollectionAction.Kind.VISIT,
     latitude: Decimal | None = None,
     longitude: Decimal | None = None,
+    **extra,
 ) -> CollectionAction:
-    """A visit without payment (F6 step 3): the result, the time and the place."""
-    from apps.customers.access import can_serve, only_collector
+    """A visit without payment (F6 step 3); phase 5 adds the promise and the
+    follow-up, all in ``agenda.record_action``."""
+    from apps.collections.agenda import record_action
 
-    if not authz.has_any_role(user, *VISIT_ROLES):
-        raise CollectionsError("Tu rol no registra gestiones.", "forbidden")
-    if only_collector(user):
-        if loan.collector_id != user.pk:
-            raise CollectionsError("Solo gestionas los préstamos de tu cartera.", "forbidden")
-    elif not can_serve(user, branch_id=loan.branch_id, customer_id=loan.customer_id):
-        raise CollectionsError("El préstamo es de otra sucursal.", "out_of_scope")
-    if result not in CollectionAction.Result.values or result == CollectionAction.Result.PAID:
-        raise CollectionsError("Elige el resultado de la visita.", "result")
-    if result in (CollectionAction.Result.OTHER, CollectionAction.Result.PROMISED) and not note:
-        raise CollectionsError("Escribe una nota con el detalle.", "note")
-    action = CollectionAction.objects.create(
-        company_id=loan.company_id,
+    return record_action(
         loan=loan,
-        customer_id=loan.customer_id,
         user=user,
         kind=kind,
         result=result,
-        note=note.strip(),
+        note=note,
         latitude=latitude,
         longitude=longitude,
+        **extra,
     )
-    RouteStop.objects.filter(
-        collector=user, date=timezone.localdate(), loan=loan, visited_at__isnull=True
-    ).update(visited_at=timezone.now(), action=action)
-    record_event(
-        company_id=loan.company_id,
-        type="collection.action",
-        target=loan,
-        actor=user,
-        summary=f"{action.get_kind_display()}: {action.get_result_display()}"
-        + (f" · {action.note}" if action.note else ""),
-    )
-    return action
 
 
 def record_ping(

@@ -234,6 +234,17 @@ pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, 
 | `Notification` | Avisos de la campana | Autorizaciones, diferencias, cierres, límite de efectivo y conciliación |
 | `RouteStop`, `CollectionAction`, `LocationPing`, `DelinquencySnapshot` | §4.7, construidos en esta fase (la promesa de pago llega en la 5) | Ruta, visitas, ubicación y foto diaria del atraso |
 
+### 4.12 Lo que agregó la fase 5 (decisiones 076–079)
+
+| Dónde | Qué | Para qué |
+| --- | --- | --- |
+| `CollectionAction` | Resultados nuevos: habló sin compromiso, no contestó y número equivocado | P42 |
+| `PaymentPromise` | Préstamo, gestión de origen, fecha, monto, estado, lo pagado al resolverse y quién la registró; una sola pendiente por préstamo (índice único parcial) | F8 paso 4 (076) |
+| `CollectionTask` | Seguimiento en la agenda: tipo (seguimiento, promesa incumplida, escalamiento), fecha, asignado a una persona **o** a un rol (restricción en la base), regla y episodio del escalamiento (único por préstamo, regla y episodio), cierre con nota | P44 y F8 paso 5 (077, 078) |
+| `EscalationRule` | Días mínimos, acción (revisar, intimar, legal), rol que actúa, activa; sembradas 31, 61 y 91 días | F8 paso 5 (077) |
+| `Loan.agent`, `AgentAssignment` | El gestor del préstamo y el historial de cambios con motivo | F8 paso 6 (079) |
+| `RouteStop` | Motivo nuevo «promesa de hoy» | La promesa del día entra en la ruta |
+
 ## 5. Ciclos de vida
 
 ### 5.1 Solicitud
@@ -258,7 +269,7 @@ stateDiagram-v2
 Sobre `active` se calculan, sin ser estados, estas condiciones:
 - al día o en atraso (con días y tramo);
 - reestructurado;
-- en gestión (hay una promesa abierta);
+- en gestión (hay una promesa pendiente: se ve en Atrasos, en la agenda y en el préstamo);
 - en vía legal (hay un caso abierto).
 
 Un préstamo `written_off` sigue recibiendo pagos, que cuentan como recuperación.

@@ -11,7 +11,7 @@ export interface RouteStop {
   address: string
   latitude: string | null
   longitude: string | null
-  reason: 'overdue' | 'due_today'
+  reason: 'overdue' | 'due_today' | 'promise'
   amount_due: string
   days_past_due: number
   position: number

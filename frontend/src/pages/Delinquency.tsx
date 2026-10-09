@@ -1,14 +1,33 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
-import { getDelinquency } from '../api/payments'
+import { ApiError } from '../api/client'
+import { assignAgent, listAgents } from '../api/collections'
+import { type DelinquencyRow, getDelinquency } from '../api/payments'
+import { ActionDialog } from '../components/ActionDialog'
+import { useRefreshCollections } from '../lib/collections'
 import { buttonClass } from '../components/classes'
-import { EmptyState, PageHeader, RowList, SearchInput, Spinner, Stat } from '../components/ui'
-import { day, phoneText, rd } from '../lib/format'
+import { Modal } from '../components/Modal'
+import {
+  Alert,
+  Badge,
+  Button,
+  EmptyState,
+  Field,
+  Input,
+  PageHeader,
+  RowList,
+  SearchInput,
+  Select,
+  Spinner,
+  Stat,
+} from '../components/ui'
+import { day, errorMessage, phoneText, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
+import { notify } from '../lib/toast'
 
 const BUCKETS: Record<string, string> = {
   '1_7': '1–7 días',
@@ -18,18 +37,32 @@ const BUCKETS: Record<string, string> = {
   '90_mas': 'Más de 90',
 }
 
-/** P43: loans in arrears by bucket; counts and totals match the filters (F8). */
+/** P43: loans in arrears by bucket; counts and totals match the filters (F8).
+ * Phase 5: the agent's tray, promises, the last action and the assignment. */
 export function DelinquencyPage({ me }: { me: Me }) {
   const [bucket, setBucket] = useState('1_7')
   const [q, setQ] = useState('')
+  const canAssign = hasRole(me, ACCESS.assignAgents)
+  const canManage = hasRole(me, ACCESS.manageCollections)
+  const canCollect = hasRole(me, ACCESS.collect)
+  // An agent starts on his own tray; supervisors see the whole branch.
+  const [agent, setAgent] = useState(canManage && !canAssign ? 'mios' : '')
+  const [promise, setPromise] = useState('')
+  const [selected, setSelected] = useState<string[]>([])
+  const [acting, setActing] = useState<DelinquencyRow | null>(null)
+  const [assigning, setAssigning] = useState(false)
   const term = useDebounced(q.trim(), 300)
   const tray = useQuery({
-    queryKey: ['delinquency', bucket, term],
-    queryFn: () => getDelinquency({ tramo: bucket, q: term }),
+    queryKey: ['delinquency', bucket, term, agent, promise],
+    queryFn: () => getDelinquency({ tramo: bucket, q: term, gestor: agent, promesa: promise }),
     placeholderData: keepPreviousData,
   })
-  const canCollect = hasRole(me, ACCESS.collect)
+  const agents = useQuery({ queryKey: ['agents'], queryFn: listAgents, enabled: canAssign })
   const data = tray.data
+  const toggle = (number: string) =>
+    setSelected((current) =>
+      current.includes(number) ? current.filter((n) => n !== number) : [...current, number],
+    )
   return (
     <>
       <PageHeader
@@ -45,12 +78,15 @@ export function DelinquencyPage({ me }: { me: Me }) {
               type="button"
               role="tab"
               aria-selected={bucket === key}
-              onClick={() => setBucket(key)}
+              onClick={() => {
+                setBucket(key)
+                setSelected([])
+              }}
               className={`rounded-xl border p-3 text-left shadow-sm ${
                 bucket === key
                   ? 'border-brand-700 bg-brand-100'
                   : 'border-edge bg-surface hover:bg-surface-2'
-              } ${key === '90_mas' || key === '61_90' ? 'col-span-1' : ''}`}
+              }`}
             >
               <div className="text-[12.5px] text-muted">{label}</div>
               <div className="text-lg font-bold tabular-nums">{info?.count ?? '—'}</div>
@@ -61,11 +97,27 @@ export function DelinquencyPage({ me }: { me: Me }) {
           )
         })}
       </div>
-      <SearchInput
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar por número o cliente…"
-      />
+      <div className="grid gap-2 sm:grid-cols-[1fr_14rem_12rem]">
+        <SearchInput
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por número o cliente…"
+        />
+        <Select aria-label="Gestor" value={agent} onChange={(e) => setAgent(e.target.value)}>
+          <option value="">Todos los gestores</option>
+          {canManage ? <option value="mios">Mis préstamos</option> : null}
+          {agents.data?.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </Select>
+        <Select aria-label="Promesa" value={promise} onChange={(e) => setPromise(e.target.value)}>
+          <option value="">Con y sin promesa</option>
+          <option value="con">Con promesa pendiente</option>
+          <option value="sin">Sin promesa</option>
+        </Select>
+      </div>
       {tray.isPending ? (
         <Spinner />
       ) : data?.results.length ? (
@@ -77,45 +129,92 @@ export function DelinquencyPage({ me }: { me: Me }) {
             />
             <Stat label="Capital de estos préstamos" value={rd(data.totals.principal)} emphasis />
           </div>
+          {canAssign && selected.length ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-700/40 bg-brand-100 px-4 py-2 text-sm">
+              <span>{selected.length} préstamo(s) seleccionado(s)</span>
+              <span className="flex gap-2">
+                <Button variant="secondary" className="!h-9" onClick={() => setSelected([])}>
+                  Quitar selección
+                </Button>
+                <Button className="!h-9" onClick={() => setAssigning(true)}>
+                  Asignar gestor
+                </Button>
+              </span>
+            </div>
+          ) : null}
           <RowList>
             {data.results.map((row) => (
               <li
                 key={row.number}
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               >
-                <div className="min-w-0">
-                  <Link
-                    to="/prestamos/$numero"
-                    params={{ numero: row.number }}
-                    className="font-semibold tabular-nums text-brand-700 hover:underline"
-                  >
-                    {row.number}
-                  </Link>{' '}
-                  <span className="text-sm">{row.customer_name}</span>
-                  <div className="text-[12.5px] text-muted">
-                    {row.days_past_due} días · {row.collector_name ?? 'sin cobrador'} ·{' '}
-                    {row.last_payment_on ? `último pago ${day(row.last_payment_on)}` : 'sin pagos'}
+                <div className="flex min-w-0 items-start gap-3">
+                  {canAssign ? (
+                    <input
+                      type="checkbox"
+                      aria-label={`Seleccionar ${row.number}`}
+                      checked={selected.includes(row.number)}
+                      onChange={() => toggle(row.number)}
+                      className="mt-1 h-4 w-4 accent-brand-700"
+                    />
+                  ) : null}
+                  <div className="min-w-0 space-y-0.5">
+                    <div>
+                      <Link
+                        to="/prestamos/$numero"
+                        params={{ numero: row.number }}
+                        className="font-semibold tabular-nums text-brand-700 hover:underline"
+                      >
+                        {row.number}
+                      </Link>{' '}
+                      <span className="text-sm">{row.customer_name}</span>{' '}
+                      {row.promise ? (
+                        <Badge tone="info">
+                          Promesa {rd(row.promise.amount)} · {day(row.promise.on)}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <div className="text-[12.5px] text-muted">
+                      {row.days_past_due} días · gestor {row.agent_name ?? 'sin asignar'} ·{' '}
+                      {row.last_payment_on
+                        ? `último pago ${day(row.last_payment_on)}`
+                        : 'sin pagos'}
+                    </div>
+                    <div className="text-[12.5px] text-muted">
+                      {row.last_action
+                        ? `Última gestión ${day(row.last_action.at.slice(0, 10))}: ${row.last_action.result}`
+                        : 'Sin gestiones'}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="mr-1 text-right">
                     <div className="font-bold tabular-nums text-danger-600">{rd(row.overdue)}</div>
                     <div className="text-[12px] text-muted">vencido con mora</div>
                   </div>
                   {row.customer_phone ? (
                     <a
                       href={`tel:${row.customer_phone}`}
-                      className={buttonClass('secondary', '!h-9')}
+                      className={buttonClass('secondary', '!h-9 !px-3')}
                       title={phoneText(row.customer_phone)}
                     >
                       Llamar
                     </a>
                   ) : null}
+                  {canManage ? (
+                    <Button
+                      variant="secondary"
+                      className="!h-9 !px-3"
+                      onClick={() => setActing(row)}
+                    >
+                      Gestión
+                    </Button>
+                  ) : null}
                   {canCollect ? (
                     <Link
                       to="/cobrar/$numero"
                       params={{ numero: row.number }}
-                      className={buttonClass('primary', '!h-9')}
+                      className={buttonClass('primary', '!h-9 !px-3')}
                     >
                       Cobrar
                     </Link>
@@ -132,8 +231,81 @@ export function DelinquencyPage({ me }: { me: Me }) {
           ) : null}
         </>
       ) : (
-        <EmptyState>Ningún préstamo en este tramo.</EmptyState>
+        <EmptyState>Ningún préstamo en este tramo con esos filtros.</EmptyState>
       )}
+      {acting ? (
+        <ActionDialog
+          loanNumber={acting.number}
+          customerName={acting.customer_name}
+          suggestedAmount={acting.overdue}
+          onClose={() => setActing(null)}
+        />
+      ) : null}
+      {assigning ? (
+        <AssignDialog
+          loans={selected}
+          onClose={(changed) => {
+            setAssigning(false)
+            if (changed) setSelected([])
+          }}
+        />
+      ) : null}
     </>
+  )
+}
+
+function AssignDialog({
+  loans,
+  onClose,
+}: {
+  loans: string[]
+  onClose: (changed: boolean) => void
+}) {
+  const refresh = useRefreshCollections()
+  const agents = useQuery({ queryKey: ['agents'], queryFn: listAgents })
+  const [agent, setAgent] = useState('')
+  const [note, setNote] = useState('')
+  const save = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => assignAgent({ loans, agent: agent === 'none' ? null : agent, note }),
+    onSuccess: (result) => {
+      notify(`Gestor asignado a ${result.changed} préstamo(s).`, 'success')
+      refresh()
+      onClose(true)
+    },
+  })
+  return (
+    <Modal onClose={() => onClose(false)} labelledBy="assign-title">
+      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+        <h2 id="assign-title" className="text-lg font-semibold">
+          Asignar gestor a {loans.length} préstamo(s)
+        </h2>
+        <Field label="Gestor">
+          <Select value={agent} onChange={(e) => setAgent(e.target.value)}>
+            <option value="">Elegir…</option>
+            <option value="none">Sin gestor (lo gestiona el cobrador)</option>
+            {agents.data?.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} · {a.roles.join(', ')}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Motivo (queda en el historial)">
+          <Input value={note} onChange={(e) => setNote(e.target.value)} />
+        </Field>
+        {save.error instanceof ApiError ? (
+          <Alert tone="danger">{errorMessage(save.error.data)}</Alert>
+        ) : null}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => onClose(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={!agent || save.isPending}>
+            Asignar
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

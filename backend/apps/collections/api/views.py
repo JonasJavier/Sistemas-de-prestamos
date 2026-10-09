@@ -196,10 +196,16 @@ class VisitSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(
         max_digits=9, decimal_places=6, required=False, allow_null=True
     )
+    # Phase 5 (P42): the promise of «Prometió pagar» and the next follow-up.
+    promise_on = serializers.DateField(required=False, allow_null=True)
+    promise_amount = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, allow_null=True
+    )
+    follow_up_on = serializers.DateField(required=False, allow_null=True)
 
 
 class VisitView(APIView):
-    """A visit or call without payment (F6 step 3)."""
+    """A visit, call or message without payment (F6 step 3, P42)."""
 
     permission_classes = [CanVisit, CompanyNotSuspendedOrReadOnly]
 

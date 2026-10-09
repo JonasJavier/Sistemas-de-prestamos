@@ -20,6 +20,8 @@ class Notification(CompanyScopedModel):
         CLOSING_TO_APPROVE = "closing_to_approve", "Cierre por aprobar"
         CASH_LIMIT = "cash_limit", "Límite de efectivo"
         RECONCILIATION = "reconciliation", "Conciliación"
+        ESCALATION = "escalation", "Escalamiento"
+        PROMISES_BROKEN = "promises_broken", "Promesas incumplidas"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

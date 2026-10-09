@@ -133,6 +133,14 @@ function Today({ me }: { me: Me }) {
           hint="Cajas cerradas que esperan tu visto bueno"
         />
       ) : null}
+      {hasRole(me, ACCESS.manageCollections) ? (
+        <Tile
+          to="/cobranza"
+          label="Agenda de hoy"
+          value={me.agenda_today ?? 0}
+          hint="Promesas que vencen y seguimientos pendientes"
+        />
+      ) : null}
       {watchesArrears ? (
         <Tile
           to="/atrasos"

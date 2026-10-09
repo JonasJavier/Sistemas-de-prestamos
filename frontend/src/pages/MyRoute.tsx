@@ -9,40 +9,21 @@ import {
   getMyRoute,
   openRoute,
   pinCustomer,
-  recordVisit,
   reorderRoute,
   sendPing,
   type MyRoute,
   type RouteStop,
-  type VisitResult,
 } from '../api/routes'
+import { ActionDialog } from '../components/ActionDialog'
 import { buttonClass } from '../components/classes'
 import { Modal } from '../components/Modal'
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  EmptyState,
-  Field,
-  PageHeader,
-  Spinner,
-  Stat,
-  Textarea,
-} from '../components/ui'
+import { Alert, Badge, Button, Card, EmptyState, PageHeader, Spinner, Stat } from '../components/ui'
 import { errorMessage, phoneText, rd } from '../lib/format'
 import { whatsappLink } from '../lib/print'
 import { notify } from '../lib/toast'
 
 const MapView = lazy(() => import('../components/MapView'))
 const PING_EVERY_MS = 5 * 60 * 1000
-
-const RESULTS: [VisitResult, string][] = [
-  ['not_home', 'No estaba'],
-  ['promised', 'Prometió pagar'],
-  ['refused', 'Se negó'],
-  ['other', 'Otro'],
-]
 
 function currentPosition(): Promise<GeolocationPosition | null> {
   return new Promise((resolve) => {
@@ -80,62 +61,6 @@ function useLocationPings(active: boolean) {
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [active])
-}
-
-function VisitSheet({ stop, onClose }: { stop: RouteStop; onClose: () => void }) {
-  const queryClient = useQueryClient()
-  const [result, setResult] = useState<VisitResult>('not_home')
-  const [note, setNote] = useState('')
-  const save = useMutation({
-    meta: { inlineError: true },
-    mutationFn: async () => {
-      const position = await currentPosition()
-      return recordVisit(stop.loan_number, {
-        result,
-        note,
-        latitude: position?.coords.latitude.toFixed(6) ?? null,
-        longitude: position?.coords.longitude.toFixed(6) ?? null,
-      })
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['my-route'] })
-      onClose()
-    },
-  })
-  return (
-    <Modal onClose={onClose} labelledBy="visit-title" align="bottom">
-      <div className="w-full space-y-3 rounded-t-2xl bg-surface p-5 pb-8 shadow-xl">
-        <h2 id="visit-title" className="text-lg font-semibold">
-          Gestión · {stop.customer_name}
-        </h2>
-        <div role="radiogroup" className="grid grid-cols-2 gap-2">
-          {RESULTS.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={result === value}
-              onClick={() => setResult(value)}
-              className={`h-12 rounded-lg border text-sm font-semibold ${
-                result === value ? 'border-brand-700 bg-brand-700 text-on-brand' : 'border-edge'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <Field label={result === 'promised' ? 'Fecha y monto prometidos' : 'Nota'}>
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
-        </Field>
-        {save.error instanceof ApiError ? (
-          <Alert tone="danger">{errorMessage(save.error.data)}</Alert>
-        ) : null}
-        <Button className="w-full !h-12" onClick={() => save.mutate()} disabled={save.isPending}>
-          Guardar gestión
-        </Button>
-      </div>
-    </Modal>
-  )
 }
 
 function directions(stop: RouteStop) {
@@ -191,7 +116,9 @@ function StopCard({
         </div>
         <div className="text-right">
           <div className="text-lg font-bold tabular-nums">{rd(stop.amount_due)}</div>
-          {stop.reason === 'overdue' ? (
+          {stop.reason === 'promise' ? (
+            <Badge tone="info">Promesa de hoy</Badge>
+          ) : stop.reason === 'overdue' ? (
             <Badge tone="danger">{stop.days_past_due} días</Badge>
           ) : (
             <Badge tone="warning">Vence hoy</Badge>
@@ -493,7 +420,17 @@ export function MyRoutePage() {
           </p>
         </Suspense>
       )}
-      {visiting ? <VisitSheet stop={visiting} onClose={() => setVisiting(null)} /> : null}
+      {visiting ? (
+        <ActionDialog
+          loanNumber={visiting.loan_number}
+          customerName={visiting.customer_name}
+          suggestedAmount={visiting.amount_due}
+          defaultKind="visit"
+          sheet
+          withLocation
+          onClose={() => setVisiting(null)}
+        />
+      ) : null}
       {summary ? <Summary data={data} onClose={() => setSummary(false)} /> : null}
     </>
   )

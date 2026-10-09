@@ -15,8 +15,8 @@ import {
   voidLoan,
 } from '../api/origination'
 import { listPayments } from '../api/payments'
-import { listVisits } from '../api/routes'
 import { buttonClass } from '../components/classes'
+import { CollectionTimeline } from '../components/CollectionTimeline'
 import { MoreMenu } from '../components/MoreMenu'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Timeline } from '../components/Timeline'
@@ -132,11 +132,6 @@ export function LoanDetailPage({ me }: { me: Me }) {
     queryKey: ['loan', numero, 'payments'],
     queryFn: () => listPayments({ loan: numero }),
     enabled: tab === 'pagos',
-  })
-  const visits = useQuery({
-    queryKey: ['loan', numero, 'visits'],
-    queryFn: () => listVisits(numero),
-    enabled: tab === 'gestiones',
   })
   const calendar = useQuery({
     queryKey: ['loan', numero, 'calendar'],
@@ -413,27 +408,11 @@ export function LoanDetailPage({ me }: { me: Me }) {
       ) : null}
 
       {tab === 'gestiones' ? (
-        <Card>
-          {visits.isPending ? (
-            <Spinner />
-          ) : visits.data?.length ? (
-            <ul className="divide-y divide-edge text-sm">
-              {visits.data.map((v) => (
-                <li key={v.id} className="py-2">
-                  <span className="font-medium">
-                    {v.kind}: {v.result}
-                  </span>{' '}
-                  <span className="text-muted">
-                    · {v.user_name} · {moment(v.created_at)}
-                  </span>
-                  {v.note ? <div className="text-muted">{v.note}</div> : null}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted">Sin gestiones registradas.</p>
-          )}
-        </Card>
+        <CollectionTimeline
+          loan={numero}
+          customerName={data.customer_name}
+          canManage={active && hasRole(me, ACCESS.manageCollections)}
+        />
       ) : null}
 
       {dialog === 'payoff' ? (

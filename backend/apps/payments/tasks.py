@@ -11,6 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.cash import services as cash
+from apps.collections import agenda, promises
 from apps.collections.models import DelinquencySnapshot
 from apps.collections.services import purge_pings
 from apps.core.models import Company
@@ -51,6 +52,12 @@ def run_nightly(company_id, today: dt.date) -> dict:
     loans = list(Loan.objects.filter(status=Loan.Status.ACTIVE).values_list("id", flat=True))
     for loan_id in loans:
         refresh_loan(loan_id, today)
+    # Phase 5 (F8): broken promises, escalation and cured loans, after the
+    # refresh so days past due are today's.
+    broken = promises.resolve_overdue(today)
+    _notify_broken(company_id, broken)
+    escalated = agenda.run_escalation(today)
+    agenda.close_cured(today)
     expired = reversals.expire_requests()
     stale_cash, stale_routes = cash.stale_sessions(today)
     for session in stale_cash:
@@ -80,7 +87,31 @@ def run_nightly(company_id, today: dt.date) -> dict:
             text=f"La conciliación nocturna encontró {len(problems)} diferencia(s): "
             + " ".join(problems)[:200],
         )
-    return {"loans": len(loans), "expired": expired, "purged": purged, "problems": problems}
+    return {
+        "loans": len(loans),
+        "expired": expired,
+        "purged": purged,
+        "problems": problems,
+        "broken_promises": len(broken),
+        "escalated": escalated,
+    }
+
+
+def _notify_broken(company_id, broken) -> None:
+    by_owner: dict = {}
+    for promise in broken:
+        owner = promises.agent_of(promise.loan) or promise.created_by
+        by_owner.setdefault(owner, []).append(promise.loan.number)
+    for owner, numbers in by_owner.items():
+        notify(
+            company_id=company_id,
+            users=[owner],
+            kind=Notification.Kind.PROMISES_BROKEN,
+            text=f"{len(numbers)} promesa(s) incumplida(s): "
+            + ", ".join(numbers[:5])
+            + ("…" if len(numbers) > 5 else ""),
+            link="/cobranza",
+        )
 
 
 @shared_task

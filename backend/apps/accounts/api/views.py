@@ -50,7 +50,22 @@ def _badges(user: User) -> dict:
         if session is None
         else {"id": str(session.id), "number": session.number},
         "route_open": open_route_of(user) is not None,
+        "agenda_today": _agenda_today(user),
     }
+
+
+def _agenda_today(user: User) -> int:
+    """Phase 5: my promises due today and follow-ups due by today (P44)."""
+    from apps.collections import agenda
+    from apps.collections.models import PaymentPromise
+
+    if not authz.has_any_role(user, *agenda.AGENT_ROLES):
+        return 0
+    today = timezone.localdate()
+    promises = agenda.promises_for(user, mine=True).filter(
+        status=PaymentPromise.Status.PENDING, promised_on__lte=today
+    )
+    return promises.count() + agenda.tasks_for(user, mine=True).filter(due_on__lte=today).count()
 
 
 class MeView(APIView):

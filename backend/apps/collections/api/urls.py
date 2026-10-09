@@ -12,6 +12,17 @@ from apps.collections.api.views import (
     RoutesView,
     VisitView,
 )
+from apps.collections.api.views_agenda import (
+    AgendaView,
+    AgentsView,
+    AssignAgentView,
+    CancelPromiseView,
+    CustomerTimelineView,
+    EscalationRulesView,
+    FollowUpView,
+    LoanTimelineView,
+    TaskActionView,
+)
 
 urlpatterns = [
     path("ruta/", MyRouteView.as_view(), name="my-route"),
@@ -23,6 +34,22 @@ urlpatterns = [
     path("rutas/asignar/", AssignView.as_view(), name="routes-assign"),
     path("rutas/<uuid:collector_id>/mapa/", RouteMapView.as_view(), name="routes-map"),
     path("prestamos/<str:number>/gestiones/", VisitView.as_view(), name="loan-visits"),
+    path("prestamos/<str:number>/cobranza/", LoanTimelineView.as_view(), name="loan-collections"),
+    path(
+        "clientes/<uuid:pk>/cobranza/", CustomerTimelineView.as_view(), name="customer-collections"
+    ),
+    path("agenda/", AgendaView.as_view(), name="agenda"),
+    path("promesas/<uuid:pk>/cancelar/", CancelPromiseView.as_view(), name="promise-cancel"),
+    path("seguimientos/", FollowUpView.as_view(), name="follow-up"),
+    path("seguimientos/<uuid:pk>/hecho/", TaskActionView.as_view(verb="hecho"), name="task-done"),
+    path(
+        "seguimientos/<uuid:pk>/reprogramar/",
+        TaskActionView.as_view(verb="reprogramar"),
+        name="task-reschedule",
+    ),
+    path("gestores/", AgentsView.as_view(), name="agents"),
+    path("gestores/asignar/", AssignAgentView.as_view(), name="agents-assign"),
+    path("reglas-escalamiento/", EscalationRulesView.as_view(), name="escalation-rules"),
     path(
         "prestamos/<str:number>/ubicacion-cliente/",
         CustomerLocationView.as_view(),
