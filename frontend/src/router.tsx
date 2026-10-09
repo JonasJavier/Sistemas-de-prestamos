@@ -77,6 +77,14 @@ const MyCashPage = lazyRouteComponent(() => import('./pages/MyCash'), 'MyCashPag
 const MyRoutePage = lazyRouteComponent(() => import('./pages/MyRoute'), 'MyRoutePage')
 const NoticesPage = lazyRouteComponent(() => import('./pages/Notices'), 'NoticesPage')
 const VerifyPage = lazyRouteComponent(() => import('./pages/Verify'), 'VerifyPage')
+const PortalEnterPage = lazyRouteComponent(
+  () => import('./pages/portal/PortalEnter'),
+  'PortalEnterPage',
+)
+const PortalHomePage = lazyRouteComponent(
+  () => import('./pages/portal/PortalHome'),
+  'PortalHomePage',
+)
 const PublicReceiptPage = lazyRouteComponent(
   () => import('./pages/PublicReceipt'),
   'PublicReceiptPage',
@@ -626,6 +634,21 @@ const verifyRoute = createRoute({
   component: VerifyPage,
 })
 
+/** P92–P93: the customer portal, with its own session (decision 099). */
+const portalEnterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/portal/entrar',
+  validateSearch: (search: Record<string, unknown>): { t?: string } =>
+    typeof search.t === 'string' ? { t: search.t } : {},
+  component: PortalEnterPage,
+})
+
+const portalHomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/portal',
+  component: PortalHomePage,
+})
+
 const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
@@ -683,6 +706,8 @@ const routeTree = rootRoute.addChildren([
   invitationRoute,
   publicReceiptRoute,
   verifyRoute,
+  portalEnterRoute,
+  portalHomeRoute,
 ])
 
 export function buildRouter(queryClient: QueryClient) {

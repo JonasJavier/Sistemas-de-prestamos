@@ -209,6 +209,7 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | `CommissionRule`, `CommissionRun`, `CommissionLine` | Comisiones (fase 7) | Regla por rol o persona (base, porcentaje, meta), cálculo del mes, aprobación | Al aprobar, cada monto pasa a cuentas por pagar (089) |
 | `Notification` | Aviso interno | Usuario, tipo, texto, enlace, leído | — |
 | `MessageTemplate`, `OutboundMessage`, `OptOut` | Mensajería (fase 9) | Canal, destinatario, texto, estado, proveedor, error | Registro de cada envío |
+| `PortalCode` | Código de acceso al portal del cliente (fase 9) | Cliente, código cifrado, vence, intentos, usado | Un solo uso; la invitación es un `PublicLink` de tipo portal (decisión 099) |
 | `DomainEvent` | Hecho de negocio | Tipo (`loan.disbursed`, `payment.posted`…), objeto, actor, datos, cuándo | Alimenta la cronología del cliente y del préstamo |
 | `LoginEvent` | Inicio de sesión (fase 7) | Usuario, hora, IP, navegador, dispositivo nuevo, fuera de horario | Alimenta las alertas antifraude (decisión 090) |
 | `FraudRule`, `FraudAlert` | Alertas antifraude (fase 7) | Patrón, umbral, ventana; alerta por persona con su revisión | Revisión nocturna; no se repite dentro de la ventana (090) |
@@ -228,7 +229,7 @@ pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, 
 | `Loan`, `Disbursement` | `legacy_number` del sistema anterior; la sesión de caja del desembolso en efectivo | Migración (074); anulación con el dinero de vuelta por una caja abierta |
 | `CollectorAssignment` | Quién cobró cada préstamo y desde cuándo | Comisiones (fase 7) y trazabilidad |
 | `ApprovalRequest` (core) | Condonación, descuento, reverso y corrección: quién pidió, quién decidió, cuándo se usó | Un solo mecanismo de autorización (069) |
-| `PublicLink` (plataforma, sin empresa) | Índice de los enlaces públicos: token → empresa y objeto, revocable | El recibo de WhatsApp se resuelve sin sesión y dentro de la empresa correcta (066) |
+| `PublicLink` (plataforma, sin empresa) | Índice de los enlaces públicos: token → empresa y objeto, revocable | El recibo de WhatsApp, el QR de los documentos (098) y la invitación al portal (099) se resuelven sin sesión y dentro de la empresa correcta (066) |
 | `Branch`, `HoursExtension`, `User` | Horario y días laborables de la sucursal; extensiones temporales; consentimiento de ubicación con fecha y texto | Horario de cajeros y cobradores (071); ruta (072) |
 | `BranchAccessGrant` | Acceso del día a un cliente de otra sucursal, con motivo | Alcance por sucursal en clientes (070) |
 | `Company` | `collector_cash_limit` (RD$ 25,000 por defecto, validado en 075) y `max_effective_annual_rate` (tope propio de costo anual efectivo, opcional) | Aviso al supervisor (072); tope de costo (075) |

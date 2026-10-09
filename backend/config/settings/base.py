@@ -195,6 +195,7 @@ REST_FRAMEWORK = {
         "registration": "5/hour",  # F19: public signup, per IP
         "invitation": "30/hour",  # F17: public invitation lookup/accept, per IP
         "public_receipt": "60/minute",  # decision 024: the WhatsApp receipt link, per IP
+        "portal": "30/minute",  # decision 099: the customer portal, per IP
     },
 }
 

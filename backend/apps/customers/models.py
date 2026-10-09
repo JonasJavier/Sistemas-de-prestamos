@@ -250,3 +250,17 @@ class BranchAccessGrant(CompanyScopedModel):
 
     class Meta:
         indexes = [models.Index(fields=["company", "user", "expires_at"])]
+
+
+class PortalCode(CompanyScopedModel):
+    """A one-time code to enter the customer portal (P92, decision 099):
+    stored hashed, valid 10 minutes, five tries."""
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="portal_codes")
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["company", "customer", "-created_at"])]

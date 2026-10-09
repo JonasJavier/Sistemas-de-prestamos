@@ -223,6 +223,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
             'Cajero',
             'Cobrador',
           ])}
+          canInvite={hasRole(me, ['Gerente', 'Supervisor', 'Oficial de crédito', 'Cajero'])}
         />
       ) : null}
       {tab === 'cobranza' ? (

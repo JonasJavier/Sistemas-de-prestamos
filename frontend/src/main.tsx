@@ -27,6 +27,8 @@ const PUBLIC_PATHS = [
   '/verificar-correo',
   '/invitacion',
   '/r/',
+  '/v/',
+  '/portal', // the customer portal answers 401 with its own screen
 ]
 
 /** 401 inside the app = the session closed (30 min idle or 12 h, doc 06 - 6). */

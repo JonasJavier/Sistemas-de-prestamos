@@ -60,6 +60,7 @@ export const sendTest = (channel: Channel, to: string): Promise<OutboundMessage>
 export interface CustomerMessages {
   messages: OutboundMessage[]
   opt_outs: { channel: string; channel_label: string; reason: string; created_at: string }[]
+  portal_since: string | null
 }
 
 export const getCustomerMessages = (customerId: string): Promise<CustomerMessages> =>

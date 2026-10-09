@@ -4,9 +4,18 @@ import { getCustomerMessages, optIn, optOut, STATUS_TONE } from '../../api/messa
 import { Badge, Button, Card, EmptyState, RowList, Spinner } from '../../components/ui'
 import { moment } from '../../lib/format'
 import { notify } from '../../lib/toast'
+import { PortalCard } from './PortalCard'
 
 /** F18 (decision 097): what was sent to the customer and their opt-outs. */
-export function MessagesTab({ customerId, canEdit }: { customerId: string; canEdit: boolean }) {
+export function MessagesTab({
+  customerId,
+  canEdit,
+  canInvite,
+}: {
+  customerId: string
+  canEdit: boolean
+  canInvite: boolean
+}) {
   const queryClient = useQueryClient()
   const data = useQuery({
     queryKey: ['customer-messages', customerId],
@@ -33,6 +42,12 @@ export function MessagesTab({ customerId, canEdit }: { customerId: string; canEd
   const blocked = data.data.opt_outs.some((o) => o.channel === '')
   return (
     <div className="space-y-3">
+      <PortalCard
+        customerId={customerId}
+        since={data.data.portal_since}
+        canInvite={canInvite}
+        onChange={refresh}
+      />
       <Card className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm">
           {blocked

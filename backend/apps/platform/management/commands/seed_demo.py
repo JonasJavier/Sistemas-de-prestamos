@@ -47,10 +47,10 @@ DEMO_STAFF = [  # (email, first name, last name, role)
     ("cobrador@modelo.test", "Carlos", "Cobrador", "Cobrador"),
     ("contabilidad@modelo.test", "Cecilia", "Contable", "Contabilidad"),
 ]
-DEMO_CUSTOMERS = [  # (first 10 digits of the cédula, names, phone)
-    ("0011234567", "María", "Gómez", "8095550101"),
-    ("4022345678", "José", "Pérez Santana", "8295550102"),
-    ("0013456789", "Ana Luisa", "Rodríguez", "8495550103"),
+DEMO_CUSTOMERS = [  # (first 10 digits of the cédula, names, phone, e-mail)
+    ("0011234567", "María", "Gómez", "8095550101", "maria@cliente.test"),
+    ("4022345678", "José", "Pérez Santana", "8295550102", "jose@cliente.test"),
+    ("0013456789", "Ana Luisa", "Rodríguez", "8495550103", "analuisa@cliente.test"),
 ]
 OTHER_COMPANY = "Préstamos del Cibao SRL"
 
@@ -92,6 +92,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(f"Dueño de la plataforma: {OWNER_EMAIL}")
         self._demo_company()
+        self._demo_contacts()
         self._demo_portfolio()
         self._demo_collections()
         self._demo_finance()
@@ -136,7 +137,7 @@ class Command(BaseCommand):
                 note="Fondo inicial de la demostración",
                 created_by=reg.admin,
             )
-            for first_ten, first_name, last_name, phone in DEMO_CUSTOMERS:
+            for first_ten, first_name, last_name, phone, email in DEMO_CUSTOMERS:
                 Customer.objects.create(
                     company=reg.company,
                     kind=Customer.Kind.PERSON,
@@ -145,9 +146,22 @@ class Command(BaseCommand):
                     first_name=first_name,
                     last_name=last_name,
                     phone=phone,
+                    email=email,
                     home_branch=reg.branch,
                 )
         self.stdout.write(f"«{DEMO_COMPANY}»: gerente@modelo.test y un usuario por rol.")
+
+    def _demo_contacts(self) -> None:
+        """The portal sends its codes by e-mail (decision 099): demo data
+        seeded before phase 9 gets the customers' addresses too."""
+        company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
+        if company is None:
+            return
+        with company_context(company.id):
+            for first_ten, *_, email in DEMO_CUSTOMERS:
+                Customer.objects.filter(document_number=cedula(first_ten), email="").update(
+                    email=email
+                )
 
     def _demo_portfolio(self) -> None:
         """Loans to collect in the phase 4 demo: through the real services

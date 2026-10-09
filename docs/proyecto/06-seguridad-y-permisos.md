@@ -153,6 +153,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
   - Hecho en la fase 4 (decisión 071): apertura, cierre y días por sucursal; extensión de 15 minutos a 6 horas con motivo, desde Rutas.
 - **Aviso de acceso nuevo:** el usuario recibe un correo cuando se inicia sesión desde un dispositivo nuevo.
 - **Restablecer el 2FA de un usuario:** lo hace el administrador tras verificar la identidad; queda auditado y se avisa al gerente.
+- **Portal del cliente (fase 9, decisión 099):** entra con su enlace personal de invitación y un código de un solo uso enviado a su correo o teléfono registrados (10 minutos, 5 intentos, uno por minuto y 10 al día). Su sesión está separada de la del personal, ve solo sus préstamos y se cierra a los 30 minutos sin uso.
 
 ## 7. Protección de los datos personales
 

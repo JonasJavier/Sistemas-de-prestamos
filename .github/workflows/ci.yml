@@ -113,6 +113,7 @@ jobs:
         image: axllent/mailpit
         ports:
           - 1025:1025
+          - 8025:8025 # its API: the portal spec reads the one-time code
     env:
       DATABASE_URL: postgres://cobradia:cobradia@localhost:5432/cobradia
       REDIS_CACHE_URL: redis://localhost:6379/0
@@ -126,6 +127,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.14"
+          # The API server started by Playwright still holds uv's cache when
+          # the job ends; pruning would wait on it until it times out.
+          prune-cache: false
       - uses: pnpm/action-setup@v4
         with:
           version: 11

@@ -11,6 +11,7 @@ from apps.accounts import authz
 from apps.accounts.api.permissions import role_required
 from apps.audit.models import record_event
 from apps.core.api.pagination import Pagination
+from apps.core.models import PublicLink
 from apps.customers.access import scope_customers
 from apps.customers.models import Customer
 from apps.notifications import messaging
@@ -154,9 +155,21 @@ class CustomerMessagesView(APIView):
     def get(self, request: Request, pk) -> Response:
         customer = _customer(request, pk)
         messages = customer.messages.select_related("loan").order_by("-created_at")[:100]
+        portal = (
+            PublicLink.objects.filter(
+                tenant=customer.company_id,
+                kind=PublicLink.Kind.PORTAL,
+                object_id=customer.id,
+                revoked_at__isnull=True,
+            )
+            .order_by("-created_at")
+            .first()
+        )
         return Response(
             {
                 "messages": [_message(m) for m in messages],
+                # Decision 099: since when the customer can enter the portal.
+                "portal_since": portal.created_at if portal else None,
                 "opt_outs": [
                     {
                         "channel": o.channel,

@@ -140,9 +140,13 @@ def send(
     to: str = "",
     created_by=None,
     respect_opt_out: bool = True,
+    secret: dict | None = None,
 ) -> list[OutboundMessage]:
     """Record and dispatch the event's active templates for the customer
-    (or ``to``, a test address). Returns what was recorded."""
+    (or ``to``, a test address). Returns what was recorded.
+
+    ``secret`` variables (the portal code) reach the customer but the record
+    keeps them masked: nobody on the staff can read them back."""
     from apps.core.models import Company
 
     company_id = current_company_id()
@@ -151,6 +155,7 @@ def send(
     if customer is not None:
         context.setdefault("nombre", customer.display_name.split(" ")[0])
     wanted = set(channels) if channels else None
+    shown = {**context, **dict.fromkeys(secret or {}, "••••••")}
     messages = []
     for template in templates():
         if template.event != event or not template.is_active:
@@ -174,8 +179,8 @@ def send(
             event=event,
             channel=channel,
             to=target or "—",
-            subject=render(template.subject, context),
-            body=render(template.body, context),
+            subject=render(template.subject, shown),
+            body=render(template.body, shown),
             status=status,
             error=error,
             created_by=created_by,
@@ -184,9 +189,18 @@ def send(
         if status == OutboundMessage.Status.QUEUED:
             from apps.notifications.tasks import deliver_message
 
+            real = {}
+            if secret:
+                full = {**context, **secret}
+                real = {
+                    "subject": render(template.subject, full),
+                    "body": render(template.body, full),
+                }
             on_commit_in_tenant(
                 company_id,
-                lambda pk=message.pk: deliver_message.delay(str(company_id), str(pk)),
+                lambda pk=message.pk, real=real: deliver_message.delay(
+                    str(company_id), str(pk), **real
+                ),
             )
     return messages
 

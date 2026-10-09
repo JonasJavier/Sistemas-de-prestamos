@@ -5,8 +5,12 @@ from apps.core.tenancy import company_context
 
 
 @shared_task
-def deliver_message(company_id: str, message_id: str) -> str:
-    """Hands one recorded message to its channel's provider (decision 097)."""
+def deliver_message(
+    company_id: str, message_id: str, subject: str | None = None, body: str | None = None
+) -> str:
+    """Hands one recorded message to its channel's provider (decision 097).
+    ``subject``/``body`` carry the unmasked text of a message with a secret;
+    they are delivered, never saved."""
     from apps.notifications import providers
     from apps.notifications.models import OutboundMessage
 
@@ -14,6 +18,8 @@ def deliver_message(company_id: str, message_id: str) -> str:
         message = OutboundMessage.objects.get(pk=message_id)
         if message.status != OutboundMessage.Status.QUEUED:
             return message.status
+        if body is not None:
+            message.subject, message.body = subject or "", body
         result = providers.deliver(message)
         message.status = result.status
         message.provider = result.provider
