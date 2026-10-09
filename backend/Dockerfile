@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 # Cobradía API, Celery worker and beat (decision 101). Built from backend/.
 
-FROM python:3.14-slim AS base
+# CI builds through a mirror of Docker Hub (REGISTRY=mirror.gcr.io/library).
+ARG REGISTRY=docker.io/library
+FROM ${REGISTRY}/python:3.14-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 # WeasyPrint (Pango, HarfBuzz) and the fonts of the documents (Inter, then

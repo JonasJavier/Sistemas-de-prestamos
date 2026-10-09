@@ -2,7 +2,9 @@
 # Caddy with the app's SPA and the promotion site (decision 101).
 # Built from the repository root: docker build -f infra/production/web.Dockerfile .
 
-FROM node:24-slim AS build
+# CI builds through a mirror of Docker Hub (REGISTRY=mirror.gcr.io/library).
+ARG REGISTRY=docker.io/library
+FROM ${REGISTRY}/node:24-slim AS build
 RUN npm install --global pnpm@11
 WORKDIR /src
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/
@@ -15,7 +17,7 @@ COPY site site
 ARG PUBLIC_APP_URL=https://app.cobradia.com
 RUN PUBLIC_APP_URL=$PUBLIC_APP_URL pnpm -C site build
 
-FROM caddy:2
+FROM ${REGISTRY}/caddy:2
 COPY infra/production/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /src/frontend/dist /srv/app
 COPY --from=build /src/site/dist /srv/site
