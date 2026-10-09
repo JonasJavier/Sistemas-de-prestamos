@@ -222,7 +222,7 @@ jobs:
         if: failure()
         run: |
           tail -n 100 "$RUNNER_TEMP/backend.log" "$RUNNER_TEMP/frontend.log"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-traces
