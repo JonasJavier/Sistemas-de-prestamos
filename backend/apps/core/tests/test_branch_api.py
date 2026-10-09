@@ -1,18 +1,20 @@
 import pytest
 from rest_framework.test import APIClient
 
-from apps.platform.services import RegistrationResult, register_company
+from apps.platform.services import RegistrationResult, register_company, use_demo_plan
 
 
 @pytest.fixture
 def tenant(db) -> RegistrationResult:
-    return register_company(
+    reg = register_company(
         legal_name="Financiera Uno SRL",
         admin_email="gerente@uno.do",
         admin_password="una-clave-larga-123",
         admin_first_name="Gina",
         admin_last_name="Rodríguez",
     )
+    use_demo_plan(reg.company)  # several branches: beyond the trial's cap (decision 104)
+    return reg
 
 
 @pytest.fixture

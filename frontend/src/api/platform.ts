@@ -34,8 +34,17 @@ export interface MyCompany {
   subscription: {
     status: string
     paid_until: string | null
-    plan: { name: string; monthly_price: string; is_trial: boolean }
+    plan: {
+      name: string
+      monthly_price: string
+      is_trial: boolean
+      max_users: number | null
+      max_branches: number | null
+      max_active_loans: number | null
+    }
   } | null
+  /** Decision 104: what the plan caps, in use today. */
+  usage?: { users: number; branches: number; active_loans: number }
 }
 
 export function getMyCompany(): Promise<MyCompany> {

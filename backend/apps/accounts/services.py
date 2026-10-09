@@ -35,6 +35,12 @@ def invite_user(
     """
     if User.objects.filter(email__iexact=email).exists():
         raise InvitationError("Ya existe una cuenta con este correo.")
+    from apps.platform import limits
+
+    try:
+        limits.check(invited_by.company_id, "users")
+    except limits.PlanLimitError as exc:
+        raise InvitationError(exc.message) from exc
 
     invitation = Invitation.objects.create(
         company_id=invited_by.company_id,

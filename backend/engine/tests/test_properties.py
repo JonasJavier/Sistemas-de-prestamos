@@ -20,6 +20,18 @@ methods = st.sampled_from(list(Method))
 frequencies = st.sampled_from(list(Frequency))
 
 
+def _schedule(**kwargs):
+    """The schedule, or None when the engine refuses a «fixed» installment
+    that pays interest only, leaving all the principal for the last one
+    (decision 105). Nothing else may be refused."""
+    try:
+        return generate_schedule(**kwargs)
+    except ValueError as exc:
+        assert kwargs["method"] == Method.FIXED_PAYMENT, exc
+        assert "casi no paga capital" in str(exc)
+        return None
+
+
 @settings(max_examples=300, deadline=None)
 @given(
     principal=principals,
@@ -29,7 +41,7 @@ frequencies = st.sampled_from(list(Frequency))
     frequency=frequencies,
 )
 def test_schedule_invariants(principal, rate, n, method, frequency) -> None:
-    rows = generate_schedule(
+    rows = _schedule(
         principal=principal,
         periodic_rate=rate,
         installments=n,
@@ -37,6 +49,8 @@ def test_schedule_invariants(principal, rate, n, method, frequency) -> None:
         frequency=frequency,
         disbursed_on=date(2026, 1, 15),
     )
+    if rows is None:
+        return
     assert len(rows) == n
     # The principal adds up EXACTLY: not one cent lost (defect #35).
     assert sum(row.principal for row in rows) == principal.quantize(Decimal("0.01"))
@@ -54,7 +68,7 @@ def test_schedule_invariants(principal, rate, n, method, frequency) -> None:
 @settings(max_examples=200, deadline=None)
 @given(principal=principals, rate=rates, n=counts)
 def test_fixed_payment_installments_are_level(principal, rate, n) -> None:
-    rows = generate_schedule(
+    rows = _schedule(
         principal=principal,
         periodic_rate=rate,
         installments=n,
@@ -62,6 +76,8 @@ def test_fixed_payment_installments_are_level(principal, rate, n) -> None:
         frequency=Frequency.MONTHLY,
         disbursed_on=date(2026, 1, 15),
     )
+    if rows is None:
+        return
     totals = [row.total for row in rows]
     # Non-last installments: level payments, then (for tiny loans that
     # finish amortizing early) one clamped partial and a zero tail.
@@ -83,7 +99,7 @@ amortizing = st.sampled_from([Method.FLAT, Method.FIXED_PAYMENT, Method.FIXED_PR
 def test_rounded_schedules_stay_exact(principal, rate, n, method, rounding) -> None:
     """Rounding the installment never loses a cent nor goes negative, and
     every non-last installment is a multiple of the rounding step."""
-    rows = generate_schedule(
+    rows = _schedule(
         principal=principal,
         periodic_rate=rate,
         installments=n,
@@ -92,6 +108,8 @@ def test_rounded_schedules_stay_exact(principal, rate, n, method, rounding) -> N
         disbursed_on=date(2026, 1, 15),
         rounding=rounding,
     )
+    if rows is None:
+        return
     assert sum(row.principal for row in rows) == principal.quantize(Decimal("0.01"))
     assert all(row.principal >= 0 and row.interest >= 0 for row in rows)
     step = ROUNDING_STEP[rounding]
@@ -105,3 +123,32 @@ def test_rounded_schedules_stay_exact(principal, rate, n, method, rounding) -> N
     # The closing installment is never above the regular one (rounding up).
     if method != Method.FIXED_PRINCIPAL and n > 1:
         assert rows[-1].total <= rows[0].total + Decimal("0.01") * n
+
+
+def test_a_fixed_installment_that_pays_no_principal_is_refused() -> None:
+    """Hypothesis found it: 29.36 % a month over 46 months leaves 0.0026 of
+    principal in the exact installment; in cents the last one would carry
+    all the principal (decision 105)."""
+    import pytest
+
+    with pytest.raises(ValueError, match="casi no paga capital"):
+        generate_schedule(
+            principal=Decimal("1249.99"),
+            periodic_rate=Decimal("0.2936"),
+            installments=46,
+            method=Method.FIXED_PAYMENT,
+            frequency=Frequency.MONTHLY,
+            disbursed_on=date(2026, 1, 15),
+            rounding=Rounding.PESO,
+        )
+    # A high but ordinary loan still works: 20 % a month over a year.
+    rows = generate_schedule(
+        principal=Decimal("1000"),
+        periodic_rate=Decimal("0.20"),
+        installments=12,
+        method=Method.FIXED_PAYMENT,
+        frequency=Frequency.MONTHLY,
+        disbursed_on=date(2026, 1, 15),
+        rounding=Rounding.PESO,
+    )
+    assert sum(row.principal for row in rows) == Decimal("1000.00")

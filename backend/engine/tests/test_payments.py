@@ -339,25 +339,30 @@ def test_late_fee_never_exceeds_the_cap(base, days, method) -> None:
     rounding=st.sampled_from(list(Rounding)),
 )
 def test_reschedule_closes_the_balance_exactly(balance, rate, n, method, mode, rounding) -> None:
-    original = generate_schedule(
-        principal=balance * 2,
-        periodic_rate=rate,
-        installments=n,
-        method=method,
-        frequency=Frequency.MONTHLY,
-        disbursed_on=date(2025, 12, 1),
-        rounding=rounding,
-    )
-    keep = original[0].total if method == Method.FIXED_PAYMENT else original[0].principal
-    rows = reschedule(
-        balance=balance,
-        periodic_rate=rate,
-        method=method,
-        dates=_dates(min(n, 12)),
-        mode=mode,
-        keep=keep,
-        rounding=rounding,
-    )
+    try:
+        original = generate_schedule(
+            principal=balance * 2,
+            periodic_rate=rate,
+            installments=n,
+            method=method,
+            frequency=Frequency.MONTHLY,
+            disbursed_on=date(2025, 12, 1),
+            rounding=rounding,
+        )
+        keep = original[0].total if method == Method.FIXED_PAYMENT else original[0].principal
+        rows = reschedule(
+            balance=balance,
+            periodic_rate=rate,
+            method=method,
+            dates=_dates(min(n, 12)),
+            mode=mode,
+            keep=keep,
+            rounding=rounding,
+        )
+    except ValueError as exc:
+        # Tiny balances whose «fixed» installment pays interest only (decision 105).
+        assert method == Method.FIXED_PAYMENT and "casi no paga capital" in str(exc)
+        return
     assert sum(row.principal for row in rows) == balance
     assert all(row.principal >= 0 for row in rows)
     assert len(rows) <= min(n, 12)

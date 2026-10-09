@@ -51,6 +51,8 @@ class Company(TimeStampedModel):
     # Decision 103: the version of the terms and privacy notice accepted at signup.
     terms_version = models.CharField(max_length=20, blank=True)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
+    # F19 (decision 104): the last day the end-of-trial notice went out.
+    trial_warned_on = models.DateField(null=True, blank=True)
     status_reason = models.CharField(max_length=300, blank=True)
 
     # Operating defaults of F3 (decision 027), editable per company.

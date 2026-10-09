@@ -20,7 +20,7 @@
 | Frecuencias permitidas | Diaria, interdiaria, semanal, quincenal, mensual | Todas |
 | Unidad de la tasa | Por período, mensual o anual (§2) | Por período, como la referencia · **Validar** |
 | Rangos | Monto, tasa y plazo, cada uno con su mínimo y su máximo | — |
-| Redondeo de la cuota | Al centavo, al peso, a 5 o a 10. La cuota regular se redondea **hacia arriba**; lo que sobra abona capital y la última cuota cierra el saldo exacto, así que nunca es mayor que las demás (decisión 054). No aplica a solo interés ni a abierto: ahí la cuota es el interés | Al centavo · **Validar** |
+| Redondeo de la cuota | Al centavo, al peso, a 5 o a 10. La cuota regular se redondea **hacia arriba**; lo que sobra abona capital y la última cuota cierra el saldo exacto, así que nunca es mayor que las demás (decisión 054). Si con la tasa y el plazo la cuota fija no llegaría a abonar capital, el sistema la rechaza (decisión 105). No aplica a solo interés ni a abierto: ahí la cuota es el interés | Al centavo · **Validar** |
 | Días de cobro | Sábados sí o no, domingos sí o no, feriados sí o no | Sábados sí, domingos no, feriados no |
 | Cargos | Lista de cargos con base y modalidad (§5) | Gastos de cierre 0 % |
 | Orden de aplicación de pagos | Estándar o proporcional (§8.1) | Estándar |

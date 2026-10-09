@@ -1,6 +1,7 @@
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -28,6 +29,25 @@ class BranchViewSet(viewsets.ModelViewSet):
     permission_classes = [IsCompanyManagerOrReadOnly, CompanyNotSuspendedOrReadOnly]
     queryset = Branch.objects.order_by("code")
     http_method_names = ["get", "post", "patch", "head", "options"]
+
+    def _within_plan(self, serializer, was_active: bool) -> None:
+        """Decision 104: a new or reactivated branch counts against the plan."""
+        from apps.platform import limits
+
+        if serializer.validated_data.get("is_active", True) and not was_active:
+            try:
+                limits.check(self.request.user.company_id, "branches")
+            except limits.PlanLimitError as exc:
+                raise ValidationError({"detail": exc.message}) from exc
+
+    def perform_create(self, serializer) -> None:
+        self._within_plan(serializer, was_active=False)
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer) -> None:
+        if "is_active" in serializer.validated_data:
+            self._within_plan(serializer, was_active=serializer.instance.is_active)
+        super().perform_update(serializer)
 
 
 class ReasonViewSet(viewsets.ModelViewSet):

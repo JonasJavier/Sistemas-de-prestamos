@@ -65,6 +65,38 @@ export function SubscriptionPage() {
         ) : null}
       </Card>
 
+      {data?.subscription && data.usage ? (
+        <Card>
+          <h2 className="text-base font-semibold">Uso del plan</h2>
+          <ul className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+            {(
+              [
+                [
+                  'Usuarios (con invitaciones pendientes)',
+                  data.usage.users,
+                  data.subscription.plan.max_users,
+                ],
+                ['Sucursales activas', data.usage.branches, data.subscription.plan.max_branches],
+                [
+                  'Préstamos activos',
+                  data.usage.active_loans,
+                  data.subscription.plan.max_active_loans,
+                ],
+              ] as const
+            ).map(([label, used, limit]) => (
+              <li key={label} className="rounded-lg border border-edge p-3">
+                <div className="text-muted">{label}</div>
+                <div
+                  className={`font-medium tabular-nums ${limit !== null && used >= limit ? 'text-warning-700' : ''}`}
+                >
+                  {limit === null ? `${used} · sin límite` : `${used} de ${limit}`}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+
       <Card>
         <h2 className="text-base font-semibold">¿Cómo activo o renuevo mi suscripción?</h2>
         <p className="mt-1 text-sm text-muted">

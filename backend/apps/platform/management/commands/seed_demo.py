@@ -34,7 +34,7 @@ from apps.ledger.models import FinancialAccount
 from apps.lending import applications as flow
 from apps.lending.disbursement import disburse
 from apps.lending.models import Installment, Loan, LoanProduct
-from apps.platform.services import register_company
+from apps.platform.services import register_company, use_demo_plan
 
 PASSWORD = "demo-cobradia-2026"  # noqa: S105 - fictitious, development only
 OWNER_EMAIL = "dueno@cobradia.test"
@@ -98,6 +98,7 @@ class Command(BaseCommand):
         self._demo_finance()
         self._demo_scores()
         self._other_company()
+        self._demo_plans()
         self.stdout.write(self.style.SUCCESS(f"Listo. Contraseña de todas las cuentas: {PASSWORD}"))
 
     @transaction.atomic
@@ -150,6 +151,12 @@ class Command(BaseCommand):
                     home_branch=reg.branch,
                 )
         self.stdout.write(f"«{DEMO_COMPANY}»: gerente@modelo.test y un usuario por rol.")
+
+    def _demo_plans(self) -> None:
+        """Both demo companies have one user per role: the demo plan, not
+        the trial's caps (decision 104). Also for data seeded before."""
+        for company in Company.objects.filter(legal_name__in=[DEMO_COMPANY, OTHER_COMPANY]):
+            use_demo_plan(company)
 
     def _demo_contacts(self) -> None:
         """The portal sends its codes by e-mail (decision 099): demo data

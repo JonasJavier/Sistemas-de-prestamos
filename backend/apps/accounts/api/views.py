@@ -129,6 +129,13 @@ class CompanyUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         user = self.get_queryset().get(pk=pk)
         if user == request.user:
             raise ValidationError({"detail": "No puedes desactivar tu propia cuenta."})
+        if active and not user.is_active:
+            from apps.platform import limits
+
+            try:
+                limits.check(user.company_id, "users")
+            except limits.PlanLimitError as exc:
+                raise ValidationError({"detail": exc.message}) from exc
         user.is_active = active
         user.save(update_fields=["is_active"])
         return Response(CompanyUserSerializer(user).data)

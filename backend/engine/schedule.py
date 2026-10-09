@@ -262,12 +262,23 @@ def _amounts(
         factor = (1 + periodic_rate) ** n
         exact = principal * periodic_rate * factor / (factor - 1)
         payment = _round_up(exact, rounding_step) if rounded else money(exact)
-    return _amortize(
+    rows = _amortize(
         principal=principal,
         installments=n,
         target_total=lambda _balance, _interest: payment,
         interest_for=lambda balance: money(balance * periodic_rate),
     )
+    # A very high rate over a long term leaves the exact installment less
+    # than a cent above the interest: in cents it pays interest only and the
+    # whole principal would fall on the last one. Refused, not disguised as
+    # a fixed installment (decision 105).
+    last_part, last_interest = rows[-1]
+    if n > 1 and rows[0][0] == 0 and last_part + last_interest > payment + CENT * n:
+        raise ValueError(
+            "Con esta tasa y este plazo la cuota fija casi no paga capital: todo quedaría en "
+            "la última cuota. Reduce el plazo o la tasa."
+        )
+    return rows
 
 
 def due_dates(

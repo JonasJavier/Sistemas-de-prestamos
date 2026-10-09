@@ -186,3 +186,15 @@ def _seed_reasons(company: Company) -> None:
         for kind, texts in SEED_REASONS.items()
         for text in texts
     )
+
+
+DEMO_PLAN = "Demostración"
+
+
+def use_demo_plan(company: Company) -> None:
+    """Demo and test companies (one user per role) run without the trial's
+    caps; the plan is never offered to customers (decision 104)."""
+    plan, _ = Plan.objects.get_or_create(
+        name=DEMO_PLAN, defaults={"monthly_price": 0, "is_trial": False, "is_active": False}
+    )
+    Subscription.objects.filter(company=company).update(plan=plan)

@@ -438,6 +438,8 @@ El único flujo que ocurre **fuera** de una empresa: es cómo una financiera ent
 6. **Baja.**
    - La empresa la solicita; se le entrega la exportación completa de sus datos.
    - Los datos se conservan un plazo (90 días por defecto) por si se arrepiente, y luego se eliminan. **Validar con el abogado** (Ley 172-13 y plazos de conservación financieros).
+> **Fase 10 (decisión 104):** los límites del plan se aplican al invitar o reactivar usuarios, al crear o reactivar sucursales y al desembolsar; los avisos de 7, 3 y 1 día antes salen cada mañana por correo y el dueño recibe un correo por cada registro nuevo. La aceptación de los términos y del aviso de privacidad queda registrada al registrarse (decisión 103). **Pendiente:** la baja con exportación completa y el borrado a los 90 días se hacen a mano hasta que haya demanda.
+
 7. **Modo soporte (046).** Para ayudar a una empresa, el dueño activa un acceso temporal de **solo lectura**, con motivo y duración (72 horas por defecto); la empresa lo ve activo en su pantalla de Ajustes y todo queda auditado.
 
 ```mermaid

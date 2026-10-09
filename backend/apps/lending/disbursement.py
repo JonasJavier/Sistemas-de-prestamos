@@ -101,6 +101,17 @@ def _check_disburser(user: User, application: Application) -> None:
         raise DisbursementError("La solicitud es de otra sucursal.", code="out_of_scope")
 
 
+def _check_plan(application: Application) -> None:
+    """Decision 104: the plan caps active loans; a renewal replaces one."""
+    from apps.platform import limits
+
+    try:
+        adding = 0 if application.renews_id else 1
+        limits.check(application.company_id, "active_loans", adding=adding)
+    except limits.PlanLimitError as exc:
+        raise DisbursementError(exc.message, code="plan_limit") from exc
+
+
 def _check_account(account: FinancialAccount, application: Application, label: str) -> None:
     if account.company_id != application.company_id or not account.is_active:
         raise DisbursementError(f"La cuenta de {label} no está disponible.", code="account")
@@ -244,6 +255,7 @@ def disburse(
             "La aprobación venció; la solicitud debe reevaluarse.", code="expired"
         )
     _check_disburser(user, application)
+    _check_plan(application)
     customer: Customer = application.customer
     if customer.status == Customer.Status.BLOCKED:
         raise DisbursementError("El cliente está bloqueado.", code="customer_blocked")

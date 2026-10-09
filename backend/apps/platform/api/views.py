@@ -1,5 +1,6 @@
 from allauth.account.models import EmailAddress
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -10,7 +11,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.models import Company
-from apps.platform import services
+from apps.platform import limits, services, tasks
 from apps.platform.api.permissions import IsPlatformAdmin
 from apps.platform.api.serializers import (
     CompanySerializer,
@@ -49,6 +50,9 @@ class RegistrationView(APIView):
             request, result.admin, result.admin.email, confirm=True, signup=True
         )
         address.set_as_primary()
+        transaction.on_commit(
+            lambda: tasks.notify_owner_of_signup(result.company, result.admin.email)
+        )
         return Response(
             {
                 "company_id": str(result.company.id),
@@ -124,6 +128,8 @@ class MyCompanyView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         company = Company.objects.select_related("subscription__plan").get(pk=company_id)
         data = MyCompanySerializer(company).data
+        # Decision 104: what the plan allows and what is in use.
+        data["usage"] = limits.usage(company.id)
         if company.trial_ends_on:
             data["trial_days_left"] = max((company.trial_ends_on - timezone.localdate()).days, 0)
         return Response(data)

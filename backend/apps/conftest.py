@@ -18,7 +18,7 @@ from apps.customers.models import Customer
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount
 from apps.lending.models import LoanProduct
-from apps.platform.services import RegistrationResult, register_company
+from apps.platform.services import RegistrationResult, register_company, use_demo_plan
 
 
 @dataclass
@@ -79,6 +79,7 @@ def build_tenant(name: str, email_domain: str) -> Tenant:
         admin_first_name="Gina",
         admin_last_name="Rodríguez",
     )
+    use_demo_plan(reg.company)  # one user per role: beyond the trial's caps
     users = {
         "gerente": reg.admin,
         "gerente2": add_user(reg, f"gerente2@{email_domain}", "Gerente"),
