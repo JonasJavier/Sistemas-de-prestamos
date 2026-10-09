@@ -190,56 +190,60 @@ export function BranchesPage() {
       <Card>
         {branches.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
         {branches.data ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                <th className="py-2 pr-3">Código</th>
-                <th className="py-2 pr-3">Nombre</th>
-                <th className="py-2 pr-3">Dirección</th>
-                <th className="py-2 pr-3">Horario</th>
-                <th className="py-2 pr-3">Estado</th>
-                <th className="py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {branches.data.results.map((branch) => (
-                <tr key={branch.id} className="border-b border-edge/60 last:border-0">
-                  <td className="py-2 pr-3 font-medium tabular-nums">{branch.code}</td>
-                  <td className="py-2 pr-3">{branch.name}</td>
-                  <td className="py-2 pr-3 text-muted">{branch.address || '—'}</td>
-                  <td className="py-2 pr-3">
-                    <button
-                      type="button"
-                      className="text-left text-brand-700 hover:underline"
-                      onClick={() => setHoursFor(branch)}
-                    >
-                      {hoursText(branch)}
-                    </button>
-                  </td>
-                  <td className="py-2 pr-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
-                        branch.is_active
-                          ? 'bg-brand-100 text-brand-800'
-                          : 'bg-warning-700/15 text-warning-700'
-                      }`}
-                    >
-                      {branch.is_active ? 'Activa' : 'Inactiva'}
-                    </span>
-                  </td>
-                  <td className="py-2 text-right">
-                    <Button
-                      variant="secondary"
-                      onClick={() => toggle.mutate({ id: branch.id, is_active: !branch.is_active })}
-                      disabled={toggle.isPending}
-                    >
-                      {branch.is_active ? 'Desactivar' : 'Activar'}
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-edge text-left text-[12.5px] text-muted">
+                  <th className="py-2 pr-3">Código</th>
+                  <th className="py-2 pr-3">Nombre</th>
+                  <th className="py-2 pr-3">Dirección</th>
+                  <th className="py-2 pr-3">Horario</th>
+                  <th className="py-2 pr-3">Estado</th>
+                  <th className="py-2" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {branches.data.results.map((branch) => (
+                  <tr key={branch.id} className="border-b border-edge/60 last:border-0">
+                    <td className="py-2 pr-3 font-medium tabular-nums">{branch.code}</td>
+                    <td className="py-2 pr-3">{branch.name}</td>
+                    <td className="py-2 pr-3 text-muted">{branch.address || '—'}</td>
+                    <td className="py-2 pr-3">
+                      <button
+                        type="button"
+                        className="text-left text-brand-700 hover:underline"
+                        onClick={() => setHoursFor(branch)}
+                      >
+                        {hoursText(branch)}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
+                          branch.is_active
+                            ? 'bg-brand-100 text-brand-800'
+                            : 'bg-warning-700/15 text-warning-700'
+                        }`}
+                      >
+                        {branch.is_active ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </td>
+                    <td className="py-2 text-right">
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          toggle.mutate({ id: branch.id, is_active: !branch.is_active })
+                        }
+                        disabled={toggle.isPending}
+                      >
+                        {branch.is_active ? 'Desactivar' : 'Activar'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : null}
       </Card>
       {hoursFor ? <HoursDialog branch={hoursFor} onClose={() => setHoursFor(null)} /> : null}

@@ -402,7 +402,7 @@ function CloseDialog({
             </label>
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <Stat label="Esperado" value={rd(expected)} />
           <Stat label="Contado" value={rd(counted)} emphasis />
           <Stat
@@ -486,7 +486,7 @@ function DrawerFigures({ session }: { session: CashSession }) {
   const methods = Object.entries(session.by_method)
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Fondo de apertura" value={rd(fund)} />
         <Stat label="Entradas" value={rd(incoming)} />
         <Stat label="Salidas" value={rd(sum('out'))} />

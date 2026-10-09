@@ -67,7 +67,7 @@ export function PayablesPage() {
         actions={<Button onClick={() => setCreating(true)}>Nueva cuenta por pagar</Button>}
       />
       {data ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <Stat
             label="Pendiente"
             value={rd(data.totals.outstanding)}
@@ -393,7 +393,7 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 {data.overdue ? 'Vencida' : data.status_label}
               </Badge>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <Stat label="Monto" value={rd(data.amount)} />
               <Stat label="Pagado" value={rd(data.paid)} />
               <Stat label="Pendiente" value={rd(data.outstanding)} emphasis />

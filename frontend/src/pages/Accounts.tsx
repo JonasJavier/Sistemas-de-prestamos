@@ -165,7 +165,7 @@ export function AccountsPage({ me }: { me: Me }) {
       {panel === 'new' ? (
         <Card>
           <form
-            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[120px_1fr_1fr_1fr_160px_auto]"
+            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-[120px_1fr_1fr_1fr_160px_auto]"
             onSubmit={(e) => {
               e.preventDefault()
               create.mutate()

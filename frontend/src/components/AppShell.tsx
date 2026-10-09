@@ -405,7 +405,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setSearching('buscar')}
-              className="hidden h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface-2 px-3 text-sm text-muted outline-none hover:border-brand-700/40 focus-visible:ring-2 focus-visible:ring-accent-500 sm:flex"
+              className="hidden h-9 w-full min-w-0 max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface-2 px-3 text-sm text-muted outline-none hover:border-brand-700/40 focus-visible:ring-2 focus-visible:ring-accent-500 sm:flex"
             >
               <SearchIcon />
               <span className="flex-1 truncate text-left">Buscar cliente, cédula o préstamo…</span>
@@ -417,8 +417,10 @@ export function AppShell({
             <span className="hidden sm:block" />
           )}
           <div className="flex items-center gap-3">
-            <div className="hidden text-right leading-tight md:block">
-              <div className="text-sm font-medium">{name}</div>
+            {/* Beside the sidebar a tablet has no room for the name: it would
+                wrap in three lines and push the buttons out. */}
+            <div className="hidden text-right leading-tight lg:block">
+              <div className="whitespace-nowrap text-sm font-medium">{name}</div>
               <div className="max-w-56 truncate text-[12px] text-muted" title={roleText}>
                 {roleText}
               </div>

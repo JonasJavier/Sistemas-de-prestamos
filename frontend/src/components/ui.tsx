@@ -288,10 +288,12 @@ export function Stat({
   hint?: ReactNode
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
+    // @container: the figure's size follows the card, not the screen (beside
+    // the sidebar on a tablet, four cards are narrower than on a phone).
+    <div className="@container min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
       <div className="text-[12.5px] text-muted">{label}</div>
       <div
-        className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
+        className={`whitespace-nowrap font-display font-bold tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
       >
         <Figure value={value} />
       </div>

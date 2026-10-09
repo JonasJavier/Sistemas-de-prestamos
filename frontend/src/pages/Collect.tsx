@@ -347,7 +347,7 @@ export function CollectPage({ me }: { me: Me }) {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Vencido" value={rd(s.overdue)} danger={Number(s.overdue) > 0} />
         <Stat label="Mora al día" value={rd(s.late_fee)} />
         <Stat

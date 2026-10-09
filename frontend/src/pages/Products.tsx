@@ -147,7 +147,7 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
         <p className="text-sm text-muted">Sin cargos.</p>
       )}
       <form
-        className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_130px_110px_230px_auto]"
+        className="grid grid-cols-2 items-end gap-2 lg:grid-cols-[1fr_130px_110px_230px_auto]"
         onSubmit={(e) => {
           e.preventDefault()
           add.mutate()

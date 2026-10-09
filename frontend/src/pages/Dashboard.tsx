@@ -46,7 +46,7 @@ function Grid({ label, children }: { label?: string; children: ReactNode }) {
   const count = Children.toArray(children).length
   const columns =
     count === 3 || count === 5 || count === 6
-      ? 'sm:grid-cols-3'
+      ? 'lg:grid-cols-3'
       : count >= 4
         ? 'lg:grid-cols-4'
         : 'sm:grid-cols-2'

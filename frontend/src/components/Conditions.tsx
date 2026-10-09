@@ -107,7 +107,7 @@ export function ConditionsForm({
 export function QuoteSummary({ data }: { data: Simulation }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Cuota" value={rd(data.schedule[0]?.total ?? 0)} emphasis />
         <Stat label="Total intereses" value={rd(data.total_interest)} />
         <Stat label="Neto a entregar" value={rd(data.net_disbursed)} />

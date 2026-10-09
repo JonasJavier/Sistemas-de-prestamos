@@ -128,7 +128,7 @@ function ReconciliationView({ id, canWork }: { id: string; canWork: boolean }) {
         </h2>
         <Badge tone={data.status === 'closed' ? 'success' : 'warning'}>{data.status_label}</Badge>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         <Stat label="Saldo en el libro" value={rd(summary.book_balance)} />
         <Stat label="En tránsito" value={rd(summary.in_transit)} />
         <Stat label="El banco debería decir" value={rd(summary.expected_statement)} />

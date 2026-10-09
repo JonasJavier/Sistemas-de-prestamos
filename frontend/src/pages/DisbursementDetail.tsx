@@ -149,7 +149,7 @@ export function DisbursementDetailPage() {
         </Alert>
       ))}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Monto aprobado" value={rd(sim.requested_amount)} />
         <Stat
           label="Cargos"

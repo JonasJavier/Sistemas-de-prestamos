@@ -231,7 +231,7 @@ export function LegalCasePage() {
         </Alert>
       ) : null}
       {error instanceof ApiError ? <Alert tone="danger">{errorMessage(error.data)}</Alert> : null}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Stat
           label="Exigible hoy"
           value={rd(data.exigible)}
@@ -359,7 +359,7 @@ export function LegalCasePage() {
           <p className="text-sm text-muted">Sin costas registradas.</p>
         )}
         {open ? (
-          <div className="grid gap-3 sm:grid-cols-[1fr_9rem_12rem_auto] sm:items-end">
+          <div className="grid gap-3 sm:grid-cols-2 sm:items-end lg:grid-cols-[1fr_9rem_12rem_auto]">
             <Field label="Descripción">
               <Input
                 value={cost.description}

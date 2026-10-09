@@ -97,7 +97,11 @@ export function RegisterPage() {
           <Field label="Correo" error={form.formState.errors.email?.message}>
             <Input type="email" autoComplete="email" {...form.register('email')} />
           </Field>
-          <Field label="Contraseña" error={form.formState.errors.password?.message}>
+          <Field
+            label="Contraseña"
+            error={form.formState.errors.password?.message}
+            hint="Al menos 12 caracteres."
+          >
             <Input type="password" autoComplete="new-password" {...form.register('password')} />
           </Field>
           {/* Decision 103: the accepted version is recorded with the company. */}

@@ -93,7 +93,7 @@ export function ExpensesPage({ me }: { me: Me }) {
           setPage(1)
         }}
       />
-      <div className="grid gap-2 sm:grid-cols-[1fr_11rem_10rem_10rem]">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_10rem_10rem]">
         <SearchInput
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -124,7 +124,7 @@ export function ExpensesPage({ me }: { me: Me }) {
         />
       </div>
       {data ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <Stat label="Gastos registrados" value={rd(data.totals.expense)} />
           <Stat label="Ingresos registrados" value={rd(data.totals.income)} />
           <Stat label="Por aprobar" value={String(data.totals.pending)} />

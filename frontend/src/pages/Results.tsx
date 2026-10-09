@@ -66,7 +66,7 @@ export function ResultsPage() {
       {report.isPending ? <Spinner /> : null}
       {data ? (
         <div id="print-area" className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <Stat label="Ingresos cobrados" value={rd(data.income_total)} />
             <Stat label="Gastos operativos" value={rd(data.expense_total)} />
             {/* A loss reads in red, as its size: «Pérdida RD$ 1,000», never in green. */}

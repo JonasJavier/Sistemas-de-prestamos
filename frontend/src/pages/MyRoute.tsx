@@ -355,14 +355,17 @@ export function MyRoutePage() {
         </Card>
       ) : null}
 
-      <div className="grid grid-cols-3 gap-2">
+      {/* Two amounts side by side fit a phone; the visits go on their own line. */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <Stat label="Cobrado hoy" value={rd(data.route?.collected ?? '0')} emphasis />
-        <Stat
-          label="Visitas"
-          value={`${data.progress.visited}/${data.progress.stops}`}
-          hint={pending ? `${pending} pendiente${pending === 1 ? '' : 's'}` : 'todas hechas'}
-        />
         <Stat label="Efectivo en mano" value={rd(data.route?.cash ?? '0')} />
+        <div className="col-span-2 sm:col-span-1">
+          <Stat
+            label="Visitas"
+            value={`${data.progress.visited}/${data.progress.stops}`}
+            hint={pending ? `${pending} pendiente${pending === 1 ? '' : 's'}` : 'todas hechas'}
+          />
+        </div>
       </div>
 
       <div className="flex gap-2">

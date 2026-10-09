@@ -23,7 +23,7 @@ export function Kpi({
   const id = useId()
   const color = tone === 'bad' ? 'text-danger-600' : tone === 'good' ? 'text-success-600' : ''
   return (
-    <div className="relative min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
+    <div className="@container relative min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div className="text-[12.5px] text-muted">
           {to ? (
@@ -48,7 +48,7 @@ export function Kpi({
         ) : null}
       </div>
       <div
-        className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${color}`}
+        className={`whitespace-nowrap font-display font-bold tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${color}`}
       >
         <Figure value={value} />
       </div>

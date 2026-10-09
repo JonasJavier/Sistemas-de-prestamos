@@ -346,7 +346,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
         />
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Capital pendiente" value={rd(data.principal_outstanding)} emphasis />
         <Stat label="Interés por cobrar" value={rd(data.interest_outstanding)} />
         <Stat

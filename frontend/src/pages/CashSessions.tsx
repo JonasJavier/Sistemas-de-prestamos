@@ -145,7 +145,7 @@ export function CashSessionDetailPage() {
           ) : null
         }
       />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Esperado" value={rd(s.expected)} />
         <Stat label="Contado" value={s.counted ? rd(s.counted) : '—'} emphasis />
         <Stat

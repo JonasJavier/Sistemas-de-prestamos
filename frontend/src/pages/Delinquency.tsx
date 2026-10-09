@@ -99,7 +99,7 @@ export function DelinquencyPage({ me }: { me: Me }) {
           )
         })}
       </div>
-      <div className="grid gap-2 sm:grid-cols-[1fr_14rem_12rem]">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_14rem_12rem]">
         <SearchInput
           value={q}
           onChange={(e) => setQ(e.target.value)}

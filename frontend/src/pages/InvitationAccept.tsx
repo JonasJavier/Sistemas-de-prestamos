@@ -93,7 +93,11 @@ export function InvitationAcceptPage() {
                 <Input {...form.register('last_name')} />
               </Field>
             </div>
-            <Field label="Crea tu contraseña" error={form.formState.errors.password?.message}>
+            <Field
+              label="Crea tu contraseña"
+              error={form.formState.errors.password?.message}
+              hint="Al menos 12 caracteres."
+            >
               <Input type="password" autoComplete="new-password" {...form.register('password')} />
             </Field>
             <Button type="submit" className="w-full" disabled={accept.isPending}>

@@ -81,7 +81,7 @@ export function LoansPage({ me }: { me: Me }) {
         title="Préstamos"
         subtitle="Cartera de tu alcance, por número, cliente o cédula."
       />
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_180px_160px] lg:grid-cols-[1fr_180px_160px_200px]">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_180px_160px] xl:grid-cols-[1fr_180px_160px_200px]">
         <SearchInput
           value={q}
           onChange={(e) => {
