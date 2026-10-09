@@ -39,4 +39,4 @@ RUN useradd --system --uid 10001 --home /app cobradia \
 USER cobradia
 EXPOSE 8000
 CMD ["gunicorn", "config.wsgi", "--bind", "0.0.0.0:8000", "--workers", "3", \
-     "--timeout", "60", "--access-logfile", "-", "--forwarded-allow-ips", "*"]
+     "--timeout", "60", "--access-logfile", "-", "--forwarded-allow-ips", "*",      "--control-socket", "/tmp/gunicorn.ctl"]

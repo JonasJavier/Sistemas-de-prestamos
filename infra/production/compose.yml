@@ -71,7 +71,7 @@ services:
       - -c
       - python manage.py collectstatic --noinput --verbosity 0 && exec gunicorn config.wsgi
         --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --timeout 60
-        --access-logfile - --forwarded-allow-ips '*'
+        --access-logfile - --forwarded-allow-ips '*' --control-socket /tmp/gunicorn.ctl
     volumes:
       - media:/app/media
       - static:/app/staticfiles

@@ -56,6 +56,7 @@ ignore = ["S101"]  # assert is fine in tests; pytest relies on it
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S105", "S106"]  # fake passwords in test factories
 "**/conftest.py" = ["S105", "S106"]
+"loadtest/**" = ["S105", "S311"]  # the demo password; random picks of screens
 
 [tool.mypy]
 python_version = "3.14"
