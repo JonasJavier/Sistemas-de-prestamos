@@ -202,10 +202,15 @@ export function LoansPage({ me }: { me: Me }) {
                       <div className="font-display font-bold tabular-nums">
                         {rd(loan.principal_outstanding)}
                       </div>
-                      <div className="text-[12.5px] text-muted">
-                        {loan.next_due_date
-                          ? `Próxima cuota ${day(loan.next_due_date)}`
-                          : 'Sin cuotas pendientes'}
+                      {/* A date already past is not «próxima»: it is the oldest one unpaid. */}
+                      <div
+                        className={`text-[12.5px] ${loan.days_past_due > 0 ? 'text-danger-600' : 'text-muted'}`}
+                      >
+                        {!loan.next_due_date
+                          ? 'Sin cuotas pendientes'
+                          : loan.status === 'active' && loan.days_past_due > 0
+                            ? `Vencida desde ${day(loan.next_due_date)}`
+                            : `Próxima cuota ${day(loan.next_due_date)}`}
                       </div>
                     </div>
                   </Link>

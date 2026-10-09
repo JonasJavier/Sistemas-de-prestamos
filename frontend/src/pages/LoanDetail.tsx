@@ -352,10 +352,12 @@ export function LoanDetailPage({ me }: { me: Me }) {
         <Stat
           label={data.days_past_due > 0 ? 'Vencido desde' : 'Próximo vencimiento'}
           value={day(data.next_due_date)}
+          danger={data.days_past_due > 0}
         />
         <Stat
           label="Atraso"
           value={data.days_past_due === 0 ? 'Al día' : `${data.days_past_due} días`}
+          danger={data.days_past_due > 0}
           hint={
             Number(data.late_fee_outstanding) ? `mora ${rd(data.late_fee_outstanding)}` : undefined
           }

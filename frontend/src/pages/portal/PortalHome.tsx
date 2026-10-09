@@ -109,8 +109,9 @@ function LoanCard({ loan, expanded }: { loan: PortalLoanRow; expanded: boolean }
           <div className="grid grid-cols-2 gap-3">
             <Stat label="Capital pendiente" value={rd(loan.principal_outstanding)} emphasis />
             <Stat
-              label="Próximo pago"
+              label={loan.days_past_due > 0 ? 'Pago atrasado desde' : 'Próximo pago'}
               value={day(loan.next_due_date)}
+              danger={loan.days_past_due > 0}
               hint={loan.days_past_due > 0 ? `${loan.days_past_due} días de atraso` : 'Al día'}
             />
           </div>
