@@ -88,6 +88,7 @@ function navFor(me: Me): NavGroup[] {
   if (hasRole(me, ACCESS.routes)) collections.push({ to: '/rutas', label: 'Rutas' })
   if (hasRole(me, ACCESS.cashSessions))
     collections.push({ to: '/cajas', label: 'Cajas', badge: me.closings_to_approve })
+  if (hasRole(me, ACCESS.legal)) collections.push({ to: '/legal', label: 'Casos legales' })
   if (collections.length) groups.push({ title: 'Cobros y caja', items: collections })
   const finance: NavItem[] = []
   if (hasRole(me, ACCESS.finance)) finance.push({ to: '/cuentas', label: 'Cuentas y bancos' })
@@ -121,6 +122,7 @@ function navFor(me: Me): NavGroup[] {
         { to: '/ajustes/numeraciones', label: 'Numeraciones' },
         { to: '/ajustes/sucursales', label: 'Sucursales' },
         { to: '/ajustes/usuarios', label: 'Usuarios' },
+        { to: '/ajustes/legales', label: 'Profesionales legales' },
         ...(hasRole(me, ACCESS.fraud)
           ? [{ to: '/ajustes/alertas', label: 'Alertas antifraude' }]
           : []),

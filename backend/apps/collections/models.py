@@ -6,6 +6,7 @@ phase 5 adds promises, follow-ups (the agenda), escalation rules and the
 collection agent of each loan (F8 steps 3-6, decisions 076-079).
 """
 
+import pghistory
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -265,3 +266,121 @@ class AgentAssignment(CompanyScopedModel):
     assigned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
     )
+
+
+# --- F9 · Vía legal (phase 8, decision 095) ----------------------------------------------------
+
+
+@pghistory.track()
+class LegalProfessional(CompanyScopedModel):
+    """Lawyers, notaries, bailiffs and witnesses (P78); a witness points to
+    the lawyer they work with (reference defect: loose catalogs)."""
+
+    class Kind(models.TextChoices):
+        LAWYER = "lawyer", "Abogado"
+        NOTARY = "notary", "Notario"
+        BAILIFF = "bailiff", "Alguacil"
+        WITNESS = "witness", "Testigo"
+
+    kind = models.CharField(max_length=10, choices=Kind)
+    name = models.CharField(max_length=150)
+    document = models.CharField(max_length=13, blank=True)  # cédula
+    license = models.CharField(max_length=60, blank=True)  # matrícula del colegio
+    phone = models.CharField(max_length=30, blank=True)
+    address = models.CharField(max_length=300, blank=True)
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="witnesses"
+    )
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+@pghistory.track()
+class LegalCase(CompanyScopedModel):
+    """A loan sent to the legal path by the manager (F9)."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Abierto"
+        AGREEMENT = "agreement", "En acuerdo"
+        EXECUTION = "execution", "En ejecución"
+        CLOSED = "closed", "Cerrado"
+
+    class Outcome(models.TextChoices):
+        PAID = "paid", "Pagó"
+        AGREEMENT = "agreement", "Acuerdo de pago"
+        EXECUTED = "executed", "Garantía ejecutada"
+        WRITTEN_OFF = "written_off", "Castigado"
+        OTHER = "other", "Otro"
+
+    loan = models.ForeignKey(Loan, on_delete=models.PROTECT, related_name="legal_cases")
+    number = models.CharField(max_length=30)
+    status = models.CharField(max_length=10, choices=Status, default=Status.OPEN)
+    lawyer = models.ForeignKey(
+        LegalProfessional, on_delete=models.PROTECT, related_name="cases_as_lawyer"
+    )
+    bailiff = models.ForeignKey(
+        LegalProfessional,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="cases_as_bailiff",
+    )
+    notary = models.ForeignKey(
+        LegalProfessional,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="cases_as_notary",
+    )
+    opened_on = models.DateField()
+    opened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    note = models.TextField(blank=True)
+    outcome = models.CharField(max_length=12, choices=Outcome, blank=True)
+    closed_on = models.DateField(null=True, blank=True)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    close_note = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["company", "number"], name="legal_case_number_unique"),
+            # One open case per loan at a time.
+            models.UniqueConstraint(
+                fields=["loan"],
+                condition=~Q(status="closed"),
+                name="legal_case_one_open_per_loan",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return self.number
+
+
+class LegalCost(CompanyScopedModel):
+    """Costs and legal fees of a case: paid as an expense and, if the
+    contract allows it, charged to the customer on the loan (F9 step 3)."""
+
+    case = models.ForeignKey(LegalCase, on_delete=models.PROTECT, related_name="costs")
+    date = models.DateField()
+    description = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    expense = models.OneToOneField(
+        "expenses.Expense", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    charged = models.BooleanField(default=False)
+    installment = models.ForeignKey(
+        "lending.Installment", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="legal_cost_positive"),
+        ]

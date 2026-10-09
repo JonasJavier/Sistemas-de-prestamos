@@ -1,0 +1,15 @@
+{% extends "documents/base.html" %}
+{% block title %}{{ text.title }}{% endblock %}
+{% block heading %}{{ text.title }}{% endblock %}
+{% block number %}{{ folio }}{% endblock %}
+{% block content %}
+<style>
+  .legal p { margin: 0 0 10px; line-height: 1.6; text-align: justify; }
+</style>
+<div class="legal">
+  {% for paragraph in text.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+</div>
+<div class="signatures">
+  {% for name, role in text.signatures %}<div class="signature">{{ name }}<br><span class="muted">{{ role }}</span></div>{% endfor %}
+</div>
+{% endblock %}

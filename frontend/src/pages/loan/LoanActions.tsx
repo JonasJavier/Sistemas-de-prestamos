@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ApiError } from '../../api/client'
 import { listReasons } from '../../api/origination'
 import type { Me } from '../../api/accounts'
+import { listProfessionals, openCase } from '../../api/legal'
 import {
   changeLoanDates,
   getPayoffQuote,
@@ -445,6 +446,59 @@ export function WriteOffDialog({
           onClick={() => run.mutate()}
         >
           Castigar
+        </Button>
+      </div>
+    </Frame>
+  )
+}
+
+/** F9 (decision 095): the manager sends the loan to the legal path with its
+ * lawyer (the bailiff and the notary can come later). */
+export function LegalCaseDialog({
+  number,
+  onOpened,
+  onClose,
+}: {
+  number: string
+  onOpened: (id: string) => void
+  onClose: () => void
+}) {
+  const people = useQuery({ queryKey: ['legal-professionals'], queryFn: listProfessionals })
+  const [lawyer, setLawyer] = useState('')
+  const [note, setNote] = useState('')
+  const run = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => openCase({ loan: number, lawyer, note }),
+    onSuccess: (legalCase) => onOpened(legalCase.id),
+  })
+  const lawyers = (people.data ?? []).filter((p) => p.kind === 'lawyer' && p.is_active)
+  return (
+    <Frame title="Enviar a la vía legal" onClose={onClose}>
+      {people.data && !lawyers.length ? (
+        <Alert tone="warning">Primero agrega un abogado en Ajustes → Profesionales legales.</Alert>
+      ) : null}
+      <Field label="Abogado">
+        <Select value={lawyer} onChange={(e) => setLawyer(e.target.value)}>
+          <option value="">Elegir…</option>
+          {lawyers.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Nota">
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+      </Field>
+      {run.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button disabled={!lawyer || run.isPending} onClick={() => run.mutate()}>
+          Abrir el caso
         </Button>
       </div>
     </Frame>

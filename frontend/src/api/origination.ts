@@ -351,6 +351,8 @@ export interface Loan extends LoanListItem {
   /** F11 (decision 092): the renewal chain. */
   renewed_from_number?: string | null
   renewed_by_number?: string | null
+  /** F9 (decision 095): the open legal case. */
+  legal_case?: { id: string; number: string } | null
   collector: string | null
   collector_name: string | null
   closed_on: string | null

@@ -23,8 +23,33 @@ from apps.collections.api.views_agenda import (
     LoanTimelineView,
     TaskActionView,
 )
+from apps.collections.api.views_legal import (
+    CaseDetailView,
+    CaseDocumentView,
+    CasesView,
+    CloseCaseView,
+    CostsView,
+    ProfessionalDetailView,
+    ProfessionalsView,
+)
 
 urlpatterns = [
+    # Phase 8 · F9 (decision 095).
+    path("profesionales-legales/", ProfessionalsView.as_view(), name="legal-professionals"),
+    path(
+        "profesionales-legales/<uuid:pk>/",
+        ProfessionalDetailView.as_view(),
+        name="legal-professional",
+    ),
+    path("casos-legales/", CasesView.as_view(), name="legal-cases"),
+    path("casos-legales/<uuid:pk>/", CaseDetailView.as_view(), name="legal-case"),
+    path("casos-legales/<uuid:pk>/cerrar/", CloseCaseView.as_view(), name="legal-case-close"),
+    path("casos-legales/<uuid:pk>/costas/", CostsView.as_view(), name="legal-case-costs"),
+    path(
+        "casos-legales/<uuid:pk>/documentos/<slug:kind>/",
+        CaseDocumentView.as_view(),
+        name="legal-case-document",
+    ),
     path("ruta/", MyRouteView.as_view(), name="my-route"),
     path("ruta/consentimiento/", ConsentView.as_view(), name="route-consent"),
     path("ruta/abrir/", OpenRouteView.as_view(), name="route-open"),

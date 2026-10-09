@@ -497,6 +497,8 @@ class LoanSerializer(LoanListSerializer):
         source="renewed_from.number", read_only=True, default=None
     )
     renewed_by_number = serializers.SerializerMethodField()
+    # F9 (decision 095): the loan's open legal case, if any.
+    legal_case = serializers.SerializerMethodField()
 
     class Meta(LoanListSerializer.Meta):
         fields = [
@@ -524,7 +526,12 @@ class LoanSerializer(LoanListSerializer):
             "collaterals",
             "renewed_from_number",
             "renewed_by_number",
+            "legal_case",
         ]
+
+    def get_legal_case(self, obj: Loan) -> dict | None:
+        case = obj.legal_cases.exclude(status="closed").first()
+        return None if case is None else {"id": str(case.id), "number": case.number}
 
     def get_renewed_by_number(self, obj: Loan) -> str | None:
         return (

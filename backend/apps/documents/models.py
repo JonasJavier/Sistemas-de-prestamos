@@ -21,6 +21,11 @@ class GeneratedDocument(CompanyScopedModel):
         ROUTE_SETTLEMENT = "route_settlement", "Rendición del cobrador"
         ACCOUNT_STATEMENT = "account_statement", "Estado de cuenta"
         MONTH_CLOSE = "month_close", "Cierre de mes"
+        # Phase 8 (F9, decision 095): legal documents from the case.
+        DEMAND_NOTICE = "demand_notice", "Acto de intimación de pago"
+        PAYMENT_ORDER = "payment_order", "Mandamiento de pago"
+        VOLUNTARY_SURRENDER = "voluntary_surrender", "Acto de entrega voluntaria"
+        NOTARIAL_NOTE = "notarial_note", "Pagaré notarial"
 
     kind = models.CharField(max_length=30, choices=Kind)
     template_version = models.CharField(max_length=20)

@@ -272,6 +272,7 @@ class Sequence(CompanyScopedModel):
         EXPENSE = "expense", "Gasto"
         INCOME = "income", "Ingreso"
         JOURNAL = "journal", "Asiento"
+        LEGAL_CASE = "legal_case", "Caso legal"
 
     # Letter between the branch code and the number; loans carry none.
     DEFAULT_INFIX = {
@@ -283,6 +284,7 @@ class Sequence(CompanyScopedModel):
         DocType.EXPENSE: "G-",
         DocType.INCOME: "I-",
         DocType.JOURNAL: "A-",
+        DocType.LEGAL_CASE: "L-",
     }
 
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="sequences")

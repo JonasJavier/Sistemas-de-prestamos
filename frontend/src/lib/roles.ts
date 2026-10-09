@@ -63,6 +63,8 @@ export const ACCESS = {
   // Phase 8 (renovación y legal).
   /** F13: write a loan off (the manager; audit reads the suggestions). */
   writeOff: [G],
+  /** F9 (decision 095): legal cases (the manager; audit reads). */
+  legal: [G, AU],
 } as const satisfies Record<string, readonly string[]>
 
 export const hasRole = (me: Me | undefined, roles: readonly string[]) =>

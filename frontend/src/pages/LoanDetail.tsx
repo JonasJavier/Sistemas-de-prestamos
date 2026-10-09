@@ -25,6 +25,7 @@ import {
   CollectorDialog,
   DateChangeDialog,
   PayoffLetterDialog,
+  LegalCaseDialog,
   RestructureDialog,
   WriteOffDialog,
 } from './loan/LoanActions'
@@ -134,7 +135,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const [tab, setTab] = useState<TabKey>('resumen')
   const [voiding, setVoiding] = useState(false)
   const [dialog, setDialog] = useState<
-    'payoff' | 'dates' | 'collector' | 'restructure' | 'writeoff' | null
+    'payoff' | 'dates' | 'collector' | 'restructure' | 'writeoff' | 'legal' | null
   >(null)
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
   const payments = useQuery({
@@ -206,6 +207,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
           { label: 'Cambiar fechas', onSelect: () => setDialog('dates') },
           { label: 'Cambiar cobrador', onSelect: () => setDialog('collector') },
         ]
+      : []),
+    ...((active || data.status === 'written_off') && !data.legal_case && hasRole(me, ['Gerente'])
+      ? [{ label: 'Enviar a la vía legal', onSelect: () => setDialog('legal') }]
       : []),
     ...(active && hasRole(me, ACCESS.writeOff)
       ? [{ label: 'Castigar', onSelect: () => setDialog('writeoff'), danger: true }]
@@ -300,6 +304,19 @@ export function LoanDetailPage({ me }: { me: Me }) {
           {data.disbursement && Number(data.disbursement.renewal_payoff)
             ? `: le liquidó ${rd(data.disbursement.renewal_payoff)}.`
             : '.'}
+        </Alert>
+      ) : null}
+      {data.legal_case ? (
+        <Alert tone="warning">
+          En vía legal: caso{' '}
+          <Link
+            to="/legal/$id"
+            params={{ id: data.legal_case.id }}
+            className="font-semibold underline"
+          >
+            {data.legal_case.number}
+          </Link>
+          .
         </Alert>
       ) : null}
       {data.status === 'written_off' ? (
@@ -479,6 +496,13 @@ export function LoanDetailPage({ me }: { me: Me }) {
 
       {dialog === 'payoff' ? (
         <PayoffLetterDialog number={numero} onClose={() => setDialog(null)} />
+      ) : null}
+      {dialog === 'legal' ? (
+        <LegalCaseDialog
+          number={numero}
+          onClose={() => setDialog(null)}
+          onOpened={(id) => void navigate({ to: '/legal/$id', params: { id } })}
+        />
       ) : null}
       {dialog === 'writeoff' ? (
         <WriteOffDialog
