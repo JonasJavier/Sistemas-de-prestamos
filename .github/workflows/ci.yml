@@ -53,6 +53,13 @@ jobs:
         run: uv run mypy engine/money.py engine/rates.py engine/schedule.py engine/late_fees.py engine/allocation.py engine/payoff.py
       - name: Check missing migrations
         run: uv run python manage.py makemigrations --check --dry-run --settings=config.settings.test
+      - name: Production settings pass Django's deploy checks (decision 101)
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.production
+          DJANGO_ALLOWED_HOSTS: app.cobradia.com
+          FRONTEND_URL: https://app.cobradia.com
+          EMAIL_HOST: smtp.example.com
+        run: DJANGO_SECRET_KEY="$(openssl rand -hex 40)" uv run python manage.py check --deploy --fail-level WARNING
       - name: Known vulnerabilities (doc 06 - 8)
         run: |
           uv export --frozen --no-hashes --no-dev --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
@@ -87,6 +94,22 @@ jobs:
         run: pnpm audit --prod
       - name: Build
         run: pnpm build
+
+  # The production images build (decision 101); they are not pushed anywhere.
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: API image
+        run: docker build --tag cobradia-api:ci backend
+      - name: The API image starts with production settings
+        run: |
+          docker run --rm -e DJANGO_SECRET_KEY="$(openssl rand -hex 40)"             -e DJANGO_ALLOWED_HOSTS=app.cobradia.com -e FRONTEND_URL=https://app.cobradia.com             -e EMAIL_HOST=smtp.example.com cobradia-api:ci             python manage.py check --deploy --fail-level WARNING
+      - name: Web image (Caddy, the app and the site)
+        run: docker build --file infra/production/web.Dockerfile --tag cobradia-web:ci .
+      - name: The Caddyfile is valid
+        run: |
+          docker run --rm -e APP_HOST=app.cobradia.com -e SITE_HOST=cobradia.com             -e ACME_EMAIL=ops@cobradia.com cobradia-web:ci caddy validate --config /etc/caddy/Caddyfile
 
   # cobradia.com: the static promotion site (doc 01, decision 100).
   site:

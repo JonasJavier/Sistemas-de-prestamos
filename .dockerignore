@@ -1,0 +1,11 @@
+# Context of infra/production/web.Dockerfile (the repository root).
+**/node_modules
+**/dist
+**/.astro
+frontend/test-results
+frontend/playwright-report
+backend
+docs
+infra/production/.env
+infra/production/backups
+.git

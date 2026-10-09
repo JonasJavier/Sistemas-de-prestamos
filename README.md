@@ -11,7 +11,7 @@
 | `backend/` | API en Django 6.1 + DRF, PostgreSQL con Row-Level Security, Celery. `engine/` es el motor financiero en Python puro |
 | `frontend/` | Aplicación web en React 19 + Vite + TypeScript, TanStack Router/Query y Tailwind 4 |
 | `site/` | Sitio de promoción de `cobradia.com`, estático, en Astro (decisión 100) |
-| `infra/` | Docker Compose para desarrollo: PostgreSQL, Redis y Mailpit |
+| `infra/` | Docker Compose para desarrollo (PostgreSQL, Redis y Mailpit) y, en `infra/production/`, el de producción con su manual (decisión 101) |
 | `docs/proyecto/` | Las bases del proyecto (pasos 01–10) y el [registro de decisiones](docs/proyecto/decisiones.md): **la fuente de verdad** |
 | `docs/referencia/` | Estudio del sistema de referencia; solo material de consulta |
 
@@ -31,6 +31,7 @@ Nada entra a `main` en rojo. La integración continua (`.github/workflows/ci.yml
 
 - **Backend:** `ruff check`, `ruff format --check`, tipos estrictos del motor financiero (`mypy`), migraciones pendientes, `pip-audit` y `pytest` contra PostgreSQL con un rol sin privilegios (así RLS se prueba de verdad), incluida una semana simulada de cobros y caja que debe conciliar en cero cada noche.
 - **Frontend:** `oxlint`, formato, pruebas unitarias, `pnpm audit` y compilación; el sitio de promoción, `pnpm audit` y compilación.
+- **Producción:** `check --deploy` con la configuración de producción, las dos imágenes de Docker y el Caddyfile.
 - **Extremo a extremo:** Playwright sobre el build de producción con los datos de `seed_demo`: las demos de las fases 3 a 9, el acceso, el aislamiento entre empresas, el celular y el portal del cliente (con el código leído de Mailpit).
 
 Las convenciones de trabajo (idiomas, dinero en `Decimal`, multiempresa, commits) están en [`CLAUDE.md`](CLAUDE.md) y en el [paso 10 §5](docs/proyecto/10-plan-de-construccion.md#5-convenciones-de-trabajo).

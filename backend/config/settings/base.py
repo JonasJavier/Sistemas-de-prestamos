@@ -139,6 +139,11 @@ MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 # accounts stay usable, and on in production.
 REQUIRE_MFA = env.bool("REQUIRE_MFA", default=False)
 
+# Decision 101: Django's admin and the API schema, on in development only.
+ADMIN_ENABLED = env.bool("ADMIN_ENABLED", default=True)
+APP_VERSION = env("APP_VERSION", default="dev")
+API_DOCS = env.bool("API_DOCS", default=True)
+
 # Decision 035: cashiers and collectors only work within their branch's
 # hours. Off by default in development (demos happen at any hour) and in
 # tests that do not ask for it; on in production.

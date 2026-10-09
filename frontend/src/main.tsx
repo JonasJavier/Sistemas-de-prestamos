@@ -1,3 +1,4 @@
+import './lib/zodSetup' // first: before any schema is built
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'

@@ -30,3 +30,17 @@ def enable_rls(table: str) -> migrations.RunSQL:
             ALTER TABLE {table} DISABLE ROW LEVEL SECURITY;
         """,
     )
+
+
+# Tables that carry company_id on purpose WITHOUT the tenant policy; each
+# one is documented where it is created (accounts 0003/0004, platform).
+RLS_EXEMPT = {
+    "accounts_user",  # login looks users up by email before any tenant
+    "accounts_userevent",
+    "accounts_invitation",  # the public token lookup is the credential
+    "accounts_invitationevent",
+    "platform_subscription",  # platform-owned (doc 05 - 4.0)
+    "platform_subscriptionevent",
+    "platform_supportaccessgrant",
+    "platform_supportaccessgrantevent",
+}

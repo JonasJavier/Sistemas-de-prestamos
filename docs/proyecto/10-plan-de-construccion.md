@@ -99,6 +99,8 @@ La CI corre estilo, tipos, pruebas y compilación en cada cambio; nada entra a `
 - **Monitoreo:** Sentry (errores), chequeo de salud externo con aviso al dueño, y la conciliación nocturna como alarma de negocio.
 - **Secretos:** variables de entorno gestionadas fuera del repositorio; rotación documentada.
 
+> **Fase 10 (decisión 101):** el paquete de producción está en `infra/production/` con su manual; el respaldo cifrado y la restauración con verificación de integridad se ensayaron en local. Los respaldos se cifran con gpg (llave pública en el servidor, privada fuera de línea) en lugar de cifrado simétrico.
+
 ## 4. Criterios de lanzamiento (fase 10)
 
 Los seis del paso 02 §8, más los del alcance SaaS:

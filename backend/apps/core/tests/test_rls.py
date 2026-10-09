@@ -12,6 +12,7 @@ from django.db import ProgrammingError, connection, transaction
 
 from apps.core import tenancy
 from apps.core.models import Branch, Company
+from apps.core.rls import RLS_EXEMPT
 from apps.core.tenancy import company_context
 
 
@@ -108,20 +109,6 @@ def test_a_database_role_that_bypasses_rls_is_refused(monkeypatch: pytest.Monkey
     monkeypatch.setattr(tenancy, "_role_checked", False)
     with pytest.raises(ImproperlyConfigured):
         tenancy._refuse_privileged_role(PrivilegedCursor())
-
-
-# Tables that carry company_id on purpose WITHOUT the tenant policy; each
-# one is documented where it is created (accounts 0003/0004, platform).
-RLS_EXEMPT = {
-    "accounts_user",  # login looks users up by email before any tenant
-    "accounts_userevent",
-    "accounts_invitation",  # the public token lookup is the credential
-    "accounts_invitationevent",
-    "platform_subscription",  # platform-owned (doc 05 - 4.0)
-    "platform_subscriptionevent",
-    "platform_supportaccessgrant",
-    "platform_supportaccessgrantevent",
-}
 
 
 def test_every_company_table_has_forced_rls(db) -> None:

@@ -18,3 +18,7 @@ frontend/dist/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Production stack (decision 101): secrets and local backups never in Git
+infra/production/.env
+infra/production/backups/
