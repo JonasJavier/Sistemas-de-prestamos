@@ -143,7 +143,7 @@ def _seed_products(company: Company) -> None:
         name="Personal San (semanal)",
         type=LoanProduct.Type.PERSONAL,
         method="flat",
-        allowed_frequencies=["daily", "interdaily", "weekly"],
+        allowed_frequencies=["weekly", "daily", "interdaily"],  # the first is proposed
         rate_unit="per_period",
         min_amount=Decimal("1000"),
         max_amount=Decimal("200000"),
@@ -158,7 +158,7 @@ def _seed_products(company: Company) -> None:
         name="Cuota Fija (mensual)",
         type=LoanProduct.Type.PERSONAL,
         method="fixed_payment",
-        allowed_frequencies=["biweekly", "monthly"],
+        allowed_frequencies=["monthly", "biweekly"],
         rate_unit="monthly",
         min_amount=Decimal("10000"),
         max_amount=Decimal("1000000"),

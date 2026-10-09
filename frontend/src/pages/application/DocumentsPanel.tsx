@@ -10,7 +10,7 @@ import {
   verifyRequirement,
   type Application,
 } from '../../api/origination'
-import { Alert, Button, Card, Field, Input, Select } from '../../components/ui'
+import { Alert, Button, Card, Field, FilePicker, Input, Select } from '../../components/ui'
 import { day, errorMessage, moment } from '../../lib/format'
 
 /** Product checklist, external bureau (decision 026) and private files. */
@@ -186,12 +186,7 @@ export function DocumentsPanel({
               </Select>
             </Field>
             <Field label="Archivo (PDF, JPG, PNG o HEIC, hasta 10 MB)">
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.heic"
-                className="block w-full text-sm"
-                onChange={(e) => setUpload(e.target.files?.[0] ?? null)}
-              />
+              <FilePicker file={upload} onPick={setUpload} accept=".pdf,.jpg,.jpeg,.png,.heic" />
             </Field>
             <Button type="submit" variant="secondary" disabled={!upload || send.isPending}>
               Subir

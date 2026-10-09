@@ -253,6 +253,7 @@ function CompanyForm({ data }: { data: CompanySettings }) {
           ref={fileInput}
           type="file"
           accept="image/png,image/jpeg"
+          aria-label="Logo de la empresa"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]

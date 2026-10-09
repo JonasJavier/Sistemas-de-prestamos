@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { ApiError } from '../api/client'
 import {
@@ -12,7 +12,7 @@ import {
 } from '../api/customers'
 import { dateOf, errorMessage } from '../lib/format'
 import { usePrompt } from './Dialog'
-import { Alert, Field, Select } from './ui'
+import { Alert, Field, FilePicker, Select } from './ui'
 
 function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
@@ -34,7 +34,6 @@ export function PrivateFiles({
   const files = useQuery({ queryKey, queryFn: () => listPrivateFiles(owner) })
   const [kind, setKind] = useState<string>(kinds[0][0])
   const [message, setMessage] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
   const [dialog, ask] = usePrompt()
   const refresh = () => queryClient.invalidateQueries({ queryKey })
 
@@ -42,7 +41,6 @@ export function PrivateFiles({
     mutationFn: (file: File) => uploadPrivateFile(owner, kind, file),
     onSuccess: () => {
       setMessage(null)
-      if (inputRef.current) inputRef.current.value = ''
       refresh()
     },
     onError: (error) => {
@@ -89,16 +87,12 @@ export function PrivateFiles({
           </Select>
         </Field>
         <div className="sm:col-span-2">
-          <input
-            ref={inputRef}
-            type="file"
-            aria-label="Archivo para subir"
+          <FilePicker
+            file={null}
+            onPick={(file) => (file ? upload.mutate(file) : undefined)}
             accept=".pdf,.jpg,.jpeg,.png,.heic"
-            className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-on-brand hover:file:bg-brand-800"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) upload.mutate(file)
-            }}
+            label="Subir archivo"
+            empty={upload.isPending ? 'Subiendo…' : 'Se sube al elegirlo.'}
             disabled={upload.isPending}
           />
         </div>

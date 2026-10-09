@@ -24,7 +24,7 @@ import {
   Spinner,
   Tabs,
 } from '../components/ui'
-import { errorMessage, moment } from '../lib/format'
+import { errorMessage, moment, plural } from '../lib/format'
 import { hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
 
@@ -55,7 +55,7 @@ function RuleRow({ rule, editable }: { rule: FraudRule; editable: boolean }) {
       <div className="min-w-0 flex-1">
         <div className="font-semibold">{rule.label}</div>
         <div className="text-[12.5px] text-muted">
-          Avisa con {rule.threshold} o más en {rule.window_days} día(s)
+          Avisa con {rule.threshold} o más en {plural(rule.window_days, 'día')}
           {rule.is_active ? '' : ' · apagada'}
         </div>
       </div>
@@ -166,8 +166,8 @@ function AlertList({ status, editable }: { status: FraudAlert['status']; editabl
                   </div>
                   <div className="text-sm">{alert.detail}</div>
                   <div className="text-[12.5px] text-muted">
-                    {moment(alert.created_at)} · umbral {alert.threshold} en {alert.window_days}{' '}
-                    día(s)
+                    {moment(alert.created_at)} · umbral {alert.threshold} en{' '}
+                    {plural(alert.window_days, 'día')}
                     {alert.reviewed_by
                       ? ` · revisada por ${alert.reviewed_by}: ${alert.review_note}`
                       : ''}

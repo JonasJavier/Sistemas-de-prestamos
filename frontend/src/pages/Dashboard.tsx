@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { type ReactNode, useState } from 'react'
+import { Children, type ReactNode, useState } from 'react'
 
 import { listBranches, type Me } from '../api/accounts'
 import { getMyCash } from '../api/cash'
@@ -8,9 +8,9 @@ import { listApplications, listLoans } from '../api/origination'
 import { getMyCompany } from '../api/platform'
 import { type Dashboard, getDashboard } from '../api/reports'
 import { Kpi } from '../components/Kpi'
-import { Alert, Field, Select } from '../components/ui'
+import { Alert, Field, LoadError, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
-import { pct, rd } from '../lib/format'
+import { pct, plural, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 
 function Tile({
@@ -38,6 +38,22 @@ function Tile({
       </div>
       <div className="text-[12px] text-muted">{hint}</div>
     </Link>
+  )
+}
+
+/** Rows that come out even: 5 or 6 cards go in threes, not 4 + a lonely 2. */
+function Grid({ label, children }: { label?: string; children: ReactNode }) {
+  const count = Children.toArray(children).length
+  const columns =
+    count === 3 || count === 5 || count === 6
+      ? 'sm:grid-cols-3'
+      : count >= 4
+        ? 'lg:grid-cols-4'
+        : 'sm:grid-cols-2'
+  return (
+    <section aria-label={label} className={`grid grid-cols-2 gap-3 ${columns}`}>
+      {children}
+    </section>
   )
 }
 
@@ -80,7 +96,7 @@ function Today({ me }: { me: Me }) {
   })
   if (!reader) return null
   return (
-    <section aria-label="Tu trabajo de hoy" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <Grid label="Tu trabajo de hoy">
       {decider ? (
         <Tile
           to="/solicitudes"
@@ -116,7 +132,7 @@ function Today({ me }: { me: Me }) {
           }
           hint={
             cash.data?.session
-              ? `${cash.data.session.number} · ${cash.data.routes_to_settle.length} rendición(es) por recibir`
+              ? `${cash.data.session.number} · ${plural(cash.data.routes_to_settle.length, 'rendición', 'rendiciones')} por recibir`
               : 'Ábrela para cobrar y desembolsar en efectivo'
           }
         />
@@ -169,7 +185,7 @@ function Today({ me }: { me: Me }) {
           }
         />
       )}
-    </section>
+    </Grid>
   )
 }
 
@@ -197,11 +213,11 @@ function Indicators({ data }: { data: Dashboard }) {
   return (
     <>
       <Section title="Cartera y cobros">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Grid>
           <Kpi
             label="Cartera activa"
             value={rd(p.principal)}
-            hint={`${p.count} préstamo(s)`}
+            hint={plural(p.count, 'préstamo')}
             help={defs.portfolio}
             to="/reportes/cartera"
           />
@@ -221,7 +237,7 @@ function Indicators({ data }: { data: Dashboard }) {
           <Kpi
             label="Desembolsado del mes"
             value={rd(ind.disbursed_month.total)}
-            hint={`${ind.disbursed_month.count} desembolso(s)`}
+            hint={plural(ind.disbursed_month.count, 'desembolso')}
             help={defs.disbursed}
           />
           {ind.profit_month ? (
@@ -252,7 +268,7 @@ function Indicators({ data }: { data: Dashboard }) {
             help={defs.cash_differences}
             tone={Number(diffs.total) ? 'bad' : 'good'}
           />
-        </div>
+        </Grid>
       </Section>
       <Section title="Mora por tramos">
         <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm">
@@ -284,7 +300,7 @@ function Operations({ data }: { data: Dashboard }) {
   if (!ops) return null
   return (
     <Section title="Operación de hoy">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Grid>
         {ops.fraud_alerts_open !== null ? (
           <Kpi
             label="Alertas antifraude"
@@ -307,7 +323,7 @@ function Operations({ data }: { data: Dashboard }) {
           hint={`${ops.stops.paid} con pago`}
           to="/rutas"
         />
-      </div>
+      </Grid>
     </Section>
   )
 }
@@ -318,7 +334,7 @@ function Books({ data }: { data: Dashboard }) {
   const pending = books.reconciliations_pending
   return (
     <Section title="Dinero y obligaciones">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Grid>
         {books.accounts.map((account) => (
           <Kpi
             key={account.id}
@@ -331,18 +347,18 @@ function Books({ data }: { data: Dashboard }) {
         <Kpi
           label="Cuentas por pagar (7 días)"
           value={rd(books.payables_due.total)}
-          hint={`${books.payables_due.count} por pagar · ${books.payables_due.overdue} vencida(s)`}
+          hint={`${books.payables_due.count} por pagar · ${plural(books.payables_due.overdue, 'vencida')}`}
           to="/cuentas-por-pagar"
           tone={books.payables_due.overdue ? 'bad' : undefined}
         />
         <Kpi
           label={`Conciliaciones de ${pending.month.slice(5)}/${pending.month.slice(0, 4)}`}
-          value={pending.accounts.length ? `${pending.accounts.length} pendiente(s)` : 'Al día'}
+          value={pending.accounts.length ? plural(pending.accounts.length, 'pendiente') : 'Al día'}
           hint={pending.accounts.join(', ') || 'Todos los bancos conciliados'}
           to="/contabilidad"
           tone={pending.accounts.length ? 'bad' : 'good'}
         />
-      </div>
+      </Grid>
     </Section>
   )
 }
@@ -352,7 +368,7 @@ function Officer({ data }: { data: Dashboard }) {
   if (!officer) return null
   return (
     <Section title="Mi cartera">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Grid>
         {officer.applications.map((row) => (
           <Kpi
             key={row.status}
@@ -374,7 +390,7 @@ function Officer({ data }: { data: Dashboard }) {
           to="/atrasos"
           tone={officer.in_arrears ? 'bad' : undefined}
         />
-      </div>
+      </Grid>
     </Section>
   )
 }
@@ -389,6 +405,7 @@ function Board({ me }: { me: Me }) {
     refetchInterval: 60_000,
   })
   const data = board.data
+  if (board.isError && !data) return <LoadError error={board.error} />
   if (!data || !(data.indicators || data.operations || data.books || data.officer)) return null
   return (
     <div className="space-y-5">

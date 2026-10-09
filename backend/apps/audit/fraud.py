@@ -17,6 +17,7 @@ from django.utils import timezone
 from apps.accounts import authz
 from apps.accounts.models import User
 from apps.audit.models import FraudAlert, FraudKind, FraudRule, LoginEvent
+from apps.core.text import plural
 
 DEFAULTS = {
     FraudKind.REVERSALS: (3, 7),
@@ -28,15 +29,30 @@ DEFAULTS = {
     FraudKind.CASH_LIMIT: (2, 7),
     FraudKind.PERMISSIONS: (1, 1),
 }
-NOUNS = {
-    FraudKind.REVERSALS: "reverso(s) pedidos",
-    FraudKind.WAIVERS: "condonación(es) o descuento(s) aprobados",
-    FraudKind.CASH_DIFFERENCES: "diferencia(s) de caja",
-    FraudKind.OFF_HOURS: "inicio(s) de sesión fuera de horario",
-    FraudKind.NEW_DEVICE: "inicio(s) de sesión desde un dispositivo nuevo",
-    FraudKind.OFF_ROUTE: "cobro(s) fuera de ruta",
-    FraudKind.CASH_LIMIT: "ruta(s) por encima del límite de efectivo",
-    FraudKind.PERMISSIONS: "cambio(s) de roles, sucursales o límites",
+NOUNS = {  # (one, many)
+    FraudKind.REVERSALS: ("reverso pedido", "reversos pedidos"),
+    FraudKind.WAIVERS: (
+        "condonación o descuento aprobado",
+        "condonaciones o descuentos aprobados",
+    ),
+    FraudKind.CASH_DIFFERENCES: ("diferencia de caja", "diferencias de caja"),
+    FraudKind.OFF_HOURS: (
+        "inicio de sesión fuera de horario",
+        "inicios de sesión fuera de horario",
+    ),
+    FraudKind.NEW_DEVICE: (
+        "inicio de sesión desde un dispositivo nuevo",
+        "inicios de sesión desde un dispositivo nuevo",
+    ),
+    FraudKind.OFF_ROUTE: ("cobro fuera de ruta", "cobros fuera de ruta"),
+    FraudKind.CASH_LIMIT: (
+        "ruta por encima del límite de efectivo",
+        "rutas por encima del límite de efectivo",
+    ),
+    FraudKind.PERMISSIONS: (
+        "cambio de roles, sucursales o límites",
+        "cambios de roles, sucursales o límites",
+    ),
 }
 
 
@@ -201,7 +217,8 @@ def review(company_id, now: dt.datetime | None = None) -> list[FraudAlert]:
                         count=count,
                         threshold=rule.threshold,
                         window_days=rule.window_days,
-                        detail=f"{who}: {count} {NOUNS[rule.kind]} en {rule.window_days} día(s).",
+                        detail=f"{who}: {plural(count, *NOUNS[rule.kind])} en "
+                        f"{plural(rule.window_days, 'día')}.",
                     )
                 )
     if created:
@@ -209,7 +226,8 @@ def review(company_id, now: dt.datetime | None = None) -> list[FraudAlert]:
             company_id=company_id,
             users=managers(),
             kind=Notification.Kind.FRAUD_ALERT,
-            text=f"Revisión nocturna: {len(created)} alerta(s) antifraude nueva(s). "
+            text=f"Revisión nocturna: "
+            f"{plural(len(created), 'alerta antifraude nueva', 'alertas antifraude nuevas')}. "
             + " ".join(alert.detail for alert in created)[:200],
             link="/ajustes/alertas",
         )

@@ -116,7 +116,7 @@ export function PayablesPage() {
                       {row.recognized_on ? '' : ' · se registra al vencer'}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <div className="font-bold tabular-nums">{rd(row.outstanding)}</div>
                     {row.paid !== '0.00' ? (
                       <div className="text-[12px] text-muted">de {rd(row.amount)}</div>

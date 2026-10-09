@@ -42,7 +42,11 @@ function onApiError(error: unknown) {
   const code = (error.data as { code?: string } | null)?.code
   void router.navigate({
     to: '/entrar',
-    search: { motivo: code === 'outside_hours' ? 'horario' : 'sesion' },
+    search: {
+      motivo: code === 'outside_hours' ? 'horario' : 'sesion',
+      // Outside the hours there is nothing to come back to today.
+      desde: code === 'outside_hours' ? undefined : path + window.location.search,
+    },
   })
 }
 

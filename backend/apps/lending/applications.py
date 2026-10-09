@@ -21,6 +21,7 @@ from apps.accounts import authz
 from apps.accounts.models import ApprovalLimit, User
 from apps.audit.models import record_event
 from apps.core.models import Company, Reason, Sequence
+from apps.core.text import plural
 from apps.customers.models import Business, Customer, Employment
 from apps.lending import simulator
 from apps.lending.models import (
@@ -406,7 +407,10 @@ def evaluate(
     if evaluation.requirements_verified < evaluation.requirements_total:
         pending = evaluation.requirements_total - evaluation.requirements_verified
         alerts.append(
-            {"code": "requirements_pending", "message": f"{pending} documento(s) sin verificar."}
+            {
+                "code": "requirements_pending",
+                "message": f"{plural(pending, 'documento')} sin verificar.",
+            }
         )
     if not evaluation.has_bureau:
         alerts.append({"code": "bureau_missing", "message": "Falta la consulta al buró."})
@@ -444,7 +448,7 @@ def evaluate(
 
 def _decider_problem(application: Application, user: User, amount: Decimal | None) -> str | None:
     if user.pk == application.created_by_id:
-        return "Nadie decide sobre una solicitud que creó (decisión 023)."
+        return "Nadie decide sobre una solicitud que creó: la decide otra persona."
     if not authz.has_any_role(user, *DECIDER_ROLES):
         return "Solo el supervisor o el gerente deciden solicitudes."
     if not authz.in_scope(user, application.branch_id):

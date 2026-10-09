@@ -73,7 +73,7 @@ export function HolidaysPage() {
         title="Feriados"
         subtitle="Las cuotas que caen en feriado confirmado pasan al siguiente día laborable; los préstamos ya desembolsados conservan sus fechas."
         actions={
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
+          <Select aria-label="Año" value={year} onChange={(e) => setYear(Number(e.target.value))}>
             {[current - 1, current, current + 1, current + 2].map((y) => (
               <option key={y} value={y}>
                 {y}

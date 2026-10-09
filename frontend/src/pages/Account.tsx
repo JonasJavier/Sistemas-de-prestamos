@@ -3,9 +3,17 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
-import { activateTotp, getRecoveryCodes, getTotpConfig, regenerateRecoveryCodes } from '../api/auth'
+import {
+  activateTotp,
+  changePassword,
+  getRecoveryCodes,
+  getTotpConfig,
+  regenerateRecoveryCodes,
+} from '../api/auth'
 import { ApiError } from '../api/client'
 import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { errorMessage } from '../lib/format'
+import { notify } from '../lib/toast'
 import { SessionsCard } from './account/SessionsCard'
 
 export function AccountPage({ me }: { me: Me }) {
@@ -13,7 +21,7 @@ export function AccountPage({ me }: { me: Me }) {
     <>
       <PageHeader
         title="Mi cuenta"
-        subtitle="Tus datos, la verificación en dos pasos y dónde está abierta tu cuenta."
+        subtitle="Tus datos, tu contraseña, la verificación en dos pasos y dónde está abierta tu cuenta."
       />
 
       {me.mfa_required && !me.mfa_enabled ? (
@@ -38,9 +46,83 @@ export function AccountPage({ me }: { me: Me }) {
         </dl>
       </Card>
 
+      <PasswordCard />
       <TwoFactorCard />
       <SessionsCard />
     </>
+  )
+}
+
+/** allauth speaks «usted»; every other screen speaks «tú». */
+function passwordError(data: unknown) {
+  const code = (data as { errors?: { code?: string }[] } | null)?.errors?.[0]?.code
+  return code === 'enter_current_password'
+    ? 'La contraseña actual no es correcta.'
+    : errorMessage(data)
+}
+
+function PasswordCard() {
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [repeat, setRepeat] = useState('')
+  const change = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => changePassword(current, next),
+    onSuccess: () => {
+      setCurrent('')
+      setNext('')
+      setRepeat('')
+      notify('Contraseña cambiada. Úsala la próxima vez que entres.', 'success')
+    },
+  })
+  const mismatch = repeat !== '' && repeat !== next
+  return (
+    <Card>
+      <h2 className="mb-1 text-base font-semibold">Contraseña</h2>
+      <p className="mb-3 text-[12.5px] text-muted">
+        Al menos 12 caracteres; evita tu nombre, tu correo y contraseñas comunes.
+      </p>
+      <form
+        className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
+        onSubmit={(e) => {
+          e.preventDefault()
+          change.mutate()
+        }}
+      >
+        <Field label="Contraseña actual">
+          <Input
+            type="password"
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
+        </Field>
+        <Field label="Nueva contraseña">
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
+        </Field>
+        <Field label="Repite la nueva" error={mismatch ? 'No coincide.' : undefined}>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value)}
+          />
+        </Field>
+        <Button type="submit" disabled={!current || !next || next !== repeat || change.isPending}>
+          {change.isPending ? 'Cambiando…' : 'Cambiar'}
+        </Button>
+      </form>
+      {change.error instanceof ApiError ? (
+        <div className="mt-3">
+          <Alert tone="danger">{passwordError(change.error.data)}</Alert>
+        </div>
+      ) : null}
+    </Card>
   )
 }
 

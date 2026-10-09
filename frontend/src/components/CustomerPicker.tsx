@@ -26,7 +26,13 @@ export function CustomerPicker({
   const rows = (results.data?.results ?? []).filter((c) => !exclude.includes(c.id))
   return (
     <div className="space-y-2">
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+      <Input
+        type="search"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={placeholder}
+        aria-label={placeholder}
+      />
       {term.length >= 2 ? (
         <ul className="max-h-64 divide-y divide-edge overflow-y-auto rounded-lg border border-edge bg-surface">
           {rows.length === 0 ? (

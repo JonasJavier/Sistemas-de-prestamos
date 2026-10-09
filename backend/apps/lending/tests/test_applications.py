@@ -157,7 +157,7 @@ def test_nobody_approves_what_they_created(tenant) -> None:
     assert detail["can"]["decide"] is False
     response = tenant.client("supervisor").post(f"/api/v1/solicitudes/{app_id}/aprobar/", {})
     assert response.status_code == 403
-    assert "023" in response.json()["detail"]
+    assert "Nadie decide sobre una solicitud que creó" in response.json()["detail"]
     # Even if code failed, the database refuses a self-decision.
     with company_context(tenant.company.id):
         application = Application.objects.get(pk=app_id)

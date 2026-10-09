@@ -16,6 +16,7 @@ from apps.collections.models import DelinquencySnapshot
 from apps.collections.services import purge_pings
 from apps.core.models import Company
 from apps.core.tenancy import company_context
+from apps.core.text import plural
 from apps.ledger import reconciliation
 from apps.lending.models import Loan
 from apps.notifications.models import Notification
@@ -104,7 +105,7 @@ def run_nightly(company_id, today: dt.date) -> dict:
             company_id=company_id,
             users=managers(),
             kind=Notification.Kind.RECONCILIATION,
-            text=f"La conciliación nocturna encontró {len(problems)} diferencia(s): "
+            text=f"La conciliación nocturna encontró {plural(len(problems), 'diferencia')}: "
             + " ".join(problems)[:200],
         )
     return {
@@ -133,7 +134,7 @@ def _notify_broken(company_id, broken) -> None:
             company_id=company_id,
             users=[owner],
             kind=Notification.Kind.PROMISES_BROKEN,
-            text=f"{len(numbers)} promesa(s) incumplida(s): "
+            text=f"{plural(len(numbers), 'promesa incumplida', 'promesas incumplidas')}: "
             + ", ".join(numbers[:5])
             + ("…" if len(numbers) > 5 else ""),
             link="/cobranza",

@@ -69,6 +69,15 @@ h3 {
   letter-spacing: -0.015em;
 }
 
+@layer base {
+  /* Columns never run into each other («11:44 p. m.Cobro»): every cell but
+     the last keeps a gap; a utility on the cell still overrides it. */
+  th:not(:last-child),
+  td:not(:last-child) {
+    padding-inline-end: 0.75rem;
+  }
+}
+
 /* Printing (doc 09): only the print area goes to paper, on a letter sheet or
    an 80 mm thermal roll (lib/print.ts sets the page size). */
 @media print {

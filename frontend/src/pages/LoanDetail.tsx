@@ -35,6 +35,7 @@ import {
   Button,
   Card,
   Field,
+  FilePicker,
   Input,
   PageHeader,
   Select,
@@ -617,11 +618,11 @@ export function LoanDetailPage({ me }: { me: Me }) {
                   upload.mutate()
                 }}
               >
-                <input
-                  type="file"
+                <FilePicker
+                  file={signed}
+                  onPick={setSigned}
                   accept=".pdf,.jpg,.jpeg,.png,.heic"
-                  className="text-sm"
-                  onChange={(e) => setSigned(e.target.files?.[0] ?? null)}
+                  label="Elegir el pagaré escaneado"
                 />
                 <Button type="submit" variant="secondary" disabled={!signed || upload.isPending}>
                   Subir escaneado

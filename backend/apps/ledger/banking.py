@@ -29,6 +29,7 @@ from apps.accounts import authz
 from apps.accounts.models import User
 from apps.audit.models import record_event
 from apps.core.models import Branch
+from apps.core.text import plural
 from apps.ledger import accounting, chart
 from apps.ledger import services as ledger
 from apps.ledger.models import (
@@ -431,7 +432,8 @@ def close(*, reconciliation: BankReconciliation, user: User) -> BankReconciliati
     result = summary(reconciliation)
     if result.unmatched_statement:
         raise BankingError(
-            f"Faltan {result.unmatched_statement} línea(s) del extracto por emparejar o registrar.",
+            f"Faltan {plural(result.unmatched_statement, 'línea', 'líneas')} del extracto por "
+            "emparejar o registrar.",
             "unmatched",
         )
     if result.difference:

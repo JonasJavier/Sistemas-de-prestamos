@@ -26,6 +26,13 @@ import {
 import { day, errorMessage, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
 
+const KIND_LABEL: Record<FinancialAccount['kind'], string> = {
+  cash: 'Caja',
+  bank: 'Banco',
+  drawer: 'Caja de cajero',
+  route: 'Efectivo de cobrador',
+}
+
 function Movements({ account }: { account: FinancialAccount }) {
   const query = useQuery({
     queryKey: ['account', account.id, 'movements'],
@@ -124,6 +131,8 @@ export function AccountsPage({ me }: { me: Me }) {
     ApiError | undefined
   const rows = accounts.data ?? []
   const total = rows.reduce((sum, a) => sum + Number(a.balance), 0)
+  // A cashier's drawer or a collector's cash moves only through its session.
+  const movable = rows.filter((a) => (a.kind === 'cash' || a.kind === 'bank') && a.is_active)
 
   return (
     <>
@@ -219,7 +228,7 @@ export function AccountsPage({ me }: { me: Me }) {
               <Field label="Desde">
                 <Select value={source} onChange={(e) => setSource(e.target.value)}>
                   <option value="">Elegir…</option>
-                  {rows.map((a) => (
+                  {movable.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} · {rd(a.balance)}
                     </option>
@@ -240,7 +249,7 @@ export function AccountsPage({ me }: { me: Me }) {
             <Field label={panel === 'transfer' ? 'Hacia' : 'Cuenta'}>
               <Select value={target} onChange={(e) => setTarget(e.target.value)}>
                 <option value="">Elegir…</option>
-                {rows.map((a) => (
+                {movable.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
                   </option>
@@ -294,8 +303,11 @@ export function AccountsPage({ me }: { me: Me }) {
                         ••{account.account_number_last4}
                       </span>
                     ) : null}{' '}
-                    <Badge tone={account.kind === 'cash' ? 'brand' : 'info'}>
-                      {account.kind === 'cash' ? 'Caja' : account.bank_name || 'Banco'}
+                    <Badge tone={account.kind === 'bank' ? 'info' : 'brand'}>
+                      {KIND_LABEL[account.kind] ?? account.kind}
+                      {account.kind === 'bank' && account.bank_name
+                        ? ` · ${account.bank_name}`
+                        : ''}
                     </Badge>
                     {!account.is_active ? <Badge>Inactiva</Badge> : null}
                     <span className="block text-[12px] text-muted">

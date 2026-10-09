@@ -22,6 +22,7 @@ from apps.accounts.models import User
 from apps.audit.models import record_event
 from apps.cash.models import CashDifference, CashDifferenceAction
 from apps.cash.services import CashError, open_session_of
+from apps.core.text import plural
 from apps.ledger import services as ledger
 from apps.notifications.models import Notification
 from apps.notifications.services import managers, notify
@@ -250,7 +251,8 @@ def nightly(today: dt.date) -> dict:
             company_id=stale[0].company_id,
             users=managers(),
             kind=Notification.Kind.CASH_DIFFERENCE,
-            text=f"{len(stale)} faltante(s) de caja llevan más de {CLAIM_DAYS} días sin resolver "
+            text=f"{plural(len(stale), 'faltante de caja lleva', 'faltantes de caja llevan')} "
+            f"más de {CLAIM_DAYS} días sin resolver "
             f"(RD$ {total:,.2f}).",
             link="/cajas",
         )

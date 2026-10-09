@@ -24,6 +24,7 @@ from django.http import Http404
 from django.utils import timezone
 
 from apps.accounts import authz
+from apps.core.text import plural
 from apps.reports import indicators
 
 G, SU, OF, CT, AU = (
@@ -92,7 +93,7 @@ class Table:
             columns=kept,
             rows=[{k: v for k, v in row.items() if k in keys} for row in self.rows],
             note=(self.note + " " if self.note else "")
-            + "Sin datos personales: tu rol no los exporta (doc 06).",
+            + "Sin datos personales: tu rol no los exporta.",
         )
 
 
@@ -250,7 +251,7 @@ def _portfolio(p: Params) -> Table:
             "label": bucket["label"],
             "value": bucket["principal"],
             "kind": "money",
-            "hint": f"{bucket['count']} préstamo(s)",
+            "hint": plural(bucket["count"], "préstamo"),
         }
         for bucket in totals.buckets
     ]
@@ -650,7 +651,7 @@ def _cash(p: Params) -> Table:
                     "label": f"Cobros en {methods[row['method']].lower()}",
                     "value": row["t"],
                     "kind": "money",
-                    "hint": f"{row['n']} pago(s)",
+                    "hint": plural(row["n"], "pago"),
                 }
                 for row in by_method
             ),

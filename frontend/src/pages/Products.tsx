@@ -147,7 +147,7 @@ function Charges({ product, onChange }: { product: LoanProduct; onChange: () => 
         <p className="text-sm text-muted">Sin cargos.</p>
       )}
       <form
-        className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_130px_110px_190px_auto]"
+        className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_130px_110px_230px_auto]"
         onSubmit={(e) => {
           e.preventDefault()
           add.mutate()
@@ -345,6 +345,30 @@ function Editor({
         {err('allowed_frequencies') ? (
           <span className="text-[12.5px] text-danger-600">{err('allowed_frequencies')}</span>
         ) : null}
+        {form.allowed_frequencies.length > 1 ? (
+          // The first allowed frequency is the one a new application proposes.
+          <div className="mt-2 max-w-xs">
+            <Field label="Frecuencia que se propone primero">
+              <Select
+                value={form.allowed_frequencies[0]}
+                onChange={(e) =>
+                  set('allowed_frequencies', [
+                    e.target.value,
+                    ...form.allowed_frequencies.filter((f) => f !== e.target.value),
+                  ])
+                }
+              >
+                {Object.entries(FREQUENCY_TEXT)
+                  .filter(([key]) => form.allowed_frequencies.includes(key))
+                  .map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+              </Select>
+            </Field>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -400,7 +424,7 @@ function Editor({
         </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 2xl:grid-cols-4">
         <Field label="Redondeo de la cuota" error={err('payment_rounding')}>
           <Select
             value={form.payment_rounding}
@@ -472,7 +496,7 @@ function Editor({
 
       <div className="rounded-lg border border-edge p-3">
         <h3 className="mb-2 text-sm font-semibold">Mora</h3>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-3">
           <Field label="Días de gracia">
             <Input
               inputMode="numeric"
@@ -504,7 +528,7 @@ function Editor({
               onChange={(e) => setPolicy('fixed_amount', e.target.value || null)}
             />
           </Field>
-          <Field label="Tope (sobre lo vencido)">
+          <Field label="Tope sobre lo vencido">
             <PercentInput
               value={form.late_fee_policy.cap_pct}
               onChange={(rate) => setPolicy('cap_pct', rate)}

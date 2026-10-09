@@ -25,6 +25,8 @@ from decimal import Decimal
 
 from django.utils import timezone
 
+from apps.core.text import plural
+
 GRADES = [("A", 85, "Excelente"), ("B", 70, "Bueno"), ("C", 50, "Regular"), ("D", 0, "Riesgoso")]
 GRADE_LABELS = {grade: label for grade, _, label in GRADES}
 WEIGHTS = {"punctuality": 50, "days_late": 30, "seniority": 10, "paid_off": 10}
@@ -101,14 +103,14 @@ def compute(facts: Facts, as_of: dt.date) -> Score:
         {
             "key": "days_late",
             "label": "Días promedio de atraso",
-            "detail": f"{average:.1f} día(s)",
+            "detail": f"{average:.1f} días",
             "points": _points(WEIGHTS["days_late"], 1 - average / DAYS_LATE_ZERO),
             "max": WEIGHTS["days_late"],
         },
         {
             "key": "seniority",
             "label": "Antigüedad como cliente",
-            "detail": f"{months} mes(es)",
+            "detail": plural(months, "mes", "meses"),
             "points": _points(WEIGHTS["seniority"], Decimal(months) / SENIORITY_MONTHS),
             "max": WEIGHTS["seniority"],
         },
@@ -127,7 +129,8 @@ def compute(facts: Facts, as_of: dt.date) -> Score:
         factors.append(
             {
                 "key": "short",
-                "label": f"Historial corto ({count} cuota(s) vencida(s)): queda entre B y C",
+                "label": f"Historial corto ({plural(count, 'cuota vencida', 'cuotas vencidas')}): "
+                "queda entre B y C",
             }
         )
     if facts.written_off:

@@ -237,3 +237,30 @@ def test_a_partial_handover_unloads_the_collector_and_keeps_the_route_open(tenan
         assert ledger.balance_of(route.bag.ledger_account) == D("0.00")
         assert cash.expected_cash(session) == drawer + D("600.00")
     books_square(tenant)
+
+
+def test_a_drawer_from_a_previous_day_only_closes(tenant) -> None:
+    """Decision 025: no cash enters or leaves yesterday's drawer but its closing."""
+    loan = make_loan(tenant, first_due_in=0)
+    with company_context(tenant.company.id):
+        Loan.objects.filter(pk=loan.pk).update(collector=tenant.users["cobrador"])
+    route = _route(tenant)
+    pay(tenant, loan, "350.00", role="cobrador")
+    with company_context(tenant.company.id):
+        session = cash.open_session_of(tenant.users["cajero"])  # the disbursement opened it
+        yesterday = timezone.localdate() - timezone.timedelta(days=1)
+        CashSession.objects.filter(pk=session.pk).update(business_date=yesterday)
+        user = tenant.users["cajero"]
+        with pytest.raises(cash.CashError, match="día anterior"):
+            cash.settle_route(route=route, user=user, delivered=D("350"))
+        with pytest.raises(cash.CashError, match="día anterior"):
+            cash.receive_handover(route=route, user=user, amount=D("100"))
+        with pytest.raises(cash.CashError, match="día anterior"):
+            cash.move(
+                session=session, user=user, account=tenant.cash, amount=D("10"), incoming=False
+            )
+        # Closing is the one thing it still does (here everything goes as a shortage).
+        closed = cash.close_session(
+            session=session, user=user, counts={}, reason=_reason(tenant), note="Prueba"
+        )
+        assert closed.status == CashSession.Status.CLOSED

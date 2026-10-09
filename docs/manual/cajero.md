@@ -21,6 +21,8 @@ En **Desembolsos**, la solicitud aprobada: confirma la entrega en efectivo desde
 
 ## Cerrar la caja
 
-**Mi caja · Cerrar:** cuenta el efectivo por denominación (billetes y monedas). Si no cuadra, el sistema muestra la diferencia y la registra; tu supervisor o gerente aprueba el cierre.
+**Mi caja · Arqueo y cierre:** cuenta el efectivo por denominación (billetes y monedas). Si no cuadra, el sistema muestra la diferencia y la registra; tu supervisor o gerente aprueba el cierre. Arriba ves siempre la cuenta del día: fondo de apertura + entradas − salidas = esperado en caja.
+
+La caja se cierra el mismo día. Si quedó abierta de un día anterior, solo admite el cierre: ciérrala y abre la de hoy antes de cobrar, desembolsar o recibir rendiciones.
 
 También recibes la **rendición** de los cobradores: el efectivo que traen de su ruta entra a tu caja con su detalle.

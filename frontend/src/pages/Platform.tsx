@@ -13,7 +13,7 @@ import {
 } from '../api/platform'
 import { Kpi } from '../components/Kpi'
 import { SupportDialog } from '../components/Support'
-import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { Alert, Button, Card, Field, Input, LoadError, PageHeader, Spinner } from '../components/ui'
 import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
 
 /** PT2 (decision 091): companies, conversion, payments due and usage
@@ -21,7 +21,8 @@ import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
 function PlatformDashboard() {
   const board = useQuery({ queryKey: ['platform-dashboard'], queryFn: getPlatformDashboard })
   const data = board.data
-  if (!data) return null
+  if (board.isError) return <LoadError error={board.error} />
+  if (!data) return <Spinner />
   const c = data.companies
   return (
     <div className="space-y-3">

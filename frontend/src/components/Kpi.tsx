@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { type ReactNode, useId, useState } from 'react'
 
+import { Figure } from './ui'
+
 /** One indicator with its exact definition behind a «?» (doc 09 §3, doc 08 §5). */
 export function Kpi({
   label,
@@ -20,7 +22,6 @@ export function Kpi({
   const [open, setOpen] = useState(false)
   const id = useId()
   const color = tone === 'bad' ? 'text-danger-600' : tone === 'good' ? 'text-success-600' : ''
-  const amount = typeof value === 'string' && value.startsWith('RD$ ') ? value.slice(4) : null
   return (
     <div className="relative min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -49,14 +50,7 @@ export function Kpi({
       <div
         className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${color}`}
       >
-        {amount !== null ? (
-          <>
-            <span className="mr-1 text-[0.7em] font-semibold opacity-80">RD$</span>
-            {amount}
-          </>
-        ) : (
-          value
-        )}
+        <Figure value={value} />
       </div>
       {hint ? <div className="mt-0.5 text-[12px] text-muted">{hint}</div> : null}
       {help && open ? (

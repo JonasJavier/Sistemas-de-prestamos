@@ -94,6 +94,7 @@ class Command(BaseCommand):
         self._demo_company()
         self._demo_contacts()
         self._demo_portfolio()
+        self._demo_refill()
         self._demo_collections()
         self._demo_finance()
         self._demo_scores()
@@ -176,27 +177,87 @@ class Command(BaseCommand):
         company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
         if company is None:
             return
-        # Commit inside the tenant: what runs at commit (documents) needs it.
-        with company_context(company.id), transaction.atomic():
+        with company_context(company.id):
             if Loan.objects.filter(collector__email="cobrador@modelo.test").exists():
                 return
-            from apps.cash import services as cash
+            san = LoanProduct.objects.get(name="Personal San (semanal)")
+            fija = LoanProduct.objects.get(name="Cuota Fija (mensual)")
+        self._lend(
+            company,
+            [  # (customer last name, product, amount, installments, first due in days)
+                ("Gómez", san, Decimal("10000"), 8, -18),
+                ("Pérez Santana", fija, Decimal("25000"), 12, -5),
+                ("Rodríguez", san, Decimal("5000"), 4, 3),
+            ],
+        )
+        self.stdout.write("Cartera de demostración: 3 préstamos (uno atrasado) con cobrador.")
 
+    def _demo_refill(self) -> None:
+        """The tours repeat (DEV.md): each one lends from the general cash and
+        collects the late loan. Run again, the seed puts back what they used
+        so the next tours find money to lend and a loan a few days late."""
+        company = Company.objects.filter(legal_name=DEMO_COMPANY).first()
+        if company is None:
+            return
+        with company_context(company.id), transaction.atomic():
+            general = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH, holder=None)
+            balance = ledger.balance_of(general.ledger_account)
+            if balance < Decimal("200000"):
+                manager = User.objects.get(email="gerente@modelo.test")
+                ledger.capital_movement(
+                    account=general,
+                    amount=Decimal("300000") - balance,
+                    increase=True,
+                    branch=Membership.objects.filter(user=manager).first().branch,
+                    on=timezone.localdate(),
+                    note="Reposición de la demostración (recorridos repetidos)",
+                    created_by=manager,
+                )
+                self.stdout.write("Caja general repuesta a RD$ 300,000.00.")
+            late = Loan.objects.filter(
+                customer__last_name="Pérez Santana",
+                status=Loan.Status.ACTIVE,
+                days_past_due__gt=0,
+            ).exists()
+            fija = LoanProduct.objects.get(name="Cuota Fija (mensual)")
+        if not late:
+            if self._lend(company, [("Pérez Santana", fija, Decimal("25000"), 12, -5)]):
+                self.stdout.write("Préstamo atrasado de José Pérez Santana creado otra vez.")
+
+    def _lend(self, company: Company, plan: list) -> bool:
+        """Lend ``plan`` in cash from the cashier's drawer, then date the loans
+        in the past; the drawer opened here is closed and approved here."""
+        from apps.cash import services as cash
+
+        # Commit inside the tenant: what runs at commit (documents) needs it.
+        with company_context(company.id), transaction.atomic():
             users = {u.email: u for u in User.objects.filter(company=company)}
             officer, supervisor = users["oficial@modelo.test"], users["supervisor@modelo.test"]
             cashier, collector = users["cajera@modelo.test"], users["cobrador@modelo.test"]
             branch = Membership.objects.filter(user=cashier).first().branch
             general = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH, holder=None)
-            session = cash.open_session(
-                user=cashier, branch=branch, amount=Decimal("60000"), fund_from=general
-            )
-            san = LoanProduct.objects.get(name="Personal San (semanal)")
-            fija = LoanProduct.objects.get(name="Cuota Fija (mensual)")
-            plan = [  # (customer last name, product, amount, installments, first due in days)
-                ("Gómez", san, Decimal("10000"), 8, -18),
-                ("Pérez Santana", fija, Decimal("25000"), 12, -5),
-                ("Rodríguez", san, Decimal("5000"), 4, 3),
-            ]
+            needed = sum((amount for _, _, amount, _, _ in plan), Decimal(0))
+            session = cash.open_session_of(cashier)
+            opened = session is None
+            if session is None:
+                session = cash.open_session(
+                    user=cashier, branch=branch, amount=needed, fund_from=general
+                )
+            elif cash.is_stale(session):
+                self.stdout.write(
+                    "La caja de la cajera es de un día anterior: ciérrala y corre "
+                    "seed_demo otra vez."
+                )
+                return False
+            elif cash.expected_cash(session) < needed:
+                cash.move(
+                    session=session,
+                    user=cashier,
+                    account=general,
+                    amount=needed - cash.expected_cash(session),
+                    incoming=True,
+                    note="Fondo para la demostración",
+                )
             today = timezone.localdate()
             for last_name, product, amount, count, first_due_in in plan:
                 customer = Customer.objects.get(last_name=last_name)
@@ -205,7 +266,7 @@ class Command(BaseCommand):
                     customer=customer,
                     product=product,
                     amount=amount,
-                    frequency=product.allowed_frequencies[-1],
+                    frequency=product.allowed_frequencies[0],
                     installments=count,
                 )
                 application.requirements.update(verified_by=officer, verified_at=timezone.now())
@@ -218,7 +279,7 @@ class Command(BaseCommand):
                     method="cash",
                     idempotency_key=uuid.uuid4().hex,
                 )
-                step = 7 if product == san else 30
+                step = 7 if product.allowed_frequencies[0] == "weekly" else 30
                 first = today + dt.timedelta(days=first_due_in)
                 for inst in loan.installments.order_by("number"):
                     due = first + dt.timedelta(days=step * (inst.number - 1))
@@ -228,21 +289,22 @@ class Command(BaseCommand):
                 Loan.objects.filter(pk=loan.pk).update(
                     disbursed_on=first - dt.timedelta(days=step),
                     next_due_date=first,
-                    collector=collector if product == san else None,
+                    collector=collector if step == 7 else None,
                 )
-            expected = cash.expected_cash(session)
-            cash.close_session(
-                session=session,
-                user=cashier,
-                counts={"1000": int(expected // 1000), "1": int(expected % 1000)},
-                return_to=general,
-                return_amount=expected,
-            )
-            cash.approve_session(session=session, user=supervisor)
+            if opened:
+                expected = cash.expected_cash(session)
+                cash.close_session(
+                    session=session,
+                    user=cashier,
+                    counts={"1000": int(expected // 1000), "1": int(expected % 1000)},
+                    return_to=general,
+                    return_amount=expected,
+                )
+                cash.approve_session(session=session, user=supervisor)
             from apps.payments.tasks import run_nightly
 
             run_nightly(company.id, today)
-        self.stdout.write("Cartera de demostración: 3 préstamos (uno atrasado) con cobrador.")
+        return True
 
     def _demo_collections(self) -> None:
         """Phase 5 demo: a promise for today, one that is coming and a

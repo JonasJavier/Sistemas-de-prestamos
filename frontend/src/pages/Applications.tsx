@@ -118,7 +118,7 @@ export function ApplicationsPage({ me }: { me: Me }) {
                           : ''}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <div className="font-display font-bold tabular-nums">
                         {rd(app.approved_amount ?? app.amount)}
                       </div>

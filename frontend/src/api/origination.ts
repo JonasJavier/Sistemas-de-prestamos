@@ -465,7 +465,9 @@ export const listReasons = (kind: string): Promise<Reason[]> =>
 export interface FinancialAccount {
   id: string
   name: string
-  kind: 'cash' | 'bank'
+  /** drawer and route: a cashier's or a collector's cash, moved only through
+   * their sessions (phase 4). */
+  kind: 'cash' | 'bank' | 'drawer' | 'route'
   bank_name: string
   account_number_last4: string
   branch: string | null

@@ -15,6 +15,7 @@ from decimal import Decimal
 from django.utils import timezone
 
 from apps.collections.models import LegalCase, LegalProfessional
+from apps.core.text import plural
 from apps.documents.models import GeneratedDocument
 from apps.documents.services import amount_in_words, date_in_words, issue
 from apps.lending.models import Loan
@@ -120,7 +121,7 @@ def demand_notice(case: LegalCase) -> LegalText:
             f"{_money(loan.principal)}.",
             f"Para que en el plazo de cinco (5) días francos pague la suma de {_money(owed)}, "
             f"correspondiente a las cuotas vencidas y su mora al {date_in_words(today)}, con "
-            f"{loan.days_past_due} día(s) de atraso.",
+            f"{plural(loan.days_past_due, 'día')} de atraso.",
             "Advertido de que, a falta de pago en el plazo indicado, el requeriente procederá a "
             "ejercer las vías de derecho que le acuerda la ley para el cobro de su crédito.",
         ],
@@ -242,8 +243,9 @@ def notarial_note(case: LegalCase) -> LegalText:
             f"De la otra parte, {_customer_line(loan)}, en lo adelante EL DEUDOR.",
             f"EL DEUDOR reconoce adeudar a EL ACREEDOR la suma de {_money(loan.principal)}, "
             f"recibida en virtud del préstamo núm. {loan.number} del "
-            f"{date_in_words(loan.disbursed_on)}, pagadera en {terms.installments} cuota(s) "
-            f"según la tabla de pagos que forma parte de este acto.",
+            f"{date_in_words(loan.disbursed_on)}, pagadera en "
+            f"{plural(terms.installments, 'cuota')} según la tabla de pagos que forma parte "
+            "de este acto.",
             "En caso de falta de pago de una o más cuotas a su vencimiento, EL ACREEDOR podrá "
             "exigir el pago total de lo adeudado, con su mora, y el presente acto vale título "
             "ejecutorio conforme a la ley.",
@@ -278,8 +280,8 @@ def _contract(loan: Loan, *, title: str, kind_text: str, assets: list) -> LegalT
         "lo adelante EL DEUDOR, se ha convenido lo siguiente:",
         f"PRIMERO: EL ACREEDOR otorga a EL DEUDOR un préstamo por {_money(loan.principal)}, "
         f"núm. {loan.number}, desembolsado el {date_in_words(loan.disbursed_on)}, pagadero en "
-        f"{terms.installments} cuota(s) según la tabla de pagos anexa, que forma parte de este "
-        "contrato.",
+        f"{plural(terms.installments, 'cuota')} según la tabla de pagos anexa, que forma parte "
+        "de este contrato.",
         f"SEGUNDO: En garantía del pago, EL DEUDOR otorga {kind_text} sobre el (los) bien(es) "
         "siguiente(s), de su propiedad:",
         *[f"— {_asset(asset)}" for asset in assets],

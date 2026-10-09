@@ -12,7 +12,7 @@ import {
   statementLineAction,
 } from '../api/accounting'
 import { api, ApiError } from '../api/client'
-import { day, errorMessage, rd, todayISO } from '../lib/format'
+import { day, errorMessage, rd, todayISO, plural } from '../lib/format'
 import { notify } from '../lib/toast'
 import { Alert, Badge, Button, Card, Field, Input, Select, Spinner, Stat } from './ui'
 
@@ -107,10 +107,11 @@ function ReconciliationView({ id, canWork }: { id: string; canWork: boolean }) {
       set(data)
       if (data.imported)
         notify(
-          `Extracto importado: ${data.imported.added} línea(s) nueva(s), ${data.imported.skipped} repetida(s).`,
+          `Extracto importado: ${plural(data.imported.added, 'línea nueva', 'líneas nuevas')}, ${plural(data.imported.skipped, 'repetida')}.`,
           'success',
         )
-      if (data.matched !== undefined) notify(`${data.matched} línea(s) emparejada(s).`, 'success')
+      if (data.matched !== undefined)
+        notify(`${plural(data.matched, 'línea emparejada', 'líneas emparejadas')}.`, 'success')
       if (data.status === 'closed') notify('Mes conciliado.', 'success')
       void queryClient.invalidateQueries({ queryKey: ['chart'] })
     },
@@ -135,7 +136,7 @@ function ReconciliationView({ id, canWork }: { id: string; canWork: boolean }) {
         <Stat
           label="Diferencia"
           value={rd(summary.difference)}
-          emphasis={Number(summary.difference) !== 0}
+          danger={Number(summary.difference) !== 0}
         />
       </div>
       {open ? (

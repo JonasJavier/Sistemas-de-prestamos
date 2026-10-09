@@ -16,7 +16,7 @@ import {
   Select,
   Spinner,
 } from '../components/ui'
-import { day, pct, rd, todayISO } from '../lib/format'
+import { day, pct, rd, todayISO, plural } from '../lib/format'
 import { printArea } from '../lib/print'
 import { hasRole } from '../lib/roles'
 
@@ -122,7 +122,7 @@ export function PortfolioReportPage({ me }: { me: Me }) {
             <Kpi
               label="Cartera activa"
               value={rd(data.totals.principal)}
-              hint={`${data.totals.count} préstamo(s)`}
+              hint={plural(data.totals.count, 'préstamo')}
               help={data.definitions.portfolio}
             />
             <Kpi

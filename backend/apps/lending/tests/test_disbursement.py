@@ -42,7 +42,7 @@ def _approved(
         "customer": str(tenant.customer.id),
         "product": str(product_obj.id),
         "amount": amount,
-        "frequency": frequency or product_obj.allowed_frequencies[-1],
+        "frequency": frequency or product_obj.allowed_frequencies[0],
         "installments": installments,
         "rate": rate or str(product_obj.default_rate),
     }

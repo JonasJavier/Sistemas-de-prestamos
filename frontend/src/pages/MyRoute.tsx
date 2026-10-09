@@ -260,8 +260,8 @@ function Summary({ data, onClose }: { data: MyRoute; onClose: () => void }) {
           ))}
         </ul>
         <p className="text-[12.5px] text-muted">
-          Entrega el efectivo hoy mismo (decisión 025): el cajero lo cuenta y confirma. Las
-          transferencias no se entregan: ya están en el banco.
+          Entrega el efectivo hoy mismo: el cajero lo cuenta y confirma. Las transferencias no se
+          entregan: ya están en el banco.
         </p>
         <Button variant="secondary" className="w-full" onClick={onClose}>
           Cerrar
@@ -360,7 +360,7 @@ export function MyRoutePage() {
         <Stat
           label="Visitas"
           value={`${data.progress.visited}/${data.progress.stops}`}
-          hint={pending ? `${pending} pendientes` : 'todas hechas'}
+          hint={pending ? `${pending} pendiente${pending === 1 ? '' : 's'}` : 'todas hechas'}
         />
         <Stat label="Efectivo en mano" value={rd(data.route?.cash ?? '0')} />
       </div>

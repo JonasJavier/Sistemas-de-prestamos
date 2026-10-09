@@ -69,10 +69,12 @@ export function ResultsPage() {
           <div className="grid grid-cols-3 gap-3">
             <Stat label="Ingresos cobrados" value={rd(data.income_total)} />
             <Stat label="Gastos operativos" value={rd(data.expense_total)} />
+            {/* A loss reads in red, as its size: «Pérdida RD$ 1,000», never in green. */}
             <Stat
               label={positive ? 'Ganancia cobrada' : 'Pérdida'}
-              value={rd(data.result)}
-              emphasis
+              value={rd(Math.abs(Number(data.result)))}
+              emphasis={positive}
+              danger={!positive}
             />
           </div>
           <p className="text-[12.5px] text-muted">

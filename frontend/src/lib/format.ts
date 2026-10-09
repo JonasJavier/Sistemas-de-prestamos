@@ -1,12 +1,27 @@
 /** Shared display formats (doc 09 - section 1): RD$ 1,250.00 and 04/10/2026. */
 
-export const rd = (value: string | number | null | undefined) =>
-  value === null || value === undefined || value === ''
-    ? '—'
-    : `RD$ ${Number(value).toLocaleString('es-DO', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`
+export const rd = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === '') return '—'
+  const number = Number(value)
+  const text = Math.abs(number).toLocaleString('es-DO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  // The sign goes before the currency (-RD$ 50.00), and a rounded -0 is 0.
+  return number < 0 && text !== '0.00' ? `-RD$ ${text}` : `RD$ ${text}`
+}
+
+/** 1,250.00 without the currency: for tables whose header already says
+ * RD$, where «RD$» in every cell only pushes the columns off a phone. */
+export const num = (value: string | number | null | undefined) =>
+  value === null || value === undefined || value === '' ? '—' : rd(value).replace('RD$ ', '')
+
+/** «RD$ 1,250.00» split so the currency can be drawn smaller than the figure. */
+export function splitAmount(value: unknown): { sign: string; amount: string } | null {
+  if (typeof value !== 'string') return null
+  const match = /^(-?)RD\$ (.+)$/.exec(value)
+  return match ? { sign: match[1], amount: match[2] } : null
+}
 
 /** Dominican documents as people write them: 001-1234567-8 (cédula) and
  * 1-01-12345-6 (RNC). Masked values from the API pass through untouched. */
@@ -78,6 +93,12 @@ export const FREQUENCY_TEXT: Record<string, string> = {
   biweekly: 'Quincenal',
   monthly: 'Mensual',
 }
+
+/** «1 préstamo», «3 préstamos»: never «préstamo(s)». The plural defaults
+ * to the singular plus «s» (pass it when it is «rendiciones», «líneas
+ * nuevas»…). */
+export const plural = (count: number, singular: string, many = `${singular}s`) =>
+  `${count} ${count === 1 ? singular : many}`
 
 /** «12 cuotas mensuales»: the plural agrees with the count. */
 export const FREQUENCY_PLURAL: Record<string, string> = {

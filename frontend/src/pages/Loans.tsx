@@ -19,7 +19,7 @@ import {
   Select,
   Spinner,
 } from '../components/ui'
-import { day, errorMessage, LOAN_STATUS, rd } from '../lib/format'
+import { day, errorMessage, LOAN_STATUS, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
@@ -59,7 +59,10 @@ export function LoansPage({ me }: { me: Me }) {
     mutationFn: () =>
       assignCollector({ loans: selected, collector: target === 'none' ? null : target }),
     onSuccess: (result) => {
-      notify(`${result.changed} préstamo(s) reasignados.`, 'success')
+      notify(
+        `${plural(result.changed, 'préstamo reasignado', 'préstamos reasignados')}.`,
+        'success',
+      )
       setSelected([])
       void queryClient.invalidateQueries({ queryKey: ['loans'] })
       void queryClient.invalidateQueries({ queryKey: ['routes'] })
@@ -136,7 +139,7 @@ export function LoansPage({ me }: { me: Me }) {
       </div>
       {supervisor && selected.length ? (
         <div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-brand-700/40 bg-brand-100 px-4 py-2 text-sm">
-          <span className="font-semibold">{selected.length} seleccionado(s)</span>
+          <span className="font-semibold">{plural(selected.length, 'seleccionado')}</span>
           <Select aria-label="Asignar a" value={target} onChange={(e) => setTarget(e.target.value)}>
             <option value="">Asignar a…</option>
             <option value="none">Quitar el cobrador</option>
@@ -195,7 +198,7 @@ export function LoansPage({ me }: { me: Me }) {
                       </div>
                       <div className="text-[12.5px] text-muted">{loan.product_name}</div>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <div className="font-display font-bold tabular-nums">
                         {rd(loan.principal_outstanding)}
                       </div>

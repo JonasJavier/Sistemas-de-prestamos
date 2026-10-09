@@ -100,9 +100,15 @@ export function SubscriptionPage() {
       <Card>
         <h2 className="text-base font-semibold">¿Cómo activo o renuevo mi suscripción?</h2>
         <p className="mt-1 text-sm text-muted">
-          Por ahora el pago es por transferencia o depósito. Escríbenos y te enviamos los datos
-          bancarios; al confirmar tu pago, activamos la cuenta el mismo día. Los planes y sus
-          precios definitivos se publican antes del lanzamiento.
+          Por ahora el pago es por transferencia o depósito. Escríbenos a{' '}
+          <a
+            href="mailto:hola@cobradia.com?subject=Suscripci%C3%B3n%20de%20Cobrad%C3%ADa"
+            className="font-medium text-brand-700 hover:underline"
+          >
+            hola@cobradia.com
+          </a>{' '}
+          y te enviamos los datos bancarios; al confirmar tu pago, activamos la cuenta el mismo día.
+          Los planes y sus precios definitivos se publican antes del lanzamiento.
         </p>
       </Card>
     </>

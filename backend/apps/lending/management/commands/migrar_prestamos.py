@@ -19,6 +19,7 @@ from django.db import transaction
 from apps.accounts.models import User
 from apps.core.tabular import header, read_rows
 from apps.core.tenancy import company_context
+from apps.core.text import plural
 from apps.customers.models import Customer
 from apps.lending.migration import LegacyLoan, MigrationError, migrate_loan
 from apps.lending.models import LoanProduct
@@ -119,7 +120,7 @@ class Command(BaseCommand):
                         raise _DryRun
             except _DryRun:
                 pass
-        summary = f"{ok} préstamo(s) válidos, {errors} con errores."
+        summary = f"{plural(ok, 'préstamo válido', 'préstamos válidos')}, {errors} con errores."
         if options["aplicar"] and not errors:
             self.stdout.write(self.style.SUCCESS(f"Migración aplicada: {summary}"))
         elif options["aplicar"]:

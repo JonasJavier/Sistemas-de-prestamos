@@ -35,7 +35,7 @@ import {
   Stat,
   Textarea,
 } from '../components/ui'
-import { errorMessage, moment, rd } from '../lib/format'
+import { errorMessage, moment, num, plural, rd } from '../lib/format'
 import { notify } from '../lib/toast'
 
 const METHOD_LABEL: Record<string, string> = {
@@ -408,6 +408,7 @@ function CloseDialog({
           <Stat
             label="Diferencia"
             value={rd(diff)}
+            danger={diff !== 0}
             hint={diff < 0 ? 'faltante' : diff > 0 ? 'sobrante' : 'cuadra'}
           />
         </div>
@@ -474,6 +475,39 @@ function CloseDialog({
   )
 }
 
+/** Fund + in − out = expected: the four figures add up on screen (F7), and
+ * what was collected by each method sits underneath. */
+function DrawerFigures({ session }: { session: CashSession }) {
+  const movements = session.movements ?? []
+  const sum = (key: 'in' | 'out') => movements.reduce((total, m) => total + Number(m[key] ?? 0), 0)
+  // The opening fund is the session's first line in: it is shown on its own.
+  const fund = Number(session.carried_over) + Number(session.funded_amount)
+  const incoming = sum('in') - Number(session.funded_amount)
+  const methods = Object.entries(session.by_method)
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Fondo de apertura" value={rd(fund)} />
+        <Stat label="Entradas" value={rd(incoming)} />
+        <Stat label="Salidas" value={rd(sum('out'))} />
+        <Stat label="Esperado en caja" value={rd(session.expected)} emphasis />
+      </div>
+      {methods.length ? (
+        <p className="text-[12.5px] text-muted">
+          Cobrado en esta caja:{' '}
+          {methods
+            .map(
+              ([method, total]) =>
+                `${METHOD_LABEL[method] ?? method} ${rd(total.amount)} (${total.count})`,
+            )
+            .join(' · ')}
+          . Solo el efectivo entra al cajón.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 /** P50: my drawer — open it with a fund, see the day, receive the collectors,
  * count and close (F7). */
 export function MyCashPage({ me }: { me: Me }) {
@@ -510,31 +544,21 @@ export function MyCashPage({ me }: { me: Me }) {
         <>
           {stale ? (
             <Alert tone="danger">
-              Esta caja es de un día anterior: ciérrala hoy (decisión 025) antes de seguir cobrando.
+              Esta caja es de un día anterior: ciérrala con su arqueo y abre la de hoy. Hasta
+              entonces no cobra, no desembolsa ni recibe rendiciones.
             </Alert>
           ) : null}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="Esperado en caja" value={rd(session.expected)} emphasis />
-            <Stat
-              label="Fondo de apertura"
-              value={rd(Number(session.carried_over) + Number(session.funded_amount))}
-            />
-            {Object.entries(session.by_method).map(([method, total]) => (
-              <Stat
-                key={method}
-                label={`${METHOD_LABEL[method] ?? method} (${total.count})`}
-                value={rd(total.amount)}
-              />
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => setDialog('move')}>
-              Depositar o trasladar
-            </Button>
-            <Button variant="secondary" onClick={() => setDialog('petty')}>
-              Gasto menor
-            </Button>
-          </div>
+          <DrawerFigures session={session} />
+          {stale ? null : (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => setDialog('move')}>
+                Depositar o trasladar
+              </Button>
+              <Button variant="secondary" onClick={() => setDialog('petty')}>
+                Gasto menor
+              </Button>
+            </div>
+          )}
 
           <CashDifferences me={me} mineOnly />
 
@@ -548,14 +572,19 @@ export function MyCashPage({ me }: { me: Me }) {
                     className="flex flex-wrap items-center justify-between gap-2 py-2"
                   >
                     <span>
-                      <strong>{route.collector_name}</strong> · {route.payments} cobro(s)
+                      <strong>{route.collector_name}</strong> · {plural(route.payments, 'cobro')}
                       {route.business_date < data.today ? (
                         <Badge tone="danger">de un día anterior</Badge>
                       ) : null}
                     </span>
                     <span className="flex items-center gap-3">
                       <span className="tabular-nums">{rd(route.expected)}</span>
-                      <Button variant="secondary" onClick={() => setSettling(route)}>
+                      <Button
+                        variant="secondary"
+                        disabled={Boolean(stale)}
+                        title={stale ? 'Primero cierra la caja del día anterior' : undefined}
+                        onClick={() => setSettling(route)}
+                      >
                         Recibir
                       </Button>
                     </span>
@@ -576,23 +605,41 @@ export function MyCashPage({ me }: { me: Me }) {
                     <tr>
                       <th className="py-1">Hora</th>
                       <th>Tipo</th>
-                      <th>Detalle</th>
-                      <th className="text-right">Entra</th>
-                      <th className="text-right">Sale</th>
+                      <th className="hidden sm:table-cell">Detalle</th>
+                      <th className="hidden text-right sm:table-cell">Entra</th>
+                      <th className="hidden text-right sm:table-cell">Sale</th>
+                      {/* A phone has room for one signed amount, not two columns. */}
+                      <th className="text-right sm:hidden">RD$</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-edge">
                     {session.movements.map((m, i) => (
-                      <tr key={i}>
+                      <tr key={i} className="align-top">
                         <td className="py-1.5 whitespace-nowrap">
                           {new Date(m.at).toLocaleTimeString('es-DO', { timeStyle: 'short' })}
                         </td>
-                        <td className="whitespace-nowrap">{m.kind}</td>
-                        <td className="max-w-xs truncate text-muted" title={m.description}>
+                        <td className="py-1.5">
+                          <div className="whitespace-nowrap">{m.kind}</div>
+                          {/* On a phone the detail goes under the type, not off screen. */}
+                          <div className="text-[12px] text-muted sm:hidden">{m.description}</div>
+                        </td>
+                        <td
+                          className="hidden max-w-xs truncate py-1.5 text-muted sm:table-cell"
+                          title={m.description}
+                        >
                           {m.description}
                         </td>
-                        <td className="text-right tabular-nums">{m.in ? rd(m.in) : ''}</td>
-                        <td className="text-right tabular-nums">{m.out ? rd(m.out) : ''}</td>
+                        <td className="hidden whitespace-nowrap py-1.5 text-right tabular-nums sm:table-cell">
+                          {m.in ? rd(m.in) : ''}
+                        </td>
+                        <td className="hidden whitespace-nowrap py-1.5 text-right tabular-nums sm:table-cell">
+                          {m.out ? rd(m.out) : ''}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap py-1.5 text-right font-medium tabular-nums sm:hidden ${m.out ? 'text-danger-600' : 'text-success-600'}`}
+                        >
+                          {m.in ? `+${num(m.in)}` : `−${num(m.out)}`}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -608,19 +655,27 @@ export function MyCashPage({ me }: { me: Me }) {
             {payments.data?.results.length ? (
               <ul className="divide-y divide-edge text-sm">
                 {payments.data.results.map((p) => (
-                  <li key={p.id} className="flex flex-wrap justify-between gap-2 py-1.5">
-                    <Link
-                      to="/recibos/$numero"
-                      params={{ numero: p.number }}
-                      className="font-medium text-brand-700 hover:underline"
-                    >
-                      {p.number}
-                    </Link>
-                    <span className="text-muted">
-                      {p.customer_name} · {p.method_label}
-                      {p.status === 'reversed' ? ' · reversado' : ''}
+                  <li key={p.id} className="flex items-center justify-between gap-3 py-2">
+                    <div className="min-w-0">
+                      <Link
+                        to="/recibos/$numero"
+                        params={{ numero: p.number }}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {p.number}
+                      </Link>
+                      <div className="truncate text-[12.5px] text-muted">
+                        {p.customer_name} · {p.method_label}
+                      </div>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {p.status === 'reversed' ? <Badge tone="danger">Reversado</Badge> : null}
+                      <span
+                        className={`tabular-nums ${p.status === 'reversed' ? 'text-muted line-through' : ''}`}
+                      >
+                        {rd(p.amount)}
+                      </span>
                     </span>
-                    <span className="tabular-nums">{rd(p.amount)}</span>
                   </li>
                 ))}
               </ul>

@@ -258,7 +258,7 @@ flowchart LR
     G --> H[PDF de cierre]
 ```
 
-> **Fase 4 (decisión 065):** cada cajero tiene su caja contable por sucursal; el esperado sale del libro. La diferencia del arqueo se asienta al cerrar (faltante a «Faltantes de caja por cobrar», sobrante a «Sobrantes de caja») y lo que no se traslada queda como fondo del día siguiente. Una caja de un día anterior no admite cobros hasta cerrarse. El supervisor aprueba hasta su límite de diferencia (el gerente, sin límite) y nunca su propia caja; al aprobar se emite el PDF del cierre.
+> **Fase 4 (decisión 065):** cada cajero tiene su caja contable por sucursal; el esperado sale del libro. La diferencia del arqueo se asienta al cerrar (faltante a «Faltantes de caja por cobrar», sobrante a «Sobrantes de caja») y lo que no se traslada queda como fondo del día siguiente. Una caja de un día anterior solo se cierra: hasta entonces no cobra, no desembolsa ni recibe rendiciones, entregas, traslados o gastos menores (decisión 108). El supervisor aprueba hasta su límite de diferencia (el gerente, sin límite) y nunca su propia caja; al aprobar se emite el PDF del cierre.
 
 ## F8 · Atraso y gestión de cobro
 

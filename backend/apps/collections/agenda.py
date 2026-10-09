@@ -29,6 +29,7 @@ from apps.collections.promises import (
     check_can_manage,
     make_promise,
 )
+from apps.core.text import plural
 from apps.lending.models import Loan
 from apps.notifications.models import Notification
 from apps.notifications.services import notify
@@ -312,7 +313,8 @@ def run_escalation(today: dt.date) -> int:
             users=_holders(role, branch_id),
             kind=Notification.Kind.ESCALATION,
             text=(
-                f"{len(numbers)} préstamo(s) escalado(s) a {role.lower()}: "
+                plural(len(numbers), "préstamo escalado", "préstamos escalados")
+                + f" a {role.lower()}: "
                 + ", ".join(numbers[:5])
                 + ("…" if len(numbers) > 5 else "")
             ),

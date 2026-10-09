@@ -15,6 +15,7 @@ from apps.accounts.models import User
 from apps.core.models import Branch
 from apps.core.tabular import read_rows
 from apps.core.tenancy import company_context
+from apps.core.text import plural
 from apps.customers.migration import CustomerRowError, migrate_customer
 
 
@@ -62,7 +63,10 @@ class Command(BaseCommand):
                         raise _DryRun
             except _DryRun:
                 pass
-        summary = f"{created} cliente(s) nuevos, {skipped} ya existían, {errors} con errores."
+        summary = (
+            f"{plural(created, 'cliente nuevo', 'clientes nuevos')}, {skipped} ya existían, "
+            f"{errors} con errores."
+        )
         if options["aplicar"] and not errors:
             self.stdout.write(self.style.SUCCESS(f"Migración aplicada: {summary}"))
         elif options["aplicar"]:

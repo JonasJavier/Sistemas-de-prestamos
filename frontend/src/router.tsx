@@ -16,6 +16,7 @@ import { AppShell } from './components/AppShell'
 import { PublicPage } from './components/ui'
 import { buttonClass } from './components/classes'
 import { APPLICATION_TABS, type ApplicationsSearch, type ApplicationTab } from './lib/applications'
+import { safeReturn } from './lib/navigation'
 import { ACCESS, hasRole, platformView } from './lib/roles'
 import type { NewApplicationSearch } from './pages/ApplicationNew'
 import { DashboardPage } from './pages/Dashboard'
@@ -196,7 +197,7 @@ const appRoute = createRoute({
   id: 'app',
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(sessionQuery)
-    if (!user) throw redirect({ to: '/entrar' })
+    if (!user) throw redirect({ to: '/entrar', search: { desde: safeReturn(location.href) } })
     const me = await context.queryClient.ensureQueryData(meQuery)
     // Decision 034: with mandatory 2FA pending, the only destination is Mi cuenta.
     if (me.mfa_required && !me.mfa_enabled && location.pathname !== '/cuenta') {
@@ -581,8 +582,10 @@ const platformRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/entrar',
-  validateSearch: (search: Record<string, unknown>): LoginSearch =>
-    search.motivo === 'sesion' || search.motivo === 'horario' ? { motivo: search.motivo } : {},
+  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+    ...(search.motivo === 'sesion' || search.motivo === 'horario' ? { motivo: search.motivo } : {}),
+    ...(safeReturn(search.desde) ? { desde: safeReturn(search.desde) } : {}),
+  }),
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(sessionQuery)
     if (user) throw redirect({ to: '/' })

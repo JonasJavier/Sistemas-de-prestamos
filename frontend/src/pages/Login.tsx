@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { authErrorCode, login, mfaAuthenticate } from '../api/auth'
 import { ApiError } from '../api/client'
 import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
+import { safeReturn } from '../lib/navigation'
 
 const schema = z.object({
   email: z.email('Escribe un correo válido.'),
@@ -20,12 +21,15 @@ export interface LoginSearch {
   /** «sesion»: the API answered 401 inside the app (idle or 12-hour limit);
    * «horario»: a cashier or collector outside the branch hours (decision 035). */
   motivo?: 'sesion' | 'horario'
+  /** Where the user was when the session closed: back there after signing in. */
+  desde?: string
 }
 
 export function LoginPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { motivo } = useSearch({ from: '/entrar' })
+  const router = useRouter()
+  const { motivo, desde } = useSearch({ from: '/entrar' })
   const [message, setMessage] = useState<string | null>(null)
   const [totpStep, setTotpStep] = useState(false)
   const [code, setCode] = useState('')
@@ -36,7 +40,9 @@ export function LoginPage() {
     // is not enough, because the route guard reads the cache (ensureQueryData)
     // and would bounce back here with the stale «no session».
     queryClient.clear()
-    navigate({ to: '/' })
+    const back = safeReturn(desde)
+    if (back) router.history.push(back)
+    else navigate({ to: '/' })
   }
 
   const mutation = useMutation({

@@ -68,11 +68,14 @@ export function ConditionsForm({
             value={value.frequency}
             onChange={(e) => onChange({ ...value, frequency: e.target.value })}
           >
-            {product?.allowed_frequencies.map((f) => (
-              <option key={f} value={f}>
-                {FREQUENCY_TEXT[f] ?? f}
-              </option>
-            ))}
+            {/* Shortest period first, whatever order the product keeps them in. */}
+            {Object.entries(FREQUENCY_TEXT)
+              .filter(([key]) => product?.allowed_frequencies.includes(key))
+              .map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
           </Select>
         </Field>
         <div className="col-span-2 sm:col-span-1">

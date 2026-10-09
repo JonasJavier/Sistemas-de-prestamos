@@ -29,6 +29,7 @@ import {
   EmptyState,
   Field,
   Input,
+  LoadError,
   PageHeader,
   Pagination,
   Select,
@@ -184,9 +185,10 @@ function ChartTab({ canEdit, onOpen }: { canEdit: boolean; onOpen: (id: string) 
             <Table
               head={
                 <>
-                  <th className={th}>Código</th>
+                  {/* Fixed widths: the five groups line up as one plan. */}
+                  <th className={`${th} w-28`}>Código</th>
                   <th className={th}>Cuenta</th>
-                  <th className={thNum}>Saldo</th>
+                  <th className={`${thNum} w-44`}>Saldo</th>
                 </>
               }
             >
@@ -198,7 +200,17 @@ function ChartTab({ canEdit, onOpen }: { canEdit: boolean; onOpen: (id: string) 
                 >
                   <td className={`${td} tabular-nums text-muted`}>{account.code}</td>
                   <td className={td}>
-                    {account.name}{' '}
+                    {/* The row opens on click; the name is also reachable by keyboard. */}
+                    <button
+                      type="button"
+                      className="text-left hover:underline focus-visible:underline focus-visible:outline-none"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpen(account.id)
+                      }}
+                    >
+                      {account.name}
+                    </button>{' '}
                     {account.is_system ? <Badge tone="neutral">Sistema</Badge> : null}{' '}
                     {account.financial ? <Badge tone="info">Caja o banco</Badge> : null}{' '}
                     {!account.is_active ? <Badge tone="warning">Inactiva</Badge> : null}
@@ -573,7 +585,7 @@ function TrialTab({ range }: { range: Range }) {
   const trial = useQuery({ queryKey: ['trial', range], queryFn: () => getTrialBalance(range) })
   if (trial.isPending) return <Spinner />
   const data = trial.data
-  if (!data) return null
+  if (!data) return <LoadError error={trial.error} />
   return (
     <div id="print-area">
       <Card className="space-y-2">
@@ -656,7 +668,7 @@ function IncomeTab({ range }: { range: Range }) {
   })
   if (report.isPending) return <Spinner />
   const data = report.data
-  if (!data) return null
+  if (!data) return <LoadError error={report.error} />
   const positive = Number(data.result) >= 0
   return (
     <div id="print-area">
@@ -699,7 +711,7 @@ function BalanceTab({ range }: { range: Range }) {
   })
   if (report.isPending) return <Spinner />
   const data = report.data
-  if (!data) return null
+  if (!data) return <LoadError error={report.error} />
   return (
     <div id="print-area">
       <Card className="space-y-2">

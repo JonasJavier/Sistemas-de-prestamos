@@ -20,7 +20,7 @@ from django.utils import timezone
 from apps.accounts import authz
 from apps.accounts.models import User
 from apps.audit.models import record_event
-from apps.cash.services import open_session_of
+from apps.cash.services import STALE_MESSAGE, is_stale, open_session_of
 from apps.core.models import Branch, Sequence
 from apps.customers.files import inspect_private_file
 from apps.customers.validators import clean_document, validate_cedula
@@ -159,6 +159,8 @@ def register(
             raise ExpenseError(
                 "Abre tu caja en esa sucursal para registrarlo desde ella.", "session"
             )
+        if is_stale(session):
+            raise ExpenseError(STALE_MESSAGE, "stale_session")
         if date != today:
             raise ExpenseError("Lo que sale de tu caja lleva la fecha de hoy.", "date")
         account, method = session.drawer, Expense.Method.CASH

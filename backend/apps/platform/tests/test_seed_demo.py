@@ -45,3 +45,39 @@ def test_seed_creates_two_isolated_tenants_and_is_idempotent(
 def test_seed_refuses_without_debug(db) -> None:
     with pytest.raises(CommandError):
         call_command("seed_demo")
+
+
+@override_settings(DEBUG=True)
+def test_seed_puts_back_what_the_tours_used(db, django_capture_on_commit_callbacks) -> None:
+    """The tours lend from the general cash and collect the late loan: run
+    again, the seed refills the cash and lends a late loan again."""
+    from decimal import Decimal
+
+    from django.utils import timezone
+
+    from apps.ledger import services as ledger
+    from apps.ledger.models import FinancialAccount
+
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("seed_demo")
+    demo = Company.objects.get(legal_name=DEMO_COMPANY)
+    manager = User.objects.get(email="gerente@modelo.test")
+    with company_context(demo.id):
+        Loan.objects.filter(customer__last_name="Pérez Santana").update(days_past_due=0)
+        general = FinancialAccount.objects.get(kind=FinancialAccount.Kind.CASH, holder=None)
+        ledger.capital_movement(
+            account=general,
+            amount=ledger.balance_of(general.ledger_account) - Decimal("1000"),
+            increase=False,
+            branch=manager.memberships.first().branch,
+            on=timezone.localdate(),
+            note="Lo que gastaron los recorridos",
+            created_by=manager,
+        )
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("seed_demo")
+    with company_context(demo.id):
+        assert ledger.balance_of(general.ledger_account) >= Decimal("270000")
+        loans = Loan.objects.filter(customer__last_name="Pérez Santana").order_by("number")
+        assert loans.count() == 2  # a new one, lent from the refilled cash
+        assert loans.last().days_past_due > 0

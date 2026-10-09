@@ -27,7 +27,7 @@ import {
   Spinner,
   Textarea,
 } from '../../components/ui'
-import { day, errorMessage, FREQUENCY_TEXT, rd, todayISO } from '../../lib/format'
+import { day, errorMessage, FREQUENCY_TEXT, rd, todayISO, plural } from '../../lib/format'
 import { notify } from '../../lib/toast'
 
 function Frame({
@@ -403,7 +403,7 @@ export function WriteOffDialog({
     <Frame title="Castigar el préstamo" onClose={onClose}>
       <p className="text-sm text-muted">
         Su capital sale de la cartera como gasto por castigo. La cobranza sigue y lo que se cobre
-        cuenta como recuperación. {daysPastDue} día(s) de atraso.
+        cuenta como recuperación. {plural(daysPastDue, 'día')} de atraso.
       </p>
       <Field label="Motivo">
         <Select value={reason} onChange={(e) => setReason(e.target.value)}>

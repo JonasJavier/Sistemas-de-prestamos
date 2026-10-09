@@ -23,6 +23,7 @@ from apps.accounts import authz
 from apps.accounts.models import User
 from apps.audit.models import record_event
 from apps.core.models import Sequence
+from apps.core.text import plural
 from apps.customers.models import Customer
 from apps.ledger import services as ledger
 from apps.lending import simulator
@@ -245,6 +246,7 @@ def migrate_loan(*, data: LegacyLoan, user: User) -> Loan:
         target=loan,
         actor=user,
         summary=f"Migrado del sistema anterior ({data.legacy_number or 'sin número'}) con "
-        f"{len(data.payments)} pago(s) histórico(s); capital {loan.principal_outstanding:,.2f}",
+        f"{plural(len(data.payments), 'pago histórico', 'pagos históricos')}; "
+        f"capital {loan.principal_outstanding:,.2f}",
     )
     return loan

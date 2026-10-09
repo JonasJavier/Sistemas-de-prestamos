@@ -12,6 +12,7 @@ import {
   phoneText,
   percentToFraction,
   rd,
+  splitAmount,
 } from './format'
 
 describe('rd (doc 09 - 1: RD$ 1,250.00)', () => {
@@ -24,6 +25,13 @@ describe('rd (doc 09 - 1: RD$ 1,250.00)', () => {
     expect(rd(null)).toBe('—')
     expect(rd(undefined)).toBe('—')
     expect(rd('')).toBe('—')
+  })
+
+  it('puts the sign before the currency and never shows -0.00', () => {
+    expect(rd('-117158.99')).toBe('-RD$ 117,158.99')
+    expect(rd('-0.001')).toBe('RD$ 0.00')
+    expect(splitAmount(rd('-5'))).toEqual({ sign: '-', amount: '5.00' })
+    expect(splitAmount('3 de 4')).toBeNull()
   })
 })
 

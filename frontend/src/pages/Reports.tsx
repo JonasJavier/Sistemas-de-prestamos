@@ -26,7 +26,7 @@ import {
   Spinner,
   Tabs,
 } from '../components/ui'
-import { day, errorMessage, moment, pct, rd, todayISO } from '../lib/format'
+import { day, errorMessage, moment, pct, rd, todayISO, plural } from '../lib/format'
 
 const TABS = [
   ['reports', 'Reportes'],
@@ -265,7 +265,7 @@ function MyExports() {
               </div>
               <div className="text-[12.5px] text-muted">
                 {moment(job.created_at)} · {job.filters_line}
-                {job.status === 'done' ? ` · ${job.rows} fila(s)` : ''}
+                {job.status === 'done' ? ` · ${plural(job.rows, 'fila')}` : ''}
                 {job.error ? ` · ${job.error}` : ''}
               </div>
             </div>

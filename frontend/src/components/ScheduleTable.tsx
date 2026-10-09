@@ -1,4 +1,4 @@
-import { day, rd } from '../lib/format'
+import { day, num } from '../lib/format'
 
 export interface ScheduleRow {
   number: number
@@ -36,7 +36,7 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
   const showStatus = rows.some((row) => row.status)
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[520px] text-sm">
+      <table className="w-full text-sm [&_td]:whitespace-nowrap">
         <thead>
           <tr className="border-b border-edge text-left text-[12.5px] text-muted">
             <th className="py-2 pr-3">#</th>
@@ -65,12 +65,14 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
                     </span>
                   ) : null}
                 </td>
-                <td className="py-1.5 pr-3 text-right tabular-nums">{rd(row.principal)}</td>
-                <td className="py-1.5 pr-3 text-right tabular-nums">{rd(row.interest)}</td>
-                <td className="py-1.5 pr-3 text-right font-medium tabular-nums">{rd(row.total)}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{num(row.principal)}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{num(row.interest)}</td>
+                <td className="py-1.5 pr-3 text-right font-medium tabular-nums">
+                  {num(row.total)}
+                </td>
                 {showBalance ? (
                   <td className="py-1.5 pr-3 text-right tabular-nums text-muted">
-                    {rd(Math.max(balances[index], 0))}
+                    {num(Math.max(balances[index], 0))}
                   </td>
                 ) : null}
                 {showStatus ? (
@@ -85,11 +87,11 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
         <tfoot>
           <tr className="border-t-2 border-brand-700/40 font-semibold">
             <td className="py-2 pr-3" colSpan={2}>
-              Totales
+              Totales (RD$)
             </td>
-            <td className="py-2 pr-3 text-right tabular-nums">{rd(totals.principal)}</td>
-            <td className="py-2 pr-3 text-right tabular-nums">{rd(totals.interest)}</td>
-            <td className="py-2 pr-3 text-right tabular-nums">{rd(totals.total)}</td>
+            <td className="py-2 pr-3 text-right tabular-nums">{num(totals.principal)}</td>
+            <td className="py-2 pr-3 text-right tabular-nums">{num(totals.interest)}</td>
+            <td className="py-2 pr-3 text-right tabular-nums">{num(totals.total)}</td>
             {showBalance ? <td /> : null}
             {showStatus ? <td /> : null}
           </tr>

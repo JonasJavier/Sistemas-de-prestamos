@@ -35,11 +35,43 @@ export async function ensureCashOpen(page: Page, fund = '50000') {
   await expect(page.getByRole('heading', { name: 'Mi caja' })).toBeVisible()
   const open = page.getByRole('button', { name: 'Abrir caja' })
   await expect(open.or(page.getByText('Esperado en caja'))).toBeVisible()
+  // A drawer left open on an earlier day (the tours ran yesterday) only
+  // closes (decision 025): count it as it is and open today's.
+  if (await page.getByText('Esta caja es de un día anterior').isVisible()) {
+    await page.getByRole('button', { name: 'Arqueo y cierre' }).click()
+    const dialog = page.getByRole('dialog')
+    const expected = amountOf(
+      await dialog.getByText('Esperado', { exact: true }).locator('..').innerText(),
+    )
+    await dialog.getByLabel('Cantidad de 1', { exact: true }).fill(String(Math.floor(expected)))
+    // Back to the general cash, so today's fund can come out of it again.
+    await dialog.getByLabel('Trasladar al cerrar (RD$)').fill(String(Math.floor(expected)))
+    if (expected !== Math.floor(expected)) {
+      await dialog.getByLabel('Motivo de la diferencia').selectOption({ index: 1 })
+      await dialog.getByLabel('Explicación').fill('Centavos del recorrido de ayer')
+    }
+    await dialog.getByRole('button', { name: 'Cerrar caja' }).click()
+    await expect(open).toBeVisible()
+  }
   if (await open.isVisible()) {
     await page.getByLabel('Fondo que recibes (RD$)').fill(fund)
     await open.click()
   }
   await expect(page.getByText('Esperado en caja')).toBeVisible()
+  // Repeated tours lend from this drawer: top it up from the general cash
+  // when it no longer covers a disbursement.
+  const inDrawer = amountOf(
+    await page.getByText('Esperado en caja', { exact: true }).locator('..').innerText(),
+  )
+  if (inDrawer < Number(fund) / 2) {
+    await page.getByRole('button', { name: 'Depositar o trasladar' }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Movimiento').selectOption('in')
+    await dialog.getByLabel('Desde').selectOption({ label: 'Caja general' })
+    await dialog.getByLabel('Monto').fill(String(Number(fund) - Math.floor(inDrawer)))
+    await dialog.getByRole('button', { name: 'Registrar' }).click()
+    await expect(dialog).toHaveCount(0)
+  }
 }
 
 /** «RD$ 5,400.00» -> 5400 */

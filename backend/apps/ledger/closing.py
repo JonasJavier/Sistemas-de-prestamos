@@ -31,6 +31,7 @@ from apps.accounts.models import User
 from apps.audit.models import record_event
 from apps.core.models import Branch
 from apps.core.tenancy import on_commit_in_tenant
+from apps.core.text import plural
 from apps.ledger import accounting, banking
 from apps.ledger import services as ledger
 from apps.ledger.models import AccountingPeriod, JournalEntry
@@ -244,7 +245,7 @@ def checklist(year: int, month: int) -> Checklist:
             "routes",
             "Todas las rutas del mes están rendidas",
             not routes,
-            f"{routes} ruta(s) sin rendir" if routes else "",
+            f"{plural(routes, 'ruta')} sin rendir" if routes else "",
         )
     )
     banks = [str(b) for b in banking.pending_for_month(year, month)]

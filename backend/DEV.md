@@ -35,7 +35,7 @@ Con PostgreSQL, el backend (`runserver 127.0.0.1:8800`), el frontend (`pnpm -C .
 pnpm -C ../frontend e2e
 ```
 
-Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase 4 (la cajera abre caja, cobra con cambio, corrige un pago que autoriza el supervisor con su contraseña, cuadra y cierra; el cobrador cobra en su ruta desde el celular y la cajera recibe la rendición; el gerente ve atrasos y rutas), el acceso, el aislamiento entre empresas, el uso en el celular y, desde la fase 9, los mensajes, el QR y el portal del cliente (que lee el código en Mailpit). En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Se pueden repetir: cada corrida crea un préstamo nuevo y cobra montos pequeños.
+Recorren la demo de la fase 3 (oficial → supervisor → cajera), la de la fase 4 (la cajera abre caja, cobra con cambio, corrige un pago que autoriza el supervisor con su contraseña, cuadra y cierra; el cobrador cobra en su ruta desde el celular y la cajera recibe la rendición; el gerente ve atrasos y rutas), el acceso, el aislamiento entre empresas, el uso en el celular y, desde la fase 9, los mensajes, el QR y el portal del cliente (que lee el código en Mailpit). En Windows usan el Edge del sistema; en otra máquina, `npx playwright install chromium` la primera vez. Se pueden repetir: cada corrida crea un préstamo nuevo y cobra montos pequeños. Tras muchas corridas la demo se queda sin efectivo para prestar o sin un préstamo atrasado; volver a correr `seed_demo` lo repone (caja general a RD$ 300,000 y un préstamo atrasado nuevo de José Pérez Santana). Si la caja de la cajera quedó abierta de un día anterior, los recorridos la cierran solos.
 
 ## Fase 4: cobros y caja
 

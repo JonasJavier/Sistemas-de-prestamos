@@ -8,6 +8,7 @@ from django.db import connection
 from apps.core.models import Company
 from apps.core.rls import RLS_EXEMPT
 from apps.core.tenancy import company_context
+from apps.core.text import plural
 from apps.ledger import reconciliation
 
 # Every table with a company column must force RLS (doc 06 - 8, decision 042),
@@ -42,10 +43,10 @@ class Command(BaseCommand):
         for line in problems:
             self.stderr.write(line)
         if problems:
-            raise CommandError(f"{len(problems)} problema(s): la base no está lista.")
+            raise CommandError(f"{plural(len(problems), 'problema')}: la base no está lista.")
         self.stdout.write(
             self.style.SUCCESS(
                 f"Todo en orden: RLS en todas las tablas y el libro cuadra en "
-                f"{len(companies)} empresa(s)."
+                f"{plural(len(companies), 'empresa')}."
             )
         )

@@ -90,6 +90,14 @@ def open_session_of(user: User) -> CashSession | None:
     return CashSession.objects.filter(cashier=user, status=CashSession.Status.OPEN).first()
 
 
+STALE_MESSAGE = "Tu caja de un día anterior sigue abierta: ciérrala y abre la de hoy."
+
+
+def is_stale(session: CashSession) -> bool:
+    """Decision 025: a drawer lives one business day; after that it only closes."""
+    return session.business_date < timezone.localdate()
+
+
 def open_route_of(user: User) -> RouteSession | None:
     return RouteSession.objects.filter(collector=user, status=RouteSession.Status.OPEN).first()
 
@@ -191,6 +199,8 @@ def move(
         raise CashError("Solo el cajero mueve el efectivo de su caja.", "forbidden")
     if session.status != CashSession.Status.OPEN:
         raise CashError("La caja ya está cerrada.", "state")
+    if is_stale(session):  # its cash leaves with the closing, not before
+        raise CashError(STALE_MESSAGE, "stale_session")
     _check_general_account(account, session.branch, "destino" if not incoming else "origen")
     amount = money(amount)
     if amount <= 0:
@@ -451,7 +461,7 @@ LOCATION_CONSENT_TEXT = (
     "Acepto que, mientras tenga mi ruta abierta en horario laboral, Cobradía registre la "
     "ubicación de mi celular cada pocos minutos y en cada cobro o gestión, para la "
     "supervisión de la cobranza. Solo la ven el supervisor y el gerente, y se borra a los "
-    "90 días (decisión 031)."
+    "90 días."
 )
 
 
@@ -522,6 +532,8 @@ def settle_route(
     session = open_session_of(user)
     if session is None:
         raise CashError("Abre tu caja para recibir la rendición.", "no_session")
+    if is_stale(session):
+        raise CashError(STALE_MESSAGE, "stale_session")
     if not authz.in_scope(user, route.branch_id):
         raise CashError("La ruta es de otra sucursal.", "out_of_scope")
     delivered = money(delivered)
@@ -621,6 +633,8 @@ def receive_handover(*, route: RouteSession, user: User, amount: Decimal) -> Rou
     session = open_session_of(user)
     if session is None:
         raise CashError("Abre tu caja para recibir la entrega.", "no_session")
+    if is_stale(session):
+        raise CashError(STALE_MESSAGE, "stale_session")
     if not authz.in_scope(user, route.branch_id):
         raise CashError("La ruta es de otra sucursal.", "out_of_scope")
     amount = money(amount)

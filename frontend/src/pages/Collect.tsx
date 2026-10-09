@@ -28,7 +28,7 @@ import {
   Spinner,
   Stat,
 } from '../components/ui'
-import { day, errorMessage, newIdempotencyKey, rd } from '../lib/format'
+import { day, errorMessage, newIdempotencyKey, num, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
@@ -184,6 +184,9 @@ export function CollectPage({ me }: { me: Me }) {
   const [key, setKey] = useState(newIdempotencyKey)
   const onRoute = screen.data?.destination?.kind === 'route'
   const position = usePosition(onRoute)
+  // Without a drawer or a route, cash has nowhere to go (F5): only bank payments.
+  const noCash = screen.data?.destination === null
+  const shownMethod: PaymentMethod = noCash && method === 'cash' ? 'transfer' : method
 
   const request: PaymentRequest | null = useMemo(() => {
     const value = money(amount)
@@ -191,10 +194,10 @@ export function CollectPage({ me }: { me: Me }) {
     return {
       kind,
       amount: value,
-      method,
-      received: method === 'cash' && money(received) ? money(received) : null,
+      method: shownMethod,
+      received: shownMethod === 'cash' && money(received) ? money(received) : null,
       reference,
-      bank_account: method === 'cash' ? null : bank || null,
+      bank_account: shownMethod === 'cash' ? null : bank || null,
       waive: waiving ? money(waive) || '0' : '0',
       waive_note: waiving ? waiveNote : '',
       waiver_approval: waiving ? waiverApproval : null,
@@ -207,7 +210,7 @@ export function CollectPage({ me }: { me: Me }) {
   }, [
     amount,
     kind,
-    method,
+    shownMethod,
     received,
     reference,
     bank,
@@ -267,6 +270,9 @@ export function CollectPage({ me }: { me: Me }) {
       : null
   const needsApproval = previewError?.code === 'needs_approval'
   const result = preview.isError ? null : preview.data
+  const withFees = Boolean(result?.lines.some((line) => Number(line.late_fee)))
+  // The breakdown on screen is the one of what is typed now, not of a moment ago.
+  const settled = debounced === request && !preview.isPlaceholderData && !preview.isFetching
   const pick = (next: PaymentKind, value: string) => {
     setKind(next)
     setAmount(value)
@@ -342,7 +348,7 @@ export function CollectPage({ me }: { me: Me }) {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Vencido" value={rd(s.overdue)} emphasis={Number(s.overdue) > 0} />
+        <Stat label="Vencido" value={rd(s.overdue)} danger={Number(s.overdue) > 0} />
         <Stat label="Mora al día" value={rd(s.late_fee)} />
         <Stat
           label="Cuota en curso"
@@ -397,15 +403,18 @@ export function CollectPage({ me }: { me: Me }) {
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Medio de pago">
-              <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+              <Select
+                value={shownMethod}
+                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+              >
                 {METHODS.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
+                  <option key={value} value={value} disabled={noCash && value === 'cash'}>
+                    {noCash && value === 'cash' ? `${label} (sin caja abierta)` : label}
                   </option>
                 ))}
               </Select>
             </Field>
-            {method === 'cash' ? (
+            {shownMethod === 'cash' ? (
               <Field label="Recibido">
                 <Input
                   inputMode="decimal"
@@ -420,7 +429,7 @@ export function CollectPage({ me }: { me: Me }) {
               </Field>
             )}
           </div>
-          {method !== 'cash' ? (
+          {shownMethod !== 'cash' ? (
             <Field label="Cuenta bancaria donde entró">
               <Select value={bank} onChange={(e) => setBank(e.target.value)}>
                 <option value="">
@@ -563,14 +572,14 @@ export function CollectPage({ me }: { me: Me }) {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm tabular-nums">
+                <table className="w-full text-sm tabular-nums [&_td]:whitespace-nowrap">
                   <thead className="text-left text-[12px] uppercase text-muted">
                     <tr>
                       <th className="py-1">Cuota</th>
-                      <th className="text-right">Mora</th>
+                      {withFees ? <th className="text-right">Mora</th> : null}
                       <th className="text-right">Interés</th>
                       <th className="text-right">Capital</th>
-                      <th className="text-right">Total</th>
+                      <th className="text-right">Total RD$</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-edge">
@@ -580,16 +589,18 @@ export function CollectPage({ me }: { me: Me }) {
                           {line.number}{' '}
                           <span className="text-[12px] text-muted">{day(line.due_date)}</span>
                         </td>
+                        {withFees ? (
+                          <td className="text-right">
+                            {Number(line.late_fee) ? num(line.late_fee) : '—'}
+                          </td>
+                        ) : null}
                         <td className="text-right">
-                          {Number(line.late_fee) ? rd(line.late_fee) : '—'}
+                          {Number(line.interest) ? num(line.interest) : '—'}
                         </td>
                         <td className="text-right">
-                          {Number(line.interest) ? rd(line.interest) : '—'}
+                          {Number(line.principal) ? num(line.principal) : '—'}
                         </td>
-                        <td className="text-right">
-                          {Number(line.principal) ? rd(line.principal) : '—'}
-                        </td>
-                        <td className="text-right font-medium">{rd(line.total)}</td>
+                        <td className="text-right font-medium">{num(line.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -610,7 +621,7 @@ export function CollectPage({ me }: { me: Me }) {
                 ) : null}
                 <dt className="font-semibold">Total del recibo</dt>
                 <dd className="text-right font-semibold tabular-nums">{rd(result.amount)}</dd>
-                {method === 'cash' && Number(result.change) > 0 ? (
+                {shownMethod === 'cash' && Number(result.change) > 0 ? (
                   <>
                     <dt className="text-muted">Cambio a devolver</dt>
                     <dd className="text-right text-lg font-bold tabular-nums text-brand-700">
@@ -628,15 +639,17 @@ export function CollectPage({ me }: { me: Me }) {
           {confirm.error instanceof ApiError ? (
             <Alert tone="danger">{errorMessage(confirm.error.data)}</Alert>
           ) : null}
-          <div className="sticky bottom-20 flex justify-end sm:static">
+          <div className="sticky bottom-20 -mx-2 flex justify-end rounded-xl bg-surface/95 p-2 shadow-sm sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:shadow-none">
             <Button
               className="w-full sm:w-auto"
-              disabled={!request || !result || previewError !== null || confirm.isPending}
+              disabled={
+                !request || !result || !settled || previewError !== null || confirm.isPending
+              }
               onClick={() => confirm.mutate()}
             >
               {confirm.isPending
                 ? 'Registrando…'
-                : result
+                : result && settled
                   ? `Confirmar cobro de ${rd(result.amount)}`
                   : 'Confirmar cobro'}
             </Button>
@@ -648,16 +661,17 @@ export function CollectPage({ me }: { me: Me }) {
         <h2 className="mb-2 text-base font-semibold">Lo exigible hoy</h2>
         {data.installments.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm tabular-nums">
+            <table className="w-full text-sm tabular-nums [&_td]:whitespace-nowrap">
               <thead className="text-left text-[12px] uppercase text-muted">
                 <tr>
                   <th className="py-1">#</th>
                   <th>Vence</th>
                   <th className="text-right">Atraso</th>
                   <th className="text-right">Mora</th>
-                  <th className="text-right">Interés</th>
-                  <th className="text-right">Capital</th>
-                  <th className="text-right">Total</th>
+                  {/* On a phone the total is what matters; the split is in the breakdown. */}
+                  <th className="hidden text-right sm:table-cell">Interés</th>
+                  <th className="hidden text-right sm:table-cell">Capital</th>
+                  <th className="text-right">Total RD$</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-edge">
@@ -667,11 +681,11 @@ export function CollectPage({ me }: { me: Me }) {
                     <td>{day(line.due_date)}</td>
                     <td className="text-right">{line.days_late ? `${line.days_late} d` : '—'}</td>
                     <td className="text-right">
-                      {Number(line.late_fee) ? rd(line.late_fee) : '—'}
+                      {Number(line.late_fee) ? num(line.late_fee) : '—'}
                     </td>
-                    <td className="text-right">{rd(line.interest)}</td>
-                    <td className="text-right">{rd(line.principal)}</td>
-                    <td className="text-right font-medium">{rd(line.total)}</td>
+                    <td className="hidden text-right sm:table-cell">{num(line.interest)}</td>
+                    <td className="hidden text-right sm:table-cell">{num(line.principal)}</td>
+                    <td className="text-right font-medium">{num(line.total)}</td>
                   </tr>
                 ))}
               </tbody>

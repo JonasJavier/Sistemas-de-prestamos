@@ -64,7 +64,7 @@ def test_repeated_reversals_alert_once_and_notify_the_managers(tenant) -> None:
         alerts = [a for a in fraud.review(tenant.company.id) if a.kind == FraudKind.REVERSALS]
         assert len(alerts) == 1
         assert alerts[0].subject == tenant.users["cajero"] and alerts[0].count == 3
-        assert "3 reverso(s) pedidos en 7 día(s)" in alerts[0].detail
+        assert "3 reversos pedidos en 7 días" in alerts[0].detail
         assert Notification.objects.filter(
             user=tenant.users["gerente"], kind=Notification.Kind.FRAUD_ALERT
         ).exists()

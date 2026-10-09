@@ -34,7 +34,7 @@ export function DisbursementsPage() {
                     <div className="text-sm">{app.customer_name}</div>
                     <div className="text-[12.5px] text-muted">{app.product_name}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <div className="font-display font-bold tabular-nums">
                       {rd(app.approved_amount)}
                     </div>

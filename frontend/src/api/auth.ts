@@ -56,6 +56,14 @@ export async function logout(): Promise<void> {
   }
 }
 
+/** Mi cuenta: the current password proves it is you; the session stays open. */
+export async function changePassword(current: string, next: string): Promise<void> {
+  await api(`${BASE}/account/password/change`, {
+    method: 'POST',
+    body: { current_password: current, new_password: next },
+  })
+}
+
 export interface TotpConfig {
   secret: string
   totp_url: string

@@ -25,7 +25,7 @@ import {
   Spinner,
   Stat,
 } from '../components/ui'
-import { day, errorMessage, phoneText, rd } from '../lib/format'
+import { day, errorMessage, phoneText, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
@@ -133,7 +133,9 @@ export function DelinquencyPage({ me }: { me: Me }) {
           </div>
           {canAssign && selected.length ? (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-700/40 bg-brand-100 px-4 py-2 text-sm">
-              <span>{selected.length} préstamo(s) seleccionado(s)</span>
+              <span>
+                {plural(selected.length, 'préstamo seleccionado', 'préstamos seleccionados')}
+              </span>
               <span className="flex gap-2">
                 <Button variant="secondary" className="!h-9" onClick={() => setSelected([])}>
                   Quitar selección
@@ -271,7 +273,7 @@ function AssignDialog({
     meta: { inlineError: true },
     mutationFn: () => assignAgent({ loans, agent: agent === 'none' ? null : agent, note }),
     onSuccess: (result) => {
-      notify(`Gestor asignado a ${result.changed} préstamo(s).`, 'success')
+      notify(`Gestor asignado a ${plural(result.changed, 'préstamo')}.`, 'success')
       refresh()
       onClose(true)
     },
@@ -280,7 +282,7 @@ function AssignDialog({
     <Modal onClose={() => onClose(false)} labelledBy="assign-title">
       <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
         <h2 id="assign-title" className="text-lg font-semibold">
-          Asignar gestor a {loans.length} préstamo(s)
+          Asignar gestor a {plural(loans.length, 'préstamo')}
         </h2>
         <Field label="Gestor">
           <Select value={agent} onChange={(e) => setAgent(e.target.value)}>

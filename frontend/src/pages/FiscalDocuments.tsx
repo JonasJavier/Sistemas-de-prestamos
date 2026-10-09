@@ -24,7 +24,7 @@ import {
   Spinner,
   Tabs,
 } from '../components/ui'
-import { day, errorMessage, rd, todayISO } from '../lib/format'
+import { day, errorMessage, rd, todayISO, plural } from '../lib/format'
 import { notify } from '../lib/toast'
 
 const TABS = [
@@ -136,7 +136,7 @@ export function FiscalDocumentsPage() {
       ) : data?.results.length ? (
         <>
           <p className="text-sm text-muted">
-            {data.totals.count} comprobante(s) · {rd(data.totals.total)}
+            {plural(data.totals.count, 'comprobante')} · {rd(data.totals.total)}
           </p>
           <RowList>
             {data.results.map((doc) => (

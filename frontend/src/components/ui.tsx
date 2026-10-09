@@ -1,6 +1,7 @@
-import { useEffect, useState, type ComponentProps, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 
-import { fractionToPercent, percentToFraction } from '../lib/format'
+import { ApiError } from '../api/client'
+import { errorMessage, fractionToPercent, percentToFraction, splitAmount } from '../lib/format'
 import { buttonClass, type ButtonVariant } from './classes'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
@@ -129,6 +130,55 @@ export function PercentInput({
   )
 }
 
+/** One file, picked with a button that speaks Spanish whatever the browser's
+ * language («Choose File» is not ours), and that forgets the file once the
+ * screen does (after an upload). */
+export function FilePicker({
+  file,
+  onPick,
+  accept,
+  label = 'Elegir archivo',
+  empty = 'Ningún archivo elegido',
+  disabled,
+}: {
+  file: File | null
+  onPick: (file: File | null) => void
+  accept?: string
+  label?: string
+  empty?: string
+  disabled?: boolean
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  return (
+    <span className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+      <input
+        ref={input}
+        type="file"
+        accept={accept}
+        aria-label={label}
+        className="sr-only"
+        tabIndex={-1}
+        disabled={disabled}
+        onChange={(e) => {
+          onPick(e.target.files?.[0] ?? null)
+          e.target.value = '' // the same file can be picked again
+        }}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={disabled}
+        onClick={() => input.current?.click()}
+      >
+        {label}
+      </Button>
+      <span className={`min-w-0 truncate ${file ? 'text-ink' : 'text-muted'}`}>
+        {file ? file.name : empty}
+      </span>
+    </span>
+  )
+}
+
 export function Select(props: ComponentProps<'select'>) {
   return <select className={`h-11 sm:h-9 ${controlClasses}`} {...props} />
 }
@@ -227,32 +277,39 @@ export function Stat({
   label,
   value,
   emphasis = false,
+  danger = false,
   hint,
 }: {
   label: string
   value: ReactNode
   emphasis?: boolean
+  /** Money that is late or missing reads in red, never in the brand green. */
+  danger?: boolean
   hint?: ReactNode
 }) {
-  // «RD$ 1,250,000.00» keeps one line on a phone: the currency goes smaller.
-  const amount = typeof value === 'string' && value.startsWith('RD$ ') ? value.slice(4) : null
   return (
     <div className="min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
       <div className="text-[12.5px] text-muted">{label}</div>
       <div
-        className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${emphasis ? 'text-brand-700' : ''}`}
+        className={`whitespace-nowrap font-display text-base font-bold tabular-nums min-[400px]:text-lg sm:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
       >
-        {amount !== null ? (
-          <>
-            <span className="mr-1 text-[0.7em] font-semibold opacity-80">RD$</span>
-            {amount}
-          </>
-        ) : (
-          value
-        )}
+        <Figure value={value} />
       </div>
       {hint ? <div className="mt-0.5 text-[12px] text-muted">{hint}</div> : null}
     </div>
+  )
+}
+
+/** «RD$ 1,250,000.00» keeps one line on a phone: the currency goes smaller. */
+export function Figure({ value }: { value: ReactNode }) {
+  const parts = splitAmount(value)
+  if (!parts) return <>{value}</>
+  return (
+    <>
+      {parts.sign}
+      <span className="mr-1 text-[0.7em] font-semibold opacity-80">RD$</span>
+      {parts.amount}
+    </>
   )
 }
 
@@ -262,6 +319,18 @@ export function EmptyState({ children, action }: { children: ReactNode; action?:
       <p>{children}</p>
       {action ? <div className="mt-3">{action}</div> : null}
     </div>
+  )
+}
+
+/** A query that failed says so: a screen never stays blank (and a 400 for a
+ * bad filter says which). */
+export function LoadError({ error }: { error: unknown }) {
+  return (
+    <Alert tone="danger">
+      {error instanceof ApiError
+        ? errorMessage(error.data, 'No se pudo cargar esta información.')
+        : 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.'}
+    </Alert>
   )
 }
 

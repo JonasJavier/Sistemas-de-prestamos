@@ -19,7 +19,7 @@ import {
   Select,
   Spinner,
 } from '../components/ui'
-import { errorMessage, moment, rd, todayISO } from '../lib/format'
+import { errorMessage, moment, rd, todayISO, plural } from '../lib/format'
 import { notify } from '../lib/toast'
 
 const MapView = lazy(() => import('../components/MapView'))
@@ -190,7 +190,8 @@ export function RoutesPage() {
       />
       {routes.data && routes.data.unassigned_loans > 0 ? (
         <Alert tone="info">
-          {routes.data.unassigned_loans} préstamo(s) activos sin cobrador.{' '}
+          {plural(routes.data.unassigned_loans, 'préstamo activo', 'préstamos activos')} sin
+          cobrador.{' '}
           <Link to="/prestamos" search={{ cobrador: 'none' }} className="font-semibold underline">
             Asignarlos
           </Link>
@@ -245,7 +246,7 @@ export function RoutesPage() {
               <div className="flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-muted">
                 <span>
                   {c.last_ping ? `Última ubicación ${moment(c.last_ping)}` : 'Sin ubicación hoy'}
-                  {c.off_route ? ` · ${c.off_route} cobro(s) fuera de ruta` : ''}
+                  {c.off_route ? ` · ${plural(c.off_route, 'cobro')} fuera de ruta` : ''}
                 </span>
                 <span className="flex gap-2">
                   <button

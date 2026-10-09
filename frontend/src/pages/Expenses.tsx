@@ -32,7 +32,7 @@ import {
   Stat,
   Tabs,
 } from '../components/ui'
-import { day, errorMessage, moment, rd } from '../lib/format'
+import { day, errorMessage, moment, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
@@ -154,7 +154,7 @@ export function ExpensesPage({ me }: { me: Me }) {
                       {row.from_drawer ? 'caja del cajero' : row.account_name}
                       {row.party_name ? ` · ${row.party_name}` : ''}
                       {row.ncf ? ` · NCF ${row.ncf}` : ''}
-                      {row.files ? ` · ${row.files} comprobante(s)` : ''}
+                      {row.files ? ` · ${plural(row.files, 'comprobante')}` : ''}
                     </div>
                   </div>
                   <span
