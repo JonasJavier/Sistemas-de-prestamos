@@ -35,7 +35,7 @@ jobs:
       CELERY_RESULT_BACKEND: redis://localhost:6379/2
     steps:
       - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.14"
       - name: Install dependencies
@@ -170,7 +170,7 @@ jobs:
       FRONTEND_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.14"
           # The API server started by Playwright still holds uv's cache when
