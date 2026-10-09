@@ -695,6 +695,10 @@ def post_payment(
     fiscal.for_payment(payment)  # its e-CF waits «por emitir» (decision 085)
     if dest.route is not None and method == Payment.Method.CASH:
         cash.check_cash_limit(dest.route)
+    if not renewal:  # F18 (decision 097): the customer's confirmation with the receipt
+        from apps.notifications import messaging
+
+        messaging.payment_received(payment)
     record_event(
         company_id=loan.company_id,
         type="payment.posted",

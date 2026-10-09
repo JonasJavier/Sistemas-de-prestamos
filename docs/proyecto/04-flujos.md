@@ -414,6 +414,8 @@ Los pagos migrados no mueven la caja (paso 3, §11).
 - **Baja de mensajes:** el cliente puede pedir que no le escriban.
 - Requiere contratar un proveedor de WhatsApp Business o de SMS.
 
+> **Fase 9 (decisión 097):** el correo ya sale; WhatsApp y SMS quedan listos para Twilio y, hasta contratarlo, cada mensaje se registra sin enviarse. **Depende de Jonas:** contratar el proveedor (WhatsApp Business y SMS) y entregar sus credenciales.
+
 ## F19 · Registro y ciclo de vida de una empresa
 
 El único flujo que ocurre **fuera** de una empresa: es cómo una financiera entra a Cobradía y cómo el dueño administra la plataforma (decisiones 045 y 046).

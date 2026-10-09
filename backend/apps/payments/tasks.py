@@ -95,6 +95,9 @@ def run_nightly(company_id, today: dt.date) -> dict:
     from apps.audit import fraud
 
     fraud_alerts = fraud.review(company_id)
+    from apps.notifications import messaging
+
+    messages = messaging.nightly(today)
     problems = reconciliation.check(company_id)
     if problems:
         notify(
@@ -115,6 +118,7 @@ def run_nightly(company_id, today: dt.date) -> dict:
         "exports_expired": exports_expired,
         "scored": scored,
         "fraud_alerts": len(fraud_alerts),
+        **messages,
         **differences,
     }
 

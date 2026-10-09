@@ -32,6 +32,7 @@ const PayablesPage = lazyRouteComponent(() => import('./pages/Payables'), 'Payab
 const ResultsPage = lazyRouteComponent(() => import('./pages/Results'), 'ResultsPage')
 const ReportsPage = lazyRouteComponent(() => import('./pages/Reports'), 'ReportsPage')
 const ScoresPage = lazyRouteComponent(() => import('./pages/Scores'), 'ScoresPage')
+const MessagesPage = lazyRouteComponent(() => import('./pages/Messages'), 'MessagesPage')
 const LegalCasesPage = lazyRouteComponent(() => import('./pages/LegalCases'), 'LegalCasesPage')
 const LegalCasePage = lazyRouteComponent(() => import('./pages/LegalCases'), 'LegalCasePage')
 const LegalProfessionalsPage = lazyRouteComponent(
@@ -429,6 +430,13 @@ const fraudAlertsRoute = createRoute({
   component: withMe(FraudAlertsPage),
 })
 
+const messagesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/mensajes',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: MessagesPage,
+})
+
 const legalCasesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/legal',
@@ -640,6 +648,7 @@ const routeTree = rootRoute.addChildren([
     reportsRoute,
     scoresRoute,
     legalCasesRoute,
+    messagesRoute,
     legalCaseRoute,
     legalProfessionalsRoute,
     fraudAlertsRoute,

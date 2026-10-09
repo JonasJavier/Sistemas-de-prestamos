@@ -123,6 +123,7 @@ function navFor(me: Me): NavGroup[] {
         { to: '/ajustes/sucursales', label: 'Sucursales' },
         { to: '/ajustes/usuarios', label: 'Usuarios' },
         { to: '/ajustes/legales', label: 'Profesionales legales' },
+        { to: '/ajustes/mensajes', label: 'Mensajería' },
         ...(hasRole(me, ACCESS.fraud)
           ? [{ to: '/ajustes/alertas', label: 'Alertas antifraude' }]
           : []),

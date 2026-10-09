@@ -236,3 +236,14 @@ MAILERS = {
     },
 }
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Cobradía <no-responder@cobradia.com>")
+
+# F18 (decision 097): who delivers WhatsApp and SMS. «registro» records the
+# message without sending it until a provider is contracted («twilio»).
+MESSAGING_PROVIDERS = {
+    "whatsapp": env("MESSAGING_WHATSAPP_PROVIDER", default="registro"),
+    "sms": env("MESSAGING_SMS_PROVIDER", default="registro"),
+}
+TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID", default="")
+TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
+TWILIO_FROM_WHATSAPP = env("TWILIO_FROM_WHATSAPP", default="")
+TWILIO_FROM_SMS = env("TWILIO_FROM_SMS", default="")
