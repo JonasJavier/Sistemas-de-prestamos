@@ -26,8 +26,20 @@
   </tbody>
 </table>
 
+{% if handovers %}
+<h2>Entregas parciales durante el día</h2>
+<table class="grid">
+  <thead><tr><th>Hora</th><th>Recibió</th><th class="num">Monto</th></tr></thead>
+  <tbody>
+  {% for h in handovers %}
+    <tr><td>{{ h.at|date:"H:i" }}</td><td>{{ h.receiver_name }}</td><td class="num">{{ h.amount|num }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
 <table class="kv" style="margin-top:10px">
-  <tr><td>Efectivo a entregar</td><td class="num">{{ route.expected|rd }}</td></tr>
+  <tr><td>Efectivo a entregar{% if handovers %} (después de las entregas parciales){% endif %}</td><td class="num">{{ route.expected|rd }}</td></tr>
   <tr><td>Entregado</td><td class="num">{{ route.delivered|rd }}</td></tr>
   <tr><td>Diferencia</td><td class="num">{{ route.difference|rd }}</td></tr>
   {% if route.difference %}<tr><td>Motivo</td><td>{{ route.difference_reason.text }}: {{ route.difference_note }}</td></tr>{% endif %}

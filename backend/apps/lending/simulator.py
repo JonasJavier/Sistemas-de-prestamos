@@ -15,10 +15,17 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from apps.core.models import Holiday
+from apps.core.models import Company, Holiday
 from apps.lending.models import LoanProduct, ProductCharge
 from engine.money import money
-from engine.rates import Frequency, RateUnit, annual_equivalent, monthly_equivalent, period_rate
+from engine.rates import (
+    Frequency,
+    RateUnit,
+    annual_equivalent,
+    effective_annual_rate,
+    monthly_equivalent,
+    period_rate,
+)
 from engine.schedule import Installment, Method, Rounding, generate_schedule
 
 
@@ -45,6 +52,9 @@ class Simulation:
     total_interest: Decimal
     total_charges: Decimal
     total_to_pay: Decimal
+    # Decision 075: what the credit really costs, charges included.
+    total_cost: Decimal  # interest + charges
+    effective_annual_rate: Decimal  # fraction; see engine.rates
 
 
 def non_working_predicate(product: LoanProduct) -> Callable[[dt.date], bool]:
@@ -82,7 +92,10 @@ def simulate(
     rate: Decimal | None = None,
     disbursed_on: dt.date | None = None,
     first_due: dt.date | None = None,
+    enforce_ceiling: bool = True,
 ) -> Simulation:
+    """Quote a loan; ``enforce_ceiling`` is off only for loans migrated from
+    another system, which already exist (decision 074)."""
     errors: dict[str, str] = {}
 
     if not product.min_amount <= amount <= product.max_amount:
@@ -151,6 +164,29 @@ def simulate(
         raise ValidationError({"non_field_errors": str(exc)}) from exc
     total_interest = sum((row.interest for row in schedule), Decimal("0.00"))
     total_charges = sum((line.amount for line in charge_lines), Decimal("0.00"))
+    paid_upfront = sum(
+        (line.amount for line in charge_lines if line.mode == ProductCharge.Mode.CASH),
+        Decimal("0.00"),
+    )
+    net_disbursed = money(amount - discounted)
+    # What the borrower really has in hand: a charge paid in cash at the
+    # disbursement shrinks it just like a discounted one.
+    effective = effective_annual_rate(
+        disbursed_on,
+        max(net_disbursed - paid_upfront, Decimal("0.01")),
+        [(row.due_date, row.total) for row in schedule],
+    )
+    if enforce_ceiling:
+        ceiling = Company.objects.get(pk=product.company_id).effective_rate_ceiling()
+        if ceiling is not None and effective > ceiling:
+            raise ValidationError(
+                {
+                    "rate": (
+                        f"El costo anual efectivo de este préstamo ({effective:,.2%}) supera "
+                        f"el tope de {ceiling:,.2%}. Baja la tasa o los cargos."
+                    )
+                }
+            )
     return Simulation(
         schedule=schedule,
         periodic_rate=periodic,
@@ -158,9 +194,11 @@ def simulate(
         annual_rate=annual_equivalent(rate, unit, freq),
         principal=principal,
         requested_amount=money(amount),
-        net_disbursed=money(amount - discounted),
+        net_disbursed=net_disbursed,
         charges=charge_lines,
         total_interest=total_interest,
         total_charges=total_charges,
         total_to_pay=sum((row.total for row in schedule), Decimal("0.00")),
+        total_cost=total_interest + total_charges,
+        effective_annual_rate=effective,
     )

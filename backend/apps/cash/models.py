@@ -194,3 +194,30 @@ class RouteSession(CompanyScopedModel):
             ),
         ]
         indexes = [models.Index(fields=["company", "branch", "status"])]
+
+
+class RouteHandover(CompanyScopedModel):
+    """Cash a collector leaves at a cashier's drawer before the day ends.
+
+    Decision 075: the cash limit is only useful if the collector can unload
+    without closing the route. The cashier counts it on the spot; whatever
+    is left is settled at the end as usual. Append-only, like the books.
+    """
+
+    route = models.ForeignKey(RouteSession, on_delete=models.PROTECT, related_name="handovers")
+    cash_session = models.ForeignKey(CashSession, on_delete=models.PROTECT, related_name="+")
+    received_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    amount = models.DecimalField(**MONEY)
+    entry = models.OneToOneField(JournalEntry, on_delete=models.PROTECT, related_name="+")
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="route_handover_positive"),
+        ]
+        triggers = [
+            pgtrigger.Protect(
+                name="route_handover_append_only", operation=pgtrigger.Update | pgtrigger.Delete
+            )
+        ]

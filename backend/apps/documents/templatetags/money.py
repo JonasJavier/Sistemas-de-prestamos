@@ -25,7 +25,7 @@ def num(value) -> str:
 def pct(value, places: int = 2) -> str:
     if value is None:
         return "—"
-    text = f"{Decimal(value):.{int(places)}f}".rstrip("0").rstrip(".")
+    text = f"{Decimal(value):,.{int(places)}f}".rstrip("0").rstrip(".")
     return f"{text} %"
 
 

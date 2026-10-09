@@ -84,6 +84,10 @@ export interface Simulation {
   total_interest: string
   total_charges: string
   total_to_pay: string
+  /** Interest + charges (decision 075). */
+  total_cost: string
+  /** Annual effective cost, charges included, as a fraction (decision 075). */
+  effective_annual_rate: string
   charges: { name: string; mode: string; amount: string }[]
   schedule: SimulationRow[]
 }

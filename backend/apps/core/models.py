@@ -55,13 +55,26 @@ class Company(TimeStampedModel):
     capacity_alert_ratio = models.DecimalField(
         max_digits=4, decimal_places=3, default=Decimal("0.400")
     )
-    # F6 control: above this cash in hand the supervisor is warned (**Validar**).
+    # F6 control: above this cash in hand the supervisor is warned (075).
     collector_cash_limit = models.DecimalField(
         max_digits=14, decimal_places=2, default=Decimal("25000.00")
+    )
+    # Decision 075: the company's own ceiling on a loan's annual effective
+    # cost (a fraction; 2.5 = 250 %), on top of the legal one in settings.
+    max_effective_annual_rate = models.DecimalField(
+        max_digits=12, decimal_places=4, null=True, blank=True
     )
 
     def __str__(self) -> str:
         return self.trade_name or self.legal_name
+
+    def effective_rate_ceiling(self) -> Decimal | None:
+        """The stricter of the company's ceiling and the legal one."""
+        ceilings = [self.max_effective_annual_rate]
+        if settings.LEGAL_MAX_EFFECTIVE_ANNUAL_RATE:
+            ceilings.append(Decimal(settings.LEGAL_MAX_EFFECTIVE_ANNUAL_RATE))
+        known = [c for c in ceilings if c is not None]
+        return min(known) if known else None
 
 
 class CompanyScopedModel(TimeStampedModel):

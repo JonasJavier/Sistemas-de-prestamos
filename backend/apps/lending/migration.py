@@ -136,6 +136,7 @@ def migrate_loan(*, data: LegacyLoan, user: User) -> Loan:
             rate=data.rate,
             disbursed_on=data.disbursed_on,
             first_due=data.first_due,
+            enforce_ceiling=False,  # it already exists: the ceiling rules new loans
         )
     except Exception as exc:  # noqa: BLE001 - every engine/product refusal reads the same
         raise MigrationError(f"Las condiciones no cumplen el producto: {exc}", "terms") from exc

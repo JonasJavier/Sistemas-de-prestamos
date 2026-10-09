@@ -112,7 +112,9 @@ export function QuoteSummary({ data }: { data: Simulation }) {
       </div>
       <p className="text-[12.5px] text-muted">
         Tasa por período {pct(data.periodic_rate, 4)} · mensual equivalente {pct(data.monthly_rate)}{' '}
-        · anual equivalente {pct(data.annual_rate)}
+        · anual equivalente {pct(data.annual_rate)} ·{' '}
+        <span className="text-ink">costo anual efectivo {pct(data.effective_annual_rate)}</span>{' '}
+        (incluye cargos) · costo total {rd(data.total_cost)}
         {data.charges.length > 0
           ? ` · cargos: ${data.charges
               .map((charge) => `${charge.name} ${rd(charge.amount)}`)

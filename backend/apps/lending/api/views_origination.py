@@ -136,11 +136,11 @@ def _evaluation_payload(evaluation: flow.Evaluation) -> dict:
         "guarantors": evaluation.guarantors,
         "collaterals": evaluation.collaterals,
         "alerts": evaluation.alerts,
-        "simulation": _simulation_payload(sim),
+        "simulation": simulation_payload(sim),
     }
 
 
-def _simulation_payload(sim) -> dict:
+def simulation_payload(sim) -> dict:
     return {
         "principal": str(sim.principal),
         "requested_amount": str(sim.requested_amount),
@@ -151,6 +151,8 @@ def _simulation_payload(sim) -> dict:
         "total_interest": str(sim.total_interest),
         "total_charges": str(sim.total_charges),
         "total_to_pay": str(sim.total_to_pay),
+        "total_cost": str(sim.total_cost),
+        "effective_annual_rate": str(sim.effective_annual_rate),
         "charges": [
             {"name": line.name, "mode": line.mode, "amount": str(line.amount)}
             for line in sim.charges
@@ -360,7 +362,7 @@ class ApplicationViewSet(
         session = open_session_of(request.user)
         return Response(
             {
-                "simulation": _simulation_payload(quote.simulation),
+                "simulation": simulation_payload(quote.simulation),
                 "discounted_charges": str(quote.discounted),
                 "financed_charges": str(quote.financed),
                 "cash_charges": str(quote.cash),

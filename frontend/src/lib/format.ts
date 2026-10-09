@@ -29,15 +29,15 @@ export const phoneText = (number: string | null | undefined) => {
   return number
 }
 
-/** A fraction as a percentage: "0.025" -> "2.5%", "0.4" -> "40%". Only
- * trailing zeros AFTER the decimal point go away. */
-export const pct = (value: string | number | null | undefined, places = 2) =>
-  value === null || value === undefined || value === ''
-    ? '—'
-    : `${(Number(value) * 100)
-        .toFixed(places)
-        .replace(/(\.\d*?)0+$/, '$1')
-        .replace(/\.$/, '')}%`
+/** A fraction as a percentage: "0.025" -> "2.5%", "0.4" -> "40%",
+ * "14.364142" -> "1,436.41%". Only trailing zeros AFTER the decimal point go
+ * away. */
+export const pct = (value: string | number | null | undefined, places = 2) => {
+  if (value === null || value === undefined || value === '') return '—'
+  const [whole, decimals = ''] = (Number(value) * 100).toFixed(places).split('.')
+  const kept = decimals.replace(/0+$/, '')
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${kept ? `.${kept}` : ''}%`
+}
 
 /** Business dates travel as YYYY-MM-DD; never let the browser shift them. */
 export const day = (value: string | null | undefined) =>

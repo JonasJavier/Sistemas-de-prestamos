@@ -31,6 +31,7 @@
       <tr><td>Tasa por período ({{ frequency_singular }})</td><td class="num">{{ periodic_rate_pct|pct:4 }}</td></tr>
       <tr><td>Tasa mensual equivalente</td><td class="num">{{ monthly_rate_pct|pct:4 }}</td></tr>
       <tr><td>Tasa anual equivalente</td><td class="num">{{ annual_rate_pct|pct:2 }}</td></tr>
+      <tr><td>Costo anual efectivo (incluye cargos)</td><td class="num">{{ effective_rate_pct|pct:2 }}</td></tr>
       <tr><td>Fecha de desembolso</td><td class="num">{{ loan.disbursed_on|dmy }}</td></tr>
     </table>
   </div>

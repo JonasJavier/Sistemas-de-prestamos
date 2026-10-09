@@ -16,6 +16,7 @@
       <tr><td>Capital</td><td class="num">{{ terms.principal|rd }}</td></tr>
       <tr><td>Cuotas</td><td class="num">{{ terms.installments }} {% if terms.installments == 1 %}{{ frequency_singular }}{% else %}{{ frequency_plural }}{% endif %}</td></tr>
       <tr><td>Tasa por período · mensual · anual</td><td class="num">{{ periodic_rate_pct|pct:4 }} · {{ monthly_rate_pct|pct:2 }} · {{ annual_rate_pct|pct:2 }}</td></tr>
+      <tr><td>Costo anual efectivo (incluye cargos)</td><td class="num">{{ effective_rate_pct|pct:2 }}</td></tr>
     </table>
   </div>
 </div>

@@ -13,6 +13,7 @@ from apps.lending.api.serializers import (
     ProductChargeSerializer,
     SimulationRequestSerializer,
 )
+from apps.lending.api.views_origination import simulation_payload
 from apps.lending.models import LoanProduct, ProductCharge
 
 # Doc 06 matrix: the simulator serves the counter (P25): G, Su, O, Ca.
@@ -62,31 +63,4 @@ class SimulateView(APIView):
         except DjangoValidationError as exc:
             raise ValidationError(exc.message_dict) from exc
         # Money travels as strings, never floats (doc 01: exact money).
-        return Response(
-            {
-                "principal": str(result.principal),
-                "requested_amount": str(result.requested_amount),
-                "net_disbursed": str(result.net_disbursed),
-                "periodic_rate": str(result.periodic_rate),
-                "monthly_rate": str(result.monthly_rate),
-                "annual_rate": str(result.annual_rate),
-                "total_interest": str(result.total_interest),
-                "total_charges": str(result.total_charges),
-                "total_to_pay": str(result.total_to_pay),
-                "charges": [
-                    {"name": line.name, "mode": line.mode, "amount": str(line.amount)}
-                    for line in result.charges
-                ],
-                "schedule": [
-                    {
-                        "number": row.number,
-                        "due_date": row.due_date.isoformat(),
-                        "original_due_date": row.original_due_date.isoformat(),
-                        "principal": str(row.principal),
-                        "interest": str(row.interest),
-                        "total": str(row.total),
-                    }
-                    for row in result.schedule
-                ],
-            }
-        )
+        return Response(simulation_payload(result))

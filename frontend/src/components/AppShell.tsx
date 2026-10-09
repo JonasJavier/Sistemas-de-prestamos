@@ -93,6 +93,7 @@ function navFor(me: Me): NavGroup[] {
     groups.push({
       title: 'Ajustes',
       items: [
+        { to: '/ajustes/empresa', label: 'Empresa' },
         { to: '/ajustes/productos', label: 'Productos' },
         { to: '/ajustes/feriados', label: 'Feriados' },
         { to: '/ajustes/numeraciones', label: 'Numeraciones' },

@@ -13,7 +13,8 @@ export default defineConfig({
     // Same zone as the business (doc 03): dates must not depend on the machine.
     env: { TZ: 'America/Santo_Domingo' },
   },
-  server: { proxy: API_PROXY },
+  // PORT lets a launcher move Vite off 5173 when another project holds it.
+  server: { proxy: API_PROXY, port: Number(process.env.PORT) || 5173 },
   // `vite preview` serves the production build for the end-to-end tests in CI.
   preview: { proxy: API_PROXY },
 })

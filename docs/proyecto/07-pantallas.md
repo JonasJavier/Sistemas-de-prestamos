@@ -145,7 +145,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 
 | # | Pantalla | Ruta | Contenido y acciones | Roles | Fase |
 | --- | --- | --- | --- | --- | --- |
-| P70 | Empresa | `/ajustes/empresa` | Datos legales y logo, con vista previa del encabezado de los documentos | G A | 1 |
+| P70 | Empresa | `/ajustes/empresa` | Datos legales y logo, con vista previa del encabezado de los documentos; valores de operación (vigencia de solicitudes, alerta de capacidad, límite de efectivo del cobrador y tope de costo anual efectivo, decisión 075) | G A (Ct Au leen) | 1 (hecha en la validación 075) |
 | P71 | Sucursales | `/ajustes/sucursales` | Código y prefijo, dirección, **horario** (035) | G A | 1 |
 | P72 | Usuarios | `/ajustes/usuarios` | Invitar; roles por sucursal; límites; sesiones; restablecer 2FA; desactivar | G A | 1 |
 | P73 | Roles y permisos | `/ajustes/roles` | Matriz editable con plantillas | G A | 1 |

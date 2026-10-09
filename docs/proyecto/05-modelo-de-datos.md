@@ -229,7 +229,8 @@ pghistory guarda, además, cada cambio de cada modelo editable, con el usuario, 
 | `PublicLink` (plataforma, sin empresa) | Índice de los enlaces públicos: token → empresa y objeto, revocable | El recibo de WhatsApp se resuelve sin sesión y dentro de la empresa correcta (066) |
 | `Branch`, `HoursExtension`, `User` | Horario y días laborables de la sucursal; extensiones temporales; consentimiento de ubicación con fecha y texto | Horario de cajeros y cobradores (071); ruta (072) |
 | `BranchAccessGrant` | Acceso del día a un cliente de otra sucursal, con motivo | Alcance por sucursal en clientes (070) |
-| `Company` | `collector_cash_limit` (RD$ 25,000 por defecto) | Aviso al supervisor (072) |
+| `Company` | `collector_cash_limit` (RD$ 25,000 por defecto, validado en 075) y `max_effective_annual_rate` (tope propio de costo anual efectivo, opcional) | Aviso al supervisor (072); tope de costo (075) |
+| `RouteHandover` | Entrega parcial del cobrador a la caja de un cajero: monto, caja, quién recibió y su asiento (solo se agrega) | El cobrador baja del límite sin cerrar la ruta (075) |
 | `Notification` | Avisos de la campana | Autorizaciones, diferencias, cierres, límite de efectivo y conciliación |
 | `RouteStop`, `CollectionAction`, `LocationPing`, `DelinquencySnapshot` | §4.7, construidos en esta fase (la promesa de pago llega en la 5) | Ruta, visitas, ubicación y foto diaria del atraso |
 

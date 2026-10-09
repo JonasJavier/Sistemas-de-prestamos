@@ -8,6 +8,7 @@ import {
   getSettlement,
   moveCash,
   openCash,
+  receiveHandover,
   settleRoute,
   type CashSession,
   type MyCash,
@@ -188,11 +189,21 @@ function SettleDialog({ route, onClose }: { route: RouteToSettle; onClose: () =>
     queryKey: ['reasons', 'cash_difference'],
     queryFn: () => listReasons('cash_difference'),
   })
+  const [partial, setPartial] = useState(false)
   const [delivered, setDelivered] = useState('')
   const [reason, setReason] = useState('')
   const [note, setNote] = useState('')
   const expected = Number(detail.data?.expected ?? route.expected)
-  const diff = toMoney(delivered) ? Number(toMoney(delivered)) - expected : 0
+  const diff = !partial && toMoney(delivered) ? Number(toMoney(delivered)) - expected : 0
+  const handover = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => receiveHandover(route.id, toMoney(delivered)),
+    onSuccess: (result) => {
+      notify(`Entrega parcial recibida; el cobrador sigue con ${rd(result.carried)}.`, 'success')
+      refresh()
+      onClose()
+    },
+  })
   const settle = useMutation({
     meta: { inlineError: true },
     mutationFn: () =>
@@ -223,8 +234,43 @@ function SettleDialog({ route, onClose }: { route: RouteToSettle; onClose: () =>
         ) : (
           <Spinner />
         )}
-        <Stat label="Efectivo que debe entregar" value={rd(expected)} emphasis />
-        <Field label="Efectivo contado">
+        {detail.data?.handovers.length ? (
+          <p className="text-[12.5px] text-muted">
+            Ya dejó{' '}
+            {detail.data.handovers
+              .map((h) => `${rd(h.amount)} (${moment(h.at)}, ${h.received_by_name ?? '—'})`)
+              .join(' · ')}
+            .
+          </p>
+        ) : null}
+        <div role="radiogroup" aria-label="Tipo de entrega" className="grid grid-cols-2 gap-2">
+          {[
+            { value: false, label: 'Rendición final', hint: 'Cierra la ruta del día' },
+            { value: true, label: 'Entrega parcial', hint: 'La ruta sigue abierta' },
+          ].map((option) => (
+            <button
+              key={option.label}
+              type="button"
+              role="radio"
+              aria-checked={partial === option.value}
+              onClick={() => setPartial(option.value)}
+              className={`rounded-lg border px-3 py-2 text-left text-sm ${
+                partial === option.value
+                  ? 'border-brand-700 bg-brand-100 font-medium'
+                  : 'border-edge hover:bg-surface-2'
+              }`}
+            >
+              {option.label}
+              <span className="block text-[12px] font-normal text-muted">{option.hint}</span>
+            </button>
+          ))}
+        </div>
+        <Stat
+          label={partial ? 'Efectivo que lleva' : 'Efectivo que debe entregar'}
+          value={rd(expected)}
+          emphasis
+        />
+        <Field label={partial ? 'Efectivo que deja ahora' : 'Efectivo contado'}>
           <Input
             inputMode="decimal"
             value={delivered}
@@ -255,18 +301,32 @@ function SettleDialog({ route, onClose }: { route: RouteToSettle; onClose: () =>
         {settle.error instanceof ApiError ? (
           <Alert tone="danger">{errorMessage(settle.error.data)}</Alert>
         ) : null}
+        {handover.error instanceof ApiError ? (
+          <Alert tone="danger">{errorMessage(handover.error.data)}</Alert>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            onClick={() => settle.mutate()}
-            disabled={
-              !toMoney(delivered) || (diff !== 0 && (!reason || !note.trim())) || settle.isPending
-            }
-          >
-            Confirmar recepción
-          </Button>
+          {partial ? (
+            <Button
+              onClick={() => handover.mutate()}
+              disabled={
+                !toMoney(delivered) || Number(toMoney(delivered)) > expected || handover.isPending
+              }
+            >
+              Recibir entrega parcial
+            </Button>
+          ) : (
+            <Button
+              onClick={() => settle.mutate()}
+              disabled={
+                !toMoney(delivered) || (diff !== 0 && (!reason || !note.trim())) || settle.isPending
+              }
+            >
+              Confirmar recepción
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

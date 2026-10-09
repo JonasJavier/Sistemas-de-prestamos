@@ -57,11 +57,13 @@ El simulador, la solicitud y el pagaré siempre muestran lo siguiente, para dar 
 - tasa por período;
 - tasa mensual equivalente;
 - tasa anual equivalente;
+- **costo anual efectivo con cargos** (decisión 075);
 - total de intereses;
 - total de cargos;
+- costo total (intereses + cargos);
 - total a pagar.
 
-**Validar con el abogado:** tasas máximas permitidas.
+Un tope de costo anual efectivo, legal o propio de la empresa, bloquea los préstamos nuevos más caros (§16.4). **Validar con el abogado:** el valor del tope cuando exista la ley.
 
 ## 3. Métodos de cálculo
 
@@ -215,13 +217,13 @@ Con la configuración de la referencia (5 % por cada día de atraso), los 8 día
 - Pasados los días de gracia, se cuenta desde el vencimiento; dentro de la gracia no hay mora.
 - El tope se mide sobre lo que estaba vencido el día del vencimiento.
 - «Porcentaje por período completo» cobra la tasa entera por cada período iniciado de la frecuencia del préstamo (la referencia, con 5 % diario: 140.00 en 8 días); «cargo fijo» cobra el monto una vez superada la gracia, también con tope.
-- La mora y el interés se reconocen como ingreso al cobrarse (**Validar con el contador**); condonar no genera asiento.
+- La mora y el interés se reconocen como ingreso al cobrarse; el cierre de mes agrega el devengo del interés de los préstamos con hasta 90 días de atraso (decisión 075, §16.2). Condonar no genera asiento.
 
 **Reglas de la mora:**
 - Una tarea nocturna actualiza la mora para los reportes; el cobro siempre la recalcula a la fecha del pago.
 - La mora nunca se aumenta a mano. Solo se **condona**, total o parcialmente, con permiso y motivo, y la condonación aparece aparte en el recibo.
 
-**Validar con el abogado:** tasas máximas de mora.
+**Valores por defecto validados (decisión 075, §16.4):** 3 días de gracia, 5 % mensual prorrateado por día sobre lo vencido, tope del 10 %. **Validar con el abogado:** los topes que fije la futura ley de usura.
 
 ## 8. Pagos
 
@@ -344,9 +346,7 @@ Cada operación genera un asiento balanceado. Nombres de cuenta provisionales, q
 | Castigo | Gasto por castigo | Cartera (saldo de capital) |
 | Reverso | Asiento inverso, enlazado al original | |
 
-**Validar con el contador:**
-- Propuesta: reconocer el interés **al cobrarlo**, que es lo más simple para una financiera mediana. La alternativa es reconocerlo cuando se devenga.
-- Tratamiento fiscal de intereses y cargos (NCF / e-CF).
+**Validado (decisión 075, §16.2 y §16.3):** al cobrarlo en la operación diaria, más el devengo mensual en el cierre; interés exento de ITBIS y gravado en el ISR; e-CF obligatorio desde el 15/11/2026.
 
 ## 14. Ejemplos que serán pruebas automáticas
 
@@ -381,5 +381,73 @@ Esta lista se le puede entregar al cliente tal cual:
 7. **Redondeo:** ¿las cuotas se redondean al centavo o al peso? En RD no circulan centavos: ¿la mora y los montos que se cobran en efectivo también se redondean al peso? El prototipo lo muestra así.
 8. **Castigo:** ¿a partir de cuántos días de atraso? ¿Quién lo aprueba?
 9. **Abogado:** tasas máximas de interés y de mora, y contenido de los contratos.
-10. **Contador:** reconocimiento de intereses y comprobantes fiscales.
+10. **Contador:** resuelto por el responsable técnico en la decisión 075 (§16); la empresa puede ajustarlo con el suyo.
 11. **Ejemplos reales:** 2 o 3 préstamos anonimizados de cada tipo, con su tabla de pagos, para compararlos con este motor.
+
+## 16. Validación contable y legal (decisión 075)
+
+Jonas no tiene contador: el 08/10/2026 pidió que el responsable técnico validara los puntos contables con investigación propia. Lo que sigue es la posición de Cobradía; cada empresa puede ajustarla con su contador, y lo estrictamente legal sigue marcado para el abogado.
+
+### 16.1 Faltantes y sobrantes de caja
+
+- **Faltante:** se asienta en «Faltantes de caja por cobrar» (`1301`) solo mientras se aclara. Se resuelve de dos formas: el cajero lo **repone** en efectivo en su caja abierta, o el gerente lo **asume como pérdida** («Pérdidas por faltantes de caja», gasto). No se descuenta de la nómina desde el sistema: el artículo 201 del Código de Trabajo solo admite los descuentos autorizados por la ley, las cuotas sindicales, los anticipos, los préstamos bancarios garantizados por el empleador (hasta la sexta parte del salario) y los aportes a pensiones. Un faltante sin resolver por más de 30 días se avisa al gerente.
+- **Sobrante:** no es ingreso de inmediato, porque puede ser dinero de un cliente (cambio no entregado, pago sin registrar). Va a un pasivo, «Sobrantes de caja por aclarar». En 30 días el supervisor lo **aplica** desde una caja abierta (devolución al cliente o un pago que se registró después); si nadie lo reclama, la tarea nocturna lo pasa a «Otros ingresos: sobrantes de caja» (`4201`).
+- **Cuándo se construye:** con la contabilidad de la fase 6. Hasta entonces el sobrante se asienta directo en `4201`, como en la fase 4.
+
+### 16.2 Reconocimiento de intereses, mora y cargos
+
+- **En la operación diaria** (como hasta ahora): el interés, la mora y los cargos se registran como ingreso al cobrarse. Así la «ganancia cobrada» de la gerencia es exacta y no depende de estimaciones.
+- **En los estados financieros:** la norma contable del país es la NIIF para las PYMES, adoptada por el ICPARD desde 2014, y exige la base de devengo (2.36). Los préstamos se miden al costo amortizado (sección 11). Por eso el **cierre de mes** (F15, fase 6) agrega un asiento de devengo: el interés corrido y no cobrado de los préstamos con **hasta 90 días de atraso** (débito «Intereses por cobrar», crédito «Ingreso por intereses»), que se reversa solo el día 1 del mes siguiente para que el cobro siga asentándose igual.
+- **Préstamos con más de 90 días:** no devengan. Es la práctica prudencial del sistema financiero: la Superintendencia de Bancos provisiona por completo los rendimientos vencidos a más de 90 días.
+- **La mora** se reconoce solo al cobrarse: es incierta y muchas veces se condona.
+- **Los cargos de cierre** se reconocen al desembolso. En préstamos cortos, diferirlos no cambia la cifra de forma importante (materialidad, 2.6). Si una empresa da préstamos largos, su contador puede pedir el diferimiento, que se agregaría al cierre de mes.
+
+### 16.3 Impuestos
+
+- **ISR:** el interés es renta gravada de la empresa (27 % para personas jurídicas), y la DGII grava los intereses devengados. El reporte mensual de devengo del cierre sirve para la declaración.
+- **ITBIS:** los intereses de préstamos están **exentos** (art. 344 del Código Tributario; Norma General 02-20 y Decreto 293-11, art. 14 d). La mora sigue al interés. Un cargo que no sea el servicio financiero en sí (por ejemplo, un seguro o un GPS que la empresa revende) puede estar gravado: en la fase 6 cada cargo del producto se marca «exento» (por defecto) o «gravado 18 %». Como presta un servicio exento, el ITBIS que la empresa paga en sus compras va a su costo.
+- **Comprobantes fiscales:** la facturación electrónica (e-CF) es obligatoria para todos los contribuyentes desde el **15/11/2026** (Ley 32-23; la DGII prorrogó el plazo de las micro y pequeñas empresas con el Aviso 06-26).
+  - Cada cobro que incluya interés, mora o cargos lleva su comprobante: E32 de consumo por defecto, o E31 de crédito fiscal si el cliente tiene RNC y lo pide. Lo mismo vale para un cargo cobrado al desembolsar.
+  - El capital no es ingreso y no se factura.
+  - La fase 6 construye los comprobantes y su numeración. Para emitirlos ante la DGII hacen falta el certificado digital de cada empresa y un proveedor certificado o un emisor propio: eso **depende de Jonas** (elegir el proveedor y obtener sus credenciales).
+
+### 16.4 Mora por defecto y tasas máximas
+
+- **Valores por defecto que se mantienen:**
+  - 3 días de gracia;
+  - 5 % mensual prorrateado por día, solo sobre lo vencido de cada cuota y sin capitalizar (nunca mora sobre mora ni sobre el saldo total);
+  - tope del 10 % de lo vencido.
+
+  Coincide con la práctica del mercado regulado: por ejemplo, el pagaré de préstamo personal de Promerica, aprobado por la Superintendencia de Bancos en 2025, pacta un 5 % mensual sobre la parte vencida.
+- **Marco legal que cambió en 2026:**
+  - La Ley 183-02 (art. 91) había derogado la Orden Ejecutiva 312 de 1919, que fijaba el interés convencional máximo en 1 % mensual y castigaba la usura.
+  - El 05/05/2026 la sentencia **TC/0235/26** declaró inconstitucional esa derogación de las sanciones y exhortó al Congreso a legislar.
+  - El 07/05/2026 se depositó en el Senado un proyecto de ley: la Junta Monetaria fijaría topes a la tasa y al **costo total del crédito**, en el mercado formal y en el informal.
+  - Al 08/10/2026 no hay ley aprobada.
+- **Lo que hace Cobradía:**
+  - El simulador, la solicitud, el pagaré y la tabla de pagos muestran el **costo anual efectivo con cargos**: la tasa diaria compuesta a 365 días que iguala lo que el cliente recibe con lo que paga. A diferencia de la «tasa anual equivalente» nominal, revela el costo real de un préstamo plano.
+  - Muestran también el **costo total** (intereses + cargos).
+  - Hay un **tope de costo anual efectivo** en dos niveles: el legal, que la plataforma fija para todas las empresas cuando exista la ley (`LEGAL_MAX_EFFECTIVE_ANNUAL_RATE`), y el propio de cada empresa (Ajustes → Empresa).
+  - Por encima del tope no se cotiza, ni se aprueba, ni se desembolsa un préstamo nuevo; los migrados ya existen y no se bloquean.
+- **Validar con el abogado:** el valor del tope cuando salga la ley y el contenido de los contratos.
+
+### 16.5 Límite de efectivo del cobrador
+
+- No hay norma legal: es un control de riesgo (asaltos y pérdidas en la calle).
+- RD$ 25,000 queda como valor por defecto y se cambia en Ajustes → Empresa. Conviene que no supere la cobertura de la póliza de valores en tránsito de la empresa, si la tiene.
+- Para que el límite sirva, el cobrador puede **dejar efectivo en una caja sin cerrar su ruta** (entrega parcial). Al bajar del límite, un nuevo exceso vuelve a avisar al supervisor.
+
+### 16.6 Otros puntos legales detectados (para el abogado)
+
+- **Captación del público:** la financiera presta con capital propio. Captar fondos del público para prestarlos es intermediación financiera y requiere autorización de la Junta Monetaria (Ley 183-02); el nuevo Código Penal la castiga. Lo dirán los términos de servicio (fase 10).
+- **Prevención de lavado (Ley 155-17):** las casas de empeño y las empresas de factoraje son sujetos obligados supervisados por la DGII. Los prestamistas con capital propio no aparecen expresamente. La fase 7 agrega un reporte de transacciones en efectivo desde un umbral configurable (US$ 15,000 por defecto) para quien lo necesite.
+
+**Fuentes consultadas:**
+- Resolución del ICPARD que adopta la NIIF para las PYMES.
+- Orden Ejecutiva 312, publicada por la Superintendencia de Bancos.
+- Notas de prensa de Acento, Diario Libre y El Caribe sobre la sentencia TC/0235/26 y el proyecto de ley de usura.
+- Norma General 02-20 de la DGII y su consulta sobre leasing financiero.
+- Prórroga del e-CF (DGII, 06/05/2026).
+- Pagaré de préstamo personal de Promerica, aprobado por la Superintendencia de Bancos.
+- Listado de sujetos obligados no financieros de la DGII.
+- Artículo 201 del Código de Trabajo.

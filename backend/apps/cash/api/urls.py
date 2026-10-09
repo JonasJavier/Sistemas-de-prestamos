@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.cash.api.views import (
     CloseView,
+    HandoverView,
     MoveView,
     MyCashView,
     OpenView,
@@ -22,4 +23,5 @@ urlpatterns = [
     path("cajas/<uuid:pk>/pdf/", SessionPdfView.as_view(), name="cash-session-pdf"),
     path("rendiciones/<uuid:pk>/", SettleView.as_view(), name="route-settle"),
     path("rendiciones/<uuid:pk>/pdf/", RoutePdfView.as_view(), name="route-settle-pdf"),
+    path("rendiciones/<uuid:pk>/entrega/", HandoverView.as_view(), name="route-handover"),
 ]

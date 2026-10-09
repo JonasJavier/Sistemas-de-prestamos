@@ -33,6 +33,7 @@ describe('pct', () => {
     expect(pct('0.4')).toBe('40%')
     expect(pct('1')).toBe('100%')
     expect(pct('0.10')).toBe('10%')
+    expect(pct('14.3641')).toBe('1,436.41%')
   })
 })
 

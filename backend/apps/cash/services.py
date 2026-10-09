@@ -16,8 +16,8 @@ from django.utils import timezone
 from apps.accounts import authz
 from apps.accounts.models import ApprovalLimit, User
 from apps.audit.models import record_event
-from apps.cash.models import DENOMINATIONS, CashCount, CashSession, RouteSession
-from apps.core.models import Branch, Reason, Sequence
+from apps.cash.models import DENOMINATIONS, CashCount, CashSession, RouteHandover, RouteSession
+from apps.core.models import Branch, Company, Reason, Sequence
 from apps.core.tenancy import on_commit_in_tenant
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount, JournalLine
@@ -568,12 +568,83 @@ def settle_route(
     return route
 
 
+@transaction.atomic
+def receive_handover(*, route: RouteSession, user: User, amount: Decimal) -> RouteHandover:
+    """Part of a collector's cash goes into my drawer; the route stays open (075)."""
+    route = (
+        RouteSession.objects.select_for_update().select_related("bag", "branch").get(pk=route.pk)
+    )
+    if route.status != RouteSession.Status.OPEN:
+        raise CashError("Esa ruta ya se rindió.", "state")
+    if route.collector_id == user.pk:
+        raise CashError("La entrega la recibe un cajero, no el propio cobrador.", "forbidden")
+    if not authz.has_any_role(user, *CASHIER_ROLES):
+        raise CashError("Solo el cajero o el supervisor reciben efectivo de una ruta.", "forbidden")
+    session = open_session_of(user)
+    if session is None:
+        raise CashError("Abre tu caja para recibir la entrega.", "no_session")
+    if not authz.in_scope(user, route.branch_id):
+        raise CashError("La ruta es de otra sucursal.", "out_of_scope")
+    amount = money(amount)
+    carried = route_cash(route)
+    if amount <= 0:
+        raise CashError("Indica cuánto efectivo entrega.", "amount")
+    if amount > carried:
+        raise CashError(
+            f"El cobrador lleva RD$ {carried:,.2f}; una entrega parcial no puede ser mayor.",
+            "amount",
+        )
+    entry = ledger.post_entry(
+        company_id=route.company_id,
+        branch=route.branch,
+        on=timezone.localdate(),
+        description=f"Entrega parcial de {_person(route.collector)} en la caja {session.number}",
+        source_type="cash.handover",
+        source_id=route.id,
+        lines=[
+            ledger.Line(
+                account=session.drawer.ledger_account,
+                debit=amount,
+                financial_account=session.drawer,
+                cash_session_id=session.id,
+            ),
+            ledger.Line(
+                account=route.bag.ledger_account,
+                credit=amount,
+                financial_account=route.bag,
+                route_session_id=route.id,
+            ),
+        ],
+        created_by=user,
+    )
+    handover = RouteHandover.objects.create(
+        company_id=route.company_id,
+        route=route,
+        cash_session=session,
+        received_by=user,
+        amount=amount,
+        entry=entry,
+    )
+    # Back under the limit: a new excess warns the supervisor again.
+    if route.limit_alerted_at is not None:
+        limit = Company.objects.only("collector_cash_limit").get(pk=route.company_id)
+        if carried - amount <= limit.collector_cash_limit:
+            route.limit_alerted_at = None
+            route.save(update_fields=["limit_alerted_at", "updated_at"])
+    record_event(
+        company_id=route.company_id,
+        type="route.handover",
+        target=route,
+        actor=user,
+        summary=f"Entrega parcial de {_person(route.collector)}: RD$ {amount:,.2f}",
+    )
+    return handover
+
+
 def check_cash_limit(route: RouteSession) -> None:
     """Warn the supervisor once when a collector carries too much (F6 controls)."""
     if route.limit_alerted_at is not None:
         return
-    from apps.core.models import Company
-
     limit = (
         Company.objects.only("collector_cash_limit").get(pk=route.company_id).collector_cash_limit
     )

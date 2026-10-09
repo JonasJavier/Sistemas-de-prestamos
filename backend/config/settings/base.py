@@ -143,6 +143,12 @@ REQUIRE_MFA = env.bool("REQUIRE_MFA", default=False)
 # tests that do not ask for it; on in production.
 ENFORCE_WORKING_HOURS = env.bool("ENFORCE_WORKING_HOURS", default=False)
 
+# Decision 075: the legal ceiling on a loan's annual effective cost, for
+# every company, once the usury law (TC/0235/26) or the Junta Monetaria sets
+# one. A fraction (2.5 = 250 %); empty means no legal ceiling yet. Each
+# company may set a stricter one of its own.
+LEGAL_MAX_EFFECTIVE_ANNUAL_RATE = env.str("LEGAL_MAX_EFFECTIVE_ANNUAL_RATE", default="") or None
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {

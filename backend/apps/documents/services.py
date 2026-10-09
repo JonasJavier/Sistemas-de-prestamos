@@ -17,8 +17,8 @@ from num2words import num2words
 
 from apps.core.models import Company
 from apps.documents.models import GeneratedDocument
-from apps.lending.models import Loan
-from engine.rates import RateUnit, annual_equivalent, monthly_equivalent
+from apps.lending.models import Loan, ProductCharge
+from engine.rates import RateUnit, annual_equivalent, effective_annual_rate, monthly_equivalent
 
 TEMPLATE_VERSION = "1.0"
 
@@ -135,6 +135,20 @@ def _loan_context(loan: Loan) -> dict:
     total_charges = sum((c.amount for c in charges), Decimal("0.00"))
     disbursement = loan.disbursement
     singular, plural = FREQUENCY_LABELS[terms.frequency]
+    # Decision 075: the real annual cost of the original conditions (version
+    # 1), charges included; a charge paid in cash shrinks what was received.
+    first_terms = loan.terms.order_by("version").first()
+    paid_upfront = sum(
+        (c.amount for c in charges if c.mode == ProductCharge.Mode.CASH), Decimal("0.00")
+    )
+    effective_rate = effective_annual_rate(
+        loan.disbursed_on,
+        max(disbursement.net - paid_upfront, Decimal("0.01")),
+        [
+            (row.due_date, row.principal_due + row.interest_due)
+            for row in loan.installments.filter(terms=first_terms)
+        ],
+    )
     unit = RateUnit(terms.rate_unit)
     return {
         "loan": loan,
@@ -154,6 +168,7 @@ def _loan_context(loan: Loan) -> dict:
         "charges": charges,
         "total_charges": total_charges,
         "credit_cost": total_interest + total_charges,
+        "effective_rate_pct": effective_rate * 100,
         "disbursement": disbursement,
         "principal_words": amount_in_words(terms.principal),
         "disbursed_words": date_in_words(loan.disbursed_on),
@@ -281,6 +296,10 @@ def route_settlement_context(route) -> dict:
         "collector_name": _person(route.collector),
         "receiver_name": _person(route.received_by),
         "payments": list(route.payments.select_related("loan", "customer").order_by("paid_at")),
+        "handovers": [
+            {"at": h.created_at, "amount": h.amount, "receiver_name": _person(h.received_by)}
+            for h in route.handovers.select_related("received_by").order_by("created_at")
+        ],
     }
 
 

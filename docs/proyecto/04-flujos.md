@@ -224,6 +224,8 @@ sequenceDiagram
 
 > **Fase 4 (decisión 072):** la ruta del día se arma al abrirla con la cartera vencida o que vence hoy del cobrador (conserva su orden); abrirla exige aceptar una vez el registro de ubicación. El celular envía la ubicación cada 5 minutos con «Mi ruta» en pantalla; cada cobro y visita guarda la suya. El cobrador no condona ni reversa. Al superar el límite de efectivo en mano se avisa una vez al supervisor; un cobro fuera de la ruta del día queda marcado. La rendición la recibe un cajero en su caja abierta; la diferencia exige motivo y avisa al supervisor. Las promesas con fecha y monto llegan en la fase 5.
 
+> **Decisión 075:** el cobrador puede dejar parte del efectivo en la caja de un cajero sin cerrar su ruta (entrega parcial, contada en el acto); lo que queda se rinde al final como siempre. El límite (RD$ 25,000 por defecto) se ajusta en Ajustes → Empresa.
+
 ## F7 · Caja diaria
 
 1. **Apertura.**
@@ -240,9 +242,9 @@ sequenceDiagram
    - Si hay diferencia, se registra el motivo.
    - El efectivo que queda se guarda como fondo o se traslada.
 5. **Aprobación del supervisor.**
-   - **Faltante:** se registra según la política, por ejemplo como cuenta por cobrar al cajero.
-   - **Sobrante:** se registra como ingreso extraordinario.
-   - **Validar con el contador** ambos tratamientos.
+   - **Faltante:** cuenta por cobrar al cajero, hasta que la reponga o el gerente la asuma como pérdida (nunca por nómina).
+   - **Sobrante:** pasivo por aclarar durante 30 días; luego, otro ingreso.
+   - Tratamientos validados en la decisión 075 ([03 §16.1](03-reglas-de-negocio.md#161-faltantes-y-sobrantes-de-caja)); la resolución se construye en la fase 6.
 6. **Reporte.** Se genera el PDF de cierre de caja.
 
 ```mermaid

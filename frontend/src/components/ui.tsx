@@ -26,17 +26,24 @@ export function Input(props: ComponentProps<'input'>) {
 export function Field({
   label,
   error,
+  hint,
   children,
 }: {
   label: string
   error?: string
+  /** One line under the control saying what the value does. */
+  hint?: string
   children: ReactNode
 }) {
   return (
     <label className="block space-y-1">
       <span className="text-[12.5px] font-medium text-muted">{label}</span>
       {children}
-      {error ? <span className="block text-[12.5px] text-danger-600">{error}</span> : null}
+      {error ? (
+        <span className="block text-[12.5px] text-danger-600">{error}</span>
+      ) : hint ? (
+        <span className="block text-[12px] text-muted">{hint}</span>
+      ) : null}
     </label>
   )
 }

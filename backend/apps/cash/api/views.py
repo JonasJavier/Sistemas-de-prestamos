@@ -361,6 +361,14 @@ class SettleView(APIView):
                 "expected": str(
                     cash.route_cash(route) if route.status == "open" else route.expected
                 ),
+                "handovers": [
+                    {
+                        "at": h.created_at,
+                        "amount": str(h.amount),
+                        "received_by_name": person(h.received_by),
+                    }
+                    for h in route.handovers.select_related("received_by").order_by("created_at")
+                ],
                 "payments": [
                     {
                         "number": p.number,
@@ -384,6 +392,31 @@ class SettleView(APIView):
         except cash.CashError as exc:
             return fail(exc)
         return Response({"status": route.status, "difference": str(route.difference)})
+
+
+class HandoverSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=ZERO)
+
+
+class HandoverView(APIView):
+    """Decision 075: part of a collector's cash, received before the day ends."""
+
+    permission_classes = [CanUseCash, CompanyNotSuspendedOrReadOnly]
+
+    def post(self, request: Request, pk) -> Response:
+        route = get_object_or_404(RouteSession, pk=pk)
+        serializer = HandoverSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            handover = cash.receive_handover(
+                route=route, user=request.user, amount=serializer.validated_data["amount"]
+            )
+        except cash.CashError as exc:
+            return fail(exc)
+        return Response(
+            {"amount": str(handover.amount), "carried": str(cash.route_cash(route))},
+            status=201,
+        )
 
 
 class RoutePdfView(APIView):

@@ -200,3 +200,40 @@ def test_the_cash_limit_warns_the_supervisor_once(tenant) -> None:
     pay(tenant, loan, "100.00", role="cobrador")
     with company_context(tenant.company.id):
         assert Notification.objects.filter(kind="cash_limit").values("text").distinct().count() == 1
+
+
+def test_a_partial_handover_unloads_the_collector_and_keeps_the_route_open(tenant) -> None:
+    """Decision 075: under the limit again, a new excess warns again."""
+    with company_context(tenant.company.id):
+        tenant.company.collector_cash_limit = D("300")
+        tenant.company.save()
+    loan = make_loan(tenant, first_due_in=0)
+    with company_context(tenant.company.id):
+        Loan.objects.filter(pk=loan.pk).update(collector=tenant.users["cobrador"])
+    route = _route(tenant)
+    pay(tenant, loan, "350.00", role="cobrador")
+    with company_context(tenant.company.id):
+        session = cash.open_session_of(tenant.users["cajero"])  # the disbursement opened it
+        drawer = cash.expected_cash(session)
+        warned = Notification.objects.filter(kind="cash_limit").count()  # one per supervisor
+        route.refresh_from_db()
+        assert route.limit_alerted_at is not None
+        with pytest.raises(cash.CashError, match="no el propio"):
+            cash.receive_handover(route=route, user=tenant.users["cobrador"], amount=D("100"))
+        with pytest.raises(cash.CashError, match="no puede ser mayor"):
+            cash.receive_handover(route=route, user=tenant.users["cajero"], amount=D("351"))
+        handover = cash.receive_handover(route=route, user=tenant.users["cajero"], amount=D("250"))
+        assert handover.cash_session == session
+        route.refresh_from_db()
+        assert route.status == RouteSession.Status.OPEN
+        assert route.limit_alerted_at is None  # back under the limit
+        assert cash.route_cash(route) == D("100.00")
+        assert cash.expected_cash(session) == drawer + D("250.00")
+    pay(tenant, loan, "250.00", role="cobrador")  # 350 in hand again: warns again
+    with company_context(tenant.company.id):
+        assert Notification.objects.filter(kind="cash_limit").count() == 2 * warned
+        settled = cash.settle_route(route=route, user=tenant.users["cajero"], delivered=D("350"))
+        assert (settled.expected, settled.difference) == (D("350.00"), D("0.00"))
+        assert ledger.balance_of(route.bag.ledger_account) == D("0.00")
+        assert cash.expected_cash(session) == drawer + D("600.00")
+    books_square(tenant)

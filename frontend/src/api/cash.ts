@@ -96,6 +96,8 @@ export interface Settlement {
   business_date: string
   status: 'open' | 'settled'
   expected: string
+  /** Cash left at a drawer before the day ended (decision 075). */
+  handovers: { at: string; amount: string; received_by_name: string | null }[]
   payments: {
     number: string
     loan_number: string
@@ -114,5 +116,11 @@ export const settleRoute = (
   body: { delivered: string; reason?: string | null; note?: string },
 ): Promise<{ status: string; difference: string }> =>
   api(`/api/v1/rendiciones/${routeId}/`, { method: 'POST', body })
+
+export const receiveHandover = (
+  routeId: string,
+  amount: string,
+): Promise<{ amount: string; carried: string }> =>
+  api(`/api/v1/rendiciones/${routeId}/entrega/`, { method: 'POST', body: { amount } })
 
 export const settlementPdfUrl = (routeId: string) => `/api/v1/rendiciones/${routeId}/pdf/`

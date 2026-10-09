@@ -42,9 +42,9 @@ async function ensureCsrf(): Promise<string> {
   return data.csrfToken
 }
 
-export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+export async function apiUpload<T>(path: string, form: FormData, method = 'POST'): Promise<T> {
   const response = await fetch(path, {
-    method: 'POST',
+    method,
     headers: { Accept: 'application/json', 'X-CSRFToken': await ensureCsrf() },
     credentials: 'same-origin',
     body: form, // browser sets the multipart boundary

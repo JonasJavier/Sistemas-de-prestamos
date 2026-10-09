@@ -72,6 +72,10 @@ const DisbursementsPage = lazyRouteComponent(
   () => import('./pages/Disbursements'),
   'DisbursementsPage',
 )
+const CompanySettingsPage = lazyRouteComponent(
+  () => import('./pages/CompanySettings'),
+  'CompanySettingsPage',
+)
 const HolidaysPage = lazyRouteComponent(() => import('./pages/Holidays'), 'HolidaysPage')
 const InvitationAcceptPage = lazyRouteComponent(
   () => import('./pages/InvitationAccept'),
@@ -374,6 +378,13 @@ const accountsRoute = createRoute({
   component: withMe(AccountsPage),
 })
 
+const companySettingsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/empresa',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: CompanySettingsPage,
+})
+
 const holidaysRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/ajustes/feriados',
@@ -500,6 +511,7 @@ const routeTree = rootRoute.addChildren([
     noticesRoute,
     accountsRoute,
     productsRoute,
+    companySettingsRoute,
     holidaysRoute,
     sequencesRoute,
     customersRoute,
