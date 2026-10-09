@@ -138,6 +138,11 @@ def receipt_payload(payment: Payment, *, public: bool = False) -> dict:
         },
         "replaces": replaces.payment.number if replaces is not None else None,
     }
+    if not payment.receipt_revoked_at:
+        # Decision 098: the printed receipt carries the QR of its public page.
+        from apps.core.qr import data_uri, public_url
+
+        data["qr"] = data_uri(public_url(f"/r/{payment.receipt_token}"))
     if not public:
         data.update(
             {

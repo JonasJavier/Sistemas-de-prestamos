@@ -8,6 +8,7 @@ same whenever they are produced.
 """
 
 import hashlib
+import secrets
 from decimal import Decimal
 
 from django.core.files.base import ContentFile
@@ -87,12 +88,19 @@ def issue(
     issued_by,
     legal_status: str = "pending",
 ) -> GeneratedDocument:
+    from apps.core.qr import data_uri, public_url
+
     now = timezone.localtime()
     issuer = (issued_by.get_full_name() or issued_by.email) if issued_by else "el sistema"
+    # Phase 9 (decision 098): its QR leads to the public verification page.
+    token = secrets.token_urlsafe(24)
+    verify_url = public_url(f"/v/{token}")
     pdf = render_pdf(
         template,
         {
             **context,
+            "qr": data_uri(verify_url),
+            "verify_url": verify_url,
             "company": company,
             "monogram": _monogram(company),
             "folio": folio,
@@ -116,6 +124,11 @@ def issue(
     )
     document.file.save(f"{folio}.pdf", ContentFile(pdf), save=False)
     document.save()
+    from apps.core.models import PublicLink
+
+    PublicLink.objects.create(
+        token=token, tenant=company.id, kind=PublicLink.Kind.DOCUMENT, object_id=document.id
+    )
     return document
 
 

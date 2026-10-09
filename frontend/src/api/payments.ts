@@ -127,6 +127,8 @@ export interface ReceiptLine {
 }
 
 export interface Receipt {
+  /** Decision 098: the QR (SVG data URI) of its public page. */
+  qr?: string
   number: string
   status: 'posted' | 'reversed'
   kind: string

@@ -243,6 +243,7 @@ class PublicLink(TimeStampedModel):
 
     class Kind(models.TextChoices):
         RECEIPT = "receipt", "Recibo"
+        DOCUMENT = "document", "Documento emitido"  # phase 9: its QR (decision 098)
 
     token = models.CharField(max_length=64, unique=True)
     tenant = models.UUIDField()  # the company; deliberately not a tenant-scoped FK

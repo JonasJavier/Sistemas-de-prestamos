@@ -135,6 +135,10 @@ export function ReceiptView({ receipt, thermal = false }: { receipt: Receipt; th
       {r.replaces ? <p className="text-[12px]">Corrige el recibo {r.replaces}.</p> : null}
 
       <footer className="pt-2 text-center text-[11px]">
+        {r.qr ? (
+          // Decision 098: the receipt's public page, to check it is authentic.
+          <img src={r.qr} alt="Código para verificar el recibo" className="mx-auto mb-1 size-20" />
+        ) : null}
         {r.collected_by ? `Cobró: ${r.collected_by} · ` : ''}Conserve este recibo.
         <div className="mt-1 opacity-70">Generado con Cobradía</div>
       </footer>

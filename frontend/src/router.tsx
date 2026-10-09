@@ -76,6 +76,7 @@ const AgendaPage = lazyRouteComponent(() => import('./pages/Agenda'), 'AgendaPag
 const MyCashPage = lazyRouteComponent(() => import('./pages/MyCash'), 'MyCashPage')
 const MyRoutePage = lazyRouteComponent(() => import('./pages/MyRoute'), 'MyRoutePage')
 const NoticesPage = lazyRouteComponent(() => import('./pages/Notices'), 'NoticesPage')
+const VerifyPage = lazyRouteComponent(() => import('./pages/Verify'), 'VerifyPage')
 const PublicReceiptPage = lazyRouteComponent(
   () => import('./pages/PublicReceipt'),
   'PublicReceiptPage',
@@ -618,6 +619,13 @@ const publicReceiptRoute = createRoute({
   component: PublicReceiptPage,
 })
 
+/** P91: the QR of a document or receipt leads here (decision 098). */
+const verifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/v/$token',
+  component: VerifyPage,
+})
+
 const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     indexRoute,
@@ -674,6 +682,7 @@ const routeTree = rootRoute.addChildren([
   verifyEmailRoute,
   invitationRoute,
   publicReceiptRoute,
+  verifyRoute,
 ])
 
 export function buildRouter(queryClient: QueryClient) {

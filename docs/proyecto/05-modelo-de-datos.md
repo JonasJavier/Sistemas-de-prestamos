@@ -203,7 +203,7 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | Modelo | Qué guarda | Campos clave | Reglas |
 | --- | --- | --- | --- |
 | `DocumentTemplate` | Plantilla | Tipo (pagaré, recibo, recibo térmico, estado de cuenta, carta de saldo, cierre de caja, contratos, legales), versión, motor (HTML o DOCX), contenido, `legal_status` (pendiente o validada), quién la validó y cuándo | Las plantillas legales no se usan en producción sin validar (015) |
-| `GeneratedDocument` | Documento emitido | Tipo, versión de plantilla, `legal_status` al emitir, objeto relacionado, folio, archivo, `sha256`, quién lo emitió (`verification_token` en la fase 9) | Solo admite inserciones (disparador); se reimprime idéntico y se verifica con QR (fase 9) |
+| `GeneratedDocument` | Documento emitido | Tipo, versión de plantilla, `legal_status` al emitir, objeto relacionado, folio, archivo, `sha256`, quién lo emitió; su QR apunta a un enlace público del índice `PublicLink` (decisión 098) | Solo admite inserciones (disparador); se reimprime idéntico y se verifica con QR (fase 9) |
 | `ExportJob` | Exportación en segundo plano | Usuario, reporte, filtros, formato, estado, archivo | Usa los mismos filtros que la pantalla |
 | `CustomerScore` | Clasificación (fase 7) | Cliente, puntuación, grado, factores, cuándo | Explicable (#38) |
 | `CommissionRule`, `CommissionRun`, `CommissionLine` | Comisiones (fase 7) | Regla por rol o persona (base, porcentaje, meta), cálculo del mes, aprobación | Al aprobar, cada monto pasa a cuentas por pagar (089) |

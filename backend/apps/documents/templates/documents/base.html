@@ -51,6 +51,8 @@
   .signatures { display: flex; flex-wrap: wrap; gap: 28px 40px; margin-top: 46px; }
   .signature { flex: 1 1 40%; border-top: 1px solid #1c2420; padding-top: 4px; font-size: 8.5pt; }
   .muted { color: #5b6b63; }
+  .qr { margin-left: 10px; text-align: center; font-size: 6.5pt; color: #5b6b63; }
+  .qr img { width: 58px; height: 58px; display: block; }
 </style>
 </head>
 <body>
@@ -67,6 +69,7 @@
     <h1>{% block heading %}{% endblock %}</h1>
     <div class="number">{% block number %}{% endblock %}</div>
   </div>
+  {% if qr %}<div class="qr"><img src="{{ qr }}" alt=""><div>Verifíquelo</div></div>{% endif %}
 </header>
 {% if legal_pending %}<div class="legal-band">Plantilla de fábrica pendiente de validación legal por el abogado de la empresa (decisión 015).</div>{% endif %}
 {% block content %}{% endblock %}
