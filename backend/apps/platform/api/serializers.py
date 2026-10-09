@@ -20,6 +20,14 @@ class RegistrationSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=150)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    accept_terms = serializers.BooleanField(default=False)
+
+    def validate_accept_terms(self, value: bool) -> bool:
+        if not value:
+            raise serializers.ValidationError(
+                "Para crear la cuenta acepta los términos de servicio y el aviso de privacidad."
+            )
+        return value
 
     def validate_password(self, value: str) -> str:
         validate_password(value)

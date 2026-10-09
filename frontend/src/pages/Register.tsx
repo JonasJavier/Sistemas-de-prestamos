@@ -18,9 +18,15 @@ const schema = z.object({
   phone: z.string().optional(),
   email: z.email('Escribe un correo válido.'),
   password: z.string().min(12, 'Mínimo 12 caracteres.'),
+  accept_terms: z.literal(true, {
+    error: 'Acepta los términos de servicio y el aviso de privacidad.',
+  }),
 })
 
 type FormData = z.infer<typeof schema>
+
+/** The promotion site, where the terms and the privacy notice live. */
+const SITE_URL = 'https://cobradia.com'
 
 function serverError(error: unknown): string {
   if (error instanceof ApiError && error.status === 429) {
@@ -94,6 +100,42 @@ export function RegisterPage() {
           <Field label="Contraseña" error={form.formState.errors.password?.message}>
             <Input type="password" autoComplete="new-password" {...form.register('password')} />
           </Field>
+          {/* Decision 103: the accepted version is recorded with the company. */}
+          <div className="space-y-1">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1 size-4 accent-brand-700"
+                {...form.register('accept_terms')}
+              />
+              <span>
+                Acepto los{' '}
+                <a
+                  href={`${SITE_URL}/terminos`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-brand-700 hover:underline"
+                >
+                  términos de servicio
+                </a>{' '}
+                y el{' '}
+                <a
+                  href={`${SITE_URL}/privacidad`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-brand-700 hover:underline"
+                >
+                  aviso de privacidad
+                </a>
+                .
+              </span>
+            </label>
+            {form.formState.errors.accept_terms ? (
+              <span className="block text-[12.5px] text-danger-600">
+                {form.formState.errors.accept_terms.message}
+              </span>
+            ) : null}
+          </div>
           <Button type="submit" className="w-full" disabled={mutation.isPending}>
             {mutation.isPending ? 'Creando tu cuenta…' : 'Empezar mi prueba gratis'}
           </Button>

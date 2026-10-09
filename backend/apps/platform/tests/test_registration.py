@@ -1,6 +1,7 @@
 import datetime as dt
 
 import pytest
+from django.conf import settings
 from django.core import mail
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -75,6 +76,7 @@ def test_registration_api_creates_company_and_sends_confirmation(db, api_client:
             "last_name": "Mejía",
             "email": "rosa@api.do",
             "password": "una-clave-larga-123",
+            "accept_terms": True,
         },
         format="json",
     )
@@ -82,6 +84,26 @@ def test_registration_api_creates_company_and_sends_confirmation(db, api_client:
     user = User.objects.get(email="rosa@api.do")
     assert user.company is not None
     assert len(mail.outbox) == 1  # email confirmation
+    # Decision 103: the accepted version is on record.
+    assert user.company.terms_version == settings.LEGAL_TERMS_VERSION
+    assert user.company.terms_accepted_at is not None
+
+
+def test_registration_requires_accepting_the_terms(db, api_client: APIClient) -> None:
+    response = api_client.post(
+        "/api/v1/registro/",
+        {
+            "company_legal_name": "Financiera Sin Aceptar SRL",
+            "first_name": "Rosa",
+            "last_name": "Mejía",
+            "email": "rosa@sin.do",
+            "password": "una-clave-larga-123",
+        },
+        format="json",
+    )
+    assert response.status_code == 400
+    assert "accept_terms" in response.json()
+    assert not User.objects.filter(email="rosa@sin.do").exists()
 
 
 def test_registration_api_rejects_duplicate_email(db, api_client: APIClient) -> None:

@@ -48,6 +48,9 @@ class Company(TimeStampedModel):
     logo = models.ImageField(upload_to="company-logos/", blank=True)
     status = models.CharField(max_length=10, choices=Status, default=Status.TRIAL)
     trial_ends_on = models.DateField(null=True, blank=True)
+    # Decision 103: the version of the terms and privacy notice accepted at signup.
+    terms_version = models.CharField(max_length=20, blank=True)
+    terms_accepted_at = models.DateTimeField(null=True, blank=True)
     status_reason = models.CharField(max_length=300, blank=True)
 
     # Operating defaults of F3 (decision 027), editable per company.

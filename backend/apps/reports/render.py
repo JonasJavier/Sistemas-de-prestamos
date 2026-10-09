@@ -145,6 +145,12 @@ def to_xlsx(table: Table, *, company, user) -> bytes:
     for index, column in enumerate(table.columns, start=1):
         width = 14 if column.kind in KINDS_RIGHT | {"date"} else 24
         sheet.column_dimensions[get_column_letter(index)].width = width
+    # Text that starts with «=» (a company's or a customer's name, a note)
+    # stays text: this sheet never carries formulas Excel would run (102).
+    for line in sheet.iter_rows():
+        for cell in line:
+            if cell.data_type == "f":
+                cell.data_type = "s"
     buffer = io.BytesIO()
     book.save(buffer)
     return buffer.getvalue()

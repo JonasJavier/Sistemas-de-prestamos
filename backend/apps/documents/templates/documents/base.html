@@ -57,7 +57,7 @@
 </head>
 <body>
 <header class="company">
-  <div class="monogram">{% if company.logo %}<img src="{{ company.logo.path }}" alt="">{% else %}{{ monogram }}{% endif %}</div>
+  <div class="monogram">{% if logo_uri %}<img src="{{ logo_uri }}" alt="">{% else %}{{ monogram }}{% endif %}</div>
   <div>
     <div class="company-name">{{ company.legal_name }}</div>
     <div class="company-meta">

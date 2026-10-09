@@ -165,6 +165,16 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Decision 102: how many proxies of ours stand in front of Django (Caddy in
+# production). Their X-Forwarded-For gives the visitor's address to the
+# throttles, the login limits and the audit; 0 trusts no header.
+TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
+
+# Decision 103: the terms of service and privacy notice in force (cobradia.com);
+# bump it whenever either text changes.
+LEGAL_TERMS_VERSION = "2026-10-09"
+ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
+
 # Doc 06 - section 6: 5 failed logins lock the address for 15 minutes,
 # plus a per-IP limit (allauth keeps the counters in the cache, Redis).
 ACCOUNT_RATE_LIMITS = {"login_failed": "10/m/ip,5/15m/key"}
@@ -196,6 +206,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "apps.core.api.pagination.Pagination",
     "EXCEPTION_HANDLER": "apps.core.api.errors.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "NUM_PROXIES": TRUSTED_PROXY_COUNT or None,
     "DEFAULT_THROTTLE_RATES": {
         "registration": "5/hour",  # F19: public signup, per IP
         "invitation": "30/hour",  # F17: public invitation lookup/accept, per IP

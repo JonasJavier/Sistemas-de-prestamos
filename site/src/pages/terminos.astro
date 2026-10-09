@@ -1,0 +1,123 @@
+---
+import Legal from '../layouts/Legal.astro'
+import { CONTACT_EMAIL, TRIAL_DAYS } from '../config'
+---
+
+<Legal
+  title="Términos de servicio"
+  description="Condiciones de uso de Cobradía, el sistema de préstamos y cobros para financieras."
+>
+  <p>
+    Estos términos regulan el uso de Cobradía (<strong>cobradia.com</strong> y
+    <strong>app.cobradia.com</strong>), un servicio en línea para administrar préstamos, cobros, caja
+    y contabilidad. Al crear una cuenta, la empresa que se registra («la financiera») y la persona
+    que la registra en su nombre los aceptan.
+  </p>
+
+  <h2>1. El servicio</h2>
+  <p>
+    Cobradía ofrece a cada financiera un espacio propio, aislado del de las demás, con las funciones
+    que se describen en el sitio. Las funciones pueden mejorar o cambiar con el tiempo; si una
+    función que la financiera usa va a desaparecer, se avisará con al menos 30 días.
+  </p>
+
+  <h2>2. Cuenta, usuarios y seguridad</h2>
+  <ul>
+    <li>La persona que registra la financiera declara que tiene autoridad para obligarla.</li>
+    <li>
+      Cada usuario es personal. Todos entran con contraseña y verificación en dos pasos; la
+      financiera responde por lo que hagan sus usuarios y por darles el rol que corresponda.
+    </li>
+    <li>
+      La financiera avisará de inmediato a {CONTACT_EMAIL} si sospecha que alguien usó una cuenta sin
+      permiso.
+    </li>
+  </ul>
+
+  <h2>3. Prueba, suscripción y pagos</h2>
+  <ul>
+    <li>Cada financiera nueva tiene {TRIAL_DAYS} días de prueba gratis, sin tarjeta.</li>
+    <li>
+      Al terminar la prueba, la cuenta queda en <strong>solo lectura</strong> hasta que se active una
+      suscripción: se puede consultar todo, pero no registrar operaciones nuevas.
+    </li>
+    <li>
+      Los planes, sus precios y sus límites se publican en el sitio. La suscripción se paga por
+      adelantado; si un pago no llega, la cuenta pasa a solo lectura y vuelve a la normalidad al
+      pagar.
+    </li>
+    <li>Los cambios de precio se avisan con al menos 30 días.</li>
+  </ul>
+
+  <h2>4. Los datos son de la financiera</h2>
+  <ul>
+    <li>
+      Los datos que la financiera registra (sus clientes, préstamos, pagos y documentos) son suyos.
+      Cobradía los trata solo para prestar el servicio, como encargado del tratamiento, según el
+      <a href="/privacidad">aviso de privacidad</a>.
+    </li>
+    <li>
+      La financiera es responsable de tener la base legal para registrar los datos de sus clientes y
+      de cumplir sus propias obligaciones con ellos, incluida la Ley 172-13 sobre protección de datos
+      personales.
+    </li>
+    <li>
+      Si la financiera cancela, puede pedir una copia de sus datos durante los 90 días siguientes;
+      después se eliminan, salvo lo que la ley obligue a conservar.
+    </li>
+  </ul>
+
+  <h2>5. Uso permitido</h2>
+  <p>La financiera se compromete a usar Cobradía solo para actividades lícitas y, en especial, a no:</p>
+  <ul>
+    <li>cobrar tasas o cargos por encima de los límites que fije la ley;</li>
+    <li>registrar datos de personas sin su autorización cuando la ley la exija;</li>
+    <li>intentar entrar a datos de otra financiera o burlar las medidas de seguridad;</li>
+    <li>enviar mensajes a clientes que pidieron no recibirlos, salvo los que la ley permita.</li>
+  </ul>
+
+  <h2>6. Documentos y cálculos</h2>
+  <p>
+    Los contratos, pagarés, cartas y demás documentos que genera Cobradía son <strong>modelos</strong>.
+    La financiera debe revisarlos con su abogado antes de usarlos y es responsable de su contenido y
+    de las condiciones que pacta con sus clientes. Los cálculos de cuotas, intereses y mora siguen las
+    condiciones que la financiera configura en cada producto.
+  </p>
+
+  <h2>7. Disponibilidad y respaldos</h2>
+  <p>
+    Cobradía hace lo razonable para que el servicio esté disponible y respalda la información cada
+    día, cifrada y fuera del servidor. Las interrupciones programadas se avisan con anticipación y,
+    en lo posible, fuera del horario laboral.
+  </p>
+
+  <h2>8. Responsabilidad</h2>
+  <p>
+    Cobradía responde por prestar el servicio con diligencia. No responde por decisiones de crédito
+    o de cobro de la financiera, ni por daños indirectos o lucro cesante. En cualquier caso, la
+    responsabilidad total de Cobradía frente a la financiera no superará lo que esta pagó por el
+    servicio en los doce meses anteriores al hecho.
+  </p>
+
+  <h2>9. Suspensión y terminación</h2>
+  <p>
+    La financiera puede cancelar en cualquier momento. Cobradía puede suspender una cuenta que
+    incumpla estos términos o ponga en riesgo a otras financieras, avisando la razón; en casos
+    graves, la suspensión puede ser inmediata.
+  </p>
+
+  <h2>10. Cambios a estos términos</h2>
+  <p>
+    Los cambios importantes se avisan por correo y dentro de la app con al menos 30 días. Si la
+    financiera sigue usando el servicio después de esa fecha, acepta la nueva versión.
+  </p>
+
+  <h2>11. Ley y tribunales</h2>
+  <p>
+    Estos términos se rigen por las leyes de la República Dominicana. Cualquier controversia se
+    someterá a los tribunales del Distrito Nacional.
+  </p>
+
+  <h2>12. Contacto</h2>
+  <p>Para cualquier asunto sobre estos términos: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+</Legal>

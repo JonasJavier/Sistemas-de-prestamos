@@ -1,0 +1,23 @@
+---
+import Base from './Base.astro'
+import { LEGAL_UPDATED } from '../config'
+
+/** Terms and privacy: one readable column, with the pending-review band
+ * until the owner's lawyer validates them (doc 10 - 4, criterion 5). */
+interface Props {
+  title: string
+  description: string
+}
+const { title, description } = Astro.props
+---
+
+<Base title={`${title} · Cobradía`} description={description}>
+  <article class="wrap legal">
+    <p class="legal-band" role="note">
+      Borrador pendiente de validación legal. Esta versión puede cambiar antes del lanzamiento.
+    </p>
+    <h1>{title}</h1>
+    <p class="legal-date">Versión del {LEGAL_UPDATED}</p>
+    <slot />
+  </article>
+</Base>

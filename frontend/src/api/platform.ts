@@ -9,6 +9,7 @@ export interface RegistrationPayload {
   last_name: string
   email: string
   password: string
+  accept_terms: boolean
 }
 
 export interface RegistrationResponse {

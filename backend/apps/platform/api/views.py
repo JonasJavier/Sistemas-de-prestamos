@@ -1,4 +1,5 @@
 from allauth.account.models import EmailAddress
+from django.conf import settings
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -42,6 +43,7 @@ class RegistrationView(APIView):
             admin_password=data["password"],
             admin_first_name=data["first_name"],
             admin_last_name=data["last_name"],
+            terms_version=settings.LEGAL_TERMS_VERSION,
         )
         address = EmailAddress.objects.add_email(
             request, result.admin, result.admin.email, confirm=True, signup=True

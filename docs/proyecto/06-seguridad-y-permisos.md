@@ -211,6 +211,8 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
   - Escaneo automático (OWASP ZAP) y una revisión manual de seguridad.
   - Un plan de respuesta a incidentes: a quién avisar, qué rotar y cómo comunicarlo.
 
+> **Fase 10 (decisión 102):** la IP del cliente se toma del único proxy propio (Caddy) para los límites y la auditoría; los PDF no cargan nada de la red ni del disco fuera de la carpeta de medios; las exportaciones a Excel nunca llevan fórmulas. Informe en [`docs/operacion/revision-seguridad.md`](../operacion/revision-seguridad.md).
+
 ## 9. Auditoría
 
 ### Qué se registra

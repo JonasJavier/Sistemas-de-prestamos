@@ -1,14 +1,17 @@
 /** Print one area of the page on a letter sheet or an 80 mm thermal roll
  * (doc 09): the browser prints, so any installed printer works. */
 export function printArea(paper: 'letter' | 'thermal') {
-  const style = document.createElement('style')
-  style.textContent =
+  // A constructed sheet, not a <style> tag: the CSP allows no inline styles
+  // (decision 102).
+  const sheet = new CSSStyleSheet()
+  sheet.replaceSync(
     paper === 'thermal'
       ? '@page { size: 80mm auto; margin: 2mm; }'
-      : '@page { size: letter; margin: 14mm; }'
-  document.head.appendChild(style)
+      : '@page { size: letter; margin: 14mm; }',
+  )
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]
   const cleanup = () => {
-    style.remove()
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter((item) => item !== sheet)
     window.removeEventListener('afterprint', cleanup)
   }
   window.addEventListener('afterprint', cleanup)

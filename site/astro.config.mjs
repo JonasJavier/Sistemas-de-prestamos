@@ -5,5 +5,6 @@ import { defineConfig } from 'astro/config'
 export default defineConfig({
   site: 'https://cobradia.com',
   trailingSlash: 'ignore',
-  build: { format: 'directory' },
+  // Stylesheets as files: the CSP allows no inline styles (decision 102).
+  build: { format: 'directory', inlineStylesheets: 'never' },
 })

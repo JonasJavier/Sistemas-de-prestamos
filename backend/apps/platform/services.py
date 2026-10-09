@@ -71,6 +71,7 @@ def register_company(
     trade_name: str = "",
     rnc: str = "",
     phone: str = "",
+    terms_version: str = "",
 ) -> RegistrationResult:
     today = timezone.localdate()
     trial_plan = Plan.objects.get(is_trial=True, is_active=True)
@@ -82,6 +83,8 @@ def register_company(
         phone=phone,
         status=Company.Status.TRIAL,
         trial_ends_on=today + dt.timedelta(days=TRIAL_DAYS),
+        terms_version=terms_version,
+        terms_accepted_at=timezone.now() if terms_version else None,
     )
     Subscription.objects.create(
         company=company,

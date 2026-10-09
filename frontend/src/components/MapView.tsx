@@ -24,7 +24,8 @@ const DEFAULT_CENTER: [number, number] = [18.4861, -69.9312]
 
 /** OpenStreetMap through Leaflet, loaded only on the screens with a map.
  * Points are drawn as circles (no image assets); the trail joins the
- * collector's pings in time order. Phase 10 reviews the tile provider. */
+ * collector's pings in time order. The CSP allows these tiles only
+ * (decision 102); a paid tile provider replaces them if use grows. */
 export default function MapView({
   points,
   trail = false,

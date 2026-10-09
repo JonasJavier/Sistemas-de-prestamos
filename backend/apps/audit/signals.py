@@ -4,6 +4,7 @@ from allauth.account.signals import user_logged_in
 from django.dispatch import receiver
 from django.utils import timezone
 
+from apps.core.net import client_ip
 from apps.core.tenancy import company_context
 
 
@@ -23,7 +24,7 @@ def record_login(sender, request, user, **kwargs) -> None:
             company_id=user.company_id,
             user=user,
             at=now,
-            ip=request.META.get("REMOTE_ADDR") or None,
+            ip=client_ip(request),
             user_agent=agent,
             # The very first sign-in has nothing to compare with: not «new».
             new_device=not known and not first_ever,

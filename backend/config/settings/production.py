@@ -16,6 +16,11 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# Decision 102: Caddy is the one proxy of ours in front of Gunicorn.
+TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=1)
+ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
+REST_FRAMEWORK = {**REST_FRAMEWORK, "NUM_PROXIES": TRUSTED_PROXY_COUNT or None}  # noqa: F405
+
 # Decision 101: no Django admin (it has no 2FA) and no public API schema.
 ADMIN_ENABLED = env.bool("ADMIN_ENABLED", default=False)
 API_DOCS = env.bool("API_DOCS", default=False)

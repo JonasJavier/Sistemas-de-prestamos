@@ -10,7 +10,11 @@ same whenever they are produced.
 import hashlib
 import secrets
 from decimal import Decimal
+from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -70,11 +74,38 @@ def _monogram(company: Company) -> str:
     return "".join(initials[:2]).upper() or "C"
 
 
+def check_resource(url: str) -> None:
+    """What a document may load (decision 102): embedded data (QR codes)
+    and the company's own files under MEDIA_ROOT (its logo). Nothing from
+    the network nor elsewhere on the disk, whatever ends up in the HTML."""
+    if url.startswith("data:"):
+        return
+    if url.startswith("file:"):
+        path = Path(url2pathname(urlparse(url).path)).resolve()
+        if path.is_relative_to(Path(settings.MEDIA_ROOT).resolve()):
+            return
+    raise ValueError(f"Recurso no permitido en un documento: {url[:80]}")
+
+
+def _fetcher():
+    from weasyprint.urls import URLFetcher
+
+    class DocumentFetcher(URLFetcher):
+        def fetch(self, url, headers=None):
+            check_resource(url)
+            return super().fetch(url, headers)
+
+    return DocumentFetcher(allowed_protocols={"data", "file"}, allow_redirects=False)
+
+
 def render_pdf(template: str, context: dict) -> bytes:
     from weasyprint import HTML  # heavy import, only when a document is issued
 
+    company = context.get("company")
+    if company is not None and getattr(company, "logo", None):
+        context = {**context, "logo_uri": Path(company.logo.path).resolve().as_uri()}
     html = render_to_string(template, context)
-    return HTML(string=html).write_pdf()
+    return HTML(string=html, url_fetcher=_fetcher()).write_pdf()
 
 
 def issue(

@@ -725,3 +725,55 @@ summary:focus-visible {
   border-top: 1px solid rgb(255 255 255 / 0.12);
   font-size: 0.82rem;
 }
+
+/* Terms and privacy */
+.legal {
+  max-width: 46rem;
+  padding-top: 3rem;
+  padding-bottom: 1rem;
+}
+
+.legal h1 {
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+}
+
+.legal h2 {
+  font-size: 1.15rem;
+  margin: 2rem 0 0.5rem;
+}
+
+.legal p,
+.legal li {
+  color: var(--ink);
+}
+
+.legal p + p {
+  margin-top: 0.75rem;
+}
+
+.legal ul {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.legal a {
+  color: var(--brand-700);
+}
+
+.legal-band {
+  border: 1px solid #e3c766;
+  background: #f6e7c1;
+  color: #5c4500;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.legal-date {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.4rem 0 1.5rem;
+}

@@ -1,0 +1,96 @@
+---
+import Legal from '../layouts/Legal.astro'
+import { CONTACT_EMAIL } from '../config'
+---
+
+<Legal
+  title="Aviso de privacidad"
+  description="Cómo Cobradía trata los datos personales de las financieras, sus usuarios y sus clientes."
+>
+  <p>
+    Este aviso explica qué datos personales trata Cobradía, para qué y con qué derechos, conforme a
+    la Ley 172-13 sobre protección de datos de carácter personal de la República Dominicana.
+  </p>
+
+  <h2>1. Dos papeles distintos</h2>
+  <ul>
+    <li>
+      <strong>Responsable</strong> de los datos de las personas que usan Cobradía en nombre de una
+      financiera (gerentes, cajeros, cobradores…) y de quienes nos escriben.
+    </li>
+    <li>
+      <strong>Encargado</strong> de los datos que cada financiera registra sobre sus clientes, fiadores
+      y referencias. Esos datos son de la financiera: Cobradía los trata solo para prestarle el
+      servicio y siguiendo sus instrucciones. Si eres cliente de una financiera, tus derechos los
+      ejerces ante ella.
+    </li>
+  </ul>
+
+  <h2>2. Qué datos tratamos</h2>
+  <ul>
+    <li>
+      <strong>De los usuarios:</strong> nombre, correo, teléfono, rol y sucursal; los inicios de
+      sesión (fecha, dirección IP y dispositivo) y el registro de lo que hace cada uno en el sistema
+      (auditoría).
+    </li>
+    <li>
+      <strong>De los clientes de cada financiera</strong> (como encargado): los que la financiera
+      decide registrar, como identificación, contacto, ingresos, garantías, préstamos, pagos,
+      gestiones de cobro y documentos.
+    </li>
+  </ul>
+
+  <h2>3. Para qué</h2>
+  <ul>
+    <li>Prestar el servicio: cálculos, cobros, caja, contabilidad, documentos y reportes.</li>
+    <li>Proteger las cuentas: verificación en dos pasos y alertas por accesos desde dispositivos nuevos o movimientos fuera de lo normal.</li>
+    <li>Enviar los mensajes que la financiera activa (recordatorios, avisos y recibos).</li>
+    <li>Cobrar la suscripción y dar soporte cuando la financiera lo pide.</li>
+  </ul>
+  <p>No vendemos datos ni los usamos para publicidad.</p>
+
+  <h2>4. Con quién se comparten</h2>
+  <p>
+    Solo con los proveedores que hacen posible el servicio, obligados a la confidencialidad: el
+    servidor donde se aloja Cobradía, el proveedor de correo, el de WhatsApp y SMS (cuando la
+    financiera los usa) y el de monitoreo de errores, al que no se envían datos personales. Algunos
+    pueden estar fuera de la República Dominicana. También se entregan datos a una autoridad cuando
+    la ley lo exige.
+  </p>
+
+  <h2>5. Cómo se protegen</h2>
+  <ul>
+    <li>Conexión cifrada (HTTPS) y respaldos diarios cifrados fuera del servidor.</li>
+    <li>Los datos de cada financiera, aislados de los de las demás en la base de datos.</li>
+    <li>Verificación en dos pasos para todos los usuarios y permisos por rol.</li>
+    <li>Datos sensibles enmascarados en pantallas y reportes para quien no los necesita.</li>
+    <li>El soporte entra solo con un permiso temporal y un motivo, en solo lectura, auditado y visible para la financiera, que puede retirarlo.</li>
+  </ul>
+
+  <h2>6. Cuánto tiempo</h2>
+  <p>
+    Mientras la financiera tenga su cuenta. Si cancela, sus datos se eliminan a los 90 días, salvo lo
+    que la ley obligue a conservar; los respaldos cifrados se borran en el ciclo de retención
+    siguiente.
+  </p>
+
+  <h2>7. Tus derechos</h2>
+  <p>
+    Puedes pedir acceso a tus datos, que se corrijan, que se supriman o que no se usen para algún
+    fin, escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Respondemos en el plazo
+    que fija la ley. Si eres cliente de una financiera, dirígete a ella; si nos escribes, le
+    pasaremos tu pedido.
+  </p>
+
+  <h2>8. Cookies</h2>
+  <p>
+    La app usa solo las cookies necesarias para mantener la sesión abierta y protegerla. El sitio
+    cobradia.com no usa cookies ni herramientas de seguimiento.
+  </p>
+
+  <h2>9. Cambios</h2>
+  <p>
+    Si este aviso cambia de forma importante, lo avisaremos por correo y dentro de la app antes de
+    que la nueva versión aplique.
+  </p>
+</Legal>
