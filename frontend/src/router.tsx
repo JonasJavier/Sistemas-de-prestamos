@@ -554,6 +554,7 @@ const customersRoute = createRoute({
 const customerNewRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/clientes/nuevo',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.originate),
   component: CustomerNewPage,
 })
 

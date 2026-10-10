@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 
+import { DateInput } from './DateInput'
 import type { PromptOptions } from './Dialog'
 import { Modal } from './Modal'
 import { Button, Field, Input, Textarea } from './ui'
@@ -37,6 +38,8 @@ export function PromptDialog({
                 value={value}
                 onChange={(event) => setValue(event.target.value)}
               />
+            ) : type === 'date' ? (
+              <DateInput autoFocus value={value} onChange={setValue} />
             ) : (
               <Input
                 autoFocus

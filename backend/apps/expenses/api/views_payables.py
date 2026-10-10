@@ -38,6 +38,7 @@ def _payload(payable: Payable, *, detail: bool = False) -> dict:
         "category_name": payable.category.name,
         "branch_name": payable.branch.name,
         "amount": str(payable.amount),
+        "itbis": str(payable.itbis),
         "paid": str(payable.paid),
         "outstanding": str(payable.outstanding),
         "due_on": payable.due_on,
@@ -87,12 +88,19 @@ class CreateSerializer(serializers.Serializer):
     ncf = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
     description = serializers.CharField(max_length=280)
     amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+    itbis = serializers.DecimalField(max_digits=14, decimal_places=2, required=False, default=ZERO)
     due_on = serializers.DateField()
     invoice_on = serializers.DateField(required=False, allow_null=True)
     frequency = serializers.ChoiceField(
         choices=[("", ""), *PayableSeries.Frequency.choices], required=False, default=""
     )
     count = serializers.IntegerField(required=False, default=1, min_value=1)
+
+
+class ReceiptSerializer(serializers.Serializer):
+    party_document = serializers.CharField(max_length=20, allow_blank=True)
+    ncf = serializers.CharField(max_length=20, allow_blank=True)
+    itbis = serializers.DecimalField(max_digits=14, decimal_places=2, required=False, default=ZERO)
 
 
 class PaySerializer(serializers.Serializer):
@@ -184,6 +192,18 @@ class PayableViewSet(viewsets.GenericViewSet):
             payables.cancel(
                 payable=payable, user=request.user, reason=str(request.data.get("reason", ""))
             )
+        except ExpenseError as exc:
+            return fail(exc)
+        return Response(_payload(self.get_queryset().get(pk=pk), detail=True))
+
+    @action(detail=True, methods=["post"])
+    def comprobante(self, request: Request, pk=None) -> Response:
+        """The supplier's invoice (NCF, RNC, ITBIS) once it arrives."""
+        payable = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = ReceiptSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            payables.set_receipt(payable=payable, user=request.user, **serializer.validated_data)
         except ExpenseError as exc:
             return fail(exc)
         return Response(_payload(self.get_queryset().get(pk=pk), detail=True))

@@ -15,6 +15,7 @@ import {
   Spinner,
 } from '../components/ui'
 import { day, errorMessage } from '../lib/format'
+import { DateInput } from '../components/DateInput'
 
 interface Holiday {
   id: string
@@ -144,7 +145,16 @@ export function HolidaysPage() {
                   <button
                     type="button"
                     className="text-[12.5px] text-danger-600 hover:underline"
-                    onClick={() => remove.mutate(holiday.id)}
+                    onClick={async () => {
+                      const confirmed = await ask({
+                        title: `Quitar ${holiday.name}`,
+                        description:
+                          'Los préstamos nuevos ya no correrán al día siguiente las cuotas de esa fecha; los desembolsados conservan las suyas.',
+                        confirmText: 'Quitar',
+                        danger: true,
+                      })
+                      if (confirmed !== null) remove.mutate(holiday.id)
+                    }}
                   >
                     Quitar
                   </button>
@@ -179,7 +189,7 @@ export function HolidaysPage() {
           }}
         >
           <Field label="Fecha">
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateInput value={date} onChange={setDate} />
           </Field>
           <Field label="Nombre">
             <Input

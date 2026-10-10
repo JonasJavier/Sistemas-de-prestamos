@@ -63,10 +63,14 @@ function useLocationPings(active: boolean) {
   }, [active])
 }
 
+/** Directions to the pin, else to the address; none when neither is known
+ * (an empty destination opens a blank map). */
 function directions(stop: RouteStop) {
   const target =
     stop.latitude && stop.longitude ? `${stop.latitude},${stop.longitude}` : stop.address
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(target)}`
+  return target
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(target)}`
+    : null
 }
 
 function StopCard({
@@ -100,6 +104,7 @@ function StopCard({
     },
   })
   const done = Boolean(stop.payment || stop.action)
+  const mapLink = directions(stop)
   return (
     <li
       className={`rounded-xl border bg-surface p-4 shadow-sm ${done ? 'border-success-600/40 opacity-80' : 'border-edge'}`}
@@ -143,32 +148,38 @@ function StopCard({
         </p>
       ) : null}
       <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
-        <a
-          href={`tel:${stop.phone}`}
-          className={buttonClass('secondary', '!h-11 !px-2')}
-          aria-label={`Llamar al ${phoneText(stop.phone)}`}
-        >
-          Llamar
-        </a>
-        <a
-          href={whatsappLink(
-            stop.phone,
-            `Hola ${stop.customer_name.split(' ')[0]}, le escribe su cobrador.`,
-          )}
-          target="_blank"
-          rel="noopener"
-          className={buttonClass('secondary', '!h-11 !px-2')}
-        >
-          WhatsApp
-        </a>
-        <a
-          href={directions(stop)}
-          target="_blank"
-          rel="noopener"
-          className={buttonClass('secondary', '!h-11 !px-2')}
-        >
-          Cómo llegar
-        </a>
+        {stop.phone ? (
+          <>
+            <a
+              href={`tel:${stop.phone}`}
+              className={buttonClass('secondary', '!h-11 !px-2')}
+              aria-label={`Llamar al ${phoneText(stop.phone)}`}
+            >
+              Llamar
+            </a>
+            <a
+              href={whatsappLink(
+                stop.phone,
+                `Hola ${stop.customer_name.split(' ')[0]}, le escribe su cobrador.`,
+              )}
+              target="_blank"
+              rel="noopener"
+              className={buttonClass('secondary', '!h-11 !px-2')}
+            >
+              WhatsApp
+            </a>
+          </>
+        ) : null}
+        {mapLink ? (
+          <a
+            href={mapLink}
+            target="_blank"
+            rel="noopener"
+            className={buttonClass('secondary', '!h-11 !px-2')}
+          >
+            Cómo llegar
+          </a>
+        ) : null}
         {open && !stop.payment ? (
           <Link
             to="/cobrar/$numero"
@@ -306,11 +317,16 @@ export function MyRoutePage() {
     <>
       <PageHeader
         title="Mi ruta"
-        subtitle={new Date(`${data.date}T00:00:00`).toLocaleDateString('es-DO', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-        })}
+        subtitle={
+          // «Viernes, 9 de octubre», as the dashboard writes the date.
+          <span className="block first-letter:uppercase">
+            {new Date(`${data.date}T00:00:00`).toLocaleDateString('es-DO', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </span>
+        }
         actions={
           isOpen ? (
             <Button variant="secondary" onClick={() => setSummary(true)}>

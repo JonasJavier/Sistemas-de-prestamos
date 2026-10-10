@@ -66,7 +66,10 @@ export function RegisterPage() {
   }
 
   return (
-    <PublicPage subtitle="Crea la cuenta de tu financiera · 30 días gratis, sin tarjeta">
+    <PublicPage
+      subtitle="Crea la cuenta de tu financiera"
+      lead="30 días de prueba gratis, sin tarjeta."
+    >
       <Card>
         <form
           className="space-y-4"

@@ -19,7 +19,7 @@ import {
   Card,
   EmptyState,
   Field,
-  Input,
+  MonthInput,
   PageHeader,
   RowList,
   Select,
@@ -27,6 +27,7 @@ import {
   Tabs,
 } from '../components/ui'
 import { day, errorMessage, moment, pct, rd, todayISO, plural } from '../lib/format'
+import { DateInput } from '../components/DateInput'
 
 const TABS = [
   ['reports', 'Reportes'],
@@ -64,11 +65,10 @@ function FilterField({
     const fallback = spec.kind === 'from' ? `${todayISO().slice(0, 8)}01` : todayISO()
     return (
       <Field label={spec.label}>
-        <Input
-          type="date"
+        <DateInput
           max={spec.kind === 'date' ? todayISO() : undefined}
           value={value || fallback}
-          onChange={(e) => onChange(spec.key, e.target.value)}
+          onChange={(date) => onChange(spec.key, date)}
         />
       </Field>
     )
@@ -76,11 +76,11 @@ function FilterField({
   if (spec.kind === 'month') {
     return (
       <Field label={spec.label}>
-        <Input
-          type="month"
+        <MonthInput
+          label={spec.label}
           max={todayISO().slice(0, 7)}
           value={value || todayISO().slice(0, 7)}
-          onChange={(e) => onChange(spec.key, e.target.value)}
+          onChange={(month) => onChange(spec.key, month)}
         />
       </Field>
     )

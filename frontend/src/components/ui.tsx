@@ -1,7 +1,20 @@
-import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 
 import { ApiError } from '../api/client'
-import { errorMessage, fractionToPercent, percentToFraction, splitAmount } from '../lib/format'
+import {
+  errorMessage,
+  fractionToPercent,
+  percentToFraction,
+  splitAmount,
+  todayISO,
+} from '../lib/format'
 import { buttonClass, type ButtonVariant } from './classes'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
@@ -73,7 +86,8 @@ export function Alert({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-edge bg-surface p-6 shadow-sm ${className}`}>
+    // 16 px of padding on a phone, 24 from a tablet up: the content gets the width.
+    <div className={`rounded-xl border border-edge bg-surface p-4 shadow-sm sm:p-6 ${className}`}>
       {children}
     </div>
   )
@@ -183,6 +197,72 @@ export function Select(props: ComponentProps<'select'>) {
   return <select className={`h-11 sm:h-9 ${controlClasses}`} {...props} />
 }
 
+const MONTH_NAMES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
+/** A month («2026-10») picked with two selects in Spanish: `<input
+ * type="month">` speaks the browser's language and is a bare text box in
+ * Firefox and Safari. ``max`` («YYYY-MM») hides the months after it. */
+export function MonthInput({
+  value,
+  onChange,
+  max,
+  label = 'Mes',
+}: {
+  value: string
+  onChange: (month: string) => void
+  max?: string
+  label?: string
+}) {
+  const [year, month] = (value || todayISO().slice(0, 7)).split('-').map(Number)
+  const lastYear = Number((max ?? todayISO()).slice(0, 4)) + (max ? 0 : 1)
+  const lastMonth = (y: number) => (max && y === lastYear ? Number(max.slice(5, 7)) : 12)
+  const firstYear = Math.min(year, lastYear - 5)
+  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => lastYear - i)
+  const pick = (y: number, m: number) =>
+    onChange(`${y}-${String(Math.min(m, lastMonth(y))).padStart(2, '0')}`)
+  return (
+    <span className="flex gap-2">
+      <select
+        aria-label={`${label}: mes`}
+        value={month}
+        onChange={(e) => pick(year, Number(e.target.value))}
+        className={`h-11 min-w-0 flex-1 sm:h-9 ${controlClasses}`}
+      >
+        {MONTH_NAMES.slice(0, lastMonth(year)).map((name, index) => (
+          <option key={name} value={index + 1}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <select
+        aria-label={`${label}: año`}
+        value={year}
+        onChange={(e) => pick(Number(e.target.value), month)}
+        className={`h-11 !w-24 shrink-0 sm:h-9 ${controlClasses}`}
+      >
+        {years.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+    </span>
+  )
+}
+
 export function Textarea(props: ComponentProps<'textarea'>) {
   return <textarea rows={3} className={`py-2 ${controlClasses}`} {...props} />
 }
@@ -251,16 +331,49 @@ export function Tabs<T extends string>({
   value: T
   onChange: (value: T) => void
 }) {
+  const list = useRef<HTMLDivElement>(null)
+  const buttons = useRef<(HTMLButtonElement | null)[]>([])
+  const active = tabs.findIndex(([key]) => key === value)
+  // On a phone the tabs scroll sideways: the chosen one is always in sight
+  // (only the strip moves, never the page).
+  useEffect(() => {
+    const strip = list.current
+    const tab = buttons.current[active]
+    if (!strip || !tab) return
+    const box = strip.getBoundingClientRect()
+    const own = tab.getBoundingClientRect()
+    if (own.left < box.left) strip.scrollLeft -= box.left - own.left + 16
+    else if (own.right > box.right) strip.scrollLeft += own.right - box.right + 16
+  }, [active])
+  // Arrows, Home and End move between tabs (WAI-ARIA tabs pattern).
+  const move = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = tabs.length - 1
+    const next = {
+      ArrowRight: index === last ? 0 : index + 1,
+      ArrowLeft: index === 0 ? last : index - 1,
+      Home: 0,
+      End: last,
+    }[event.key]
+    if (next === undefined) return
+    event.preventDefault()
+    onChange(tabs[next][0])
+    buttons.current[next]?.focus()
+  }
   return (
-    <nav role="tablist" className="flex gap-1 overflow-x-auto border-b border-edge">
-      {tabs.map(([key, label]) => (
+    <div ref={list} role="tablist" className="flex gap-1 overflow-x-auto border-b border-edge">
+      {tabs.map(([key, label], index) => (
         <button
           key={key}
+          ref={(node) => {
+            buttons.current[index] = node
+          }}
           type="button"
           role="tab"
           aria-selected={value === key}
+          tabIndex={value === key || (active === -1 && index === 0) ? 0 : -1}
           onClick={() => onChange(key)}
-          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${
+          onKeyDown={(event) => move(event, index)}
+          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
             value === key
               ? 'border-brand-700 text-brand-700'
               : 'border-transparent text-muted hover:text-ink'
@@ -269,7 +382,7 @@ export function Tabs<T extends string>({
           {label}
         </button>
       ))}
-    </nav>
+    </div>
   )
 }
 
@@ -350,7 +463,16 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
 
 /** Layout of the screens outside the app: sign in, sign up, links. On wide
  * screens a brand panel keeps the first impression in Cobradía's identity. */
-export function PublicPage({ subtitle, children }: { subtitle?: string; children: ReactNode }) {
+export function PublicPage({
+  subtitle,
+  lead,
+  children,
+}: {
+  subtitle?: string
+  /** A second, quieter line under the subtitle. */
+  lead?: string
+  children: ReactNode
+}) {
   return (
     <div className="flex min-h-screen">
       <aside className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden bg-brand-950 p-10 text-white lg:flex">
@@ -395,6 +517,7 @@ export function PublicPage({ subtitle, children }: { subtitle?: string; children
                 {subtitle}
               </h1>
             ) : null}
+            {lead ? <p className="mt-1 text-sm text-muted">{lead}</p> : null}
           </div>
           {children}
         </div>

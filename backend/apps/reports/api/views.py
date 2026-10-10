@@ -232,12 +232,18 @@ class PortfolioReportView(APIView):
             product_id=_uuid(request, "producto"),
         )
         totals = indicators.portfolio_of(rows)
+        from apps.collections.models import DelinquencySnapshot
+
         return Response(
             plain(
                 {
                     "date": as_of,
                     "scope": scope_label(branches),
                     "snapshot": as_of < today,
+                    # A night without a photo (before the company started, or
+                    # the nightly run did not happen) is not a zero portfolio.
+                    "missing_snapshot": as_of < today
+                    and not DelinquencySnapshot.objects.filter(date=as_of).exists(),
                     "cut": by,
                     "totals": totals.as_dict(),
                     "rows": indicators.portfolio_cuts(rows, by),

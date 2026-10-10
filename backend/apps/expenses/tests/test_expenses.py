@@ -70,6 +70,32 @@ def test_the_manager_registers_an_expense_that_lands_in_the_books(tenant) -> Non
     books_square(tenant)
 
 
+def test_a_suppliers_receipt_is_entered_once(tenant) -> None:
+    manager = tenant.client("gerente")
+    first = manager.post("/api/v1/gastos/", body(tenant), format="json").json()
+    twice = manager.post("/api/v1/gastos/", body(tenant), format="json")
+    assert twice.status_code == 400 and twice.json()["code"] == "ncf"
+    assert first["number"] in twice.json()["detail"]
+    # Another supplier may print the same number; an edit cannot copy it.
+    other = manager.post(
+        "/api/v1/gastos/",
+        body(tenant, party_document="131234567", ncf="B0100000123"),
+        format="json",
+    )
+    assert other.status_code == 201, other.content
+    copied = manager.patch(
+        f"/api/v1/gastos/{other.json()['id']}/", {"party_document": "101821248"}, format="json"
+    )
+    assert copied.status_code == 400
+    # Once voided, the receipt can be entered again (corrected).
+    voided = manager.post(
+        f"/api/v1/gastos/{first['id']}/anular/", {"note": "Monto mal"}, format="json"
+    )
+    assert voided.json()["status"] == "voided", voided.content
+    again = manager.post("/api/v1/gastos/", body(tenant), format="json")
+    assert again.status_code == 201, again.content
+
+
 def test_above_the_limit_someone_else_approves_and_only_then_money_moves(tenant) -> None:
     supervisor = tenant.client("supervisor")
     response = supervisor.post(
@@ -86,7 +112,7 @@ def test_above_the_limit_someone_else_approves_and_only_then_money_moves(tenant)
     approved = tenant.client("gerente").post(f"/api/v1/gastos/{expense_id}/aprobar/")
     assert approved.json()["status"] == "posted", approved.content
     second = supervisor.post(
-        "/api/v1/gastos/", body(tenant, amount="9000", itbis="0"), format="json"
+        "/api/v1/gastos/", body(tenant, amount="9000", itbis="0", ncf="B0100000124"), format="json"
     )
     refused = tenant.client("gerente").post(f"/api/v1/gastos/{second.json()['id']}/rechazar/", {})
     assert refused.status_code == 400  # a rejection needs its reason

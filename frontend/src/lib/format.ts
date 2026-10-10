@@ -96,6 +96,30 @@ export const dateOf = (value: string | null | undefined) =>
       })
     : '—'
 
+/** «2026-10-09» → «09/10/2026», the way a date box shows it. */
+export const dateText = (iso: string | null | undefined) =>
+  iso && /^\d{4}-\d{2}-\d{2}/.test(iso)
+    ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
+    : ''
+
+/** What someone typed in a date box («9/10/2026», «09/10/2026» or a pasted
+ * «2026-10-09») → YYYY-MM-DD; null while incomplete or not a real day. */
+export function dateFromText(text: string): string | null {
+  const trimmed = text.trim()
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed)
+  const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed)
+  const [y, m, d] = iso
+    ? [Number(iso[1]), Number(iso[2]), Number(iso[3])]
+    : dmy
+      ? [Number(dmy[3]), Number(dmy[2]), Number(dmy[1])]
+      : [0, 0, 0]
+  if (!y || y < 1900) return null
+  const date = new Date(Date.UTC(y, m - 1, d))
+  if (date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null // 31/02
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${y}-${pad(m)}-${pad(d)}`
+}
+
 /** Today as YYYY-MM-DD in local time (toISOString would give UTC's date). */
 export function todayISO(daysAhead = 0) {
   const now = new Date()

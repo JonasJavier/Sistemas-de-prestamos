@@ -14,6 +14,7 @@ import { errorMessage, rd, todayISO } from '../lib/format'
 import { notify } from '../lib/toast'
 import { Modal } from './Modal'
 import { Alert, Button, Field, Input, Select } from './ui'
+import { DateInput } from './DateInput'
 
 const listPayAccounts = (): Promise<{ id: string; name: string; kind: string }[]> =>
   api('/api/v1/gastos/cuentas/')
@@ -133,11 +134,10 @@ export function ExpenseDialog({
           {fromDrawer ? null : (
             <>
               <Field label="Fecha del comprobante">
-                <Input
-                  type="date"
+                <DateInput
                   value={form.date}
                   max={todayISO()}
-                  onChange={(e) => set('date', e.target.value)}
+                  onChange={(date) => set('date', date)}
                 />
               </Field>
               <Field label="Sucursal">

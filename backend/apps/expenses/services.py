@@ -24,7 +24,7 @@ from apps.cash.services import STALE_MESSAGE, is_stale, open_session_of
 from apps.core.models import Branch, Sequence
 from apps.customers.files import inspect_private_file
 from apps.customers.validators import clean_document, validate_cedula
-from apps.expenses.models import Expense, ExpenseCategory, ExpenseFile, Kind
+from apps.expenses.models import Expense, ExpenseCategory, ExpenseFile, Kind, Payable
 from apps.ledger import accounting
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount
@@ -55,6 +55,41 @@ def clean_ncf(value: str) -> str:
             "El NCF no es válido: B01…B17 con 8 dígitos o E31…E47 con 10 (e-CF).", "ncf"
         )
     return ncf
+
+
+def ensure_new_receipt(
+    *,
+    kind: str,
+    ncf: str,
+    party_document: str,
+    expense: Expense | None = None,
+    payable: Payable | None = None,
+) -> None:
+    """A supplier's receipt is entered once: as a paid expense or as a
+    payable, never both nor twice (the 606 would count it twice and the
+    DGII rejects a repeated NCF of the same issuer)."""
+    if not ncf:
+        return
+    expenses = Expense.objects.filter(kind=kind, ncf=ncf, party_document=party_document).exclude(
+        status__in=[Expense.Status.REJECTED, Expense.Status.VOIDED]
+    )
+    if expense is not None:
+        expenses = expenses.exclude(pk=expense.pk)
+    twin = expenses.first()
+    if twin is not None:
+        raise ExpenseError(f"El NCF {ncf} ya está registrado en {twin.number}.", "ncf")
+    if kind != Kind.EXPENSE:
+        return
+    payables = Payable.objects.filter(ncf=ncf, party_document=party_document).exclude(
+        status=Payable.Status.CANCELLED
+    )
+    if payable is not None:
+        payables = payables.exclude(pk=payable.pk)
+    owed = payables.first()
+    if owed is not None:
+        raise ExpenseError(
+            f"El NCF {ncf} ya está registrado en la cuenta por pagar a {owed.party_name}.", "ncf"
+        )
 
 
 def clean_party_document(value: str) -> str:
@@ -172,6 +207,8 @@ def register(
         raise ExpenseError(
             "Supera tu límite para gastos: pídele al supervisor que lo registre.", "limit"
         )
+    ncf, party_document = clean_ncf(ncf), clean_party_document(party_document)
+    ensure_new_receipt(kind=kind, ncf=ncf, party_document=party_document)
     expense = Expense.objects.create(
         company_id=user.company_id,
         number=Sequence.allocate(
@@ -188,8 +225,8 @@ def register(
         account=account,
         cash_session=session,
         party_name=party_name.strip()[:200],
-        party_document=clean_party_document(party_document),
-        ncf=clean_ncf(ncf),
+        party_document=party_document,
+        ncf=ncf,
         created_by=user,
     )
     for upload in files or []:
@@ -385,5 +422,8 @@ def update_details(*, expense: Expense, user: User, **changes) -> Expense:
             setattr(expense, key, value.strip() if isinstance(value, str) else value)
     if not expense.description:
         raise ExpenseError("Describe el gasto o el ingreso.", "description")
+    ensure_new_receipt(
+        kind=expense.kind, ncf=expense.ncf, party_document=expense.party_document, expense=expense
+    )
     expense.save()
     return expense

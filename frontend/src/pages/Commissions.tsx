@@ -24,6 +24,7 @@ import {
   EmptyState,
   Field,
   Input,
+  MonthInput,
   PageHeader,
   PercentInput,
   Select,
@@ -255,12 +256,7 @@ export function CommissionsPage({ me }: { me: Me }) {
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Mes">
-              <Input
-                type="month"
-                max={todayISO().slice(0, 7)}
-                value={month}
-                onChange={(e) => e.target.value && setMonth(e.target.value)}
-              />
+              <MonthInput max={todayISO().slice(0, 7)} value={month} onChange={setMonth} />
             </Field>
             {operate && run?.status !== 'approved' ? (
               <Button
@@ -299,16 +295,22 @@ export function CommissionsPage({ me }: { me: Me }) {
               </div>
               {run.lines.length ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-max text-sm">
+                  <table className="w-full text-sm sm:min-w-max">
                     <thead>
                       <tr className="border-y border-edge text-left text-[12.5px] text-muted">
                         <th className="px-4 py-2 font-medium">Empleado</th>
-                        <th className="px-3 py-2 font-medium">Regla</th>
-                        <th className="px-3 py-2 text-right font-medium">Base</th>
-                        <th className="px-3 py-2 text-right font-medium">%</th>
-                        <th className="px-3 py-2 text-right font-medium">Meta</th>
+                        {/* On a phone: who and how much; the rule and its base
+                            go under the name. */}
+                        <th className="hidden px-3 py-2 font-medium sm:table-cell">Regla</th>
+                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
+                          Base
+                        </th>
+                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">%</th>
+                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
+                          Meta
+                        </th>
                         <th className="px-3 py-2 text-right font-medium">Comisión</th>
-                        <th className="px-4 py-2 font-medium">Por pagar</th>
+                        <th className="hidden px-4 py-2 font-medium sm:table-cell">Por pagar</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -317,25 +319,33 @@ export function CommissionsPage({ me }: { me: Me }) {
                           <td className="px-4 py-2">
                             <div className="font-semibold">{line.user}</div>
                             <div className="text-[12px] text-muted">{line.role}</div>
+                            <div className="text-[12px] text-muted sm:hidden">
+                              {line.rule} · {pct(line.rate)} de {rd(line.base_amount)}
+                              {Number(line.goal) && !line.reached_goal
+                                ? ' · no alcanzó la meta'
+                                : ''}
+                            </div>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="hidden px-3 py-2 sm:table-cell">
                             {line.rule}
                             <div className="text-[12px] text-muted">{line.base_label}</div>
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums">
+                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
                             {rd(line.base_amount)}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums">{pct(line.rate)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">
+                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
+                            {pct(line.rate)}
+                          </td>
+                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
                             {Number(line.goal) ? rd(line.goal) : '—'}
                             {Number(line.goal) && !line.reached_goal ? (
                               <div className="text-[12px] text-warning-700">No la alcanzó</div>
                             ) : null}
                           </td>
-                          <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                          <td className="whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums">
                             {rd(line.amount)}
                           </td>
-                          <td className="px-4 py-2 text-[12.5px]">
+                          <td className="hidden px-4 py-2 text-[12.5px] sm:table-cell">
                             {line.payable ? line.payable.status : '—'}
                           </td>
                         </tr>

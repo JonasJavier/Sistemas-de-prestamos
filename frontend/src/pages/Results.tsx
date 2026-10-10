@@ -3,9 +3,10 @@ import { useState } from 'react'
 
 import { listBranches } from '../api/accounts'
 import { getManagementResults, type Range } from '../api/accounting'
-import { Button, Card, Field, Input, PageHeader, Select, Spinner, Stat } from '../components/ui'
+import { Button, Card, Field, PageHeader, Select, Spinner, Stat } from '../components/ui'
 import { day, rd, todayISO } from '../lib/format'
 import { printArea } from '../lib/print'
+import { DateInput } from '../components/DateInput'
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
@@ -36,18 +37,10 @@ export function ResultsPage() {
       />
       <div className="flex flex-wrap items-end gap-3">
         <Field label="Desde">
-          <Input
-            type="date"
-            value={range.desde}
-            onChange={(e) => setRange({ ...range, desde: e.target.value })}
-          />
+          <DateInput value={range.desde} onChange={(date) => setRange({ ...range, desde: date })} />
         </Field>
         <Field label="Hasta">
-          <Input
-            type="date"
-            value={range.hasta}
-            onChange={(e) => setRange({ ...range, hasta: e.target.value })}
-          />
+          <DateInput value={range.hasta} onChange={(date) => setRange({ ...range, hasta: date })} />
         </Field>
         <Field label="Sucursal">
           <Select

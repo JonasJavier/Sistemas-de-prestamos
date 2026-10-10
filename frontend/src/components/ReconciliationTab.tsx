@@ -14,7 +14,7 @@ import {
 import { api, ApiError } from '../api/client'
 import { amountValue, day, errorMessage, plural, rd, todayISO } from '../lib/format'
 import { notify } from '../lib/toast'
-import { Alert, Badge, Button, Card, Field, Input, Select, Spinner, Stat } from './ui'
+import { Alert, Badge, Button, Card, Field, Input, MonthInput, Select, Spinner, Stat } from './ui'
 
 interface Bank {
   id: string
@@ -66,7 +66,7 @@ export function ReconciliationTab({ canWork }: { canWork: boolean }) {
             </Select>
           </Field>
           <Field label="Mes">
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+            <MonthInput value={month} onChange={setMonth} />
           </Field>
           <Field label="Saldo final del extracto (RD$)">
             <Input

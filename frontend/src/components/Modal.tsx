@@ -19,6 +19,9 @@ export function Modal({
   children: ReactNode
 }) {
   const ref = useRef<HTMLDialogElement>(null)
+  // Only a click that starts AND ends on the backdrop closes: selecting text
+  // in a field and letting go outside the panel must not lose the form.
+  const pressedOutside = useRef(false)
 
   useEffect(() => {
     const dialog = ref.current
@@ -41,8 +44,12 @@ export function Modal({
         event.preventDefault() // React decides: unmounting closes it
         onClose()
       }}
+      onPointerDown={(event) => {
+        pressedOutside.current = event.target === event.currentTarget
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
+        if (pressedOutside.current && event.target === event.currentTarget) onClose()
+        pressedOutside.current = false
       }}
       className={`m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-black/40 open:flex ${placement}`}
     >

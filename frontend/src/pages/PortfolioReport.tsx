@@ -7,11 +7,12 @@ import { getPortfolioReport, type PortfolioCut, type PortfolioFilters } from '..
 import { ExportButtons } from '../components/ExportButtons'
 import { Kpi } from '../components/Kpi'
 import {
+  Alert,
   Button,
   Card,
   EmptyState,
   Field,
-  Input,
+  LoadError,
   PageHeader,
   Select,
   Spinner,
@@ -19,6 +20,7 @@ import {
 import { day, pct, rd, todayISO, plural } from '../lib/format'
 import { printArea } from '../lib/print'
 import { hasRole } from '../lib/roles'
+import { DateInput } from '../components/DateInput'
 
 const CUTS: [PortfolioCut, string][] = [
   ['sucursal', 'Sucursal'],
@@ -58,14 +60,13 @@ export function PortfolioReportPage({ me }: { me: Me }) {
       />
       <div className="flex flex-wrap items-end gap-3">
         <Field label="Fecha de corte">
-          <Input
-            type="date"
+          <DateInput
             max={todayISO()}
             value={filters.fecha ?? todayISO()}
-            onChange={(e) =>
+            onChange={(date) =>
               setFilters({
                 ...filters,
-                fecha: e.target.value && e.target.value !== todayISO() ? e.target.value : undefined,
+                fecha: date && date !== todayISO() ? date : undefined,
               })
             }
           />
@@ -112,7 +113,13 @@ export function PortfolioReportPage({ me }: { me: Me }) {
         </Field>
       </div>
       {report.isPending ? <Spinner /> : null}
-      {data ? (
+      {report.error ? <LoadError error={report.error} /> : null}
+      {data?.missing_snapshot ? (
+        <Alert tone="info">
+          No hay foto de la cartera de la noche del {day(data.date)}: la empresa aún no tenía
+          préstamos activos o el cierre nocturno no corrió ese día. Elige otra fecha.
+        </Alert>
+      ) : data ? (
         <div id="print-area" className="space-y-4">
           <p className="text-[12.5px] text-muted">
             Corte al {day(data.date)} · {data.scope}

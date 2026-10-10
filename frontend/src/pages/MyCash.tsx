@@ -493,7 +493,16 @@ function DrawerFigures({ session }: { session: CashSession }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Fondo de apertura" value={rd(fund)} />
+        <Stat
+          label="Fondo de apertura"
+          value={rd(fund)}
+          // What stayed in the drawer is no movement of this session: say it.
+          hint={
+            Number(session.carried_over)
+              ? `${rd(session.carried_over)} de la caja anterior + ${rd(session.funded_amount)} recibido`
+              : undefined
+          }
+        />
         <Stat label="Entradas" value={rd(incoming)} />
         <Stat label="Salidas" value={rd(sum('out'))} />
         <Stat label="Esperado en caja" value={rd(session.expected)} emphasis />

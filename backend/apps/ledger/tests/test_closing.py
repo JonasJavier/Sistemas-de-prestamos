@@ -38,6 +38,28 @@ def test_the_accrual_counts_due_interest_and_the_elapsed_share(tenant) -> None:
         assert (item.amount, item.days_past_due) == (D("128.57"), 2)
 
 
+def test_the_accrual_reads_the_portfolio_as_it_was_at_the_cut(tenant) -> None:
+    loan = make_loan(tenant, first_due_in=3)
+    as_of = today() + dt.timedelta(days=5)
+    with company_context(tenant.company.id):
+        # Paid off after the cut (the month closed a few days late): it
+        # still earned that month's interest.
+        type(loan).objects.filter(pk=loan.pk).update(
+            status="paid_off", closed_on=as_of + dt.timedelta(days=2)
+        )
+        assert [item.amount for item in closing.accrual(as_of)] == [D("128.57")]
+        type(loan).objects.filter(pk=loan.pk).update(closed_on=as_of - dt.timedelta(days=1))
+        assert closing.accrual(as_of) == []
+        # A migrated loan is in the books from its migration on.
+        type(loan).objects.filter(pk=loan.pk).update(
+            status="active",
+            closed_on=None,
+            is_migrated=True,
+            created_at=timezone.now() + dt.timedelta(days=10),
+        )
+        assert closing.accrual(as_of) == []
+
+
 def test_loans_over_90_days_late_do_not_accrue(tenant) -> None:
     make_loan(tenant, first_due_in=-100)
     with company_context(tenant.company.id):

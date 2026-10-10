@@ -28,7 +28,12 @@ from apps.expenses.models import (
     PayablePayment,
     PayableSeries,
 )
-from apps.expenses.services import ExpenseError, clean_ncf, clean_party_document
+from apps.expenses.services import (
+    ExpenseError,
+    clean_ncf,
+    clean_party_document,
+    ensure_new_receipt,
+)
 from apps.ledger import accounting
 from apps.ledger import services as ledger
 from apps.ledger.models import FinancialAccount
@@ -53,6 +58,13 @@ def _date_ok(company_id, on: dt.date, field: str) -> None:
         accounting.ensure_open(company_id, on)
     except accounting.AccountingError as exc:
         raise ExpenseError(str(exc), field) from exc
+
+
+def _itbis(value: Decimal | None, amount: Decimal) -> Decimal:
+    itbis = money(value or ZERO)
+    if itbis < 0 or itbis > amount:
+        raise ExpenseError("El ITBIS va incluido en el monto y no lo supera.", "itbis")
+    return itbis
 
 
 def occurrence_dates(start: dt.date, frequency: str, count: int) -> list[dt.date]:
@@ -103,6 +115,7 @@ def create(
     invoice_on: dt.date | None = None,
     party_document: str = "",
     ncf: str = "",
+    itbis: Decimal = ZERO,
     frequency: str = "",
     count: int = 1,
 ) -> list[Payable]:
@@ -119,6 +132,7 @@ def create(
     if not party_name.strip() or not description.strip():
         raise ExpenseError("Indica a quién se le debe y por qué.", "party_name")
     party_document, ncf = clean_party_document(party_document), clean_ncf(ncf)
+    itbis = _itbis(itbis, amount)
     series = None
     if frequency:
         if frequency not in PayableSeries.Frequency.values or not 2 <= count <= MAX_OCCURRENCES:
@@ -133,12 +147,15 @@ def create(
             created_by=user,
         )
         dates = occurrence_dates(due_on, frequency, count)
+        # Each occurrence gets its receipt when its invoice arrives (set_receipt).
+        ncf, itbis = "", ZERO
     else:
         if invoice_on is None:
             raise ExpenseError("Indica la fecha de la factura.", "invoice_on")
         _date_ok(user.company_id, invoice_on, "invoice_on")
         if due_on < invoice_on:
             raise ExpenseError("Vence en la fecha de la factura o después.", "due_on")
+        ensure_new_receipt(kind=Kind.EXPENSE, ncf=ncf, party_document=party_document)
         dates = [due_on]
     created = []
     for index, due in enumerate(dates, start=1):
@@ -148,7 +165,8 @@ def create(
             category=category,
             party_name=party_name.strip()[:200],
             party_document=party_document,
-            ncf=ncf if series is None else "",
+            ncf=ncf,
+            itbis=itbis,
             description=(
                 description.strip()
                 if series is None
@@ -319,5 +337,32 @@ def cancel(*, payable: Payable, user: User, reason: str) -> Payable:
         target=payable,
         actor=user,
         summary=f"Cancelada (RD$ {remainder:,.2f} pendientes): {payable.cancel_reason}",
+    )
+    return payable
+
+
+@transaction.atomic
+def set_receipt(
+    *, payable: Payable, user: User, party_document: str, ncf: str, itbis: Decimal | None
+) -> Payable:
+    """The supplier's invoice for an obligation (e.g. this month's rent of a
+    series): its NCF, RNC and ITBIS, for the 606. Money and dates stay."""
+    _check(user)
+    payable = Payable.objects.select_for_update(of=("self",)).get(pk=payable.pk)
+    if payable.status == Payable.Status.CANCELLED:
+        raise ExpenseError("Una cuenta cancelada ya no se edita.", "state")
+    party_document, ncf = clean_party_document(party_document), clean_ncf(ncf)
+    if ncf and not party_document:
+        raise ExpenseError("Con el NCF va el RNC o la cédula del proveedor.", "party_document")
+    itbis = _itbis(itbis, payable.amount)
+    ensure_new_receipt(kind=Kind.EXPENSE, ncf=ncf, party_document=party_document, payable=payable)
+    payable.party_document, payable.ncf, payable.itbis = party_document, ncf, itbis
+    payable.save(update_fields=["party_document", "ncf", "itbis", "updated_at"])
+    record_event(
+        company_id=payable.company_id,
+        type="payable.receipt",
+        target=payable,
+        actor=user,
+        summary=f"Comprobante de {payable.party_name}: NCF {ncf or '—'}, ITBIS RD$ {itbis:,.2f}",
     )
     return payable

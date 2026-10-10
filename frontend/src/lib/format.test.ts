@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   amountValue,
+  dateFromText,
   dateOf,
+  dateText,
   deviceText,
   documentText,
   day,
@@ -139,5 +141,25 @@ describe('typed amounts («25,000» as people write them)', () => {
     expect(amountValue('abc')).toBe(0)
     expect(toAmount('')).toBe('')
     expect(toAmount('abc')).toBe('')
+  })
+})
+
+describe('date boxes read and write dd/mm/aaaa, whatever the browser language', () => {
+  it('writes an ISO date the Dominican way', () => {
+    expect(dateText('2026-10-09')).toBe('09/10/2026')
+    expect(dateText('')).toBe('')
+    expect(dateText(null)).toBe('')
+  })
+  it('reads what was typed, with one or two digits', () => {
+    expect(dateFromText('09/10/2026')).toBe('2026-10-09')
+    expect(dateFromText('9/1/2027')).toBe('2027-01-09')
+    expect(dateFromText(' 2026-10-09 ')).toBe('2026-10-09') // pasted
+  })
+  it('waits for a complete, real day', () => {
+    expect(dateFromText('09/10/26')).toBeNull()
+    expect(dateFromText('09/10/')).toBeNull()
+    expect(dateFromText('31/02/2026')).toBeNull()
+    expect(dateFromText('29/02/2028')).toBe('2028-02-29')
+    expect(dateFromText('10/13/2026')).toBeNull() // no month 13: not mm/dd
   })
 })

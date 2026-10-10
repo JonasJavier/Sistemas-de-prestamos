@@ -155,7 +155,12 @@ def test_the_portfolio_report_cuts_and_reads_past_snapshots(tenant) -> None:
 
     past = client.get(f"/api/v1/reportes/cartera/?fecha={yesterday.isoformat()}").json()
     assert past["snapshot"] is True
+    assert past["missing_snapshot"] is False
     assert past["totals"]["count"] == 2
+    # A night with no photo says so instead of reading as an empty portfolio.
+    before = (yesterday - dt.timedelta(days=30)).isoformat()
+    assert client.get(f"/api/v1/reportes/cartera/?fecha={before}").json()["missing_snapshot"]
+    assert live["missing_snapshot"] is False
 
     assert client.get("/api/v1/reportes/cartera/?corte=color").status_code == 400
     assert tenant.client("cobrador").get("/api/v1/reportes/cartera/").status_code == 403

@@ -189,7 +189,9 @@ export function CashSessionDetailPage() {
         </Alert>
       ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        {/* min-w-0: a long description truncates instead of widening the
+            card past a phone's screen. */}
+        <Card className="min-w-0">
           <h2 className="mb-2 text-base font-semibold">Movimientos</h2>
           <ul className="divide-y divide-edge text-sm">
             {s.movements?.map((m, i) => (
@@ -197,16 +199,20 @@ export function CashSessionDetailPage() {
                 <span className="min-w-0">
                   <span className="font-medium">{m.kind}</span>{' '}
                   <span className="text-muted">{moment(m.at)}</span>
-                  <span className="block truncate text-[12.5px] text-muted">{m.description}</span>
+                  <span className="block truncate text-[12.5px] text-muted" title={m.description}>
+                    {m.description}
+                  </span>
                 </span>
-                <span className={`tabular-nums ${m.out ? 'text-danger-600' : 'text-success-600'}`}>
+                <span
+                  className={`shrink-0 whitespace-nowrap tabular-nums ${m.out ? 'text-danger-600' : 'text-success-600'}`}
+                >
                   {m.in ? `+${rd(m.in)}` : `−${rd(m.out)}`}
                 </span>
               </li>
             ))}
           </ul>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <h2 className="mb-2 text-base font-semibold">Arqueo</h2>
           {s.counts?.length ? (
             <table className="w-full text-sm tabular-nums">

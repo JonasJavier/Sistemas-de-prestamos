@@ -7,10 +7,12 @@ import { day, documentText, moment, rd } from '../lib/format'
 export function ReceiptView({ receipt, thermal = false }: { receipt: Receipt; thermal?: boolean }) {
   const r = receipt
   const company = r.company.trade_name || r.company.name
+  // A column of dashes says nothing: charges show only when some were paid.
+  const showCharges = !thermal && r.lines.some((line) => Number(line.charges))
   const row = (label: string, value: string, strong = false) => (
     <div className={`flex justify-between gap-3 ${strong ? 'font-semibold' : ''}`}>
-      <span className="text-muted print:text-black">{label}</span>
-      <span className="tabular-nums">{value}</span>
+      <span className="min-w-0 text-muted print:text-black">{label}</span>
+      <span className="shrink-0 whitespace-nowrap text-right tabular-nums">{value}</span>
     </div>
   )
   return (
@@ -60,7 +62,7 @@ export function ReceiptView({ receipt, thermal = false }: { receipt: Receipt; th
         <thead className="text-left text-[11px] uppercase">
           <tr>
             <th className="py-0.5">Cuota</th>
-            {!thermal ? <th className="text-right">Cargos</th> : null}
+            {showCharges ? <th className="text-right">Cargos</th> : null}
             <th className="text-right">Mora</th>
             <th className="text-right">Interés</th>
             <th className="text-right">Capital</th>
@@ -72,9 +74,14 @@ export function ReceiptView({ receipt, thermal = false }: { receipt: Receipt; th
             <tr key={line.number} className="border-t border-black/10">
               <td className="py-0.5">
                 {line.number}
-                {!thermal ? <span className="ml-1 text-[11px]">({day(line.due_date)})</span> : null}
+                {/* On a phone the date would push the figures off the screen. */}
+                {!thermal ? (
+                  <span className="ml-1 hidden text-[11px] sm:inline print:inline">
+                    ({day(line.due_date)})
+                  </span>
+                ) : null}
               </td>
-              {!thermal ? (
+              {showCharges ? (
                 <td className="text-right">
                   {Number(line.charges) ? rd(line.charges).slice(4) : '—'}
                 </td>

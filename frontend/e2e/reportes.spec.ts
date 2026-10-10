@@ -66,7 +66,7 @@ test('el gerente define una comisión y calcula el mes', async ({ browser }) => 
   await expect(manager.getByRole('heading', { name: 'Comisiones', level: 1 })).toBeVisible()
   // The tours run again on the same data: reuse the rule if a run left it
   // (once the rules have loaded, or the check would race the request).
-  const existing = manager.getByText('Cobradores del recorrido')
+  const existing = manager.getByText('Cobradores del recorrido', { exact: true })
   await expect(existing.or(manager.getByText(/Sin reglas/)).first()).toBeVisible()
   if (!(await existing.count())) {
     await manager.getByRole('button', { name: 'Nueva regla' }).click()

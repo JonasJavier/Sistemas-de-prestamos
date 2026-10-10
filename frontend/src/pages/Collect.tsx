@@ -394,7 +394,6 @@ export function CollectPage({ me }: { me: Me }) {
               readOnly={kind === 'payoff'}
               className="h-14 w-full rounded-lg border border-edge bg-surface px-3 text-2xl font-semibold tabular-nums text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
               placeholder="0.00"
-              aria-label="Monto"
             />
           </Field>
 
@@ -655,7 +654,7 @@ export function CollectPage({ me }: { me: Me }) {
       </div>
 
       <Card>
-        <h2 className="mb-2 text-base font-semibold">Lo exigible hoy</h2>
+        <h2 className="mb-2 text-base font-semibold">Cuotas pendientes</h2>
         {data.installments.length ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm tabular-nums [&_td]:whitespace-nowrap">

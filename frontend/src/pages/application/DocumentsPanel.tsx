@@ -12,6 +12,7 @@ import {
 } from '../../api/origination'
 import { Alert, Button, Card, Field, FilePicker, Input, Select } from '../../components/ui'
 import { day, errorMessage, moment } from '../../lib/format'
+import { DateInput } from '../../components/DateInput'
 
 /** Product checklist, external bureau (decision 026) and private files. */
 export function DocumentsPanel({
@@ -121,11 +122,7 @@ export function DocumentsPanel({
               <Input inputMode="numeric" value={score} onChange={(e) => setScore(e.target.value)} />
             </Field>
             <Field label="Fecha de consulta">
-              <Input
-                type="date"
-                value={bureauDate}
-                onChange={(e) => setBureauDate(e.target.value)}
-              />
+              <DateInput value={bureauDate} onChange={setBureauDate} />
             </Field>
             <Button type="submit" variant="secondary" disabled={saveBureau.isPending}>
               Guardar

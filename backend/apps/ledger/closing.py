@@ -88,8 +88,16 @@ def accrual(as_of: dt.date) -> list[LoanAccrual]:
     from apps.lending.models import Installment, Loan
 
     paid = _paid_as_of(as_of)
-    loans = Loan.objects.filter(status=Loan.Status.ACTIVE, disbursed_on__lte=as_of).only(
-        "id", "number", "branch_id", "disbursed_on"
+    # The loans active AT ``as_of``: one paid off, renewed or written off
+    # after it (a month closed a few days late) still earned its interest
+    # that month, and a migrated loan is in the books only from the day it
+    # was migrated (F16).
+    loans = (
+        Loan.objects.filter(disbursed_on__lte=as_of)
+        .filter(Q(status=Loan.Status.ACTIVE) | Q(closed_on__gt=as_of) | Q(written_off_on__gt=as_of))
+        .exclude(status=Loan.Status.VOIDED)
+        .exclude(is_migrated=True, created_at__date__gt=as_of)
+        .only("id", "number", "branch_id", "disbursed_on")
     )
     rows_by_loan = defaultdict(list)
     for inst in (

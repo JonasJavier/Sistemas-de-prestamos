@@ -70,6 +70,8 @@ export interface PortfolioReport {
   date: string
   scope: string
   snapshot: boolean
+  /** A past date whose nightly photo does not exist: the zeros mean nothing. */
+  missing_snapshot: boolean
   cut: PortfolioCut
   totals: PortfolioFigures
   rows: {

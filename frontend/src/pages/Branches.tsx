@@ -6,8 +6,19 @@ import { z } from 'zod'
 
 import { createBranch, listBranches, updateBranch, type Branch } from '../api/accounts'
 import { ApiError } from '../api/client'
+import { usePrompt } from '../components/Dialog'
 import { Modal } from '../components/Modal'
-import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  LoadError,
+  PageHeader,
+  Spinner,
+} from '../components/ui'
 import { errorMessage } from '../lib/format'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -135,19 +146,80 @@ export function BranchesPage() {
     },
   })
 
+  const [dialog, ask] = usePrompt()
   const toggle = useMutation({
     meta: { inlineError: true },
-    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
-      updateBranch(id, { is_active }),
+    mutationFn: async ({ branch, is_active }: { branch: Branch; is_active: boolean }) => {
+      if (!is_active) {
+        const confirmed = await ask({
+          title: `Desactivar la sucursal ${branch.name}`,
+          description:
+            'Deja de recibir operaciones nuevas hasta que la actives de nuevo; su historial se conserva.',
+          confirmText: 'Desactivar',
+          danger: true,
+        })
+        if (confirmed === null) return null
+      }
+      return updateBranch(branch.id, { is_active })
+    },
     onSuccess: invalidate,
   })
 
   return (
     <>
+      {dialog}
       <PageHeader
         title="Sucursales"
         subtitle="Cada sucursal numera sus documentos con su código."
       />
+      {/* What exists first; the form to add one after it. */}
+      {toggle.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(toggle.error.data)}</Alert>
+      ) : null}
+      <Card>
+        <h2 className="mb-2 text-base font-semibold">Tus sucursales</h2>
+        {branches.isPending ? <Spinner /> : null}
+        {branches.error ? <LoadError error={branches.error} /> : null}
+        {branches.data ? (
+          // Rows, not a table: on a phone each branch keeps its button in sight.
+          <ul className="divide-y divide-edge text-sm">
+            {branches.data.results.map((branch) => (
+              <li
+                key={branch.id}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3"
+              >
+                <div className="min-w-0">
+                  <div className="font-semibold">
+                    <span className="tabular-nums text-muted">{branch.code}</span> {branch.name}
+                  </div>
+                  {branch.address ? (
+                    <div className="text-[12.5px] text-muted">{branch.address}</div>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="text-left text-[12.5px] text-brand-700 hover:underline"
+                    onClick={() => setHoursFor(branch)}
+                  >
+                    Horario: {hoursText(branch)}
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge tone={branch.is_active ? 'brand' : 'warning'}>
+                    {branch.is_active ? 'Activa' : 'Inactiva'}
+                  </Badge>
+                  <Button
+                    variant="secondary"
+                    onClick={() => toggle.mutate({ branch, is_active: !branch.is_active })}
+                    disabled={toggle.isPending}
+                  >
+                    {branch.is_active ? 'Desactivar' : 'Activar'}
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </Card>
       <Card>
         <h2 className="mb-3 text-base font-semibold">Nueva sucursal</h2>
         <form
@@ -182,69 +254,6 @@ export function BranchesPage() {
           El código numera los documentos de la sucursal (por ejemplo SD-000125) y no se puede
           cambiar después.
         </p>
-      </Card>
-
-      {toggle.error instanceof ApiError ? (
-        <Alert tone="danger">{errorMessage(toggle.error.data)}</Alert>
-      ) : null}
-      <Card>
-        {branches.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
-        {branches.data ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                  <th className="py-2 pr-3">Código</th>
-                  <th className="py-2 pr-3">Nombre</th>
-                  <th className="py-2 pr-3">Dirección</th>
-                  <th className="py-2 pr-3">Horario</th>
-                  <th className="py-2 pr-3">Estado</th>
-                  <th className="py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {branches.data.results.map((branch) => (
-                  <tr key={branch.id} className="border-b border-edge/60 last:border-0">
-                    <td className="py-2 pr-3 font-medium tabular-nums">{branch.code}</td>
-                    <td className="py-2 pr-3">{branch.name}</td>
-                    <td className="py-2 pr-3 text-muted">{branch.address || '—'}</td>
-                    <td className="py-2 pr-3">
-                      <button
-                        type="button"
-                        className="text-left text-brand-700 hover:underline"
-                        onClick={() => setHoursFor(branch)}
-                      >
-                        {hoursText(branch)}
-                      </button>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${
-                          branch.is_active
-                            ? 'bg-brand-100 text-brand-800'
-                            : 'bg-warning-700/15 text-warning-700'
-                        }`}
-                      >
-                        {branch.is_active ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </td>
-                    <td className="py-2 text-right">
-                      <Button
-                        variant="secondary"
-                        onClick={() =>
-                          toggle.mutate({ id: branch.id, is_active: !branch.is_active })
-                        }
-                        disabled={toggle.isPending}
-                      >
-                        {branch.is_active ? 'Desactivar' : 'Activar'}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
       </Card>
       {hoursFor ? <HoursDialog branch={hoursFor} onClose={() => setHoursFor(null)} /> : null}
     </>

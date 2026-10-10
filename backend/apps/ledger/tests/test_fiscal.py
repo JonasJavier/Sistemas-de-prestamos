@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from apps.core.models import Reason
 from apps.core.tenancy import company_context
+from apps.expenses import payables
 from apps.expenses import services as expenses
 from apps.expenses.models import ExpenseCategory
 from apps.ledger import accounting
@@ -93,7 +94,10 @@ def test_the_606_and_607_and_the_pending_list(tenant) -> None:
     with company_context(tenant.company.id):
         light = ExpenseCategory.objects.get(name="Luz, agua, teléfono e internet")
         owner = ExpenseCategory.objects.get(name="Gastos personales del dueño")
-        for category, amount in ((light, "2500"), (owner, "900")):
+        for category, amount, ncf in (
+            (light, "2500", "B0100000123"),
+            (owner, "900", "B0100000124"),
+        ):
             expenses.register(
                 user=tenant.users["gerente"],
                 kind="expense",
@@ -105,7 +109,7 @@ def test_the_606_and_607_and_the_pending_list(tenant) -> None:
                 itbis=D("381.36") if category == light else D("0"),
                 account=tenant.cash,
                 party_document="101821248",
-                ncf="B0100000123",
+                ncf=ncf,
             )
     loan = make_loan(tenant, first_due_in=-10)
     payment = pay(tenant, loan, "400")
@@ -124,6 +128,79 @@ def test_the_606_and_607_and_the_pending_list(tenant) -> None:
     pending = tenant.client("gerente").get(f"{URL}exportar/pendientes/").content.decode()
     assert pending.startswith("﻿Tipo,Fecha")
     assert tenant.client("cajero").get(URL).status_code == 403
+
+
+def test_invoices_owed_reach_the_606_in_the_month_of_their_receipt(tenant) -> None:
+    payables_url = "/api/v1/cuentas-por-pagar/"
+    accountant = tenant.client("contabilidad")
+    with company_context(tenant.company.id):
+        rent = str(ExpenseCategory.objects.get(name="Alquiler del local").id)
+    base = {
+        "branch": str(tenant.branch.id),
+        "category": rent,
+        "party_name": "Inmobiliaria del Cibao",
+        "party_document": "131234567",
+        "description": "Alquiler",
+        "amount": "30000",
+        "invoice_on": today().isoformat(),
+        "due_on": today().isoformat(),
+    }
+    owed = accountant.post(payables_url, {**base, "ncf": "B0100000888"}, format="json")
+    assert owed.status_code == 201, owed.content
+    paid = accountant.post(
+        payables_url, {**base, "ncf": "B0100000889", "itbis": "4576.27"}, format="json"
+    ).json()[0]
+    accountant.post(
+        f"{payables_url}{paid['id']}/pagar/",
+        {"amount": "30000", "account": str(tenant.cash.id), "date": today().isoformat()},
+        format="json",
+    )
+    # A series occurrence gets its invoice when it arrives.
+    series = accountant.post(
+        payables_url,
+        {**base, "invoice_on": None, "frequency": "monthly", "count": 2},
+        format="json",
+    ).json()
+    assert series[0]["ncf"] == "" and series[0]["itbis"] == "0.00"
+    with company_context(tenant.company.id):
+        payables.recognize_due(today())
+    receipt = accountant.post(
+        f"{payables_url}{series[0]['id']}/comprobante/",
+        {"party_document": "131234567", "ncf": "B0100000890", "itbis": "4576.27"},
+        format="json",
+    )
+    assert receipt.status_code == 200, receipt.content
+    assert (receipt.json()["ncf"], receipt.json()["itbis"]) == ("B0100000890", "4576.27")
+    month = f"?year={today().year}&month={today().month}"
+    lines = accountant.get(f"{URL}exportar/606/{month}").content.decode().strip().splitlines()
+    rows = {line.split(",")[3]: line.split(",") for line in lines[1:]}
+    assert set(rows) == {"B0100000888", "B0100000889", "B0100000890"}
+    assert (rows["B0100000888"][6], rows["B0100000888"][15]) == ("", "04")  # still owed
+    assert rows["B0100000889"][6] == today().strftime("%Y%m%d")  # paid in the month
+    assert rows["B0100000889"][10] == "4576.27"
+    # The same supplier's receipt is never entered twice.
+    twice = accountant.post(payables_url, {**base, "ncf": "B0100000888"}, format="json")
+    assert twice.status_code == 400 and twice.json()["code"] == "ncf"
+    with company_context(tenant.company.id):
+        light = ExpenseCategory.objects.get(name="Luz, agua, teléfono e internet")
+        try:
+            expenses.register(
+                user=tenant.users["gerente"],
+                kind="expense",
+                date=today(),
+                branch=tenant.branch,
+                category=light,
+                description="La misma factura",
+                amount=D("30000"),
+                account=tenant.cash,
+                party_document="131234567",
+                ncf="B0100000889",
+            )
+        except expenses.ExpenseError as exc:
+            assert exc.code == "ncf" and "cuenta por pagar" in str(exc)
+        else:
+            raise AssertionError("a payable's NCF was entered again as an expense")
+    books_square(tenant)
 
 
 def test_management_results_count_what_was_collected(tenant) -> None:

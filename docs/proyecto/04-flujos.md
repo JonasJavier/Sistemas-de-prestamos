@@ -371,11 +371,11 @@ En la fase 4 se construyen los pasos 1 y 2 y el cálculo de mora; en la 5, los p
   - Después, el período se **bloquea**: nadie registra movimientos con fecha de un mes cerrado sin un permiso especial.
 
 > **Fase 6 (decisiones 080–085):**
-> - **Gasto:** un mismo registro sirve para un gasto o un ingreso. Lleva categoría operativa o del dueño (lo del dueño va al patrimonio), NCF o e-NCF, RNC o cédula validados, el ITBIS incluido para el 606 y los comprobantes adjuntos.
+> - **Gasto:** un mismo registro sirve para un gasto o un ingreso. Lleva categoría operativa o del dueño (lo del dueño va al patrimonio), NCF o e-NCF, RNC o cédula validados, el ITBIS incluido para el 606 y los comprobantes adjuntos. El comprobante de un proveedor se registra **una sola vez**: el mismo NCF del mismo RNC no entra dos veces, ni como gasto ni como cuenta por pagar (decisión 109).
 >   - El gerente y contabilidad lo registran sin límite; el supervisor y el cajero, hasta su límite. Por encima, lo aprueba otra persona y solo entonces se mueve el dinero.
 >   - El cajero puede registrar un gasto menor desde su caja abierta.
 >   - Lo anula el gerente, con un asiento inverso fechado hoy.
-> - **Cuentas por pagar:** se registran por devengo. Una factura entra con su fecha; las cuotas de una serie entran al vencer o al pagarse antes. Admiten pagos parciales, y cancelar lo pendiente revierte su parte del gasto.
+> - **Cuentas por pagar:** se registran por devengo. Una factura entra con su fecha; las cuotas de una serie entran al vencer o al pagarse antes. Admiten pagos parciales, y cancelar lo pendiente revierte su parte del gasto. Llevan NCF, RNC e ITBIS como un gasto; la cuota de una serie (el alquiler de cada mes) recibe su comprobante cuando llega la factura. Las que tienen NCF y RNC salen en el **606** del mes de su factura, pagadas o no («04 · compra a crédito» si al cierre del mes se deben) (decisión 109).
 > - **Conciliación:** el extracto en CSV o Excel se empareja automáticamente (mismo monto y hasta 3 días de diferencia) o a mano, y los cargos del banco se registran desde su línea. Se cierra cuando todo cuadra.
 > - **Cierre de mes:**
 >   - Lista de verificación: meses anteriores cerrados, mes terminado, cajas cerradas, rutas rendidas, bancos conciliados, ningún gasto por aprobar y, si hay reglas de comisión activas, las comisiones del mes aprobadas (fase 7, decisión 089).

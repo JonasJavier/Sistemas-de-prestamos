@@ -8,12 +8,15 @@ import { MODELO, sessionFor } from './helpers'
 test('el gerente lleva un préstamo a la vía legal y emite la intimación', async ({ browser }) => {
   const manager = await sessionFor(browser, MODELO.gerente)
 
-  // P78: the company's lawyer, once.
+  // P78: the company's lawyer, once. Decided on the catalog the API returns,
+  // not on what the screen managed to draw (that created copies).
+  const catalog = manager.waitForResponse(
+    (r) => r.url().includes('/api/v1/profesionales-legales/') && r.request().method() === 'GET',
+  )
   await manager.goto('/ajustes/legales')
   await expect(manager.getByRole('heading', { name: 'Profesionales legales' })).toBeVisible()
-  const lawyer = manager.getByText('Lic. Ramón del Recorrido')
-  await expect(lawyer.or(manager.getByText(/Agrega el abogado|Abogado/)).first()).toBeVisible()
-  if (!(await lawyer.count())) {
+  const people = (await (await catalog).json()) as { name: string }[]
+  if (!people.some((p) => p.name === 'Lic. Ramón del Recorrido')) {
     await manager.getByRole('button', { name: 'Nuevo profesional' }).click()
     const dialog = manager.getByRole('dialog')
     await dialog.getByLabel('Nombre').fill('Lic. Ramón del Recorrido')

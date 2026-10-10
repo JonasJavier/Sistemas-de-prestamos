@@ -29,6 +29,7 @@ import {
 } from '../../components/ui'
 import { day, errorMessage, FREQUENCY_TEXT, rd, todayISO, plural } from '../../lib/format'
 import { notify } from '../../lib/toast'
+import { DateInput } from '../../components/DateInput'
 
 function Frame({
   title,
@@ -74,13 +75,7 @@ export function PayoffLetterDialog({ number, onClose }: { number: string; onClos
   return (
     <Frame title="Carta de saldo" onClose={onClose}>
       <Field label="Fecha de cálculo">
-        <Input
-          type="date"
-          value={date}
-          min={today}
-          max={maxISO}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <DateInput value={date} min={today} max={maxISO} onChange={setDate} />
       </Field>
       {quote.isPending ? (
         <Spinner />
@@ -153,12 +148,7 @@ export function DateChangeDialog({ number, onClose }: { number: string; onClose:
         siguen la frecuencia del préstamo. Montos e interés no cambian.
       </p>
       <Field label="Nueva fecha de la próxima cuota">
-        <Input
-          type="date"
-          value={date}
-          min={todayISO()}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <DateInput value={date} min={todayISO()} onChange={setDate} />
       </Field>
       <Field label="Motivo">
         <Select value={reason} onChange={(e) => setReason(e.target.value)}>
@@ -306,11 +296,10 @@ export function RestructureDialog({
           <PercentInput value={form.rate} onChange={(value) => set({ rate: value })} />
         </Field>
         <Field label="Primera cuota (opcional)">
-          <Input
-            type="date"
+          <DateInput
             min={todayISO(1)}
             value={form.first_due ?? ''}
-            onChange={(e) => set({ first_due: e.target.value || null })}
+            onChange={(date) => set({ first_due: date || null })}
           />
         </Field>
       </div>

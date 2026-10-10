@@ -41,8 +41,10 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
           <tr className="border-b border-edge text-left text-[12.5px] text-muted">
             <th className="py-2 pr-3">#</th>
             <th className="py-2 pr-3">Vence</th>
-            <th className="py-2 pr-3 text-right">Capital</th>
-            <th className="py-2 pr-3 text-right">Interés</th>
+            {/* On a phone the installment, the balance and the state fit; the
+                capital and interest split is on wider screens. */}
+            <th className="hidden py-2 pr-3 text-right sm:table-cell">Capital</th>
+            <th className="hidden py-2 pr-3 text-right sm:table-cell">Interés</th>
             <th className="py-2 pr-3 text-right">Cuota</th>
             {showBalance ? <th className="py-2 pr-3 text-right">Saldo</th> : null}
             {showStatus ? <th className="py-2">Estado</th> : null}
@@ -65,8 +67,12 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
                     </span>
                   ) : null}
                 </td>
-                <td className="py-1.5 pr-3 text-right tabular-nums">{num(row.principal)}</td>
-                <td className="py-1.5 pr-3 text-right tabular-nums">{num(row.interest)}</td>
+                <td className="hidden py-1.5 pr-3 text-right tabular-nums sm:table-cell">
+                  {num(row.principal)}
+                </td>
+                <td className="hidden py-1.5 pr-3 text-right tabular-nums sm:table-cell">
+                  {num(row.interest)}
+                </td>
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums">
                   {num(row.total)}
                 </td>
@@ -89,8 +95,12 @@ export function ScheduleTable({ rows, principal }: { rows: ScheduleRow[]; princi
             <td className="py-2 pr-3" colSpan={2}>
               Totales (RD$)
             </td>
-            <td className="py-2 pr-3 text-right tabular-nums">{num(totals.principal)}</td>
-            <td className="py-2 pr-3 text-right tabular-nums">{num(totals.interest)}</td>
+            <td className="hidden py-2 pr-3 text-right tabular-nums sm:table-cell">
+              {num(totals.principal)}
+            </td>
+            <td className="hidden py-2 pr-3 text-right tabular-nums sm:table-cell">
+              {num(totals.interest)}
+            </td>
             <td className="py-2 pr-3 text-right tabular-nums">{num(totals.total)}</td>
             {showBalance ? <td /> : null}
             {showStatus ? <td /> : null}

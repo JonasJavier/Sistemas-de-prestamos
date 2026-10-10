@@ -16,7 +16,8 @@ test('el gerente registra un gasto, paga una cuenta y ve los estados', async ({ 
   await expense.getByLabel('Categoría').selectOption({ label: 'Materiales de oficina' })
   await expense.getByLabel('Monto (RD$)').fill('500')
   await expense.getByLabel('Descripción').fill('Sobres manila')
-  await expense.getByLabel('NCF del comprobante').fill('B0200000099')
+  // A receipt is entered once (the 606): each run brings a new one.
+  await expense.getByLabel('NCF del comprobante').fill(`B02${String(Date.now()).slice(-8)}`)
   await expense.getByRole('button', { name: /Registrar/ }).click()
   await expect(manager.getByText(/Gasto .* registrado/)).toBeVisible()
   await expect(manager.getByText('Sobres manila').first()).toBeVisible()

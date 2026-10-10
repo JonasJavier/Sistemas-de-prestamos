@@ -21,6 +21,7 @@ import {
 } from '../components/ui'
 import { errorMessage, moment, rd, todayISO, plural } from '../lib/format'
 import { notify } from '../lib/toast'
+import { DateInput } from '../components/DateInput'
 
 const MapView = lazy(() => import('../components/MapView'))
 
@@ -178,15 +179,7 @@ export function RoutesPage() {
       <PageHeader
         title="Rutas"
         subtitle="Avance de los cobradores, efectivo en mano y rendiciones"
-        actions={
-          <Input
-            type="date"
-            value={date}
-            max={todayISO()}
-            onChange={(e) => setDate(e.target.value)}
-            aria-label="Fecha"
-          />
-        }
+        actions={<DateInput value={date} max={todayISO()} onChange={setDate} aria-label="Fecha" />}
       />
       {routes.data && routes.data.unassigned_loans > 0 ? (
         <Alert tone="info">

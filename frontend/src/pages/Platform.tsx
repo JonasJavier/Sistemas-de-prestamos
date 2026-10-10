@@ -15,6 +15,7 @@ import { Kpi } from '../components/Kpi'
 import { SupportDialog } from '../components/Support'
 import { Alert, Button, Card, Field, Input, LoadError, PageHeader, Spinner } from '../components/ui'
 import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
+import { DateInput } from '../components/DateInput'
 
 /** PT2 (decision 091): companies, conversion, payments due and usage
  * counts; never a customer, a loan or an amount of a company. */
@@ -253,17 +254,15 @@ function PaymentForm({
       </h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Inicio del período">
-          <Input
-            type="date"
+          <DateInput
             value={data.period_start}
-            onChange={(e) => setData({ ...data, period_start: e.target.value })}
+            onChange={(date) => setData({ ...data, period_start: date })}
           />
         </Field>
         <Field label="Fin del período">
-          <Input
-            type="date"
+          <DateInput
             value={data.period_end}
-            onChange={(e) => setData({ ...data, period_end: e.target.value })}
+            onChange={(date) => setData({ ...data, period_end: date })}
           />
         </Field>
         <Field label="Monto (RD$)">

@@ -59,6 +59,14 @@ def save_professional(
         professional.license
     ):
         raise LegalError("Indica la matrícula del colegio de abogados o notarios.", "license")
+    # One person, one entry: a second save of the same form must not split
+    # the cases and documents between two copies.
+    twins = LegalProfessional.objects.filter(kind=professional.kind).exclude(pk=professional.pk)
+    label = professional.get_kind_display().lower()
+    if professional.license and twins.filter(license__iexact=professional.license).exists():
+        raise LegalError(f"Ya hay un {label} con la matrícula {professional.license}.", "license")
+    if professional.document and twins.filter(document=professional.document).exists():
+        raise LegalError(f"Ya hay un {label} con la cédula {professional.document}.", "document")
     professional.save()
     return professional
 

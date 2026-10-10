@@ -36,6 +36,7 @@ import { day, errorMessage, moment, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
+import { DateInput } from '../components/DateInput'
 
 const STATUS_TONE: Record<string, string> = {
   pending: 'warning',
@@ -93,7 +94,7 @@ export function ExpensesPage({ me }: { me: Me }) {
           setPage(1)
         }}
       />
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_10rem_10rem]">
+      <div className="grid items-end gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_10rem_10rem]">
         <SearchInput
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -110,18 +111,19 @@ export function ExpensesPage({ me }: { me: Me }) {
           <option value="rejected">Rechazados</option>
           <option value="voided">Anulados</option>
         </Select>
-        <Input
-          type="date"
-          aria-label="Desde"
-          value={filters.desde ?? ''}
-          onChange={(e) => set({ desde: e.target.value || undefined })}
-        />
-        <Input
-          type="date"
-          aria-label="Hasta"
-          value={filters.hasta ?? ''}
-          onChange={(e) => set({ hasta: e.target.value || undefined })}
-        />
+        {/* A bare date box reads «dd/mm/aaaa»: the label says which end it is. */}
+        <Field label="Desde">
+          <DateInput
+            value={filters.desde ?? ''}
+            onChange={(date) => set({ desde: date || undefined })}
+          />
+        </Field>
+        <Field label="Hasta">
+          <DateInput
+            value={filters.hasta ?? ''}
+            onChange={(date) => set({ hasta: date || undefined })}
+          />
+        </Field>
       </div>
       {data ? (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">

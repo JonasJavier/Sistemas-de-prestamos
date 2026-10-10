@@ -216,6 +216,17 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
                 Desistió
               </Button>
             ) : null}
+            {data.can.decide ? (
+              <Button
+                onClick={() =>
+                  document
+                    .getElementById('decision')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+              >
+                Decidir
+              </Button>
+            ) : null}
             {data.can.submit ? (
               <Button onClick={() => submit.mutate()} disabled={submit.isPending || Boolean(draft)}>
                 {submit.isPending ? 'Enviando…' : 'Enviar a aprobación'}
@@ -258,14 +269,6 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
             </ul>
           ) : null}
         </Alert>
-      ) : null}
-
-      {data.can.decide ? (
-        <DecisionPanel
-          application={data}
-          frequencies={product?.allowed_frequencies ?? [data.frequency]}
-          onDone={refresh}
-        />
       ) : null}
 
       <Card className="space-y-3">
@@ -322,6 +325,17 @@ export function ApplicationDetailPage({ me }: { me: Me }) {
       <EvaluationPanel application={data} evaluation={evaluation.data} onChange={refresh} />
       <GuaranteesPanel application={data} onChange={refresh} />
       <DocumentsPanel application={data} canVerify={canVerify} onChange={refresh} />
+
+      {/* The decision comes after what it is decided on; «Decidir» jumps here. */}
+      {data.can.decide ? (
+        <div id="decision" className="scroll-mt-20">
+          <DecisionPanel
+            application={data}
+            frequencies={product?.allowed_frequencies ?? [data.frequency]}
+            onDone={refresh}
+          />
+        </div>
+      ) : null}
 
       <Card>
         <h2 className="mb-3 text-base font-semibold">Historial</h2>

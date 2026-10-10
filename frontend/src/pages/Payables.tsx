@@ -10,6 +10,8 @@ import {
   getPayable,
   listPayables,
   payPayable,
+  setPayableReceipt,
+  type PayableDetail,
   type PayableView,
 } from '../api/payables'
 import { usePrompt } from '../components/Dialog'
@@ -33,6 +35,7 @@ import {
 import { day, errorMessage, rd, todayISO } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { notify } from '../lib/toast'
+import { DateInput } from '../components/DateInput'
 
 const listPayAccounts = (): Promise<{ id: string; name: string; kind: string }[]> =>
   api('/api/v1/gastos/cuentas/')
@@ -151,6 +154,7 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
     party_name: '',
     party_document: '',
     ncf: '',
+    itbis: '',
     description: '',
     amount: '',
     invoice_on: todayISO(),
@@ -168,6 +172,7 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
         party_name: form.party_name,
         party_document: form.party_document,
         ncf: recurring ? '' : form.ncf,
+        itbis: recurring ? '0' : form.itbis.replace(/,/g, '') || '0',
         description: form.description,
         amount: form.amount.replace(/,/g, ''),
         due_on: form.due_on,
@@ -239,11 +244,7 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
           {recurring ? (
             <>
               <Field label="Primera cuota vence">
-                <Input
-                  type="date"
-                  value={form.due_on}
-                  onChange={(e) => set('due_on', e.target.value)}
-                />
+                <DateInput value={form.due_on} onChange={(date) => set('due_on', date)} />
               </Field>
               <Field label="Frecuencia">
                 <Select value={form.frequency} onChange={(e) => set('frequency', e.target.value)}>
@@ -263,24 +264,27 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
           ) : (
             <>
               <Field label="Fecha de la factura">
-                <Input
-                  type="date"
+                <DateInput
                   value={form.invoice_on}
                   max={todayISO()}
-                  onChange={(e) => set('invoice_on', e.target.value)}
+                  onChange={(date) => set('invoice_on', date)}
                 />
               </Field>
               <Field label="Vence">
-                <Input
-                  type="date"
-                  value={form.due_on}
-                  onChange={(e) => set('due_on', e.target.value)}
-                />
+                <DateInput value={form.due_on} onChange={(date) => set('due_on', date)} />
               </Field>
               <Field label="NCF">
                 <Input
                   value={form.ncf}
                   onChange={(e) => set('ncf', e.target.value.toUpperCase())}
+                />
+              </Field>
+              <Field label="ITBIS incluido (RD$)" hint="Para el reporte 606.">
+                <Input
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={form.itbis}
+                  onChange={(e) => set('itbis', e.target.value)}
                 />
               </Field>
             </>
@@ -400,11 +404,11 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </div>
             <p className="text-[12.5px] text-muted">
               Vence {day(data.due_on)} · {data.category_name}
-              {data.ncf ? ` · NCF ${data.ncf}` : ''}
               {data.recognized_on
                 ? ` · registrada el ${day(data.recognized_on)}`
                 : ' · se registra al vencer'}
             </p>
+            <ReceiptBlock payable={data} onSaved={refresh} />
             {data.payments.length ? (
               <ul className="divide-y divide-edge text-sm">
                 {data.payments.map((p) => (
@@ -434,12 +438,7 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
                   />
                 </Field>
                 <Field label="Fecha del pago">
-                  <Input
-                    type="date"
-                    value={date}
-                    max={todayISO()}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
+                  <DateInput value={date} max={todayISO()} onChange={setDate} />
                 </Field>
                 <Field label="Sale de">
                   <Select value={account} onChange={(e) => setAccount(e.target.value)}>
@@ -482,9 +481,14 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 </>
               ) : null}
               {paying ? (
-                <Button onClick={() => pay.mutate()} disabled={pay.isPending}>
-                  Registrar pago de {rd(amount || data.outstanding)}
-                </Button>
+                <>
+                  <Button variant="secondary" onClick={() => setPaying(false)}>
+                    Volver
+                  </Button>
+                  <Button onClick={() => pay.mutate()} disabled={pay.isPending}>
+                    Registrar pago de {rd(amount || data.outstanding)}
+                  </Button>
+                </>
               ) : null}
               <Button variant="secondary" onClick={onClose}>
                 Cerrar
@@ -494,5 +498,93 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
         )}
       </div>
     </Modal>
+  )
+}
+
+/** The supplier's invoice (NCF, RNC, ITBIS): what the 606 reports. A series
+ * occurrence gets it when its invoice arrives. */
+function ReceiptBlock({ payable, onSaved }: { payable: PayableDetail; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({
+    party_document: payable.party_document,
+    ncf: payable.ncf,
+    itbis: Number(payable.itbis) ? payable.itbis : '',
+  })
+  const save = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () =>
+      setPayableReceipt(payable.id, {
+        party_document: form.party_document,
+        ncf: form.ncf,
+        itbis: form.itbis.replace(/,/g, '') || '0',
+      }),
+    onSuccess: () => {
+      notify('Comprobante guardado.', 'success')
+      setEditing(false)
+      onSaved()
+    },
+  })
+  const editable = payable.status !== 'cancelled'
+  if (!editing) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge px-3 py-2 text-sm">
+        <span className="min-w-0">
+          {payable.ncf ? (
+            <>
+              NCF <span className="tabular-nums">{payable.ncf}</span>
+              {payable.party_document ? ` · RNC o cédula ${payable.party_document}` : ''}
+              {Number(payable.itbis) ? ` · ITBIS ${rd(payable.itbis)}` : ''}
+            </>
+          ) : (
+            <span className="text-muted">
+              Sin comprobante: regístralo cuando llegue la factura, para el 606.
+            </span>
+          )}
+        </span>
+        {editable ? (
+          <Button variant="secondary" onClick={() => setEditing(true)}>
+            {payable.ncf ? 'Editar comprobante' : 'Registrar comprobante'}
+          </Button>
+        ) : null}
+      </div>
+    )
+  }
+  return (
+    <div className="space-y-3 rounded-lg bg-surface-2 p-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field label="RNC o cédula">
+          <Input
+            inputMode="numeric"
+            value={form.party_document}
+            onChange={(e) => setForm({ ...form, party_document: e.target.value })}
+          />
+        </Field>
+        <Field label="NCF">
+          <Input
+            value={form.ncf}
+            onChange={(e) => setForm({ ...form, ncf: e.target.value.toUpperCase() })}
+          />
+        </Field>
+        <Field label="ITBIS incluido (RD$)">
+          <Input
+            inputMode="decimal"
+            placeholder="0.00"
+            value={form.itbis}
+            onChange={(e) => setForm({ ...form, itbis: e.target.value })}
+          />
+        </Field>
+      </div>
+      {save.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(save.error.data)}</Alert>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={() => setEditing(false)}>
+          Volver
+        </Button>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          Guardar comprobante
+        </Button>
+      </div>
+    </div>
   )
 }

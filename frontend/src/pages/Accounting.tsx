@@ -39,6 +39,7 @@ import {
 import { day, errorMessage, rd, todayISO } from '../lib/format'
 import { printArea } from '../lib/print'
 import { notify } from '../lib/toast'
+import { DateInput } from '../components/DateInput'
 
 type Tab =
   'cuentas' | 'diario' | 'mayor' | 'balanza' | 'resultados' | 'balance' | 'conciliacion' | 'cierre'
@@ -86,26 +87,23 @@ export function AccountingPage({ me }: { me: Me }) {
           {showRange ? (
             <>
               <Field label="Desde">
-                <Input
-                  type="date"
+                <DateInput
                   value={range.desde}
-                  onChange={(e) => setRange({ ...range, desde: e.target.value })}
+                  onChange={(date) => setRange({ ...range, desde: date })}
                 />
               </Field>
               <Field label="Hasta">
-                <Input
-                  type="date"
+                <DateInput
                   value={range.hasta}
-                  onChange={(e) => setRange({ ...range, hasta: e.target.value })}
+                  onChange={(date) => setRange({ ...range, hasta: date })}
                 />
               </Field>
             </>
           ) : (
             <Field label="Al día">
-              <Input
-                type="date"
+              <DateInput
                 value={range.hasta}
-                onChange={(e) => setRange({ ...range, hasta: e.target.value })}
+                onChange={(date) => setRange({ ...range, hasta: date })}
               />
             </Field>
           )}
@@ -146,10 +144,19 @@ export function AccountingPage({ me }: { me: Me }) {
   )
 }
 
-function Table({ head, children }: { head: ReactNode; children: ReactNode }) {
+function Table({
+  head,
+  children,
+  narrow = false,
+}: {
+  head: ReactNode
+  children: ReactNode
+  /** Fits a phone without scrolling (few columns). */
+  narrow?: boolean
+}) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] text-sm">
+      <table className={`w-full text-sm ${narrow ? '' : 'min-w-[560px]'}`}>
         <thead>
           <tr className="border-b border-edge text-left text-[12.5px] text-muted">{head}</tr>
         </thead>
@@ -183,12 +190,14 @@ function ChartTab({ canEdit, onOpen }: { canEdit: boolean; onOpen: (id: string) 
           <Card key={type.value} className="space-y-2">
             <h2 className="text-base font-semibold">{type.label}</h2>
             <Table
+              narrow
               head={
                 <>
                   {/* Fixed widths: the five groups line up as one plan. */}
-                  <th className={`${th} w-28`}>Código</th>
+                  {/* On a phone the code goes under the name. */}
+                  <th className={`${th} hidden w-28 sm:table-cell`}>Código</th>
                   <th className={th}>Cuenta</th>
-                  <th className={`${thNum} w-44`}>Saldo</th>
+                  <th className={`${thNum} w-32 sm:w-44`}>Saldo</th>
                 </>
               }
             >
@@ -198,7 +207,9 @@ function ChartTab({ canEdit, onOpen }: { canEdit: boolean; onOpen: (id: string) 
                   className="cursor-pointer border-b border-edge/60 last:border-0 hover:bg-surface-2"
                   onClick={() => onOpen(account.id)}
                 >
-                  <td className={`${td} tabular-nums text-muted`}>{account.code}</td>
+                  <td className={`${td} hidden tabular-nums text-muted sm:table-cell`}>
+                    {account.code}
+                  </td>
                   <td className={td}>
                     {/* The row opens on click; the name is also reachable by keyboard. */}
                     <button
@@ -211,11 +222,14 @@ function ChartTab({ canEdit, onOpen }: { canEdit: boolean; onOpen: (id: string) 
                     >
                       {account.name}
                     </button>{' '}
+                    <span className="text-[12px] tabular-nums text-muted sm:hidden">
+                      {account.code}
+                    </span>{' '}
                     {account.is_system ? <Badge tone="neutral">Sistema</Badge> : null}{' '}
                     {account.financial ? <Badge tone="info">Caja o banco</Badge> : null}{' '}
                     {!account.is_active ? <Badge tone="warning">Inactiva</Badge> : null}
                   </td>
-                  <td className={tdNum}>{rd(account.balance)}</td>
+                  <td className={`${tdNum} whitespace-nowrap`}>{rd(account.balance)}</td>
                 </tr>
               ))}
             </Table>
@@ -422,12 +436,7 @@ function ManualEntryDialog({ onClose }: { onClose: () => void }) {
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Fecha">
-            <Input
-              type="date"
-              value={date}
-              max={todayISO()}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <DateInput value={date} max={todayISO()} onChange={setDate} />
           </Field>
           <Field label="Sucursal">
             <Select value={branch} onChange={(e) => setBranch(e.target.value)}>

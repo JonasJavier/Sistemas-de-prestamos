@@ -16,6 +16,7 @@ import {
   type Me,
 } from '../api/accounts'
 import { ApiError } from '../api/client'
+import { usePrompt } from '../components/Dialog'
 import {
   Alert,
   Badge,
@@ -70,8 +71,22 @@ export function UsersPage({ me }: { me: Me }) {
     },
   })
 
+  const [dialog, ask] = usePrompt()
   const toggleUser = useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) => setUserActive(id, active),
+    mutationFn: async ({ id, active, name }: { id: string; active: boolean; name: string }) => {
+      // Shutting someone out takes a second look; letting them back in does not.
+      if (!active) {
+        const confirmed = await ask({
+          title: `Desactivar a ${name}`,
+          description:
+            'No podrá entrar a Cobradía hasta que lo actives de nuevo. Lo que registró se conserva.',
+          confirmText: 'Desactivar',
+          danger: true,
+        })
+        if (confirmed === null) return null
+      }
+      return setUserActive(id, active)
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
     onError: () =>
       setMessage({ tone: 'danger', text: 'No se pudo cambiar el estado del usuario.' }),
@@ -84,6 +99,7 @@ export function UsersPage({ me }: { me: Me }) {
 
   return (
     <>
+      {dialog}
       <PageHeader
         title="Usuarios"
         subtitle="Invita a tu equipo: cada quien crea su propia contraseña."
@@ -188,7 +204,13 @@ export function UsersPage({ me }: { me: Me }) {
                 {user.id !== me.id ? (
                   <Button
                     variant="secondary"
-                    onClick={() => toggleUser.mutate({ id: user.id, active: !user.is_active })}
+                    onClick={() =>
+                      toggleUser.mutate({
+                        id: user.id,
+                        active: !user.is_active,
+                        name: `${user.first_name} ${user.last_name}`.trim() || user.email,
+                      })
+                    }
                     disabled={toggleUser.isPending}
                   >
                     {user.is_active ? 'Desactivar' : 'Activar'}

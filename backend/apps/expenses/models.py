@@ -186,6 +186,7 @@ class Payable(CompanyScopedModel):
     ncf = models.CharField(max_length=13, blank=True)
     description = models.CharField(max_length=300)
     amount = models.DecimalField(**MONEY)
+    itbis = models.DecimalField(**MONEY, default=0)  # included in amount (606 report)
     due_on = models.DateField()
     series = models.ForeignKey(
         PayableSeries, null=True, blank=True, on_delete=models.PROTECT, related_name="payables"
@@ -212,6 +213,9 @@ class Payable(CompanyScopedModel):
     class Meta:
         constraints = [
             models.CheckConstraint(condition=Q(amount__gt=0), name="payable_amount_positive"),
+            models.CheckConstraint(
+                condition=Q(itbis__gte=0) & Q(itbis__lte=F("amount")), name="payable_itbis_range"
+            ),
             models.CheckConstraint(
                 condition=Q(paid__gte=0) & Q(paid__lte=F("amount")), name="payable_paid_range"
             ),

@@ -183,7 +183,7 @@ El 2FA, las sesiones y los códigos de respaldo los guarda django-allauth en sus
 | `ExpenseCategory` | Categoría | Nombre, naturaleza (operativo o del dueño), cuenta contable | Separa el negocio de lo personal (#12) |
 | `Expense`, `Income` | Gasto o ingreso | Número, fecha, sucursal, categoría, descripción, monto, origen o destino (caja o cuenta), proveedor con su RNC, NCF, comprobante, `status` (registrado o anulado), aprobador | Se editan con historial (#18) y se anulan con asiento inverso |
 | `PayableSeries` | Serie recurrente | Periodicidad, cantidad, fecha inicial | Cada ocurrencia es una `Payable` |
-| `Payable` | Cuenta por pagar | Proveedor, descripción, categoría, monto original, vencimiento, serie, **pagado** y **pendiente**, `status` (abierta, parcial, pagada, cancelada) | Un pago parcial no la cierra (#10) |
+| `Payable` | Cuenta por pagar | Proveedor, descripción, categoría, monto original, vencimiento, serie, **pagado** y **pendiente**, `status` (abierta, parcial, pagada, cancelada); RNC o cédula, NCF e ITBIS incluido para el 606 (109) | Un pago parcial no la cierra (#10); el NCF de un proveedor no se repite (109) |
 | `PayablePayment` | Pago de una obligación | `payable`, monto, fecha, origen, asiento | — |
 
 ### 4.9 `ledger` · Libro de movimientos

@@ -14,6 +14,7 @@ import { errorMessage, todayISO } from '../lib/format'
 import { notify } from '../lib/toast'
 import { Modal } from './Modal'
 import { Alert, Button, Field, Input, Textarea } from './ui'
+import { DateInput } from './DateInput'
 
 /** The longest a promise can wait (decision 076); the server enforces it. */
 const PROMISE_MAX_DAYS = 30
@@ -142,12 +143,11 @@ export function ActionDialog({
         {promised ? (
           <div className="grid grid-cols-2 gap-3 rounded-lg bg-surface-2 p-3">
             <Field label="Paga el día">
-              <Input
-                type="date"
+              <DateInput
                 value={promiseOn}
                 min={todayISO()}
                 max={todayISO(PROMISE_MAX_DAYS)}
-                onChange={(e) => setPromiseOn(e.target.value)}
+                onChange={setPromiseOn}
               />
             </Field>
             <Field label="Monto (RD$)">
@@ -179,12 +179,11 @@ export function ActionDialog({
         </label>
         {followUp ? (
           <Field label="Volver a gestionar el día">
-            <Input
-              type="date"
+            <DateInput
               value={followUpOn}
               min={todayISO()}
               max={todayISO(FOLLOW_UP_MAX_DAYS)}
-              onChange={(e) => setFollowUpOn(e.target.value)}
+              onChange={setFollowUpOn}
             />
           </Field>
         ) : null}

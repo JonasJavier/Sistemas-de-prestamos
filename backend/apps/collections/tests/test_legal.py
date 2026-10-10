@@ -49,6 +49,27 @@ def test_the_catalog_of_professionals(tenant) -> None:
     assert len(listed) == 4
 
 
+def test_the_same_professional_is_not_entered_twice(tenant) -> None:
+    people = catalog(tenant)
+    twin = professional(tenant, kind="lawyer", name="Lic. R. Peña", license=" 12345-678-90 ")
+    assert twin.status_code == 400 and twin.json()["code"] == "license"
+    assert "matrícula 12345-678-90" in twin.json()["detail"]
+    same_id = professional(
+        tenant, kind="lawyer", name="Otro", license="999", document="00100000001"
+    ).json()
+    assert same_id["code"] == "document"
+    # A notary may share a lawyer's number (another registry), and editing
+    # a professional keeps its own license.
+    assert professional(tenant, kind="notary", name="X", license="12345-678-90").status_code == 201
+    manager = tenant.client("gerente")
+    edited = manager.patch(
+        f"/api/v1/profesionales-legales/{people['lawyer']['id']}/",
+        {"phone": "8095550000", "license": "12345-678-90"},
+        format="json",
+    )
+    assert edited.status_code == 200, edited.content
+
+
 def test_a_case_needs_real_arrears_and_its_lawyer(tenant) -> None:
     people = catalog(tenant)
     current = make_loan(tenant, first_due_in=5)

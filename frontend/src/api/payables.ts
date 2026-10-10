@@ -12,6 +12,8 @@ export interface Payable {
   category_name: string
   branch_name: string
   amount: string
+  /** Included in the amount; for the 606. */
+  itbis: string
   paid: string
   outstanding: string
   due_on: string
@@ -60,6 +62,7 @@ export const createPayable = (body: {
   ncf?: string
   description: string
   amount: string
+  itbis?: string
   due_on: string
   invoice_on?: string | null
   frequency?: '' | 'weekly' | 'biweekly' | 'monthly'
@@ -79,3 +82,10 @@ export const payPayable = (
 
 export const cancelPayable = (id: string, reason: string): Promise<PayableDetail> =>
   api(`/api/v1/cuentas-por-pagar/${id}/cancelar/`, { method: 'POST', body: { reason } })
+
+/** The supplier's invoice once it arrives (NCF, RNC, ITBIS): for the 606. */
+export const setPayableReceipt = (
+  id: string,
+  body: { party_document: string; ncf: string; itbis: string },
+): Promise<PayableDetail> =>
+  api(`/api/v1/cuentas-por-pagar/${id}/comprobante/`, { method: 'POST', body })

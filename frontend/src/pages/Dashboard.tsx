@@ -8,7 +8,7 @@ import { listApplications, listLoans } from '../api/origination'
 import { getMyCompany } from '../api/platform'
 import { type Dashboard, getDashboard } from '../api/reports'
 import { Kpi } from '../components/Kpi'
-import { Alert, Field, LoadError, Select } from '../components/ui'
+import { Alert, Field, Figure, LoadError, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { pct, plural, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
@@ -30,11 +30,18 @@ function Tile({
     <Link
       to={to}
       search={search}
-      className="block rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none transition-colors hover:border-brand-700/50 focus-visible:ring-2 focus-visible:ring-accent-500"
+      className="@container block min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none transition-colors hover:border-brand-700/50 focus-visible:ring-2 focus-visible:ring-accent-500"
     >
       <div className="text-[12.5px] text-muted">{label}</div>
-      <div className="font-display text-2xl font-bold tabular-nums text-brand-700">
-        {value ?? '…'}
+      {/* An amount keeps one line and follows the card's width, as in Kpi. */}
+      <div
+        className={`whitespace-nowrap font-display font-bold tabular-nums text-brand-700 ${
+          typeof value === 'string' && value.includes('RD$')
+            ? 'text-base @min-[11rem]:text-xl @min-[14rem]:text-2xl'
+            : 'text-2xl'
+        }`}
+      >
+        <Figure value={value ?? '…'} />
       </div>
       <div className="text-[12px] text-muted">{hint}</div>
     </Link>
@@ -132,7 +139,11 @@ function Today({ me }: { me: Me }) {
           }
           hint={
             cash.data?.session
-              ? `${cash.data.session.number} · ${plural(cash.data.routes_to_settle.length, 'rendición', 'rendiciones')} por recibir`
+              ? `${cash.data.session.number} · ${
+                  cash.data.routes_to_settle.length
+                    ? `${plural(cash.data.routes_to_settle.length, 'rendición', 'rendiciones')} por recibir`
+                    : 'ninguna rendición por recibir'
+                }`
               : 'Ábrela para cobrar y desembolsar en efectivo'
           }
         />
@@ -231,7 +242,11 @@ function Indicators({ data }: { data: Dashboard }) {
           <Kpi
             label="Cobrado hoy"
             value={rd(ind.today.collected)}
-            hint={`de ${rd(ind.today.expected)} esperado · ${pct(ind.today.recovery, 0)}`}
+            hint={
+              Number(ind.today.expected) > 0
+                ? `de ${rd(ind.today.expected)} esperado · ${pct(ind.today.recovery, 0)}`
+                : 'Hoy no vencía ninguna cuota'
+            }
             help={`${defs.collected} Esperado: ${defs.expected}`}
           />
           <Kpi
@@ -241,9 +256,12 @@ function Indicators({ data }: { data: Dashboard }) {
             help={defs.disbursed}
           />
           {ind.profit_month ? (
+            // Same words as «Resultados»: a loss reads as «Pérdida», by its size.
             <Kpi
-              label="Ganancia cobrada del mes"
-              value={rd(ind.profit_month.result)}
+              label={
+                Number(ind.profit_month.result) < 0 ? 'Pérdida del mes' : 'Ganancia cobrada del mes'
+              }
+              value={rd(Math.abs(Number(ind.profit_month.result)))}
               hint={`${rd(ind.profit_month.income)} cobrado − ${rd(ind.profit_month.expenses)} de gastos`}
               help={defs.profit}
               to="/reportes/resultados"
@@ -273,9 +291,11 @@ function Indicators({ data }: { data: Dashboard }) {
       <Section title="Mora por tramos">
         <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm">
           <p className="mb-3 text-[12px] text-muted">{defs.buckets}</p>
-          <ul className="space-y-2">
+          {/* One grid for every row (subgrid): the bars share the same track
+              whatever the width of each row's figures. */}
+          <ul className="grid grid-cols-[auto_1fr_auto] gap-x-3 gap-y-2">
             {p.buckets.map((b) => (
-              <li key={b.key} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3">
+              <li key={b.key} className="col-span-3 grid grid-cols-subgrid items-center">
                 <span className="text-[13px]">{b.label}</span>
                 <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
                   <span
@@ -314,7 +334,11 @@ function Operations({ data }: { data: Dashboard }) {
         <Kpi
           label="Rutas en la calle"
           value={`${ops.routes_open} de ${ops.routes_total}`}
-          hint="Abiertas de las de hoy"
+          hint={
+            ops.routes_total
+              ? plural(ops.routes_total - ops.routes_open, 'ya rendida', 'ya rendidas')
+              : 'Ninguna ruta abierta hoy'
+          }
           to="/rutas"
         />
         <Kpi

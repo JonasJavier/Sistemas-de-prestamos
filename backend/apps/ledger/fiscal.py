@@ -238,40 +238,79 @@ PAYMENT_FORM_606 = {"cash": "01", "transfer": "02", "check": "02", "card": "03"}
 
 
 def format_606(year: int, month: int) -> str:
-    """Purchases of the month with RNC/cédula and NCF, in the DGII 606 columns.
-    The ITBIS paid goes to cost: the company provides an exempt service."""
-    from apps.expenses.models import Expense, Kind
+    """Purchases of the month with RNC/cédula and NCF, in the DGII 606 columns:
+    the expenses paid on the spot and the invoices owed (payables), in the
+    month of their receipt. The ITBIS paid goes to cost: the company
+    provides an exempt service."""
+    from apps.expenses.models import Expense, Kind, Payable
 
     first, last = accounting.month_bounds(year, month)
-    rows = []
-    for e in (
-        Expense.objects.filter(kind=Kind.EXPENSE, status=Expense.Status.POSTED)
+    # (document, DGII type, NCF, receipt date, payment date, total, ITBIS, form)
+    purchases = [
+        (
+            e.party_document,
+            e.category.dgii_type,
+            e.ncf,
+            e.date,
+            e.date,
+            e.amount,
+            e.itbis,
+            PAYMENT_FORM_606.get(e.method, "02"),
+        )
+        for e in Expense.objects.filter(kind=Kind.EXPENSE, status=Expense.Status.POSTED)
         .filter(date__gte=first, date__lte=last)
         .exclude(ncf="")
         .exclude(party_document="")
         .exclude(category__nature="owner")  # personal spending is not the company's
         .select_related("category")
-        .order_by("date")
+    ]
+    for p in (
+        Payable.objects.filter(recognized_on__gte=first, recognized_on__lte=last)
+        .exclude(status=Payable.Status.CANCELLED)
+        .exclude(ncf="")
+        .exclude(party_document="")
+        .exclude(category__nature="owner")
+        .select_related("category")
+        .prefetch_related("payments")
     ):
-        net = e.amount - e.itbis
+        payments = sorted(p.payments.all(), key=lambda payment: (payment.date, payment.created_at))
+        settled = p.status == Payable.Status.PAID and payments and payments[-1].date <= last
+        purchases.append(
+            (
+                p.party_document,
+                p.category.dgii_type,
+                p.ncf,
+                p.recognized_on,
+                payments[-1].date if settled else None,
+                p.amount,
+                p.itbis,
+                # Still owed at the month's end: a purchase on credit.
+                PAYMENT_FORM_606.get(payments[-1].method, "02") if settled else "04",
+            )
+        )
+    rows = []
+    for document, kind, ncf, on, paid_on, amount, itbis, form in sorted(
+        purchases, key=lambda row: row[3]
+    ):
+        net = amount - itbis
         rows.append(
             [
-                e.party_document,
-                _id_type(e.party_document),
-                e.category.dgii_type,
-                e.ncf,
+                document,
+                _id_type(document),
+                kind,
+                ncf,
                 "",
-                e.date.strftime("%Y%m%d"),
-                e.date.strftime("%Y%m%d"),
+                on.strftime("%Y%m%d"),
+                paid_on.strftime("%Y%m%d") if paid_on else "",
                 net,
                 "0.00",
                 net,
-                e.itbis,
+                itbis,
                 "0.00",
                 "0.00",
-                e.itbis,
+                itbis,
                 "0.00",
-                PAYMENT_FORM_606.get(e.method, "02"),
+                form,
             ]
         )
     return _rows_csv(

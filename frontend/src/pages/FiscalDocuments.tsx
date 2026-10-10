@@ -10,6 +10,7 @@ import {
 } from '../api/accounting'
 import { ApiError } from '../api/client'
 import { usePrompt } from '../components/Dialog'
+import { buttonClass } from '../components/classes'
 import {
   Alert,
   Badge,
@@ -17,7 +18,7 @@ import {
   Card,
   EmptyState,
   Field,
-  Input,
+  MonthInput,
   PageHeader,
   Pagination,
   RowList,
@@ -101,24 +102,15 @@ export function FiscalDocumentsPage() {
       </Alert>
       <Card className="flex flex-wrap items-end gap-3">
         <Field label="Mes de los formatos">
-          <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <MonthInput value={month} onChange={setMonth} />
         </Field>
-        <a
-          href={fiscalExportUrl('606', year, monthNumber)}
-          className="inline-flex h-9 items-center rounded-lg border border-edge px-3 text-sm font-semibold hover:bg-surface-2"
-        >
+        <a href={fiscalExportUrl('606', year, monthNumber)} className={buttonClass('secondary')}>
           Formato 606 (compras)
         </a>
-        <a
-          href={fiscalExportUrl('607', year, monthNumber)}
-          className="inline-flex h-9 items-center rounded-lg border border-edge px-3 text-sm font-semibold hover:bg-surface-2"
-        >
+        <a href={fiscalExportUrl('607', year, monthNumber)} className={buttonClass('secondary')}>
           Formato 607 (ventas)
         </a>
-        <a
-          href={fiscalExportUrl('pendientes')}
-          className="inline-flex h-9 items-center rounded-lg border border-edge px-3 text-sm font-semibold hover:bg-surface-2"
-        >
+        <a href={fiscalExportUrl('pendientes')} className={buttonClass('secondary')}>
           Por emitir (CSV)
         </a>
       </Card>
@@ -159,26 +151,21 @@ export function FiscalDocumentsPage() {
                     {doc.void_reason ? ` · ${doc.void_reason}` : ''}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
+                {/* On a phone: the amount on the left, the actions on the right. */}
+                <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end">
+                  <div className="whitespace-nowrap sm:text-right">
                     <div className="font-bold tabular-nums">{rd(doc.total)}</div>
                     <div className="text-[12px] text-muted">
                       {Number(doc.itbis) ? `ITBIS ${rd(doc.itbis)}` : 'exento'}
                     </div>
                   </div>
                   {doc.status === 'pending' ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        className="!h-9"
-                        onClick={() => cancel.mutate(doc)}
-                      >
+                    <div className="flex gap-2 whitespace-nowrap">
+                      <Button variant="secondary" onClick={() => cancel.mutate(doc)}>
                         No emitir
                       </Button>
-                      <Button className="!h-9" onClick={() => issue.mutate(doc)}>
-                        Registrar e-NCF
-                      </Button>
-                    </>
+                      <Button onClick={() => issue.mutate(doc)}>Registrar e-NCF</Button>
+                    </div>
                   ) : null}
                 </div>
               </li>

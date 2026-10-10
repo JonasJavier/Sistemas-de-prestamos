@@ -97,3 +97,10 @@ export const CollectIcon = () => (
     <path d="M14.6 9.3c-.4-.9-1.4-1.5-2.6-1.5-1.5 0-2.6.8-2.6 2 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 2.1-2.8 2.1-1.2 0-2.3-.6-2.7-1.6M12 6.2v1.6M12 16.2v1.6" />
   </Svg>
 )
+
+export const CalendarIcon = () => (
+  <Svg className="size-4 shrink-0">
+    <rect x="4" y="5" width="16" height="15" rx="2" />
+    <path d="M4 10h16M9 3v4M15 3v4" />
+  </Svg>
+)
