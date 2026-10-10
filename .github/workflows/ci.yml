@@ -7,9 +7,11 @@ on:
 
 # Images come from mirror.gcr.io (Docker Hub's official images) and ghcr.io:
 # Docker Hub's anonymous pull limit is shared by every job on a runner.
+# Runners pinned to 24.04: ubuntu-latest moves to 26 from 19/10/2026, and
+# the move is made on purpose (Playwright and WeasyPrint system packages).
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -70,7 +72,7 @@ jobs:
         run: uv run pytest -q
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
@@ -99,7 +101,7 @@ jobs:
 
   # The production images build (decision 101); they are not pushed anywhere.
   images:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: API image
@@ -117,7 +119,7 @@ jobs:
 
   # cobradia.com: the static promotion site (doc 01, decision 100).
   site:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: site
@@ -141,7 +143,7 @@ jobs:
   # The phase demos as a user lives them (doc 10 - 2): the real API, the
   # production build and a browser, over the demo seed.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: mirror.gcr.io/library/postgres:18
