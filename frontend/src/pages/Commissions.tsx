@@ -309,8 +309,7 @@ export function CommissionsPage({ me }: { me: Me }) {
                         <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
                           Meta
                         </th>
-                        <th className="px-3 py-2 text-right font-medium">Comisión</th>
-                        <th className="hidden px-4 py-2 font-medium sm:table-cell">Por pagar</th>
+                        <th className="px-4 py-2 text-right font-medium">Comisión</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -342,11 +341,14 @@ export function CommissionsPage({ me }: { me: Me }) {
                               <div className="text-[12px] text-warning-700">No la alcanzó</div>
                             ) : null}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums">
+                          <td className="whitespace-nowrap px-4 py-2 text-right font-semibold tabular-nums">
                             {rd(line.amount)}
-                          </td>
-                          <td className="hidden px-4 py-2 text-[12.5px] sm:table-cell">
-                            {line.payable ? line.payable.status : '—'}
+                            {/* Approved: where it went to be paid, under the figure. */}
+                            {line.payable ? (
+                              <div className="text-[12px] font-normal text-muted">
+                                Por pagar · {line.payable.status.toLowerCase()}
+                              </div>
+                            ) : null}
                           </td>
                         </tr>
                       ))}
