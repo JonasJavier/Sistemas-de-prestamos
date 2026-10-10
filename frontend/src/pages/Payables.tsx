@@ -191,7 +191,7 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
   })
   return (
     <Modal onClose={onClose} labelledBy="payable-title">
-      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="payable-title" className="text-lg font-semibold">
           Nueva cuenta por pagar
         </h2>
@@ -380,7 +380,7 @@ function PayableDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const error = [pay.error, cancel.error].find((e) => e instanceof ApiError)
   return (
     <Modal onClose={onClose} labelledBy="payable-detail-title">
-      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         {dialog}
         {!data ? (
           <Spinner />

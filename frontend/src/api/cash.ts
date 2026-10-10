@@ -80,7 +80,8 @@ export const closeCash = (body: {
 export const listSessions = (params: {
   status?: string
   date?: string
-}): Promise<{ results: CashSession[]; to_approve: number }> =>
+  page?: number
+}): Promise<{ count: number; results: CashSession[]; to_approve: number }> =>
   api(`/api/v1/cajas/${toQuery(params)}`)
 
 export const getSession = (id: string): Promise<CashSession> => api(`/api/v1/cajas/${id}/`)

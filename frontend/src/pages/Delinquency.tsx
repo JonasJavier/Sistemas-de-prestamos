@@ -137,10 +137,10 @@ export function DelinquencyPage({ me }: { me: Me }) {
                 {plural(selected.length, 'préstamo seleccionado', 'préstamos seleccionados')}
               </span>
               <span className="flex gap-2">
-                <Button variant="secondary" className="!h-9" onClick={() => setSelected([])}>
+                <Button variant="secondary" size="sm" onClick={() => setSelected([])}>
                   Quitar selección
                 </Button>
-                <Button className="!h-9" onClick={() => setAssigning(true)}>
+                <Button size="sm" onClick={() => setAssigning(true)}>
                   Asignar gestor
                 </Button>
               </span>
@@ -199,18 +199,14 @@ export function DelinquencyPage({ me }: { me: Me }) {
                   {row.customer_phone ? (
                     <a
                       href={`tel:${row.customer_phone}`}
-                      className={buttonClass('secondary', '!h-9 !px-3')}
+                      className={buttonClass('secondary', '', 'sm')}
                       title={phoneText(row.customer_phone)}
                     >
                       Llamar
                     </a>
                   ) : null}
                   {canManage ? (
-                    <Button
-                      variant="secondary"
-                      className="!h-9 !px-3"
-                      onClick={() => setActing(row)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => setActing(row)}>
                       Gestión
                     </Button>
                   ) : null}
@@ -218,7 +214,7 @@ export function DelinquencyPage({ me }: { me: Me }) {
                     <Link
                       to="/cobrar/$numero"
                       params={{ numero: row.number }}
-                      className={buttonClass('primary', '!h-9 !px-3')}
+                      className={buttonClass('soft', '', 'sm')}
                     >
                       Cobrar
                     </Link>
@@ -280,7 +276,7 @@ function AssignDialog({
   })
   return (
     <Modal onClose={() => onClose(false)} labelledBy="assign-title">
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+      <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="assign-title" className="text-lg font-semibold">
           Asignar gestor a {plural(loans.length, 'préstamo')}
         </h2>

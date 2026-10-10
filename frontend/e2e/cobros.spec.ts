@@ -154,8 +154,16 @@ test('el gerente ve los atrasos por tramo y el avance de las rutas', async ({ br
   const manager = await sessionFor(browser, MODELO.gerente)
   await manager.goto('/atrasos')
   await expect(manager.getByRole('tab', { name: /1–7 días/ })).toBeVisible()
-  await manager.getByRole('tab', { name: /8–30 días/ }).click()
-  await expect(manager.getByText('María Gómez').first()).toBeVisible()
+  // The seed's late loans change bucket as the days go by: open the first
+  // bucket that has any (its name reads «1–7 días 2 RD$ …») and see a row.
+  await expect(manager.getByRole('tab').first()).toContainText('RD$')
+  const late = manager
+    .getByRole('tab')
+    .filter({ hasNotText: /días\s*0\s*RD|90\s*0\s*RD/ })
+    .first()
+  await late.click()
+  await expect(late).toHaveAttribute('aria-selected', 'true')
+  await expect(manager.getByText(/María Gómez|Pérez Santana/).first()).toBeVisible()
   await manager.goto('/rutas')
   await expect(manager.getByText('Carlos Cobrador').first()).toBeVisible()
   await expect(manager.getByRole('button', { name: 'Mapa' }).first()).toBeVisible()

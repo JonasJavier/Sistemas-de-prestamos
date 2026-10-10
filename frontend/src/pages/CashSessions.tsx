@@ -22,6 +22,7 @@ import {
   Field,
   Input,
   PageHeader,
+  Pagination,
   RowList,
   Spinner,
   Stat,
@@ -46,10 +47,15 @@ type Tab = (typeof TABS)[number][0]
 
 /** P52: the branch's cash sessions, closings to approve first. */
 export function CashSessionsPage({ me }: { me: Me }) {
-  const [tab, setTab] = useState<Tab>('closed')
+  const [tab, setTabState] = useState<Tab>('closed')
+  const [page, setPage] = useState(1)
+  const setTab = (next: Tab) => {
+    setTabState(next)
+    setPage(1)
+  }
   const sessions = useQuery({
-    queryKey: ['cash-sessions', tab],
-    queryFn: () => listSessions({ status: tab as CashSession['status'] }),
+    queryKey: ['cash-sessions', tab, page],
+    queryFn: () => listSessions({ status: tab as CashSession['status'], page }),
     enabled: tab !== 'differences',
   })
   return (
@@ -93,6 +99,9 @@ export function CashSessionsPage({ me }: { me: Me }) {
             : 'No hay cajas en esta bandeja.'}
         </EmptyState>
       )}
+      {tab !== 'differences' ? (
+        <Pagination page={page} count={sessions.data?.count ?? 0} onChange={setPage} />
+      ) : null}
     </>
   )
 }

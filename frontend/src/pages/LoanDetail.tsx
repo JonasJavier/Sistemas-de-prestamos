@@ -15,7 +15,7 @@ import {
   uploadSignedNote,
   voidLoan,
 } from '../api/origination'
-import { listPayments } from '../api/payments'
+import { PaymentList } from '../components/PaymentList'
 import { buttonClass } from '../components/classes'
 import { CollectionTimeline } from '../components/CollectionTimeline'
 import { MoreMenu } from '../components/MoreMenu'
@@ -139,11 +139,6 @@ export function LoanDetailPage({ me }: { me: Me }) {
     'payoff' | 'dates' | 'collector' | 'restructure' | 'writeoff' | 'legal' | null
   >(null)
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
-  const payments = useQuery({
-    queryKey: ['loan', numero, 'payments'],
-    queryFn: () => listPayments({ loan: numero }),
-    enabled: tab === 'pagos',
-  })
   const calendar = useQuery({
     queryKey: ['loan', numero, 'calendar'],
     queryFn: () => getLoanCalendar(numero),
@@ -457,35 +452,15 @@ export function LoanDetailPage({ me }: { me: Me }) {
 
       {tab === 'pagos' ? (
         <Card>
-          {payments.isPending ? (
-            <Spinner />
-          ) : payments.data?.results.length ? (
-            <ul className="divide-y divide-edge text-sm">
-              {payments.data.results.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <span className="min-w-0">
-                    <Link
-                      to="/recibos/$numero"
-                      params={{ numero: p.number }}
-                      className="font-semibold text-brand-700 hover:underline"
-                    >
-                      {p.number}
-                    </Link>{' '}
-                    <span className="text-muted">
-                      · {p.kind_label} · {p.method_label} · {moment(p.paid_at)} ·{' '}
-                      {p.collected_by_name}
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    {p.status === 'reversed' ? <Badge tone="danger">Reversado</Badge> : null}
-                    <span className="tabular-nums font-medium">{rd(p.amount)}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted">Sin pagos todavía.</p>
-          )}
+          <PaymentList
+            filter={{ loan: numero }}
+            queryKey={['loan', numero, 'payments']}
+            describe={(p) =>
+              [p.kind_label, p.method_label, moment(p.paid_at), p.collected_by_name]
+                .filter(Boolean)
+                .join(' · ')
+            }
+          />
         </Card>
       ) : null}
 

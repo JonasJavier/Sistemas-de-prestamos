@@ -128,8 +128,15 @@ export function todayISO(daysAhead = 0) {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
+/** «09/10/2026 7:51 p. m.»: the same date as everywhere, then the hour (the
+ * short style wrote «9/10/26, 7:51 p. m.»). */
 export const moment = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleString('es-DO', { dateStyle: 'short', timeStyle: 'short' }) : '—'
+  value
+    ? `${dateOf(value)} ${new Date(value).toLocaleTimeString('es-DO', {
+        hour: 'numeric',
+        minute: '2-digit',
+      })}`
+    : '—'
 
 export const FREQUENCY_TEXT: Record<string, string> = {
   daily: 'Diaria',
@@ -280,4 +287,13 @@ export function deviceText(userAgent: string) {
             ? 'Linux'
             : 'otro sistema'
   return `${browser} en ${system}`
+}
+
+/** «Gina Gerente» → «GG»: the avatar of people and companies. */
+export function initials(text: string) {
+  const words = text
+    .replace(/\b(SRL|SAS|SA|EIRL|C\.? ?por ?A\.?)\b/gi, '')
+    .split(/\s+/)
+    .filter(Boolean)
+  return ((words[0]?.[0] ?? '') + (words[1]?.[0] ?? '')).toUpperCase() || '·'
 }

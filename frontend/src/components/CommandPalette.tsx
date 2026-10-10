@@ -7,6 +7,7 @@ import { globalSearch } from '../api/customers'
 import { phoneText, rd } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
+import { CollectIcon, SearchIcon } from './icons'
 import { Modal } from './Modal'
 
 interface Option {
@@ -121,33 +122,41 @@ export function CommandPalette({
 
   return (
     <Modal onClose={onClose} label="Búsqueda global" align="top">
-      <div className="w-full max-w-lg overflow-hidden rounded-xl border border-edge bg-surface shadow-xl">
-        <input
-          autoFocus
-          value={q}
-          onChange={(event) => {
-            setQ(event.target.value)
-            setActive(0)
-          }}
-          placeholder={
-            collecting
-              ? 'Préstamo o cliente a cobrar…'
-              : 'Buscar cliente, cédula, teléfono o número de préstamo…'
-          }
-          aria-label={collecting ? 'Préstamo a cobrar' : 'Buscar'}
-          className="w-full border-b border-edge bg-surface px-4 py-3 text-sm text-ink outline-none"
-          onKeyDown={(event) => {
-            if (event.key === 'ArrowDown') {
-              event.preventDefault()
-              setActive((current + 1) % Math.max(options.length, 1))
-            } else if (event.key === 'ArrowUp') {
-              event.preventDefault()
-              setActive((current - 1 + options.length) % Math.max(options.length, 1))
-            } else if (event.key === 'Enter') {
-              options[current]?.run()
+      <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-edge bg-surface shadow-xl">
+        <div className="flex items-center gap-3 border-b border-edge px-4">
+          <span className={collecting ? 'text-brand-700' : 'text-muted'}>
+            {collecting ? <CollectIcon /> : <SearchIcon />}
+          </span>
+          <input
+            autoFocus
+            value={q}
+            onChange={(event) => {
+              setQ(event.target.value)
+              setActive(0)
+            }}
+            placeholder={
+              collecting
+                ? 'Préstamo o cliente a cobrar…'
+                : 'Buscar cliente, cédula, teléfono o número de préstamo…'
             }
-          }}
-        />
+            aria-label={collecting ? 'Préstamo a cobrar' : 'Buscar'}
+            className="h-14 min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-muted/80"
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault()
+                setActive((current + 1) % Math.max(options.length, 1))
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault()
+                setActive((current - 1 + options.length) % Math.max(options.length, 1))
+              } else if (event.key === 'Enter') {
+                options[current]?.run()
+              }
+            }}
+          />
+          <kbd className="hidden rounded-md border border-edge bg-surface-2 px-1.5 text-[11px] font-medium leading-5 text-muted sm:block">
+            Esc
+          </kbd>
+        </div>
         <div className="max-h-80 overflow-y-auto p-2" role="listbox" aria-label="Resultados">
           {term.length < 2 ? (
             <p className="px-3 py-2 text-[12.5px] text-muted">
@@ -166,8 +175,8 @@ export function CommandPalette({
               aria-selected={index === current}
               onMouseEnter={() => setActive(index)}
               onClick={option.run}
-              className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm ${
-                index === current ? 'bg-brand-100' : ''
+              className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                index === current ? 'bg-brand-50 ring-1 ring-inset ring-brand-700/15' : ''
               } ${option.action ? 'text-brand-700' : ''} ${
                 option.action && options[index - 1] && !options[index - 1].action
                   ? 'mt-1 border-t border-edge'

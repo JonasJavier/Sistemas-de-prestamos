@@ -12,8 +12,8 @@ export interface Notice {
   created_at: string
 }
 
-export const listNotices = (unreadOnly = false): Promise<Page<Notice>> =>
-  api(`/api/v1/avisos/${toQuery({ sin_leer: unreadOnly ? '1' : undefined })}`)
+export const listNotices = (unreadOnly = false, page = 1): Promise<Page<Notice>> =>
+  api(`/api/v1/avisos/${toQuery({ sin_leer: unreadOnly ? '1' : undefined, page })}`)
 
 export const markNoticeRead = (id: string): Promise<unknown> =>
   api(`/api/v1/avisos/${id}/leido/`, { method: 'POST' })

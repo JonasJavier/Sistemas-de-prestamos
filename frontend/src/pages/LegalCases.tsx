@@ -305,7 +305,8 @@ export function LegalCasePage() {
                   </a>
                   {open ? (
                     <Button
-                      className="!h-8"
+                      variant="soft"
+                      size="sm"
                       disabled={issue.isPending}
                       onClick={() => issue.mutate(doc.kind)}
                     >
@@ -407,7 +408,7 @@ export function LegalCasePage() {
       </Card>
       {closing ? (
         <Modal onClose={() => setClosing(false)} labelledBy="close-case-title">
-          <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
             <h2 id="close-case-title" className="text-lg font-semibold">
               Cerrar el caso {data.number}
             </h2>

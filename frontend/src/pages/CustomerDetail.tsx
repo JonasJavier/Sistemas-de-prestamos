@@ -7,7 +7,7 @@ import type { Me } from '../api/accounts'
 import { blockCustomer, getCustomer, unblockCustomer } from '../api/customers'
 import { listApplications, listLoans } from '../api/origination'
 import { ClassificationNote } from '../components/Grade'
-import { Alert, Badge, Button, Card, PageHeader, Tabs } from '../components/ui'
+import { Alert, Avatar, Badge, Button, Card, PageHeader, Spinner, Tabs } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { APPLICATION_STATUS, dateOf, documentText, LOAN_STATUS, phoneText, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
@@ -113,7 +113,7 @@ export function CustomerDetailPage({ me }: { me: Me }) {
   const unblock = useMutation({ mutationFn: () => unblockCustomer(id), onSuccess: refresh })
 
   const data = customer.data
-  if (customer.isPending) return <p className="text-sm text-muted">Cargando…</p>
+  if (customer.isPending) return <Spinner />
   if (!data) return <Alert tone="danger">No se encontró el cliente.</Alert>
 
   return (
@@ -127,7 +127,8 @@ export function CustomerDetailPage({ me }: { me: Me }) {
         }
         documentTitle={data.display_name}
         title={
-          <span className="flex flex-wrap items-center gap-2">
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Avatar name={data.display_name} size="lg" />
             {data.display_name}
             <Badge tone={data.status === 'active' ? 'brand' : 'danger'}>
               {data.status === 'active' ? 'Activo' : 'Bloqueado'}

@@ -98,7 +98,7 @@ export function ExpenseDialog({
   const amount = Number(form.amount.replace(/,/g, '')) || 0
   return (
     <Modal onClose={onClose} labelledBy="expense-title">
-      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="expense-title" className="text-lg font-semibold">
           {title}
         </h2>
@@ -209,7 +209,7 @@ export function ExpenseDialog({
             className="hidden"
             onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
           />
-          <Button variant="secondary" className="!h-9" onClick={() => fileInput.current?.click()}>
+          <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
             Adjuntar comprobante
           </Button>
           <span className="text-muted">

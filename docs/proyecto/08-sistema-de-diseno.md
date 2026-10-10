@@ -1,6 +1,6 @@
 # 08 · Sistema de diseño de Cobradía
 
-**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **paleta definitiva «Bosque y Arena» elegida el 05/10/2026 (decisión 053)** por el dueño entre cuatro opciones de un lienzo comparativo, tras descartar el «solo blanco» por simplón; tipografías **Sora** (títulos y marca) e **Inter** (interfaz y cifras) de la decisión 052; tema claro predeterminado con oscuro opcional por interruptor.
+**Estado:** aprobado el 04/10/2026 (decisiones 047 y 048) · **paleta definitiva «Bosque y Arena» elegida el 05/10/2026 (decisión 053)** por el dueño entre cuatro opciones de un lienzo comparativo, tras descartar el «solo blanco» por simplón; tipografías **Sora** (títulos y marca) e **Inter** (interfaz y cifras) de la decisión 052; tema claro predeterminado con oscuro opcional por interruptor. **Refinado el 10/10/2026 (decisión 110):** arena más clara, sombras suaves, menú con íconos y grupos plegables, menú de usuario con avatar y colores semánticos AA también en oscuro.
 
 **En una frase:** la identidad **«Bosque y Arena»** (decisión 053, distinta de la referencia Púrpura Datos): menú lateral verde bosque, fondo arena cálido, tarjetas blancas, acciones esmeralda y un dorado discreto como firma, sobre Tailwind 4 con componentes propios (vocabulario de shadcn/ui, decisión 064), con alta densidad donde se trabaja, números tabulares para el dinero, modo claro (y oscuro opcional) y accesibilidad WCAG 2.2 AA.
 
@@ -24,25 +24,26 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-950` | `#15402F` | **El menú lateral** (verde bosque) |
-| `--brand-900` | `#1E5540` | Ítem activo y hover dentro del menú |
+| `--brand-950` | `#143B2C` | **El menú lateral** (verde bosque) |
+| `--brand-900` | `#1C4E3B` | Hover dentro del menú |
 | `--brand-800` | `#0B5C43` | Hover de la acción primaria; texto de insignia «al día» |
 | `--brand-700` | `#0E6B4F` | **Acción primaria**, enlaces (AA sobre blanco) |
 | `--brand-200` | `#B9CDC1` | Texto de navegación sobre el bosque |
-| `--brand-100` | `#DCEFE4` | Selecciones, fondos de insignia «al día» |
+| `--brand-100` | `#DCEFE4` | Selecciones, botón tonal de fila |
+| `--brand-50` | `#EFF7F2` | Hover de filas y botones secundarios, insignia «al día» |
 | `--gold-500` | `#C9A227` | **Firma dorada:** la í de la marca, marcador del ítem activo |
-| `--gold-100` / `--gold-800` | `#F6ECD4` / `#8A6A14` | Aviso de la prueba gratis (fondo / texto) |
+| `--gold-100` / `--gold-800` | `#F7EED8` / `#7D5F10` | Aviso de la prueba gratis (fondo / texto) |
 | `--accent-500` | `#0E8A64` | Anillos de foco |
-| `--success-600` | `#059669` | Pagado, cuadrado, confirmaciones |
+| `--success-600` | `#047857` | Pagado, cuadrado, confirmaciones (AA como texto sobre blanco) |
 | `--warning-700` | `#B45309` | Vencido 1–30 días — semántico, no identidad |
-| `--danger-600` | `#DC2626` | Errores, mora grave (31+ días), acciones destructivas |
+| `--danger-600` | `#DC2626` | Errores, mora grave (31+ días), acciones destructivas; el texto sobre el rojo usa `--on-danger` |
 | `--info-700` | `#0369A1` | Información neutral |
-| `--canvas` | `#F3EEE3` | Fondo de la página (**arena cálido**) |
+| `--canvas` | `#F6F3EC` | Fondo de la página (**arena cálido**, más claro desde la 110) |
 | `--surface` | `#FFFFFF` | Tarjetas, tablas, barras: donde se trabaja |
-| `--surface-2` | `#FCFAF5` | Zonas de contenido sutiles |
-| `--text` | `#26302B` | Texto principal |
-| `--muted` | `#716B5E` | Texto secundario |
-| `--border` | `#E6DFD0` | Bordes y separadores |
+| `--surface-2` | `#FAF8F3` | Zonas de contenido sutiles |
+| `--text` | `#1F2925` | Texto principal |
+| `--muted` | `#6B6659` | Texto secundario (5:1 sobre la arena) |
+| `--border` | `#E8E2D5` | Bordes y separadores |
 
 ### Oscuro (opcional)
 
@@ -52,8 +53,9 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 | `--brand-700` | `#35B585` | Acción primaria y enlaces |
 | `--brand-100` / `--brand-800` | `#1A3A2B` / `#9FE0C3` | Insignias (fondo / texto) |
 | `--gold-500` | `#D4AF37` | Firma dorada |
-| `--canvas` / `--surface` | `#151A16` / `#1D2420` | Fondo y tarjetas |
-| `--text` / `--muted` / `--border` | `#E8EDE8` / `#9FA89F` / `#333C35` | Texto y bordes |
+| `--canvas` / `--surface` | `#121714` / `#1A211D` | Fondo y tarjetas |
+| `--text` / `--muted` / `--border` | `#E8EDE8` / `#9DA69D` / `#2C3530` | Texto y bordes |
+| Semánticos | éxito `#34D399` · advertencia `#F59E0B` · peligro `#F87171` · información `#38BDF8` | Más claros que en el tema claro para mantener AA como texto sobre las superficies oscuras |
 
 ### Reglas de uso
 
@@ -83,8 +85,8 @@ Formato regional fijo (es-DO): `RD$ 1,250.00`, fechas `04/10/2026`, sin notacion
 | Elemento | Valor |
 | --- | --- |
 | Escala de espaciado | Múltiplos de 4 px; secciones separadas por 24 px |
-| Radios | 8 px en controles y tarjetas; 12 px en diálogos y hojas; 999 px en insignias |
-| Sombras | Dos niveles: tarjeta (`0 1px 2px rgba(6,40,26,.06)`) y flotante (`0 8px 24px rgba(6,40,26,.14)`). Nada más |
+| Radios | 8 px en controles; 12 px en tarjetas y menús; 16 px en diálogos; 24 px arriba en las hojas del celular; 999 px en insignias y avatares |
+| Sombras | Dos niveles teñidos de bosque: tarjeta (`0 1px 2px` y `0 1px 3px` al 4–5 %) y flotante (`0 12px 32px -8px` al 18 %), más un `xs` de 1 px para controles. Nada más |
 | Altura de controles | 36 px en escritorio; 44 px mínimo en móvil (objetivo táctil) |
 | Filas de tabla | 40 px (densa pero legible); modo compacto opcional de 32 px en reportes |
 | Menú lateral | 248 px; plegado, 56 px con íconos y burbujas de ayuda |
@@ -107,6 +109,12 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Formularios | `Field` + React Hook Form + Zod; tasas con `PercentInput` (se escriben en %) | Error junto al campo; borrador automático en los largos |
 | Línea de tiempo | propia | Cronología del préstamo y del cliente (`DomainEvent`) |
 | Calendario de cuotas | propia | Tabla con insignias y barra de progreso del préstamo |
+| Menú lateral | `AppShell` | Ícono de línea por ítem, marcador dorado del activo, grupos plegables (Ajustes plegado por defecto; el grupo de la pantalla en uso siempre abierto; la elección se recuerda en el navegador) y desplazamiento automático al ítem activo |
+| Menú de usuario | `AppShell` | Avatar con iniciales y nombre con rol; dentro: Mi cuenta, tema claro/oscuro y Cerrar sesión (reemplaza el botón «Salir») |
+| Avatar | `Avatar` | Iniciales en un círculo con un tono suave fijo por nombre: clientes, usuario y empresa |
+| Botones de fila | `Button size="sm"` · `variant="soft"` | La acción principal de cada fila de una lista es tonal (verde suave), nunca el verde relleno de la acción de la pantalla |
+| Progreso | `TopProgress` | Barra fina arriba mientras una pantalla carga sus datos o se guarda algo; espera 180 ms para no parpadear |
+| Lista de pagos | `PaymentList` | Recibos de un préstamo, un cliente o una caja, paginados de 25 en 25 |
 
 **Jerarquía de acciones por pantalla:** 1 primaria (verde, rellena) · secundarias (borde) · el resto en «Más» (menú). Las destructivas, en rojo y al final.
 

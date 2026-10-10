@@ -569,7 +569,7 @@ export function CollectPage({ me }: { me: Me }) {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm tabular-nums [&_td]:whitespace-nowrap">
-                  <thead className="text-left text-[12px] uppercase text-muted">
+                  <thead className="text-left text-[12px] text-muted">
                     <tr>
                       <th className="py-1">Cuota</th>
                       {withFees ? <th className="text-right">Mora</th> : null}
@@ -658,7 +658,7 @@ export function CollectPage({ me }: { me: Me }) {
         {data.installments.length ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm tabular-nums [&_td]:whitespace-nowrap">
-              <thead className="text-left text-[12px] uppercase text-muted">
+              <thead className="text-left text-[12px] text-muted">
                 <tr>
                   <th className="py-1">#</th>
                   <th>Vence</th>
@@ -699,7 +699,7 @@ export function CollectPage({ me }: { me: Me }) {
           <Link
             to="/prestamos/$numero"
             params={{ numero }}
-            className={buttonClass('secondary', 'ml-1 !h-8')}
+            className={buttonClass('secondary', 'ml-1', 'sm')}
           >
             Ver el préstamo
           </Link>

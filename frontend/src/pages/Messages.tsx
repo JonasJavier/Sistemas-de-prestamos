@@ -65,7 +65,7 @@ function TemplateDialog({
   })
   return (
     <Modal onClose={onClose} labelledBy="template-title">
-      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="template-title" className="text-lg font-semibold">
           {template.event_label} · {template.channel_label}
         </h2>

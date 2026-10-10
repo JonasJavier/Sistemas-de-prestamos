@@ -204,6 +204,7 @@ export function UsersPage({ me }: { me: Me }) {
                 {user.id !== me.id ? (
                   <Button
                     variant="secondary"
+                    size="sm"
                     onClick={() =>
                       toggleUser.mutate({
                         id: user.id,

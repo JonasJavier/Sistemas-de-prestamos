@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, toQuery } from './client'
 
 export interface RegistrationPayload {
   company_legal_name: string
@@ -69,8 +69,8 @@ export interface PlatformCompany {
   } | null
 }
 
-export function listCompanies(): Promise<{ count: number; results: PlatformCompany[] }> {
-  return api('/api/v1/plataforma/empresas/')
+export function listCompanies(page = 1): Promise<{ count: number; results: PlatformCompany[] }> {
+  return api(`/api/v1/plataforma/empresas/${toQuery({ page })}`)
 }
 
 export function suspendCompany(id: string, reason: string): Promise<PlatformCompany> {

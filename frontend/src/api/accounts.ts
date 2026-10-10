@@ -49,7 +49,7 @@ export interface Branch {
 }
 
 export function listBranches(): Promise<Paginated<Branch>> {
-  return api('/api/v1/sucursales/')
+  return api('/api/v1/sucursales/?page_size=100')
 }
 
 export function createBranch(data: Partial<Branch>): Promise<Branch> {
@@ -77,8 +77,9 @@ export interface CompanyUser {
   memberships: Membership[]
 }
 
+/** The whole team in one page (up to 100: the API's maximum). */
 export function listUsers(): Promise<Paginated<CompanyUser>> {
-  return api('/api/v1/usuarios/')
+  return api('/api/v1/usuarios/?page_size=100')
 }
 
 export function setUserActive(id: string, active: boolean): Promise<CompanyUser> {

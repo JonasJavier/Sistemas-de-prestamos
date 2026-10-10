@@ -42,7 +42,7 @@ function Frame({
 }) {
   return (
     <Modal onClose={onClose} labelledBy="loan-action-title">
-      <div className="max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="loan-action-title" className="text-lg font-semibold">
           {title}
         </h2>

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import {
@@ -17,7 +16,7 @@ import {
 import type { Me } from '../api/accounts'
 import { ApiError } from '../api/client'
 import { listReasons } from '../api/origination'
-import { listPayments } from '../api/payments'
+import { PaymentList } from '../components/PaymentList'
 import { CashDifferences } from '../components/CashDifferences'
 import { ExpenseDialog } from '../components/ExpenseDialog'
 import { Modal } from '../components/Modal'
@@ -141,7 +140,7 @@ function MoveDialog({ data, onClose }: { data: MyCash; onClose: () => void }) {
   })
   return (
     <Modal onClose={onClose} labelledBy="move-title">
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+      <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="move-title" className="text-lg font-semibold">
           Depositar o trasladar
         </h2>
@@ -225,7 +224,7 @@ function SettleDialog({ route, onClose }: { route: RouteToSettle; onClose: () =>
   })
   return (
     <Modal onClose={onClose} labelledBy="settle-title">
-      <div className="max-h-[90vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="settle-title" className="text-lg font-semibold">
           Rendición de {route.collector_name}
         </h2>
@@ -387,7 +386,7 @@ function CloseDialog({
   })
   return (
     <Modal onClose={onClose} labelledBy="close-title">
-      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="close-title" className="text-lg font-semibold">
           Arqueo y cierre de {session.number}
         </h2>
@@ -530,11 +529,6 @@ export function MyCashPage({ me }: { me: Me }) {
   const [dialog, setDialog] = useState<'move' | 'close' | 'petty' | null>(null)
   const [settling, setSettling] = useState<RouteToSettle | null>(null)
   const session = cash.data?.session ?? null
-  const payments = useQuery({
-    queryKey: ['payments', 'session', session?.id],
-    queryFn: () => listPayments({ cash_session: session!.id }),
-    enabled: Boolean(session),
-  })
   if (cash.isPending) return <Spinner />
   const data = cash.data
   if (!data) return <Alert tone="danger">No se pudo cargar tu caja.</Alert>
@@ -616,7 +610,7 @@ export function MyCashPage({ me }: { me: Me }) {
             {session.movements?.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-left text-[12px] uppercase text-muted">
+                  <thead className="text-left text-[12px] text-muted">
                     <tr>
                       <th className="py-1">Hora</th>
                       <th>Tipo</th>
@@ -667,36 +661,12 @@ export function MyCashPage({ me }: { me: Me }) {
 
           <Card className="space-y-2">
             <h2 className="text-base font-semibold">Recibos de esta caja</h2>
-            {payments.data?.results.length ? (
-              <ul className="divide-y divide-edge text-sm">
-                {payments.data.results.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 py-2">
-                    <div className="min-w-0">
-                      <Link
-                        to="/recibos/$numero"
-                        params={{ numero: p.number }}
-                        className="font-medium text-brand-700 hover:underline"
-                      >
-                        {p.number}
-                      </Link>
-                      <div className="truncate text-[12.5px] text-muted">
-                        {p.customer_name} · {p.method_label}
-                      </div>
-                    </div>
-                    <span className="flex shrink-0 items-center gap-2">
-                      {p.status === 'reversed' ? <Badge tone="danger">Reversado</Badge> : null}
-                      <span
-                        className={`tabular-nums ${p.status === 'reversed' ? 'text-muted line-through' : ''}`}
-                      >
-                        {rd(p.amount)}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">Sin cobros todavía.</p>
-            )}
+            <PaymentList
+              filter={{ cash_session: session.id }}
+              queryKey={['payments', 'session', session.id]}
+              describe={(p) => `${p.customer_name} · ${p.method_label}`}
+              empty="Sin cobros todavía."
+            />
           </Card>
           {dialog === 'move' ? <MoveDialog data={data} onClose={() => setDialog(null)} /> : null}
           {dialog === 'petty' ? (

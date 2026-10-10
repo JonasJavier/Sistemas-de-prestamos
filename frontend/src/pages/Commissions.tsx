@@ -56,7 +56,7 @@ function RuleDialog({ rule, onClose }: { rule: Draft; onClose: () => void }) {
   })
   return (
     <Modal onClose={onClose} labelledBy="rule-title">
-      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="rule-title" className="text-lg font-semibold">
           {rule.id ? 'Editar regla' : 'Nueva regla de comisión'}
         </h2>
@@ -185,7 +185,7 @@ function Rules({ editable }: { editable: boolean }) {
                 </div>
               </div>
               {editable ? (
-                <Button variant="secondary" className="!h-8" onClick={() => setEditing(rule)}>
+                <Button variant="secondary" size="sm" onClick={() => setEditing(rule)}>
                   Editar
                 </Button>
               ) : null}

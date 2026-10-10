@@ -13,7 +13,17 @@ import {
 } from '../api/platform'
 import { Kpi } from '../components/Kpi'
 import { SupportDialog } from '../components/Support'
-import { Alert, Button, Card, Field, Input, LoadError, PageHeader, Spinner } from '../components/ui'
+import {
+  Alert,
+  Button,
+  Card,
+  Field,
+  Input,
+  LoadError,
+  PageHeader,
+  Pagination,
+  Spinner,
+} from '../components/ui'
 import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
 import { DateInput } from '../components/DateInput'
 
@@ -96,7 +106,11 @@ export function PlatformPage() {
   const [paying, setPaying] = useState<PlatformCompany | null>(null)
   const [helping, setHelping] = useState<PlatformCompany | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const companies = useQuery({ queryKey: ['platform-companies'], queryFn: listCompanies })
+  const [page, setPage] = useState(1)
+  const companies = useQuery({
+    queryKey: ['platform-companies', page],
+    queryFn: () => listCompanies(page),
+  })
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['platform-companies'] })
 
@@ -129,7 +143,7 @@ export function PlatformPage() {
       <PlatformDashboard />
 
       <Card>
-        {companies.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
+        {companies.isPending ? <Spinner /> : null}
         {companies.data ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -213,6 +227,9 @@ export function PlatformPage() {
             </table>
           </div>
         ) : null}
+        <div className="mt-3">
+          <Pagination page={page} count={companies.data?.count ?? 0} onChange={setPage} />
+        </div>
       </Card>
 
       {helping ? <SupportDialog company={helping} onClose={() => setHelping(null)} /> : null}

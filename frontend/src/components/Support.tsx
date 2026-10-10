@@ -34,7 +34,7 @@ export function SupportBanner({ me }: { me: Me }) {
         <strong>Modo soporte · solo lectura</strong> en {me.company_name} hasta{' '}
         {moment(me.support.ends_at)}. Cada pantalla queda registrada para la empresa.
       </span>
-      <Button variant="secondary" className="!h-8" onClick={() => leave.mutate()}>
+      <Button variant="secondary" size="sm" onClick={() => leave.mutate()}>
         Salir del modo soporte
       </Button>
     </div>
@@ -81,7 +81,7 @@ export function SupportDialog({
   const name = company.trade_name || company.legal_name
   return (
     <Modal onClose={onClose} labelledBy="support-title">
-      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="support-title" className="text-lg font-semibold">
           Modo soporte · {name}
         </h2>
@@ -109,14 +109,10 @@ export function SupportDialog({
                 </div>
                 {grant.active ? (
                   <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      className="!h-8"
-                      onClick={() => revoke.mutate(grant.id)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => revoke.mutate(grant.id)}>
                       Revocar
                     </Button>
-                    <Button className="!h-8" onClick={() => enter.mutate(grant.id)}>
+                    <Button variant="soft" size="sm" onClick={() => enter.mutate(grant.id)}>
                       Entrar
                     </Button>
                   </div>

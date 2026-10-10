@@ -30,9 +30,9 @@ export function Modal({
   }, [])
 
   const placement = {
-    center: 'items-center justify-center px-4',
-    top: 'items-start justify-center px-4 pt-[12vh]',
-    bottom: 'items-end',
+    center: 'items-center justify-center px-4 [&>*]:animate-pop',
+    top: 'items-start justify-center px-4 pt-[12vh] [&>*]:animate-pop',
+    bottom: 'items-end [&>*]:animate-sheet',
   }[align]
 
   return (
@@ -51,7 +51,7 @@ export function Modal({
         if (pressedOutside.current && event.target === event.currentTarget) onClose()
         pressedOutside.current = false
       }}
-      className={`m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-black/40 open:flex ${placement}`}
+      className={`m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-[rgb(8_20_14/0.45)] backdrop:backdrop-blur-[2px] open:flex ${placement}`}
     >
       {children}
     </dialog>

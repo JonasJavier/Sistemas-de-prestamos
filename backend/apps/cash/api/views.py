@@ -19,6 +19,7 @@ from apps.audit.models import SensitiveAccessLog
 from apps.cash import services as cash
 from apps.cash.models import DENOMINATIONS, CashSession, RouteSession
 from apps.core.api.errors import fail, person
+from apps.core.api.pagination import Pagination
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.core.models import Branch, Reason
 from apps.documents.models import GeneratedDocument
@@ -263,11 +264,15 @@ class SessionsView(APIView):
             queryset = queryset.filter(status=params["status"])
         if params.get("date"):
             queryset = queryset.filter(business_date=params["date"])
-        sessions = list(queryset.order_by("-opened_at")[:100])
+        # Paged like every list (25 rows): the history no longer stops at the
+        # last 100 sessions.
+        paginator = Pagination()
+        sessions = paginator.paginate_queryset(queryset.order_by("-opened_at"), request, view=self)
         return Response(
             {
+                "count": paginator.page.paginator.count,
                 "results": [session_payload(s, detail=False) for s in sessions],
-                "to_approve": sum(1 for s in sessions if s.status == CashSession.Status.CLOSED),
+                "to_approve": queryset.filter(status=CashSession.Status.CLOSED).count(),
             }
         )
 

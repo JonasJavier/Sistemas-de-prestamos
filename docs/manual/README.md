@@ -14,7 +14,9 @@ Guías cortas para capacitar a cada persona de la financiera según su rol. Cada
 ## Antes de empezar (todos)
 
 - **Entrar:** con tu correo, tu contraseña (12 caracteres o más) y el código de 6 dígitos de tu app autenticadora (Google Authenticator, Microsoft Authenticator…). La primera vez, Cobradía te pide activarla en **Mi cuenta**; guarda los códigos de respaldo en un lugar seguro.
+- **Tu cuenta** está en tu nombre, arriba a la derecha (en el celular, el círculo con tus iniciales): ahí están **Mi cuenta**, el tema claro u oscuro y **Cerrar sesión**.
 - **Tu contraseña** la cambias en **Mi cuenta · Contraseña** (te pide la actual); si la olvidaste, usa «¿Olvidaste tu contraseña?» en la entrada.
+- **El menú** de la izquierda agrupa las pantallas; un grupo se pliega o despliega tocando su título (Ajustes empieza plegado).
 - **La sesión se cierra** tras 30 minutos sin uso y a las 12 horas en cualquier caso. Cajeros y cobradores solo entran en el horario de su sucursal.
 - **Buscar:** la barra de arriba (Ctrl K) encuentra clientes por nombre, cédula o teléfono y préstamos por número.
 - **La campana** avisa lo que te toca: autorizaciones, cierres por aprobar, promesas que vencen, alertas.

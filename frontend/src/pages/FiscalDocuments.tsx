@@ -161,10 +161,12 @@ export function FiscalDocumentsPage() {
                   </div>
                   {doc.status === 'pending' ? (
                     <div className="flex gap-2 whitespace-nowrap">
-                      <Button variant="secondary" onClick={() => cancel.mutate(doc)}>
+                      <Button variant="secondary" size="sm" onClick={() => cancel.mutate(doc)}>
                         No emitir
                       </Button>
-                      <Button onClick={() => issue.mutate(doc)}>Registrar e-NCF</Button>
+                      <Button variant="soft" size="sm" onClick={() => issue.mutate(doc)}>
+                        Registrar e-NCF
+                      </Button>
                     </div>
                   ) : null}
                 </div>

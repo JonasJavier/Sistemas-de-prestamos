@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 
 import { listApplications } from '../api/origination'
-import { Card, EmptyState, PageHeader, Spinner } from '../components/ui'
+import { Card, EmptyState, PageHeader, Pagination, Spinner } from '../components/ui'
 import { day, rd } from '../lib/format'
 
 /** P29: approved, still-valid applications waiting for their money. */
 export function DisbursementsPage() {
+  const [page, setPage] = useState(1)
   const query = useQuery({
-    queryKey: ['applications', 'por_desembolsar'],
-    queryFn: () => listApplications({ bandeja: 'por_desembolsar' }),
+    queryKey: ['applications', 'por_desembolsar', page],
+    queryFn: () => listApplications({ bandeja: 'por_desembolsar', page }),
   })
   return (
     <>
@@ -27,7 +29,7 @@ export function DisbursementsPage() {
                 <Link
                   to="/desembolsos/$id"
                   params={{ id: app.id }}
-                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 hover:bg-surface-2"
+                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-brand-50/60"
                 >
                   <div>
                     <div className="font-semibold tabular-nums">{app.number}</div>
@@ -50,6 +52,7 @@ export function DisbursementsPage() {
       ) : (
         <EmptyState>No hay solicitudes aprobadas esperando desembolso.</EmptyState>
       )}
+      <Pagination page={page} count={query.data?.count ?? 0} onChange={setPage} />
     </>
   )
 }

@@ -178,6 +178,7 @@ def test_cash_api_open_close_approve_and_pdf(tenant) -> None:
     supervisor = tenant.client("supervisor")
     listing = supervisor.get("/api/v1/cajas/?status=closed").json()
     assert listing["to_approve"] == 1
+    assert listing["count"] == len(listing["results"]) == 1  # paged like every list
     assert supervisor.get("/api/v1/yo/").json()["closings_to_approve"] == 1
     assert cashier.get(f"/api/v1/cajas/{session_id}/").status_code == 403
     approved = supervisor.post(f"/api/v1/cajas/{session_id}/", {"note": "OK"}, format="json")

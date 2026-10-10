@@ -7,6 +7,18 @@ import { getMyCash } from '../api/cash'
 import { listApplications, listLoans } from '../api/origination'
 import { getMyCompany } from '../api/platform'
 import { type Dashboard, getDashboard } from '../api/reports'
+import {
+  AgendaIcon,
+  ApplicationIcon,
+  ArrowRightIcon,
+  ClockAlertIcon,
+  DisburseIcon,
+  DrawerIcon,
+  LoanIcon,
+  ShieldIcon,
+  PencilIcon,
+  WalletIcon,
+} from '../components/icons'
 import { Kpi } from '../components/Kpi'
 import { Alert, Field, Figure, LoadError, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
@@ -19,23 +31,46 @@ function Tile({
   label,
   value,
   hint,
+  icon,
 }: {
   to: string
   search?: Record<string, string>
   label: string
   value?: string | number
   hint: string
+  icon: ReactNode
 }) {
+  // Something waiting reads in green; an empty queue stays quiet.
+  const waiting = typeof value === 'string' || (typeof value === 'number' && value > 0)
   return (
     <Link
       to={to}
       search={search}
-      className="@container block min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none transition-colors hover:border-brand-700/50 focus-visible:ring-2 focus-visible:ring-accent-500"
+      className="group @container flex min-w-0 flex-col rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-brand-700/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent-500"
     >
-      <div className="text-[12.5px] text-muted">{label}</div>
+      {/* A narrow card (two per row on a phone) puts the icon above the label. */}
+      <div className="flex flex-col items-start gap-2 @min-[12rem]:flex-row @min-[12rem]:items-center @min-[12rem]:gap-2.5">
+        <span
+          aria-hidden
+          className={`grid size-8 shrink-0 place-items-center rounded-lg transition-colors ${
+            waiting ? 'bg-brand-50 text-brand-700' : 'bg-surface-2 text-muted'
+          }`}
+        >
+          {icon}
+        </span>
+        <span className="min-w-0 text-[13px] font-medium text-muted">{label}</span>
+        <span
+          aria-hidden
+          className="ml-auto hidden text-muted opacity-0 transition-opacity group-hover:opacity-100 @min-[12rem]:block"
+        >
+          <ArrowRightIcon />
+        </span>
+      </div>
       {/* An amount keeps one line and follows the card's width, as in Kpi. */}
       <div
-        className={`whitespace-nowrap font-display font-bold tabular-nums text-brand-700 ${
+        className={`mt-2 whitespace-nowrap font-display @min-[12rem]:mt-3 font-semibold tracking-tight tabular-nums ${
+          waiting ? 'text-ink' : 'text-muted'
+        } ${
           typeof value === 'string' && value.includes('RD$')
             ? 'text-base @min-[11rem]:text-xl @min-[14rem]:text-2xl'
             : 'text-2xl'
@@ -43,10 +78,12 @@ function Tile({
       >
         <Figure value={value ?? '…'} />
       </div>
-      <div className="text-[12px] text-muted">{hint}</div>
+      <div className="mt-0.5 text-[12px] text-muted">{hint}</div>
     </Link>
   )
 }
+
+const tileIcon = 'size-[18px] shrink-0'
 
 /** Rows that come out even: 5 or 6 cards go in threes, not 4 + a lonely 2. */
 function Grid({ label, children }: { label?: string; children: ReactNode }) {
@@ -109,6 +146,7 @@ function Today({ me }: { me: Me }) {
           to="/solicitudes"
           search={{ bandeja: 'por_aprobar' }}
           label="Por aprobar"
+          icon={<ApplicationIcon className={tileIcon} />}
           value={pending.data?.count}
           hint="Solicitudes que puedes decidir"
         />
@@ -118,6 +156,7 @@ function Today({ me }: { me: Me }) {
           to="/solicitudes"
           search={{ bandeja: 'mias' }}
           label="Mis borradores"
+          icon={<PencilIcon className={tileIcon} />}
           value={drafts.data?.count}
           hint="Borradores y devueltas"
         />
@@ -126,6 +165,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/desembolsos"
           label="Por desembolsar"
+          icon={<DisburseIcon className={tileIcon} />}
           value={toDisburse.data?.count}
           hint="Aprobadas y vigentes"
         />
@@ -134,6 +174,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/caja"
           label="Mi caja"
+          icon={<WalletIcon className={tileIcon} />}
           value={
             cash.data ? (cash.data.session ? rd(cash.data.session.expected) : 'Cerrada') : undefined
           }
@@ -152,6 +193,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/avisos"
           label="Por autorizar"
+          icon={<ShieldIcon className={tileIcon} />}
           value={me.pending_approvals ?? 0}
           hint="Reversos, condonaciones y descuentos"
         />
@@ -160,6 +202,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/cajas"
           label="Cierres por aprobar"
+          icon={<DrawerIcon className={tileIcon} />}
           value={me.closings_to_approve ?? 0}
           hint="Cajas cerradas que esperan tu visto bueno"
         />
@@ -168,6 +211,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/cobranza"
           label="Agenda de hoy"
+          icon={<AgendaIcon className={tileIcon} />}
           value={me.agenda_today ?? 0}
           hint="Promesas que vencen y seguimientos pendientes"
         />
@@ -175,6 +219,7 @@ function Today({ me }: { me: Me }) {
       {watchesArrears ? (
         <Tile
           to="/atrasos"
+          icon={<ClockAlertIcon className={tileIcon} />}
           label="En atraso"
           value={arrears.data?.count}
           hint={
@@ -188,6 +233,7 @@ function Today({ me }: { me: Me }) {
         <Tile
           to="/prestamos"
           label="Préstamos activos"
+          icon={<LoanIcon className={tileIcon} />}
           value={loans.data?.count}
           hint={
             loans.data
@@ -202,17 +248,29 @@ function Today({ me }: { me: Me }) {
 
 const ALL_BRANCHES = ['Gerente', 'Contabilidad', 'Auditoría']
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  aside,
+  children,
+}: {
+  title: string
+  /** A quiet note at the right of the title (the scope of the figures). */
+  aside?: ReactNode
+  children: ReactNode
+}) {
   return (
-    <section aria-label={title} className="space-y-2">
-      <h2 className="text-sm font-semibold text-muted">{title}</h2>
+    <section aria-label={title} className="space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <h2 className="text-[15px] font-semibold">{title}</h2>
+        {aside ? <span className="text-[12.5px] text-muted">{aside}</span> : null}
+      </div>
       {children}
     </section>
   )
 }
 
 /** P10 · indicators (decision 086): the same figures as the reports. */
-function Indicators({ data }: { data: Dashboard }) {
+function Indicators({ data, scope }: { data: Dashboard; scope?: string }) {
   const ind = data.indicators
   if (!ind) return null
   const defs = data.definitions
@@ -223,7 +281,7 @@ function Indicators({ data }: { data: Dashboard }) {
   const maxBucket = Math.max(...p.buckets.map((b) => Number(b.principal)), 1)
   return (
     <>
-      <Section title="Cartera y cobros">
+      <Section title="Cartera y cobros" aside={scope ? `Alcance: ${scope}` : undefined}>
         <Grid>
           <Kpi
             label="Cartera activa"
@@ -289,15 +347,15 @@ function Indicators({ data }: { data: Dashboard }) {
         </Grid>
       </Section>
       <Section title="Mora por tramos">
-        <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm">
-          <p className="mb-3 text-[12px] text-muted">{defs.buckets}</p>
+        <div className="rounded-xl border border-edge bg-surface p-4 shadow-sm sm:p-5">
+          <p className="mb-4 text-[12.5px] text-muted">{defs.buckets}</p>
           {/* One grid for every row (subgrid): the bars share the same track
               whatever the width of each row's figures. */}
           <ul className="grid grid-cols-[auto_1fr_auto] gap-x-3 gap-y-2">
             {p.buckets.map((b) => (
               <li key={b.key} className="col-span-3 grid grid-cols-subgrid items-center">
                 <span className="text-[13px]">{b.label}</span>
-                <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
+                <span className="h-2 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-edge/60">
                   <span
                     className={`block h-full rounded-full ${b.key === 'al_dia' ? 'bg-brand-700' : 'bg-warning-700'}`}
                     style={{ width: `${(Number(b.principal) / maxBucket) * 100}%` }}
@@ -432,7 +490,7 @@ function Board({ me }: { me: Me }) {
   if (board.isError && !data) return <LoadError error={board.error} />
   if (!data || !(data.indicators || data.operations || data.books || data.officer)) return null
   return (
-    <div className="space-y-5">
+    <div className="space-y-7">
       {wide && (branches.data?.results.length ?? 0) > 1 ? (
         <div className="max-w-xs">
           <Field label="Sucursal">
@@ -446,10 +504,11 @@ function Board({ me }: { me: Me }) {
             </Select>
           </Field>
         </div>
-      ) : data.indicators ? (
-        <p className="text-[12.5px] text-muted">Alcance: {data.scope}</p>
       ) : null}
-      <Indicators data={data} />
+      <Indicators
+        data={data}
+        scope={wide && (branches.data?.results.length ?? 0) > 1 ? undefined : data.scope}
+      />
       <Operations data={data} />
       <Books data={data} />
       <Officer data={data} />
@@ -479,11 +538,11 @@ export function DashboardPage({ me }: { me: Me }) {
     <>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <p className="text-[13px] font-medium text-muted first-letter:uppercase">{today}</p>
+          <h1 className="mt-0.5 text-2xl font-semibold sm:text-[1.75rem]">
             {greeting(now.getHours())}
             {me.first_name ? `, ${me.first_name}` : ''}
           </h1>
-          <p className="text-sm text-muted first-letter:uppercase">{today}</p>
         </div>
         {originator || hasRole(me, ACCESS.simulate) ? (
           <div className="flex flex-wrap gap-2">
@@ -502,17 +561,23 @@ export function DashboardPage({ me }: { me: Me }) {
       </div>
 
       {data?.status === 'trial' && typeof data.trial_days_left === 'number' ? (
-        <Alert tone="info">
-          Te quedan <strong>{data.trial_days_left} días</strong> de prueba gratis.
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-gold-500/30 bg-gold-100 px-4 py-2.5 text-sm text-gold-800"
+        >
+          <span aria-hidden className="size-2 shrink-0 rounded-full bg-gold-500" />
+          <span className="flex-1">
+            Te quedan <strong>{plural(data.trial_days_left, 'día')}</strong> de prueba gratis.
+          </span>
           {me.is_manager ? (
-            <>
-              {' '}
-              <Link to="/ajustes/suscripcion" className="font-semibold underline">
-                Ver la suscripción
-              </Link>
-            </>
+            <Link
+              to="/ajustes/suscripcion"
+              className="font-semibold underline-offset-2 hover:underline"
+            >
+              Ver la suscripción →
+            </Link>
           ) : null}
-        </Alert>
+        </div>
       ) : null}
       {data?.status === 'suspended' ? (
         <Alert tone="warning">

@@ -35,7 +35,8 @@ test.describe('acceso (doc 06 - 6)', () => {
 
   test('cerrar sesión vuelve a la entrada', async ({ page }) => {
     await signIn(page, MODELO.cobrador)
-    await page.getByRole('button', { name: 'Salir' }).click()
+    await page.getByRole('button', { name: /^Tu cuenta/ }).click()
+    await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/entrar/)
   })
 

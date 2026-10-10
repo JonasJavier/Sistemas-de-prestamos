@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   amountValue,
   dateFromText,
+  moment,
   dateOf,
   dateText,
   deviceText,
@@ -161,5 +162,12 @@ describe('date boxes read and write dd/mm/aaaa, whatever the browser language', 
     expect(dateFromText('31/02/2026')).toBeNull()
     expect(dateFromText('29/02/2028')).toBe('2028-02-29')
     expect(dateFromText('10/13/2026')).toBeNull() // no month 13: not mm/dd
+  })
+})
+
+describe('moment', () => {
+  it('writes the full date and the hour', () => {
+    const text = moment('2026-10-09T23:51:00Z') // 7:51 p. m. in Santo Domingo
+    expect(text).toMatch(/^09\/10\/2026 7:51\sp\.\s?m\.$/)
   })
 })

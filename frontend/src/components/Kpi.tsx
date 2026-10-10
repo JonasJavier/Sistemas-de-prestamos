@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { type ReactNode, useId, useState } from 'react'
 
+import { cardClass } from './classes'
 import { Figure } from './ui'
 
 /** One indicator with its exact definition behind a «?» (doc 09 §3, doc 08 §5). */
@@ -23,11 +24,11 @@ export function Kpi({
   const id = useId()
   const color = tone === 'bad' ? 'text-danger-600' : tone === 'good' ? 'text-success-600' : ''
   return (
-    <div className="@container relative min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
+    <div className={`@container relative min-w-0 p-4 ${cardClass}`}>
       <div className="flex items-start justify-between gap-2">
-        <div className="text-[12.5px] text-muted">
+        <div className="text-[12.5px] font-medium text-muted">
           {to ? (
-            <Link to={to} className="hover:underline">
+            <Link to={to} className="transition-colors hover:text-brand-700">
               {label}
             </Link>
           ) : (
@@ -41,14 +42,14 @@ export function Kpi({
             aria-expanded={open}
             aria-controls={id}
             onClick={() => setOpen(!open)}
-            className="grid size-5 shrink-0 place-items-center rounded-full border border-edge text-[11px] font-bold text-muted hover:bg-surface-2"
+            className="grid size-5 shrink-0 place-items-center rounded-full border border-edge text-[11px] font-bold text-muted transition-colors hover:border-brand-700/40 hover:text-brand-700"
           >
             ?
           </button>
         ) : null}
       </div>
       <div
-        className={`whitespace-nowrap font-display font-bold tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${color}`}
+        className={`mt-1 whitespace-nowrap font-display font-semibold tracking-tight tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${color}`}
       >
         <Figure value={value} />
       </div>

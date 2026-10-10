@@ -11,30 +11,34 @@ import { ApiError } from '../api/client'
 import {
   errorMessage,
   fractionToPercent,
+  initials,
   percentToFraction,
   splitAmount,
   todayISO,
 } from '../lib/format'
-import { buttonClass, type ButtonVariant } from './classes'
+import {
+  buttonClass,
+  cardClass,
+  controlClass,
+  type ButtonSize,
+  type ButtonVariant,
+} from './classes'
+import { AlertIcon, CheckCircleIcon, CheckIcon, InboxIcon, InfoIcon, SearchIcon } from './icons'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
  * replaces these as screens grow; the class vocabulary stays the same. */
 
 export function Button({
   variant = 'primary',
+  size = 'md',
   className = '',
   ...props
-}: ComponentProps<'button'> & { variant?: ButtonVariant }) {
-  return <button className={buttonClass(variant, className)} {...props} />
+}: ComponentProps<'button'> & { variant?: ButtonVariant; size?: ButtonSize }) {
+  return <button className={buttonClass(variant, className, size)} {...props} />
 }
 
 export function Input(props: ComponentProps<'input'>) {
-  return (
-    <input
-      className="h-11 w-full rounded-lg border border-edge bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent-500 sm:h-9"
-      {...props}
-    />
-  )
+  return <input className={`h-11 sm:h-9 ${controlClass}`} {...props} />
 }
 
 export function Field({
@@ -50,16 +54,26 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <label className="block space-y-1">
-      <span className="text-[12.5px] font-medium text-muted">{label}</span>
+    <label className="block space-y-1.5">
+      <span className="block text-[13px] font-medium text-ink/85">{label}</span>
       {children}
       {error ? (
-        <span className="block text-[12.5px] text-danger-600">{error}</span>
+        <span className="block text-[12.5px] font-medium text-danger-600">{error}</span>
       ) : hint ? (
-        <span className="block text-[12px] text-muted">{hint}</span>
+        <span className="block text-[12px] leading-snug text-muted">{hint}</span>
       ) : null}
     </label>
   )
+}
+
+const ALERT_TONES = {
+  danger: { box: 'border-danger-600/25 bg-danger-600/[0.07] text-danger-600', icon: AlertIcon },
+  warning: { box: 'border-warning-700/25 bg-warning-700/[0.07] text-warning-700', icon: AlertIcon },
+  success: {
+    box: 'border-success-600/25 bg-success-600/[0.07] text-success-600',
+    icon: CheckCircleIcon,
+  },
+  info: { box: 'border-info-700/20 bg-info-700/[0.06] text-info-700', icon: InfoIcon },
 }
 
 export function Alert({
@@ -69,17 +83,15 @@ export function Alert({
   tone: 'danger' | 'warning' | 'success' | 'info'
   children: ReactNode
 }) {
-  const tones = {
-    danger: 'border-danger-600/30 bg-danger-600/10 text-danger-600',
-    warning: 'border-warning-700/30 bg-warning-700/10 text-warning-700',
-    success: 'border-success-600/30 bg-success-600/10 text-success-600',
-    info: 'border-info-700/30 bg-info-700/10 text-info-700',
-  }
+  const { box, icon: Icon } = ALERT_TONES[tone]
   // Problems interrupt the screen reader; confirmations and hints wait their turn.
   const role = tone === 'danger' || tone === 'warning' ? 'alert' : 'status'
   return (
-    <div role={role} className={`rounded-lg border px-3 py-2 text-sm ${tones[tone]}`}>
-      {children}
+    <div role={role} className={`flex gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm ${box}`}>
+      <span className="mt-px">
+        <Icon />
+      </span>
+      <div className="min-w-0 flex-1 leading-relaxed">{children}</div>
     </div>
   )
 }
@@ -87,9 +99,7 @@ export function Alert({
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     // 16 px of padding on a phone, 24 from a tablet up: the content gets the width.
-    <div className={`rounded-xl border border-edge bg-surface p-4 shadow-sm sm:p-6 ${className}`}>
-      {children}
-    </div>
+    <div className={`${cardClass} p-4 sm:p-6 ${className}`}>{children}</div>
   )
 }
 
@@ -102,15 +112,47 @@ export function Brand({
 }) {
   const color = tone === 'light' ? 'text-white' : 'text-brand-700'
   return (
-    <span className={`font-display font-semibold tracking-tight ${color} ${className}`}>
-      Cobrad<span className="text-gold-500">í</span>a
+    <span
+      className={`inline-flex items-center gap-[0.35em] font-display font-semibold tracking-tight ${color} ${className}`}
+    >
+      <BrandMark tone={tone} />
+      <span>
+        Cobrad<span className="text-gold-500">í</span>a
+      </span>
     </span>
   )
 }
 
-const controlClasses =
-  'w-full rounded-lg border border-edge bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent-500'
+/** The square mark of the favicon (public/favicon.svg): the «C» on forest
+ * with the gold dot. On the forest sidebar the square goes translucent. */
+export function BrandMark({
+  tone = 'default',
+  className = 'size-[1.15em]',
+}: {
+  tone?: 'default' | 'light'
+  className?: string
+}) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden className={`shrink-0 ${className}`}>
+      <rect
+        width="64"
+        height="64"
+        rx="16"
+        className={tone === 'light' ? 'fill-white/12' : 'fill-brand-950'}
+      />
+      <path
+        d="M42.5 22.5a13 13 0 1 0 0 19"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="7"
+        strokeLinecap="round"
+      />
+      <circle cx="45" cy="15" r="4.5" className="fill-gold-500" />
+    </svg>
+  )
+}
 
+const controlClasses = controlClass
 /** Rates are typed as percentages and handed over as fractions (5 → 0.05).
  * Keeps its own text so «4.» survives typing; remount it (key) to reset. */
 export function PercentInput({
@@ -268,19 +310,19 @@ export function Textarea(props: ComponentProps<'textarea'>) {
 }
 
 const TONES: Record<string, string> = {
-  neutral: 'bg-edge/60 text-muted',
-  info: 'bg-info-700/12 text-info-700',
-  warning: 'bg-warning-700/12 text-warning-700',
-  success: 'bg-success-600/12 text-success-600',
-  danger: 'bg-danger-600/12 text-danger-600',
-  brand: 'bg-brand-100 text-brand-800',
+  neutral: 'bg-surface-2 text-muted ring-edge',
+  info: 'bg-info-700/[0.07] text-info-700 ring-info-700/20',
+  warning: 'bg-warning-700/[0.08] text-warning-700 ring-warning-700/20',
+  success: 'bg-success-600/[0.08] text-success-600 ring-success-600/20',
+  danger: 'bg-danger-600/[0.07] text-danger-600 ring-danger-600/20',
+  brand: 'bg-brand-50 text-brand-800 ring-brand-700/20',
 }
 
 /** A state always reads as color AND text (doc 07 - section 5). */
 export function Badge({ tone = 'neutral', children }: { tone?: string; children: ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[12px] font-medium ${TONES[tone] ?? TONES.neutral}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-px text-[11.5px] font-semibold leading-5 ring-1 ring-inset ${TONES[tone] ?? TONES.neutral}`}
     >
       {children}
     </span>
@@ -311,10 +353,14 @@ export function PageHeader({
     }
   }, [tab])
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div className="min-w-0">
-        {back ? <div className="text-[12.5px] text-muted">{back}</div> : null}
-        <h1 className="text-xl font-semibold">{title}</h1>
+    <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+      <div className="min-w-0 space-y-1">
+        {back ? (
+          <div className="text-[13px] font-medium text-muted [&_a:hover]:text-ink [&_a]:transition-colors">
+            {back}
+          </div>
+        ) : null}
+        <h1 className="text-[22px] font-semibold leading-tight sm:text-2xl">{title}</h1>
         {subtitle ? <div className="text-sm text-muted">{subtitle}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -360,7 +406,11 @@ export function Tabs<T extends string>({
     buttons.current[next]?.focus()
   }
   return (
-    <div ref={list} role="tablist" className="flex gap-1 overflow-x-auto border-b border-edge">
+    <div
+      ref={list}
+      role="tablist"
+      className="flex gap-1 overflow-x-auto border-b border-edge [scrollbar-width:none]"
+    >
       {tabs.map(([key, label], index) => (
         <button
           key={key}
@@ -373,10 +423,10 @@ export function Tabs<T extends string>({
           tabIndex={value === key || (active === -1 && index === 0) ? 0 : -1}
           onClick={() => onChange(key)}
           onKeyDown={(event) => move(event, index)}
-          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-medium outline-none transition-colors focus-visible:rounded-t-md focus-visible:ring-2 focus-visible:ring-accent-500 ${
             value === key
               ? 'border-brand-700 text-brand-700'
-              : 'border-transparent text-muted hover:text-ink'
+              : 'border-transparent text-muted hover:border-edge hover:text-ink'
           }`}
         >
           {label}
@@ -403,10 +453,10 @@ export function Stat({
   return (
     // @container: the figure's size follows the card, not the screen (beside
     // the sidebar on a tablet, four cards are narrower than on a phone).
-    <div className="@container min-w-0 rounded-xl border border-edge bg-surface p-4 shadow-sm">
-      <div className="text-[12.5px] text-muted">{label}</div>
+    <div className={`@container min-w-0 p-4 ${cardClass}`}>
+      <div className="text-[12.5px] font-medium text-muted">{label}</div>
       <div
-        className={`whitespace-nowrap font-display font-bold tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
+        className={`mt-1 whitespace-nowrap font-display font-semibold tracking-tight tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
       >
         <Figure value={value} />
       </div>
@@ -422,7 +472,7 @@ export function Figure({ value }: { value: ReactNode }) {
   return (
     <>
       {parts.sign}
-      <span className="mr-1 text-[0.7em] font-semibold opacity-80">RD$</span>
+      <span className="mr-1 text-[0.68em] font-medium opacity-70">RD$</span>
       {parts.amount}
     </>
   )
@@ -430,10 +480,37 @@ export function Figure({ value }: { value: ReactNode }) {
 
 export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-edge bg-surface-2 px-4 py-8 text-center text-sm text-muted">
-      <p>{children}</p>
-      {action ? <div className="mt-3">{action}</div> : null}
+    <div className="flex flex-col items-center rounded-xl border border-dashed border-edge bg-surface-2/60 px-4 py-9 text-center text-sm text-muted">
+      <span className="mb-3 grid size-10 place-items-center rounded-full bg-surface text-muted shadow-xs ring-1 ring-edge">
+        <InboxIcon />
+      </span>
+      <p className="max-w-md text-balance">{children}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
+  )
+}
+
+const AVATAR_TONES = [
+  'bg-brand-100 text-brand-800',
+  'bg-gold-100 text-gold-800',
+  'bg-info-700/10 text-info-700',
+  'bg-warning-700/10 text-warning-700',
+  'bg-surface-2 text-muted ring-1 ring-inset ring-edge',
+]
+
+/** Initials in a circle; the same name always gets the same soft tone. */
+export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
+  let hash = 0
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  const tone = AVATAR_TONES[hash % AVATAR_TONES.length]
+  const box = size === 'lg' ? 'size-12 text-base' : 'size-9 text-[12.5px]'
+  return (
+    <span
+      aria-hidden
+      className={`grid shrink-0 place-items-center rounded-full font-semibold ${box} ${tone}`}
+    >
+      {initials(name)}
+    </span>
   )
 }
 
@@ -475,30 +552,36 @@ export function PublicPage({
 }) {
   return (
     <div className="flex min-h-screen">
-      <aside className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden bg-brand-950 p-10 text-white lg:flex">
+      <aside className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden bg-brand-950 p-10 text-white lg:flex xl:p-12">
+        {/* A soft light from the corner and a fine dot grid: depth without noise. */}
         <div
           aria-hidden
-          className="absolute -right-24 -top-24 size-80 rounded-full border-[40px] border-brand-900/70"
+          className="absolute inset-0 bg-[radial-gradient(60%_50%_at_100%_0%,rgb(53_181_133/0.22),transparent_70%),radial-gradient(50%_40%_at_0%_100%,rgb(201_162_39/0.14),transparent_70%)]"
         />
         <div
           aria-hidden
-          className="absolute -bottom-32 -left-16 size-96 rounded-full border-[48px] border-brand-900/50"
+          className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]"
         />
-        <Brand className="relative text-3xl" tone="light" />
-        <div className="relative space-y-6">
-          <h2 className="text-3xl font-semibold leading-tight">
+        <Brand className="relative text-2xl" tone="light" />
+        <div className="relative space-y-8">
+          <h2 className="text-[2.1rem] font-semibold leading-[1.15]">
             Tu cartera al día,
             <br />
-            cada día.
+            <span className="text-gold-500">cada día.</span>
           </h2>
-          <ul className="space-y-3 text-brand-200">
+          <ul className="space-y-4 text-[15px] text-brand-200">
             {[
               'Cuotas, intereses y mora calculados al centavo.',
               'Desembolsos y caja que siempre cuadran con el libro.',
               'Los datos de tu financiera, aislados y protegidos.',
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
-                <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-gold-500" />
+                <span
+                  aria-hidden
+                  className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/10 text-gold-500 ring-1 ring-white/15"
+                >
+                  <CheckIcon />
+                </span>
                 {line}
               </li>
             ))}
@@ -509,15 +592,15 @@ export function PublicPage({
         </p>
       </aside>
       <main className="flex flex-1 items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <Brand className="text-3xl lg:hidden" />
+        <div className="w-full max-w-sm space-y-6 animate-fade">
+          <div className="space-y-1.5 text-center">
+            <Brand className="text-[1.7rem] lg:hidden" />
             {subtitle ? (
-              <h1 className="mt-1 font-sans text-sm font-normal tracking-normal text-muted lg:font-display lg:text-xl lg:font-semibold lg:text-ink">
+              <h1 className="font-sans text-sm font-normal tracking-normal text-muted lg:font-display lg:text-[1.4rem] lg:font-semibold lg:tracking-tight lg:text-ink">
                 {subtitle}
               </h1>
             ) : null}
-            {lead ? <p className="mt-1 text-sm text-muted">{lead}</p> : null}
+            {lead ? <p className="text-sm text-muted">{lead}</p> : null}
           </div>
           {children}
         </div>
@@ -531,17 +614,7 @@ export function SearchInput({ className = '', ...props }: ComponentProps<'input'
   return (
     <div className={`relative ${className}`}>
       <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-muted">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.8}
-          aria-hidden
-          className="size-4"
-        >
-          <circle cx="11" cy="11" r="6.5" />
-          <path d="m20 20-4.2-4.2" strokeLinecap="round" />
-        </svg>
+        <SearchIcon className="size-4 shrink-0" />
       </span>
       <input
         type="search"
@@ -589,11 +662,11 @@ export function Pagination({
 /** A list of rows that are links: wraps gracefully from desktop to phone. */
 export function RowList({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-edge bg-surface shadow-sm">
+    <div className={`overflow-hidden ${cardClass}`}>
       <ul className="divide-y divide-edge">{children}</ul>
     </div>
   )
 }
 
 export const rowLinkClass =
-  'flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none transition-colors hover:bg-surface-2 focus-visible:bg-brand-100'
+  'flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50'

@@ -266,7 +266,7 @@ function NewAccountDialog({
   })
   return (
     <Modal onClose={onClose} labelledBy="new-account-title">
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+      <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="new-account-title" className="text-lg font-semibold">
           Nueva cuenta contable
         </h2>
@@ -425,7 +425,7 @@ function ManualEntryDialog({ onClose }: { onClose: () => void }) {
   })
   return (
     <Modal onClose={onClose} labelledBy="manual-title">
-      <div className="max-h-[92vh] w-full max-w-2xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-2xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="manual-title" className="text-lg font-semibold">
           Ajuste contable
         </h2>
@@ -486,7 +486,7 @@ function ManualEntryDialog({ onClose }: { onClose: () => void }) {
           ))}
           <Button
             variant="secondary"
-            className="!h-8"
+            size="sm"
             onClick={() => setLines([...lines, { account: '', debit: '', credit: '' }])}
           >
             Agregar línea

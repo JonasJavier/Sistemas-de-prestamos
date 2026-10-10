@@ -231,7 +231,7 @@ function ExpenseDetailDialog({ id, onClose }: { id: string; onClose: () => void 
   const error = [decide.error, saveNcf.error, attach.error].find((e) => e instanceof ApiError)
   return (
     <Modal onClose={onClose} labelledBy="expense-detail-title">
-      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-xl space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         {dialog}
         {!data ? (
           <Spinner />
@@ -342,11 +342,7 @@ function ExpenseDetailDialog({ id, onClose }: { id: string; onClose: () => void 
                     className="hidden"
                     onChange={(e) => attach.mutate(Array.from(e.target.files ?? []))}
                   />
-                  <Button
-                    variant="secondary"
-                    className="!h-8"
-                    onClick={() => fileInput.current?.click()}
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
                     Adjuntar
                   </Button>
                 </>

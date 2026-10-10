@@ -198,7 +198,7 @@ function ReconciliationView({ id, canWork }: { id: string; canWork: boolean }) {
                   {open && line.matched ? (
                     <Button
                       variant="secondary"
-                      className="!h-8"
+                      size="sm"
                       onClick={() =>
                         run.mutate(() => statementLineAction(id, line.id, 'desemparejar'))
                       }
@@ -303,7 +303,7 @@ function LineActions({
       </Select>
       <Button
         variant="secondary"
-        className="!h-8"
+        size="sm"
         disabled={!choice}
         onClick={() => {
           const [kind, value] = choice.split(':')

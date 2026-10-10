@@ -116,7 +116,7 @@ export function CashDifferences({ me, mineOnly = false }: { me: Me; mineOnly?: b
                 {d.kind === 'shortage' && drawer ? (
                   <Button
                     variant="secondary"
-                    className="!h-8"
+                    size="sm"
                     onClick={() => act.mutate({ difference: d, verb: 'reponer' })}
                   >
                     Reponer
@@ -125,7 +125,7 @@ export function CashDifferences({ me, mineOnly = false }: { me: Me; mineOnly?: b
                 {d.kind === 'shortage' && manager ? (
                   <Button
                     variant="secondary"
-                    className="!h-8"
+                    size="sm"
                     onClick={() => act.mutate({ difference: d, verb: 'perdida' })}
                   >
                     Asumir pérdida
@@ -134,7 +134,7 @@ export function CashDifferences({ me, mineOnly = false }: { me: Me; mineOnly?: b
                 {d.kind === 'overage' && (supervisor || (drawer && d.is_mine)) ? (
                   <Button
                     variant="secondary"
-                    className="!h-8"
+                    size="sm"
                     onClick={() => act.mutate({ difference: d, verb: 'aplicar' })}
                   >
                     Aplicar
@@ -143,7 +143,7 @@ export function CashDifferences({ me, mineOnly = false }: { me: Me; mineOnly?: b
                 {d.kind === 'overage' && supervisor ? (
                   <Button
                     variant="secondary"
-                    className="!h-8"
+                    size="sm"
                     onClick={() => act.mutate({ difference: d, verb: 'ingreso' })}
                   >
                     A ingresos

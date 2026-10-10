@@ -8,7 +8,7 @@ import { errorMessage } from '../lib/format'
 
 import { acceptInvitation, getInvitation } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PublicPage, Spinner } from '../components/ui'
 
 const schema = z.object({
   first_name: z.string().min(1, 'Escribe tu nombre.'),
@@ -106,7 +106,7 @@ export function InvitationAcceptPage() {
           </form>
         </>
       ) : (
-        <p className="text-sm text-muted">Cargando…</p>
+        <Spinner />
       )}
     </Wrapper>
   )

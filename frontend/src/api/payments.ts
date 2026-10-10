@@ -307,8 +307,8 @@ export const getDelinquency = (params: {
   promesa?: string
 }): Promise<Delinquency> => api(`/api/v1/atrasos/${toQuery(params)}`)
 
-export const listApprovals = (box: 'por_decidir' | 'mias'): Promise<Page<Approval>> =>
-  api(`/api/v1/autorizaciones/${toQuery({ bandeja: box })}`)
+export const listApprovals = (box: 'por_decidir' | 'mias', page = 1): Promise<Page<Approval>> =>
+  api(`/api/v1/autorizaciones/${toQuery({ bandeja: box, page })}`)
 
 export const requestAuthorization = (body: {
   loan: string

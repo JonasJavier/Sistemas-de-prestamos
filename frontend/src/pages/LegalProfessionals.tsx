@@ -50,7 +50,7 @@ function ProfessionalDialog({
   const needsLicense = form.kind === 'lawyer' || form.kind === 'notary'
   return (
     <Modal onClose={onClose} labelledBy="professional-title">
-      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="professional-title" className="text-lg font-semibold">
           {draft.id ? 'Editar profesional' : 'Nuevo profesional'}
         </h2>
@@ -159,7 +159,7 @@ export function LegalProfessionalsPage() {
                     .join(' · ')}
                 </div>
               </div>
-              <Button variant="secondary" className="!h-8" onClick={() => setEditing(p)}>
+              <Button variant="secondary" size="sm" onClick={() => setEditing(p)}>
                 Editar
               </Button>
             </li>

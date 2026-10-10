@@ -32,7 +32,7 @@ test('el gerente lleva un préstamo a la vía legal y emite la intimación', asy
     .getByRole('link', { name: /Pérez Santana/ })
     .first()
     .click()
-  await manager.getByRole('button', { name: 'Más ▾' }).click()
+  await manager.getByRole('button', { name: 'Más', exact: true }).click()
   await manager.getByRole('button', { name: 'Enviar a la vía legal' }).click()
   const open = manager.getByRole('dialog')
   await open

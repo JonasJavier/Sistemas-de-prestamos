@@ -13,7 +13,7 @@ test('el oficial renueva un préstamo desde su ficha', async ({ browser }) => {
     .first()
     .click()
   await expect(officer).toHaveURL(/\/prestamos\/[^/]+$/)
-  await officer.getByRole('button', { name: 'Más ▾' }).click()
+  await officer.getByRole('button', { name: 'Más', exact: true }).click()
   await officer.getByRole('button', { name: 'Renovar' }).click()
   // A run before may have left this loan's renewal in progress: both are fine.
   await expect(
@@ -39,7 +39,7 @@ test('el oficial pide una reestructuración y el supervisor la rechaza', async (
     .first()
     .click()
   await expect(officer).toHaveURL(/\/prestamos\/[^/]+$/)
-  await officer.getByRole('button', { name: 'Más ▾' }).click()
+  await officer.getByRole('button', { name: 'Más', exact: true }).click()
   await officer.getByRole('button', { name: 'Reestructurar' }).click()
   const dialog = officer.getByRole('dialog')
   await dialog.getByRole('button', { name: 'Ver el calendario nuevo' }).click()
@@ -73,7 +73,7 @@ test('el gerente ve el castigo con su confirmación', async ({ browser }) => {
     .getByRole('link', { name: /María Gómez/ })
     .first()
     .click()
-  await manager.getByRole('button', { name: 'Más ▾' }).click()
+  await manager.getByRole('button', { name: 'Más', exact: true }).click()
   await manager.getByRole('button', { name: 'Castigar' }).click()
   const dialog = manager.getByRole('dialog')
   await expect(dialog.getByText(/sale de la cartera como gasto por castigo/)).toBeVisible()

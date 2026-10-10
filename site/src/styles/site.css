@@ -114,6 +114,23 @@ summary:focus-visible {
   letter-spacing: -0.03em;
   color: var(--brand-700);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.brand-mark {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.brand-mark-box {
+  fill: var(--brand-950);
+}
+
+.brand-mark-box.light {
+  fill: rgb(255 255 255 / 0.12);
 }
 
 .brand-light {

@@ -11,7 +11,7 @@ import {
   regenerateRecoveryCodes,
 } from '../api/auth'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PageHeader, Spinner } from '../components/ui'
 import { errorMessage } from '../lib/format'
 import { notify } from '../lib/toast'
 import { SessionsCard } from './account/SessionsCard'
@@ -171,7 +171,7 @@ function TwoFactorCard() {
     <Card>
       <h2 className="mb-2 text-base font-semibold">Verificación en dos pasos</h2>
 
-      {totp.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
+      {totp.isPending ? <Spinner /> : null}
 
       {totp.data && !totp.data.active && totp.data.config ? (
         <div className="space-y-4">

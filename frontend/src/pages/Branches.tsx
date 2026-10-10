@@ -49,7 +49,7 @@ function HoursDialog({ branch, onClose }: { branch: Branch; onClose: () => void 
   })
   return (
     <Modal onClose={onClose} labelledBy="hours-title">
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+      <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="hours-title" className="text-lg font-semibold">
           Horario de {branch.name}
         </h2>

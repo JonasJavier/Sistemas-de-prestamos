@@ -7,6 +7,7 @@ import { findInOtherBranches, grantBranchAccess, listCustomers } from '../api/cu
 import { usePrompt } from '../components/Dialog'
 import { phoneText } from '../lib/format'
 import {
+  Avatar,
   Badge,
   EmptyState,
   PageHeader,
@@ -117,17 +118,20 @@ export function CustomersPage({ me }: { me: Me }) {
             {rows.map((customer) => (
               <li key={customer.id}>
                 <Link to="/clientes/$id" params={{ id: customer.id }} className={rowLinkClass}>
-                  <div className="min-w-0">
-                    <div className="truncate font-semibold">
-                      {customer.display_name}
-                      {customer.kind === 'company' ? (
-                        <span className="ml-2 text-[12.5px] font-normal text-muted">Empresa</span>
-                      ) : null}
-                    </div>
-                    <div className="text-[12.5px] text-muted tabular-nums">
-                      {customer.document_number /* masked by the API (doc 06 - 7) */} ·{' '}
-                      {phoneText(customer.phone) || 'sin teléfono'} · Sucursal{' '}
-                      {customer.branch_code}
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <Avatar name={customer.display_name} />
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold">
+                        {customer.display_name}
+                        {customer.kind === 'company' ? (
+                          <span className="ml-2 text-[12.5px] font-normal text-muted">Empresa</span>
+                        ) : null}
+                      </div>
+                      <div className="text-[12.5px] text-muted tabular-nums">
+                        {customer.document_number /* masked by the API (doc 06 - 7) */} ·{' '}
+                        {phoneText(customer.phone) || 'sin teléfono'} · Sucursal{' '}
+                        {customer.branch_code}
+                      </div>
                     </div>
                   </div>
                   <Badge tone={customer.status === 'active' ? 'brand' : 'danger'}>

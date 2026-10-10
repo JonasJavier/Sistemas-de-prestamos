@@ -62,7 +62,7 @@ function RouteMapDialog({
     : []
   return (
     <Modal onClose={onClose} labelledBy="map-title">
-      <div className="w-full max-w-4xl space-y-3 rounded-xl bg-surface p-4 shadow-xl">
+      <div className="w-full max-w-4xl space-y-3 rounded-2xl bg-surface p-4 shadow-xl">
         <div className="flex items-center justify-between gap-2">
           <h2 id="map-title" className="text-lg font-semibold">
             Recorrido de {collector.name}
@@ -134,7 +134,7 @@ function HoursCard() {
       </ul>
       {extending ? (
         <Modal onClose={() => setExtending(null)} labelledBy="extend-title">
-          <div className="w-full max-w-sm space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+          <div className="w-full max-w-sm space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
             <h2 id="extend-title" className="text-lg font-semibold">
               Extender el horario de {extending.name}
             </h2>
@@ -244,7 +244,7 @@ export function RoutesPage() {
                 <span className="flex gap-2">
                   <button
                     type="button"
-                    className={buttonClass('secondary', '!h-8')}
+                    className={buttonClass('secondary', '', 'sm')}
                     onClick={() => setMapFor(c)}
                   >
                     Mapa
@@ -252,7 +252,7 @@ export function RoutesPage() {
                   <Link
                     to="/prestamos"
                     search={{ cobrador: c.id }}
-                    className={buttonClass('secondary', '!h-8')}
+                    className={buttonClass('secondary', '', 'sm')}
                   >
                     Cartera
                   </Link>

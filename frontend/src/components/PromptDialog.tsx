@@ -20,7 +20,7 @@ export function PromptDialog({
   return (
     <Modal onClose={() => onClose(null)} labelledBy={titleId}>
       <form
-        className="w-full max-w-md space-y-4 rounded-xl border border-edge bg-surface p-6 shadow-xl"
+        className="w-full max-w-md space-y-4 rounded-2xl border border-edge bg-surface p-6 shadow-xl"
         onSubmit={(event) => {
           event.preventDefault()
           if (!blocked) onClose(value.trim())

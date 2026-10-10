@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getMyCompany } from '../api/platform'
-import { Alert, Card, PageHeader } from '../components/ui'
+import { Alert, Card, PageHeader, Spinner } from '../components/ui'
 import { day, STATUS_BADGES } from '../lib/format'
 
 export function SubscriptionPage() {
@@ -30,7 +30,7 @@ export function SubscriptionPage() {
       ) : null}
 
       <Card>
-        {company.isPending ? <p className="text-sm text-muted">Cargando…</p> : null}
+        {company.isPending ? <Spinner /> : null}
         {data ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">

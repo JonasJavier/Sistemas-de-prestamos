@@ -83,7 +83,7 @@ function RuleRow({ rule, editable }: { rule: FraudRule; editable: boolean }) {
           </label>
           <Button
             variant="secondary"
-            className="!h-9"
+            size="sm"
             disabled={!changed || save.isPending}
             onClick={() =>
               save.mutate({ threshold: Number(threshold), window_days: Number(windowDays) })
@@ -93,7 +93,7 @@ function RuleRow({ rule, editable }: { rule: FraudRule; editable: boolean }) {
           </Button>
           <Button
             variant="secondary"
-            className="!h-9"
+            size="sm"
             disabled={save.isPending}
             onClick={() => save.mutate({ is_active: !rule.is_active })}
           >
@@ -174,7 +174,7 @@ function AlertList({ status, editable }: { status: FraudAlert['status']; editabl
                   </div>
                 </div>
                 {editable && alert.status === 'open' ? (
-                  <Button className="!h-9" onClick={() => review.mutate(alert)}>
+                  <Button variant="soft" size="sm" onClick={() => review.mutate(alert)}>
                     Revisar
                   </Button>
                 ) : null}

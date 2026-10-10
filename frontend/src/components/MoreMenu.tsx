@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { buttonClass } from './classes'
+import { ChevronDownIcon } from './icons'
 
 export interface MoreItem {
   label: string
@@ -39,18 +40,19 @@ export function MoreMenu({ items }: { items: MoreItem[] }) {
         onClick={() => setOpen((value) => !value)}
         className={buttonClass('secondary')}
       >
-        Más ▾
+        Más
+        <ChevronDownIcon className="-mr-1 size-4 shrink-0 text-muted" />
       </button>
       {open ? (
         <ul
           id={id}
-          className="absolute right-0 z-40 mt-1 min-w-52 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-lg"
+          className="absolute right-0 z-40 mt-2 min-w-56 animate-pop overflow-hidden rounded-xl border border-edge bg-surface p-1.5 shadow-lg"
         >
           {items.map((item) => (
             <li key={item.label}>
               <button
                 type="button"
-                className={`block w-full px-4 py-2 text-left text-sm hover:bg-brand-100 ${
+                className={`block w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50 ${
                   item.danger ? 'text-danger-600' : ''
                 }`}
                 onClick={() => {

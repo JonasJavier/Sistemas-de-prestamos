@@ -159,7 +159,7 @@ export function CollectionTimeline({
                   {task.note ? <span className="text-muted"> · {task.note}</span> : null}
                 </span>
                 {task.can_act && loan ? (
-                  <Button variant="secondary" className="!h-8" onClick={() => done.mutate(task)}>
+                  <Button variant="secondary" size="sm" onClick={() => done.mutate(task)}>
                     Hecho
                   </Button>
                 ) : null}

@@ -266,14 +266,14 @@ function AgendaRow({
       <div className="flex flex-wrap items-center gap-2">
         {loan.phone ? (
           <>
-            <a href={`tel:${loan.phone}`} className={buttonClass('secondary', '!h-9 !px-3')}>
+            <a href={`tel:${loan.phone}`} className={buttonClass('secondary', '', 'sm')}>
               Llamar
             </a>
             <a
               href={whatsappLink(loan.phone, `Hola ${loan.customer_name.split(' ')[0]}, `)}
               target="_blank"
               rel="noopener"
-              className={buttonClass('secondary', '!h-9 !px-3')}
+              className={buttonClass('secondary', '', 'sm')}
             >
               WhatsApp
             </a>
@@ -281,7 +281,7 @@ function AgendaRow({
         ) : null}
         <Button
           variant="secondary"
-          className="!h-9 !px-3"
+          size="sm"
           onClick={() => onAct(loan, item.type === 'promise' ? item.promise.amount : undefined)}
         >
           Gestión
@@ -290,7 +290,7 @@ function AgendaRow({
           <Link
             to="/cobrar/$numero"
             params={{ numero: loan.number }}
-            className={buttonClass('secondary', '!h-9 !px-3')}
+            className={buttonClass('secondary', '', 'sm')}
           >
             Cobrar
           </Link>
@@ -298,15 +298,11 @@ function AgendaRow({
         {item.type === 'task' && item.task.can_act ? (
           <>
             {item.task.kind !== 'escalation' ? (
-              <Button
-                variant="secondary"
-                className="!h-9 !px-3"
-                onClick={() => move.mutate(item.task)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => move.mutate(item.task)}>
                 Reprogramar
               </Button>
             ) : null}
-            <Button className="!h-9 !px-3" onClick={() => done.mutate(item.task)}>
+            <Button variant="soft" size="sm" onClick={() => done.mutate(item.task)}>
               Hecho
             </Button>
           </>

@@ -16,6 +16,7 @@ import {
   Field,
   Input,
   PageHeader,
+  Pagination,
   Spinner,
   Tabs,
   Textarea,
@@ -75,7 +76,7 @@ function DecideDialog({
   })
   return (
     <Modal onClose={onClose} labelledBy="decide-title">
-      <div className="w-full max-w-md space-y-3 rounded-xl bg-surface p-5 shadow-xl">
+      <div className="w-full max-w-md space-y-3 rounded-2xl bg-surface p-5 shadow-xl">
         <h2 id="decide-title" className="text-lg font-semibold">
           {approve ? 'Autorizar' : 'Rechazar'}: {approval.kind_label.toLowerCase()}
         </h2>
@@ -201,16 +202,22 @@ function ApprovalRow({
 /** P11: authorizations to decide, my requests, and the notices of the bell. */
 export function NoticesPage({ me }: { me: Me }) {
   const refresh = useRefresh()
-  const [tab, setTab] = useState<Tab>(me.pending_approvals ? 'decidir' : 'avisos')
+  const [tab, setTabState] = useState<Tab>(me.pending_approvals ? 'decidir' : 'avisos')
+  // Every tab is paged (25 rows): the older notices stay within reach.
+  const [page, setPage] = useState(1)
+  const setTab = (next: Tab) => {
+    setTabState(next)
+    setPage(1)
+  }
   const [deciding, setDeciding] = useState<{ approval: Approval; approve: boolean } | null>(null)
   const approvals = useQuery({
-    queryKey: ['approvals', tab],
-    queryFn: () => listApprovals(tab === 'mias' ? 'mias' : 'por_decidir'),
+    queryKey: ['approvals', tab, page],
+    queryFn: () => listApprovals(tab === 'mias' ? 'mias' : 'por_decidir', page),
     enabled: tab !== 'avisos',
   })
   const notices = useQuery({
-    queryKey: ['notices'],
-    queryFn: () => listNotices(),
+    queryKey: ['notices', page],
+    queryFn: () => listNotices(false, page),
     enabled: tab === 'avisos',
   })
   const readAll = useMutation({ mutationFn: markAllNoticesRead, onSuccess: refresh })
@@ -239,16 +246,13 @@ export function NoticesPage({ me }: { me: Me }) {
           <Card className="!p-0">
             <ul className="divide-y divide-edge">
               {notices.data.results.map((n) => (
-                <li
-                  key={n.id}
-                  className={`flex items-start justify-between gap-3 px-4 py-3 ${n.read_at ? '' : 'bg-brand-100/40'}`}
-                >
+                <li key={n.id} className="flex items-start justify-between gap-3 px-4 py-3">
                   <div className="min-w-0">
-                    <div className="text-sm">
+                    <div className={`text-sm ${n.read_at ? 'text-muted' : 'font-medium'}`}>
                       {!n.read_at ? (
                         <span
                           aria-label="Sin leer"
-                          className="mr-2 inline-block size-2 rounded-full bg-brand-700"
+                          className="mr-2 inline-block size-2 rounded-full bg-brand-700 align-middle"
                         />
                       ) : null}
                       {n.text}
@@ -284,6 +288,9 @@ export function NoticesPage({ me }: { me: Me }) {
         ) : (
           <EmptyState>No tienes avisos.</EmptyState>
         )
+      ) : null}
+      {tab === 'avisos' ? (
+        <Pagination page={page} count={notices.data?.count ?? 0} onChange={setPage} />
       ) : approvals.isPending ? (
         <Spinner />
       ) : approvals.data?.results.length ? (
@@ -304,6 +311,9 @@ export function NoticesPage({ me }: { me: Me }) {
           {tab === 'mias' ? 'No has pedido autorizaciones.' : 'Nada pendiente por autorizar.'}
         </EmptyState>
       )}
+      {tab !== 'avisos' ? (
+        <Pagination page={page} count={approvals.data?.count ?? 0} onChange={setPage} />
+      ) : null}
       {deciding ? (
         <DecideDialog
           approval={deciding.approval}
