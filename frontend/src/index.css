@@ -125,6 +125,51 @@ h3 {
   letter-spacing: -0.015em;
 }
 
+/* The title of a screen has presence: bold and tight (decision 111). */
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* A small label above a title or a figure (the date, a group, a scope). */
+@utility eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* The brand texture (decision 111): the fine dot grid and the soft light of
+   the sign-in panel follow the person into the app, on forest (the menu) and
+   in gold on sand (the home card), so the identity lives beyond the menu
+   without adding another block of color. Each one is an absolute layer behind
+   the content (see <Texture> in components/ui.tsx). */
+.texture-glow-forest {
+  background-image:
+    radial-gradient(60% 50% at 100% 0%, rgb(53 181 133 / 0.22), transparent 70%),
+    radial-gradient(50% 40% at 0% 100%, rgb(201 162 39 / 0.14), transparent 70%);
+}
+.texture-grid-forest {
+  background-image: radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+.texture-glow-sand {
+  background-image: radial-gradient(70% 90% at 100% 0%, rgb(201 162 39 / 0.22), transparent 70%);
+}
+.texture-grid-sand {
+  background-image: radial-gradient(rgb(20 59 44 / 0.16) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(70% 90% at 100% 0%, black, transparent 80%);
+}
+:root.dark .texture-glow-sand {
+  background-image: radial-gradient(70% 90% at 100% 0%, rgb(212 175 55 / 0.16), transparent 70%);
+}
+:root.dark .texture-grid-sand {
+  background-image: radial-gradient(rgb(255 255 255 / 0.1) 1px, transparent 1px);
+}
+
 @layer base {
   /* Columns never run into each other («11:44 p. m.Cobro»): every cell but
      the last keeps a gap; a utility on the cell still overrides it. */

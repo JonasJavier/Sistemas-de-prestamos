@@ -340,6 +340,23 @@ export const ChevronDownIcon = (p: IconProps) => (
   </Svg>
 )
 
+/** The sidebar toggle: a panel whose left column folds and unfolds (doc 08 - 4). */
+export const PanelFoldIcon = (p: IconProps) => (
+  <Svg className="size-[18px] shrink-0" {...p}>
+    <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+    <path d="M9 4.5v15" />
+    <path d="m16 10-2 2 2 2" />
+  </Svg>
+)
+
+export const PanelUnfoldIcon = (p: IconProps) => (
+  <Svg className="size-[18px] shrink-0" {...p}>
+    <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+    <path d="M9 4.5v15" />
+    <path d="m14 10 2 2-2 2" />
+  </Svg>
+)
+
 // --- Feedback ----------------------------------------------------------------
 
 export const InfoIcon = (p: IconProps) => (

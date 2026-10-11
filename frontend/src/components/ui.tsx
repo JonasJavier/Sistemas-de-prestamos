@@ -23,7 +23,7 @@ import {
   type ButtonSize,
   type ButtonVariant,
 } from './classes'
-import { AlertIcon, CheckCircleIcon, CheckIcon, InboxIcon, InfoIcon, SearchIcon } from './icons'
+import { AlertIcon, CheckCircleIcon, CheckIcon, InfoIcon, SearchIcon } from './icons'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
  * replaces these as screens grow; the class vocabulary stays the same. */
@@ -149,6 +149,44 @@ export function BrandMark({
       />
       <circle cx="45" cy="15" r="4.5" className="fill-gold-500" />
     </svg>
+  )
+}
+
+/** The brand texture behind a panel (decision 111): the dot grid and the soft
+ * light of the sign-in panel, on forest (the menu) or in gold on sand (the
+ * home card). The container needs `relative` (and `overflow-hidden` when it
+ * has rounded corners); the content sits above with `relative`. */
+export function Texture({ tone }: { tone: 'forest' | 'sand' }) {
+  return (
+    <>
+      <div aria-hidden className={`pointer-events-none absolute inset-0 texture-glow-${tone}`} />
+      <div aria-hidden className={`pointer-events-none absolute inset-0 texture-grid-${tone}`} />
+    </>
+  )
+}
+
+/** A titled group of a screen; the gold dot is the house mark (decision 111). */
+export function Section({
+  title,
+  aside,
+  children,
+}: {
+  title: string
+  /** A quiet note at the right of the title (the scope of the figures). */
+  aside?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section aria-label={title} className="space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+          <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-gold-500" />
+          {title}
+        </h2>
+        {aside ? <span className="text-[12.5px] text-muted">{aside}</span> : null}
+      </div>
+      {children}
+    </section>
   )
 }
 
@@ -360,7 +398,7 @@ export function PageHeader({
             {back}
           </div>
         ) : null}
-        <h1 className="text-[22px] font-semibold leading-tight sm:text-2xl">{title}</h1>
+        <h1 className="text-[1.5rem] leading-tight sm:text-[1.75rem]">{title}</h1>
         {subtitle ? <div className="text-sm text-muted">{subtitle}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -478,11 +516,32 @@ export function Figure({ value }: { value: ReactNode }) {
   )
 }
 
+/** The house drawing of an empty list: two cards and the gold dot. */
+function EmptyArt() {
+  return (
+    <svg
+      viewBox="0 0 96 64"
+      aria-hidden
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-16 w-24"
+    >
+      <path d="M30 14a6 6 0 0 1 6-6h32a6 6 0 0 1 6 6v24" className="text-muted/45" />
+      <rect x="18" y="22" width="52" height="34" rx="6" className="fill-surface" />
+      <path d="M28 36h18M28 44h26" />
+      <circle cx="60" cy="33" r="3.5" className="fill-gold-500" stroke="none" />
+    </svg>
+  )
+}
+
 export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-edge bg-surface-2/60 px-4 py-9 text-center text-sm text-muted">
-      <span className="mb-3 grid size-10 place-items-center rounded-full bg-surface text-muted shadow-xs ring-1 ring-edge">
-        <InboxIcon />
+      <span className="mb-2 text-muted/80">
+        <EmptyArt />
       </span>
       <p className="max-w-md text-balance">{children}</p>
       {action ? <div className="mt-4">{action}</div> : null}
@@ -554,14 +613,7 @@ export function PublicPage({
     <div className="flex min-h-screen">
       <aside className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden bg-brand-950 p-10 text-white lg:flex xl:p-12">
         {/* A soft light from the corner and a fine dot grid: depth without noise. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(60%_50%_at_100%_0%,rgb(53_181_133/0.22),transparent_70%),radial-gradient(50%_40%_at_0%_100%,rgb(201_162_39/0.14),transparent_70%)]"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]"
-        />
+        <Texture tone="forest" />
         <Brand className="relative text-2xl" tone="light" />
         <div className="relative space-y-8">
           <h2 className="text-[2.1rem] font-semibold leading-[1.15]">

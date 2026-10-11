@@ -20,7 +20,7 @@ import {
   WalletIcon,
 } from '../components/icons'
 import { Kpi } from '../components/Kpi'
-import { Alert, Field, Figure, LoadError, Select } from '../components/ui'
+import { Alert, Field, Figure, LoadError, Section, Select, Texture } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { pct, plural, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
@@ -248,28 +248,8 @@ function Today({ me }: { me: Me }) {
 
 const ALL_BRANCHES = ['Gerente', 'Contabilidad', 'Auditoría']
 
-function Section({
-  title,
-  aside,
-  children,
-}: {
-  title: string
-  /** A quiet note at the right of the title (the scope of the figures). */
-  aside?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <section aria-label={title} className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
-        {aside ? <span className="text-[12.5px] text-muted">{aside}</span> : null}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-/** P10 · indicators (decision 086): the same figures as the reports. */
+/** P10 · indicators (decision 086): the same figures as the reports. The
+ * day's collection lives in the welcome card above, not here twice. */
 function Indicators({ data, scope }: { data: Dashboard; scope?: string }) {
   const ind = data.indicators
   if (!ind) return null
@@ -296,16 +276,6 @@ function Indicators({ data, scope }: { data: Dashboard; scope?: string }) {
             hint={`PAR7 ${pct(p.par7)} · PAR90 ${pct(p.par90)}`}
             help={defs.par30}
             tone={Number(p.par30 ?? 0) > 0.1 ? 'bad' : undefined}
-          />
-          <Kpi
-            label="Cobrado hoy"
-            value={rd(ind.today.collected)}
-            hint={
-              Number(ind.today.expected) > 0
-                ? `de ${rd(ind.today.expected)} esperado · ${pct(ind.today.recovery, 0)}`
-                : 'Hoy no vencía ninguna cuota'
-            }
-            help={`${defs.collected} Esperado: ${defs.expected}`}
           />
           <Kpi
             label="Desembolsado del mes"
@@ -477,7 +447,9 @@ function Officer({ data }: { data: Dashboard }) {
   )
 }
 
-function Board({ me }: { me: Me }) {
+/** The board's data and its branch filter, shared by the welcome card and
+ * the sections below so both read the same figures. */
+function useBoard(me: Me) {
   const [branch, setBranch] = useState('')
   const wide = hasRole(me, ALL_BRANCHES)
   const branches = useQuery({ queryKey: ['branches'], queryFn: listBranches, enabled: wide })
@@ -486,12 +458,18 @@ function Board({ me }: { me: Me }) {
     queryFn: () => getDashboard(branch || undefined),
     refetchInterval: 60_000,
   })
+  const several = wide && (branches.data?.results.length ?? 0) > 1
+  return { branch, setBranch, branches, board, several }
+}
+
+function Board({ state }: { state: ReturnType<typeof useBoard> }) {
+  const { branch, setBranch, branches, board, several } = state
   const data = board.data
   if (board.isError && !data) return <LoadError error={board.error} />
   if (!data || !(data.indicators || data.operations || data.books || data.officer)) return null
   return (
     <div className="space-y-7">
-      {wide && (branches.data?.results.length ?? 0) > 1 ? (
+      {several ? (
         <div className="max-w-xs">
           <Field label="Sucursal">
             <Select value={branch} onChange={(e) => setBranch(e.target.value)}>
@@ -505,10 +483,7 @@ function Board({ me }: { me: Me }) {
           </Field>
         </div>
       ) : null}
-      <Indicators
-        data={data}
-        scope={wide && (branches.data?.results.length ?? 0) > 1 ? undefined : data.scope}
-      />
+      <Indicators data={data} scope={several ? undefined : data.scope} />
       <Operations data={data} />
       <Books data={data} />
       <Officer data={data} />
@@ -522,31 +497,71 @@ function greeting(hour: number) {
   return 'Buenas noches'
 }
 
-export function DashboardPage({ me }: { me: Me }) {
-  const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
-  const data = company.data
-  const [now] = useState(() => new Date())
-  const today = now.toLocaleDateString('es-DO', {
+/** The welcome card (decision 111): the brand texture, the date, a greeting
+ * with presence, the trial as a gold chip and, for who reads the indicators,
+ * the figure of the day: what was collected against what fell due. */
+function Welcome({
+  me,
+  now,
+  today,
+  definitions,
+  trialDaysLeft,
+}: {
+  me: Me
+  now: Date
+  today?: { collected: string; expected: string; recovery: string | null }
+  definitions?: Dashboard['definitions']
+  trialDaysLeft?: number
+}) {
+  const date = now.toLocaleDateString('es-DO', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
   const originator = hasRole(me, ACCESS.originate)
-
+  const simulates = hasRole(me, ACCESS.simulate)
+  const expected = today ? Number(today.expected) : 0
+  const collected = today ? Number(today.collected) : 0
+  const ratio = expected > 0 ? Math.min(collected / expected, 1) : collected > 0 ? 1 : 0
   return (
-    <>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[13px] font-medium text-muted first-letter:uppercase">{today}</p>
-          <h1 className="mt-0.5 text-2xl font-semibold sm:text-[1.75rem]">
+    <section
+      aria-label="Hoy"
+      className="relative overflow-hidden rounded-2xl border border-edge bg-surface shadow-sm"
+    >
+      <Texture tone="sand" />
+      <div className="relative flex flex-wrap items-end justify-between gap-x-6 gap-y-4 p-5 sm:p-7">
+        <div className="min-w-0 space-y-2">
+          <p className="eyebrow flex items-center gap-2">
+            <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-gold-500" />
+            <span className="first-letter:uppercase">{date}</span>
+          </p>
+          <h1 className="text-[1.75rem] leading-tight sm:text-[2.125rem]">
             {greeting(now.getHours())}
             {me.first_name ? `, ${me.first_name}` : ''}
           </h1>
+          {trialDaysLeft !== undefined ? (
+            <p
+              role="status"
+              className="inline-flex flex-wrap items-center gap-x-2 rounded-full bg-gold-100 py-1 pl-3 pr-3.5 text-[12.5px] font-medium text-gold-800 ring-1 ring-inset ring-gold-500/30"
+            >
+              <span>
+                Te quedan <strong>{plural(trialDaysLeft, 'día')}</strong> de prueba gratis.
+              </span>
+              {me.is_manager ? (
+                <Link
+                  to="/ajustes/suscripcion"
+                  className="font-semibold underline-offset-2 hover:underline"
+                >
+                  Ver la suscripción →
+                </Link>
+              ) : null}
+            </p>
+          ) : null}
         </div>
-        {originator || hasRole(me, ACCESS.simulate) ? (
+        {originator || simulates ? (
           <div className="flex flex-wrap gap-2">
-            {hasRole(me, ACCESS.simulate) ? (
+            {simulates ? (
               <Link to="/simulador" className={buttonClass('secondary')}>
                 Simular
               </Link>
@@ -559,26 +574,63 @@ export function DashboardPage({ me }: { me: Me }) {
           </div>
         ) : null}
       </div>
-
-      {data?.status === 'trial' && typeof data.trial_days_left === 'number' ? (
-        <div
-          role="status"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-gold-500/30 bg-gold-100 px-4 py-2.5 text-sm text-gold-800"
-        >
-          <span aria-hidden className="size-2 shrink-0 rounded-full bg-gold-500" />
-          <span className="flex-1">
-            Te quedan <strong>{plural(data.trial_days_left, 'día')}</strong> de prueba gratis.
-          </span>
-          {me.is_manager ? (
-            <Link
-              to="/ajustes/suscripcion"
-              className="font-semibold underline-offset-2 hover:underline"
-            >
-              Ver la suscripción →
-            </Link>
-          ) : null}
+      {today ? (
+        <div className="relative border-t border-edge/80 px-5 py-4 sm:px-7">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <span className="text-[12.5px] font-medium text-muted">Cobrado hoy</span>
+            <span className="text-[12.5px] text-muted tabular-nums">
+              {expected > 0
+                ? `de ${rd(today.expected)} esperado · ${pct(today.recovery, 0)}`
+                : 'Hoy no vencía ninguna cuota'}
+            </span>
+          </div>
+          <div
+            className="mt-1 font-display text-[1.6rem] font-bold tracking-tight tabular-nums sm:text-[1.9rem]"
+            title={
+              definitions ? `${definitions.collected} Esperado: ${definitions.expected}` : undefined
+            }
+          >
+            <Figure value={rd(today.collected)} />
+          </div>
+          <div
+            role="progressbar"
+            aria-label="Cobrado hoy frente a lo esperado"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(ratio * 100)}
+            className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-edge/60"
+          >
+            <div
+              className="h-full rounded-full bg-brand-700 transition-[width] duration-500"
+              style={{ width: `${ratio * 100}%` }}
+            />
+          </div>
         </div>
       ) : null}
+    </section>
+  )
+}
+
+export function DashboardPage({ me }: { me: Me }) {
+  const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
+  const data = company.data
+  const [now] = useState(() => new Date())
+  const state = useBoard(me)
+  const indicators = state.board.data?.indicators
+
+  return (
+    <>
+      <Welcome
+        me={me}
+        now={now}
+        today={indicators?.today}
+        definitions={state.board.data?.definitions}
+        trialDaysLeft={
+          data?.status === 'trial' && typeof data.trial_days_left === 'number'
+            ? data.trial_days_left
+            : undefined
+        }
+      />
       {data?.status === 'suspended' ? (
         <Alert tone="warning">
           {data.status_reason || 'La empresa está suspendida: puedes consultar, pero no registrar.'}
@@ -586,7 +638,7 @@ export function DashboardPage({ me }: { me: Me }) {
       ) : null}
 
       <Today me={me} />
-      <Board me={me} />
+      <Board state={state} />
     </>
   )
 }

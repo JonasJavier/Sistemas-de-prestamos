@@ -12,6 +12,7 @@ import { getMe, type Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
 import { initials } from '../lib/format'
 import { ACCESS, hasRole, platformView } from '../lib/roles'
+import { useDarkTheme } from '../lib/theme'
 import { CommandPalette, type PaletteIntent } from './CommandPalette'
 import { Modal } from './Modal'
 import {
@@ -42,6 +43,8 @@ import {
   MapIcon,
   MenuIcon,
   MoonIcon,
+  PanelFoldIcon,
+  PanelUnfoldIcon,
   PeopleIcon,
   PercentIcon,
   PieIcon,
@@ -59,26 +62,11 @@ import {
   UserIcon,
   WalletIcon,
 } from './icons'
-import { Brand } from './ui'
+import { Brand, BrandMark, Texture } from './ui'
 import { SupportBanner } from './Support'
 
 const iconButton =
   'relative grid size-10 place-items-center rounded-lg text-muted outline-none transition-colors hover:bg-brand-50 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500 sm:size-9'
-
-function useDarkTheme() {
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
-  const toggle = () => {
-    const next = !dark
-    document.documentElement.classList.toggle('dark', next)
-    try {
-      localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {
-      // storage unavailable: the choice just won't persist
-    }
-    setDark(next)
-  }
-  return [dark, toggle] as const
-}
 
 function ThemeToggle() {
   const [dark, toggle] = useDarkTheme()
@@ -202,9 +190,14 @@ function navFor(me: Me): NavGroup[] {
 const linkClasses =
   'group relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-[13.5px] font-medium text-brand-200 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
 
+/** The folded menu (doc 08 - 4): one icon per option, named by a bubble. */
+const railClasses =
+  'group relative flex h-10 items-center justify-center rounded-lg text-brand-200 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
+
 /** Groups folded by default: settings are visited now and then. */
 const FOLDED_BY_DEFAULT = ['Ajustes']
 const FOLD_KEY = 'nav-folded'
+const COLLAPSE_KEY = 'nav-collapsed'
 
 function readFolded(): Record<string, boolean> {
   try {
@@ -214,9 +207,29 @@ function readFolded(): Record<string, boolean> {
   }
 }
 
-function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () => void }) {
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function NavLinks({
+  groups,
+  onNavigate,
+  collapsed = false,
+}: {
+  groups: NavGroup[]
+  onNavigate?: () => void
+  /** The rail of the folded menu: icons only, every group open. */
+  collapsed?: boolean
+}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [folded, setFolded] = useState(readFolded)
+  // The bubble that names the option under the pointer on the rail. Fixed on
+  // the page, so the scrolling menu never clips it.
+  const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null)
   const toggle = (title: string, open: boolean) => {
     const next = { ...folded, [title]: !open }
     setFolded(next)
@@ -226,13 +239,21 @@ function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () 
       // storage unavailable: the choice lasts until the page reloads
     }
   }
+  const showTip = (target: HTMLElement, label: string) => {
+    const rect = target.getBoundingClientRect()
+    setTip({ label, top: rect.top + rect.height / 2, left: rect.right + 10 })
+  }
   // A long menu keeps the screen in use in sight (Ajustes sits at the bottom).
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
     navRef.current?.querySelector('a.active')?.scrollIntoView({ block: 'nearest' })
   }, [pathname])
   return (
-    <nav ref={navRef} aria-label="Menú principal" className="flex flex-col gap-4">
+    <nav
+      ref={navRef}
+      aria-label="Menú principal"
+      className={`flex flex-col ${collapsed ? 'gap-2' : 'gap-4'}`}
+    >
       {groups
         .filter((group) => group.items.length)
         .map((group, index) => {
@@ -242,11 +263,15 @@ function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () 
             (entry) =>
               entry.to !== '/' && (pathname === entry.to || pathname.startsWith(`${entry.to}/`)),
           )
-          const open = !title || here || !(folded[title] ?? FOLDED_BY_DEFAULT.includes(title))
+          const open =
+            collapsed || !title || here || !(folded[title] ?? FOLDED_BY_DEFAULT.includes(title))
           const listId = `nav-${index}`
           return (
             <div key={title ?? index} className="flex flex-col gap-0.5">
-              {title ? (
+              {title && collapsed ? (
+                // A thin line stands for the group's title on the rail.
+                <span aria-hidden className="mx-2 mb-1 h-px bg-white/10" />
+              ) : title ? (
                 <button
                   type="button"
                   aria-expanded={open}
@@ -264,34 +289,70 @@ function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () 
                 </button>
               ) : null}
               <div id={listId} hidden={!open} className="flex flex-col gap-0.5">
-                {group.items.map((entry) => (
-                  <Link
-                    key={entry.to}
-                    to={entry.to}
-                    onClick={onNavigate}
-                    className={linkClasses}
-                    activeOptions={{ exact: entry.to === '/' }}
-                  >
-                    {/* The gold marker of the active item (doc 08 - 2). */}
-                    <span
-                      aria-hidden
-                      className="absolute inset-y-2 -left-3 w-[3px] rounded-r-full bg-gold-500 opacity-0 transition-opacity group-[.active]:opacity-100"
-                    />
-                    <span className="text-brand-200/70 transition-colors group-hover:text-white group-[.active]:text-gold-500">
-                      {entry.icon}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{entry.label}</span>
-                    {entry.badge ? (
-                      <span className="rounded-full bg-gold-500 px-1.5 text-[11px] font-bold leading-[18px] text-brand-950">
-                        {entry.badge}
+                {group.items.map((entry) => {
+                  const name = entry.badge ? `${entry.label} (${entry.badge})` : entry.label
+                  return (
+                    <Link
+                      key={entry.to}
+                      to={entry.to}
+                      onClick={() => {
+                        setTip(null)
+                        onNavigate?.()
+                      }}
+                      className={collapsed ? railClasses : linkClasses}
+                      activeOptions={{ exact: entry.to === '/' }}
+                      aria-label={collapsed ? name : undefined}
+                      onMouseEnter={
+                        collapsed ? (event) => showTip(event.currentTarget, name) : undefined
+                      }
+                      onMouseLeave={collapsed ? () => setTip(null) : undefined}
+                      onFocus={
+                        collapsed ? (event) => showTip(event.currentTarget, name) : undefined
+                      }
+                      onBlur={collapsed ? () => setTip(null) : undefined}
+                    >
+                      {/* The gold marker of the active item (doc 08 - 2). */}
+                      <span
+                        aria-hidden
+                        className={`absolute inset-y-2 w-[3px] rounded-r-full bg-gold-500 opacity-0 transition-opacity group-[.active]:opacity-100 ${
+                          collapsed ? '-left-2' : '-left-3'
+                        }`}
+                      />
+                      <span className="relative text-brand-200/75 transition-colors group-hover:text-white group-[.active]:text-gold-500">
+                        {entry.icon}
+                        {collapsed && entry.badge ? (
+                          <span
+                            aria-hidden
+                            className="absolute -right-1.5 -top-1 size-2 rounded-full bg-gold-500 ring-2 ring-brand-950"
+                          />
+                        ) : null}
                       </span>
-                    ) : null}
-                  </Link>
-                ))}
+                      {collapsed ? null : (
+                        <>
+                          <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+                          {entry.badge ? (
+                            <span className="rounded-full bg-gold-500 px-1.5 text-[11px] font-bold leading-[18px] text-brand-950">
+                              {entry.badge}
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           )
         })}
+      {tip ? (
+        <div
+          role="tooltip"
+          style={{ top: tip.top, left: tip.left }}
+          className="pointer-events-none fixed z-50 -translate-y-1/2 animate-fade whitespace-nowrap rounded-lg bg-ink px-2.5 py-1 text-[12.5px] font-medium text-canvas shadow-lg"
+        >
+          {tip.label}
+        </div>
+      ) : null}
     </nav>
   )
 }
@@ -328,9 +389,27 @@ const STATUS_CHIP: Record<string, { label: string; className: string }> = {
 }
 
 /** The tenant the user works in, always in sight (doc 07 - section 2). */
-function CompanyBadge({ me }: { me: Me }) {
+function CompanyBadge({ me, compact = false }: { me: Me; compact?: boolean }) {
   if (!me.company_name) return null
   const chip = me.company_status ? STATUS_CHIP[me.company_status] : undefined
+  if (compact)
+    return (
+      <div
+        title={me.company_name}
+        className="mx-auto grid size-10 place-items-center rounded-xl bg-white/[0.06] ring-1 ring-white/[0.06]"
+      >
+        <span
+          aria-hidden
+          className="grid size-8 place-items-center rounded-lg bg-gold-500 font-display text-[12px] font-bold text-brand-950"
+        >
+          {initials(me.company_name)}
+        </span>
+        <span className="sr-only">
+          {me.company_name}
+          {chip ? ` · ${chip.label}` : ''}
+        </span>
+      </div>
+    )
   return (
     <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.06] p-2.5 ring-1 ring-white/[0.06]">
       <span
@@ -493,19 +572,22 @@ function MobileBar({
     <>
       {open ? (
         <Modal onClose={() => setOpen(false)} label="Menú" align="bottom">
-          <div className="max-h-[85vh] w-full animate-sheet space-y-4 overflow-y-auto rounded-t-3xl bg-brand-950 px-4 pb-8 pt-2.5">
-            <span aria-hidden className="mx-auto block h-1 w-10 rounded-full bg-white/20" />
-            <CompanyBadge me={me} />
-            <div className="pl-3">
-              <NavLinks groups={groups} onNavigate={() => setOpen(false)} />
+          <div className="relative max-h-[85vh] w-full animate-sheet overflow-hidden rounded-t-3xl bg-brand-950">
+            <Texture tone="forest" />
+            <div className="relative max-h-[85vh] space-y-4 overflow-y-auto px-4 pb-8 pt-2.5">
+              <span aria-hidden className="mx-auto block h-1 w-10 rounded-full bg-white/20" />
+              <CompanyBadge me={me} />
+              <div className="pl-3">
+                <NavLinks groups={groups} onNavigate={() => setOpen(false)} />
+              </div>
+              <button
+                type="button"
+                className="h-11 w-full rounded-xl bg-white/[0.06] px-3 text-sm font-medium text-brand-200 hover:bg-white/10"
+                onClick={() => setOpen(false)}
+              >
+                Cerrar menú
+              </button>
             </div>
-            <button
-              type="button"
-              className="h-11 w-full rounded-xl bg-white/[0.06] px-3 text-sm font-medium text-brand-200 hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            >
-              Cerrar menú
-            </button>
           </div>
         </Modal>
       ) : null}
@@ -612,6 +694,17 @@ export function AppShell({
   const [searching, setSearching] = useState<PaletteIntent | null>(null)
   const closeSearch = useCallback(() => setSearching(null), [])
   const searchable = !platformView(me)
+  // The menu folds to a rail of icons (doc 08 - 4); the choice is remembered.
+  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const toggleCollapsed = () => {
+    const next = !collapsed
+    setCollapsed(next)
+    try {
+      localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0')
+    } catch {
+      // storage unavailable: the choice lasts until the page reloads
+    }
+  }
 
   useEffect(() => {
     if (!searchable) return
@@ -651,15 +744,51 @@ export function AppShell({
       {searchable && searching ? (
         <CommandPalette me={me} intent={searching} onClose={closeSearch} />
       ) : null}
-      <aside className="scroll-quiet sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-5 overflow-y-auto bg-brand-950 px-3 pb-6 pt-4 sm:flex">
-        <Link
-          to="/"
-          className="self-start rounded-lg px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-gold-500"
+      <aside
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col bg-brand-950 transition-[width] duration-200 sm:flex ${
+          collapsed ? 'w-16' : 'w-60'
+        }`}
+      >
+        {/* The texture of the sign-in panel follows the person into the app. */}
+        <Texture tone="forest" />
+        <div
+          className={`scroll-quiet relative flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-4 pt-4 ${
+            collapsed ? 'px-2' : 'px-3'
+          }`}
         >
-          <Brand className="text-[1.2rem]" tone="light" />
-        </Link>
-        <CompanyBadge me={me} />
-        <NavLinks groups={groups} />
+          <Link
+            to="/"
+            aria-label={collapsed ? 'Inicio' : undefined}
+            className={`rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold-500 ${
+              collapsed ? 'mx-auto p-1' : 'self-start px-2 py-1'
+            }`}
+          >
+            {collapsed ? (
+              <BrandMark tone="light" className="size-8" />
+            ) : (
+              <Brand className="text-[1.2rem]" tone="light" />
+            )}
+          </Link>
+          <CompanyBadge me={me} compact={collapsed} />
+          <NavLinks groups={groups} collapsed={collapsed} />
+        </div>
+        <div
+          className={`relative border-t border-white/[0.08] py-2 ${collapsed ? 'px-2' : 'px-3'}`}
+        >
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? 'Desplegar el menú' : 'Plegar el menú'}
+            title={collapsed ? 'Desplegar el menú' : undefined}
+            className={`flex h-9 w-full items-center gap-3 rounded-lg text-[13px] font-medium text-brand-200/80 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 ${
+              collapsed ? 'justify-center' : 'px-2.5'
+            }`}
+          >
+            {collapsed ? <PanelUnfoldIcon /> : <PanelFoldIcon />}
+            {collapsed ? null : 'Plegar el menú'}
+          </button>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
