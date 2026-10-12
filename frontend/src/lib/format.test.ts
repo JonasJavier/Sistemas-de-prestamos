@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   amountValue,
+  monthYear,
+  nearDay,
+  short,
+  whole,
   dateFromText,
   moment,
   dateOf,
@@ -169,5 +173,34 @@ describe('moment', () => {
   it('writes the full date and the hour', () => {
     const text = moment('2026-10-09T23:51:00Z') // 7:51 p. m. in Santo Domingo
     expect(text).toMatch(/^09\/10\/2026 7:51\sp\.\s?m\.$/)
+  })
+})
+
+describe('short figures (decision 114)', () => {
+  it('drops the cents and the currency for the «cobrado / esperado» pairs', () => {
+    expect(whole('68200.40')).toBe('68,200')
+    expect(whole(4500)).toBe('4,500')
+    expect(whole(null)).toBe('—')
+  })
+
+  it('reads a large amount at a glance', () => {
+    expect(short('2218400')).toBe('RD$ 2.22 M')
+    expect(short(512400)).toBe('RD$ 512 K')
+    expect(short(850)).toBe('RD$ 850.00')
+  })
+})
+
+describe('dates near today (decision 114)', () => {
+  it('says today, tomorrow, the weekday within a week and the date beyond', () => {
+    expect(nearDay('2026-10-12', '2026-10-12')).toBe('Hoy')
+    expect(nearDay('2026-10-13', '2026-10-12')).toBe('Mañana')
+    expect(nearDay('2026-10-19', '2026-10-12')).toBe('Lun 19 oct')
+    expect(nearDay('2026-10-09', '2026-10-12')).toBe('Vie 9 oct')
+    expect(nearDay('2026-11-01', '2026-10-12')).toBe('1 nov')
+    expect(nearDay(null)).toBe('—')
+  })
+
+  it('names the month and year a customer arrived', () => {
+    expect(monthYear('2023-03-14T15:00:00Z')).toBe('mar 2023')
   })
 })

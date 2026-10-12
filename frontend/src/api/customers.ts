@@ -11,6 +11,40 @@ export interface CustomerListItem {
   status: 'active' | 'blocked'
   branch_code: string
   created_at: string
+  /** Sector, municipality or province: where the customer lives. */
+  zone?: string
+  /** Decision 114: only in the list. */
+  portfolio?: CustomerPortfolio | null
+}
+
+export interface CustomerPortfolio {
+  active_loans: number
+  balance: string
+  days_past_due: number
+  next_due: string | null
+  next_amount: string | null
+  /** The loan due soonest. */
+  loan: string | null
+  /** Its collector; null when the customer pays at the office. */
+  collector: string | null
+}
+
+export type CustomerState = '' | 'al_dia' | 'atraso' | 'sin_prestamo'
+
+export interface CustomerSummary {
+  todos: number
+  al_dia: number
+  atraso: number
+  sin_prestamo: number
+  loans: number
+  principal: string
+}
+
+export function getCustomerSummary(params: {
+  q?: string
+  cobrador?: string
+}): Promise<CustomerSummary> {
+  return api(`/api/v1/clientes/resumen/${toQuery(params)}`)
 }
 
 export interface Customer extends CustomerListItem {
@@ -51,6 +85,8 @@ export interface CustomerPayload {
 export function listCustomers(params: {
   q?: string
   status?: string
+  estado?: CustomerState
+  cobrador?: string
   page?: number
 }): Promise<Page<CustomerListItem>> {
   return api(`/api/v1/clientes/${toQuery(params)}`)

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useParams, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
@@ -26,7 +26,9 @@ import {
   Select,
   Spinner,
   Textarea,
+  Texture,
 } from '../components/ui'
+import { CheckIcon } from '../components/icons'
 import { day, errorMessage, rd } from '../lib/format'
 import { printArea, whatsappLink } from '../lib/print'
 import { ACCESS, hasRole } from '../lib/roles'
@@ -179,6 +181,7 @@ function ReversalDialog({ receipt, onClose }: { receipt: Receipt; onClose: () =>
 /** P34: the receipt, its printing on paper or thermal, and the WhatsApp link. */
 export function ReceiptPage({ me }: { me: Me }) {
   const { numero } = useParams({ from: '/app/recibos/$numero' })
+  const { nuevo } = useSearch({ from: '/app/recibos/$numero' })
   const queryClient = useQueryClient()
   const [paper, setPaper] = useState<'letter' | 'thermal'>('letter')
   const [reversing, setReversing] = useState(false)
@@ -197,6 +200,24 @@ export function ReceiptPage({ me }: { me: Me }) {
   )} del préstamo ${r.loan.number}. ${url ?? ''}`
   return (
     <>
+      {nuevo && r.status === 'posted' ? (
+        // The payment just went through: a check that pops and the amount (decision 114).
+        <section
+          role="status"
+          className="relative flex items-center gap-4 overflow-hidden rounded-card bg-brand-950 px-5 py-4 text-on-forest shadow-sm"
+        >
+          <Texture tone="forest" />
+          <span className="relative grid size-11 shrink-0 animate-pop place-items-center rounded-full bg-forest-accent text-on-forest-accent">
+            <CheckIcon className="size-5 shrink-0" />
+          </span>
+          <div className="relative min-w-0">
+            <div className="font-display text-[19px] font-bold">Pago registrado</div>
+            <div className="text-[13px] text-brand-200">
+              {rd(r.amount)} de {r.customer.name} · recibo {r.number}
+            </div>
+          </div>
+        </section>
+      ) : null}
       <PageHeader
         back={
           <Link

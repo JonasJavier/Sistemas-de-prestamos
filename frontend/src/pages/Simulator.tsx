@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 
 import type { Me } from '../api/accounts'
 import { listProducts, type LoanProduct } from '../api/lending'
-import { ConditionsForm, QuoteSummary } from '../components/Conditions'
+import { ConditionsForm, QuoteBlock } from '../components/Conditions'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Alert, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
@@ -49,33 +49,42 @@ function Simulator({ me, products }: { me: Me; products: LoanProduct[] }) {
         }
       />
 
-      <Card>
-        <ConditionsForm
-          products={products}
-          value={conditions}
-          onChange={setConditions}
-          errorText={errorText}
-        />
-      </Card>
-
-      {quote.error && !fieldErrors ? (
-        <Alert tone="danger">No se pudo cotizar. Intenta de nuevo.</Alert>
-      ) : null}
-
       {products.length === 0 ? (
         <EmptyState>
           No hay productos activos. {me.is_manager ? 'Crea uno en Ajustes › Productos.' : ''}
         </EmptyState>
-      ) : null}
-
-      {data ? (
-        <>
-          <QuoteSummary data={data} />
-          <Card>
-            <ScheduleTable rows={data.schedule} principal={data.principal} />
-          </Card>
-        </>
-      ) : null}
+      ) : (
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 space-y-4">
+            <Card>
+              <ConditionsForm
+                products={products}
+                value={conditions}
+                onChange={setConditions}
+                errorText={errorText}
+              />
+            </Card>
+            {quote.error && !fieldErrors ? (
+              <Alert tone="danger">No se pudo cotizar. Intenta de nuevo.</Alert>
+            ) : null}
+            {data ? (
+              <Card>
+                <h2 className="mb-3 text-[16px] font-semibold">Tabla de pagos</h2>
+                <ScheduleTable rows={data.schedule} principal={data.principal} />
+              </Card>
+            ) : null}
+          </div>
+          <aside className="lg:sticky lg:top-24">
+            {data && !fieldErrors ? (
+              <QuoteBlock
+                data={data}
+                frequency={conditions.frequency}
+                note="Una cotización: nada se guarda hasta crear la solicitud"
+              />
+            ) : null}
+          </aside>
+        </div>
+      )}
     </>
   )
 }

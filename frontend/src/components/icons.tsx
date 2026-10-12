@@ -340,6 +340,12 @@ export const ChevronDownIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const PlusIcon = (p: IconProps) => (
+  <Svg className="size-[18px] shrink-0" {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+)
+
 export const ChevronRightIcon = (p: IconProps) => (
   <Svg className="size-4 shrink-0" {...p}>
     <path d="m9 6 6 6-6 6" />

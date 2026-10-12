@@ -37,8 +37,8 @@ export function Button({
   return <button className={buttonClass(variant, className, size)} {...props} />
 }
 
-export function Input(props: ComponentProps<'input'>) {
-  return <input className={`h-11 sm:h-9 ${controlClass}`} {...props} />
+export function Input({ className = '', ...props }: ComponentProps<'input'>) {
+  return <input className={`h-11 sm:h-[38px] ${controlClass} ${className}`} {...props} />
 }
 
 export function Field({
@@ -168,24 +168,24 @@ export function Texture({ tone }: { tone: 'forest' | 'sand' }) {
   )
 }
 
-/** A titled group of a screen; the gold dot is the house mark (decision 111). */
+/** A titled group of a screen (decision 114): the title in Sora 17 and a
+ * quiet note at its right; the gold dot now marks only the eyebrows. */
 export function Section({
   title,
   aside,
   children,
+  className = '',
 }: {
   title: string
   /** A quiet note at the right of the title (the scope of the figures). */
   aside?: ReactNode
   children: ReactNode
+  className?: string
 }) {
   return (
-    <section aria-label={title} className="space-y-3">
+    <section aria-label={title} className={`flex min-w-0 flex-col gap-3 ${className}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-          <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-gold-500" />
-          {title}
-        </h2>
+        <h2 className="text-[17px] font-semibold">{title}</h2>
         {aside ? <span className="text-[12.5px] text-muted">{aside}</span> : null}
       </div>
       {children}
@@ -276,8 +276,8 @@ export function FilePicker({
   )
 }
 
-export function Select(props: ComponentProps<'select'>) {
-  return <select className={`h-11 sm:h-9 ${controlClasses}`} {...props} />
+export function Select({ className = '', ...props }: ComponentProps<'select'>) {
+  return <select className={`h-11 sm:h-[38px] ${controlClasses} ${className}`} {...props} />
 }
 
 const MONTH_NAMES = [
@@ -351,22 +351,86 @@ export function Textarea(props: ComponentProps<'textarea'>) {
 }
 
 const TONES: Record<string, string> = {
-  neutral: 'bg-surface-2 text-muted ring-edge',
-  info: 'bg-info-700/[0.07] text-info-700 ring-info-700/20',
-  warning: 'bg-warning-700/[0.08] text-warning-700 ring-warning-700/20',
-  success: 'bg-success-600/[0.08] text-success-600 ring-success-600/20',
-  danger: 'bg-danger-600/[0.07] text-danger-600 ring-danger-600/20',
-  brand: 'bg-brand-50 text-brand-800 ring-brand-700/20',
+  neutral: 'bg-surface-2 text-muted',
+  info: 'bg-info-100 text-info-700',
+  warning: 'bg-warning-100 text-warning-700',
+  success: 'bg-success-100 text-success-600',
+  danger: 'bg-danger-100 text-danger-600',
+  brand: 'bg-brand-100 text-brand-800',
+  gold: 'bg-gold-100 text-gold-800',
 }
 
-/** A state always reads as color AND text (doc 07 - section 5). */
-export function Badge({ tone = 'neutral', children }: { tone?: string; children: ReactNode }) {
+/** A state always reads as color AND text (doc 07 - section 5): a soft tint
+ * of the state, and a dot before the words when it is a status (decision 114). */
+export function Badge({
+  tone = 'neutral',
+  dot = false,
+  children,
+}: {
+  tone?: string
+  dot?: boolean
+  children: ReactNode
+}) {
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-px text-[11.5px] font-semibold leading-5 ring-1 ring-inset ${TONES[tone] ?? TONES.neutral}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4 ${TONES[tone] ?? TONES.neutral}`}
     >
+      {dot ? <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" /> : null}
       {children}
     </span>
+  )
+}
+
+/** Choices side by side in one rounded box (decision 114): the filters of a
+ * list with their counts, the frequency of a loan, monthly or yearly. */
+export function Segmented<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  className = '',
+}: {
+  label: string
+  options: readonly { value: T; label: ReactNode; count?: number | string }[]
+  value: T
+  onChange: (value: T) => void
+  className?: string
+}) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={`inline-flex max-w-full gap-0.5 overflow-x-auto rounded-control bg-surface p-[3px] shadow-xs ring-1 ring-inset ring-edge [scrollbar-width:none] ${className}`}
+    >
+      {options.map((option) => {
+        const on = option.value === value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(option.value)}
+            className={`press press-down flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+              on
+                ? 'bg-brand-100 font-semibold text-brand-800'
+                : 'font-medium text-muted hover:bg-brand-50 hover:text-ink'
+            }`}
+          >
+            {option.label}
+            {option.count !== undefined ? (
+              <span
+                className={`text-[12px] tabular-nums ${on ? 'text-brand-800/80' : 'text-muted'}`}
+              >
+                {typeof option.count === 'number'
+                  ? option.count.toLocaleString('es-DO')
+                  : option.count}
+              </span>
+            ) : null}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
@@ -377,6 +441,7 @@ export function PageHeader({
   subtitle,
   actions,
   documentTitle,
+  inline = false,
 }: {
   back?: ReactNode
   title: ReactNode
@@ -384,6 +449,8 @@ export function PageHeader({
   actions?: ReactNode
   /** Browser tab text when the title is not plain text. */
   documentTitle?: string
+  /** On a phone the (icon-sized) action stays beside the title. */
+  inline?: boolean
 }) {
   const tab = documentTitle ?? (typeof title === 'string' ? title : null)
   useEffect(() => {
@@ -394,15 +461,19 @@ export function PageHeader({
     }
   }, [tab])
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div
+      className={`flex items-end justify-between gap-x-4 gap-y-3 ${
+        inline ? 'max-sm:items-start sm:flex-wrap' : 'flex-wrap'
+      }`}
+    >
       <div className="min-w-0 space-y-1">
         {back ? (
           <div className="text-[13px] font-medium text-muted [&_a:hover]:text-ink [&_a]:transition-colors">
             {back}
           </div>
         ) : null}
-        <h1 className="text-[1.5rem] leading-tight sm:text-[1.75rem]">{title}</h1>
-        {subtitle ? <div className="text-sm text-muted">{subtitle}</div> : null}
+        <h1 className="text-[26px] leading-[1.15] sm:text-[30px]">{title}</h1>
+        {subtitle ? <div className="text-[13.5px] text-muted">{subtitle}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -511,7 +582,7 @@ export function Stat({
     <div className={`@container min-w-0 p-4 ${cardClass}`}>
       <div className="text-[12.5px] font-medium text-muted">{label}</div>
       <div
-        className={`mt-1 whitespace-nowrap font-display font-semibold tracking-tight tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
+        className={`mt-2 whitespace-nowrap font-display font-semibold tracking-[-0.02em] tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-[22px] ${danger ? 'text-danger-600' : emphasis ? 'text-brand-700' : ''}`}
       >
         <Figure value={value} />
       </div>
@@ -569,21 +640,26 @@ export function EmptyState({ children, action }: { children: ReactNode; action?:
 const AVATAR_TONES = [
   'bg-brand-100 text-brand-800',
   'bg-gold-100 text-gold-800',
-  'bg-info-700/10 text-info-700',
-  'bg-warning-700/10 text-warning-700',
+  'bg-info-100 text-info-700',
+  'bg-warning-100 text-warning-700',
   'bg-surface-2 text-muted ring-1 ring-inset ring-edge',
 ]
 
 /** Initials in a circle; the same name always gets the same soft tone. */
-export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
+export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
   let hash = 0
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
   const tone = AVATAR_TONES[hash % AVATAR_TONES.length]
-  const box = size === 'lg' ? 'size-12 text-base' : 'size-9 text-[12.5px]'
+  const box = {
+    sm: 'size-8 text-[11.5px]',
+    md: 'size-9 text-[12.5px]',
+    lg: 'size-12 text-base',
+    xl: 'size-[60px] text-lg',
+  }[size]
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center rounded-full font-semibold ${box} ${tone}`}
+      className={`grid shrink-0 place-items-center rounded-full font-bold ${box} ${tone}`}
     >
       {initials(name)}
     </span>
@@ -687,7 +763,7 @@ export function SearchInput({ className = '', ...props }: ComponentProps<'input'
       </span>
       <input
         type="search"
-        className={`h-11 pl-9 sm:h-9 ${controlClasses}`}
+        className={`h-11 pl-9 sm:h-[38px] ${controlClasses}`}
         aria-label={props.placeholder}
         {...props}
       />

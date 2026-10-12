@@ -51,7 +51,7 @@ export function Kpi({
         ) : null}
       </div>
       <div
-        className={`mt-1 whitespace-nowrap font-display font-semibold tracking-tight tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-xl ${color}`}
+        className={`mt-2 whitespace-nowrap font-display font-semibold tracking-[-0.02em] tabular-nums text-sm @min-[9rem]:text-base @min-[11rem]:text-lg @min-[13.5rem]:text-[22px] ${color}`}
       >
         <Figure value={value} />
       </div>

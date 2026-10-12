@@ -177,3 +177,45 @@ def test_indicators_never_cross_companies(tenant, other_tenant) -> None:
     assert report["totals"]["count"] == 0
     response = other_tenant.client("gerente").get(f"/api/v1/tablero/?sucursal={tenant.branch.id}")
     assert response.status_code == 404
+
+
+def test_origins_split_the_day_between_routes_and_the_office(tenant) -> None:
+    """Decision 114: each route against its stops, the office with the rest,
+    and the rows add up to the figure of the day."""
+    from apps.cash.tests.test_cash import _route
+    from apps.collections.models import RouteStop
+    from apps.lending.models import Loan
+
+    on_route = make_loan(tenant, first_due_in=0)
+    at_office = make_loan(tenant, first_due_in=0)
+    collector = tenant.users["cobrador"]
+    with company_context(tenant.company.id):
+        Loan.objects.filter(pk=on_route.pk).update(collector=collector)
+        RouteStop.objects.create(
+            company=tenant.company,
+            collector=collector,
+            date=today(),
+            loan=on_route,
+            position=1,
+            reason=RouteStop.Reason.DUE_TODAY,
+            amount_due=D("350.00"),
+        )
+    _route(tenant)
+    pay(tenant, on_route, "300.00", role="cobrador")
+    pay(tenant, at_office, "350.00")
+    with company_context(tenant.company.id):
+        rows = indicators.origins(today())
+    route, office = rows
+    assert (route["kind"], route["status"]) == ("route", "open")
+    assert (route["collected"], route["expected"]) == (D("300.00"), D("350.00"))
+    assert (office["kind"], office["collected"], office["expected"]) == (
+        "office",
+        D("350.00"),
+        D("350.00"),
+    )
+    with company_context(tenant.company.id):
+        day = indicators.day_collection(today())
+    assert sum(r["collected"] for r in rows) == day["collected"]
+    assert sum(r["expected"] for r in rows) == day["expected"]
+    manager = tenant.client("gerente").get("/api/v1/tablero/").json()
+    assert [o["kind"] for o in manager["indicators"]["origins"]] == ["route", "office"]

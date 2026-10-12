@@ -31,7 +31,7 @@ test('la cajera cobra, corrige con autorización y cierra; el supervisor aprueba
   await cashier.getByLabel('Monto a pagar').fill('500')
   await cashier.getByLabel('Recibido').fill('1000')
   await expect(cashier.getByText('Cambio a devolver')).toBeVisible()
-  await cashier.getByRole('button', { name: 'Confirmar cobro de RD$ 500.00' }).click()
+  await cashier.getByRole('button', { name: 'Registrar pago · RD$ 500.00' }).click()
 
   // P34: the receipt, printable, with its WhatsApp link.
   await expect(cashier).toHaveURL(/\/recibos\//)
@@ -125,7 +125,7 @@ test('el cobrador cobra en su ruta desde el celular y la cajera recibe la rendic
   await collector.goto(`/cobrar/${number}`)
   await expect(collector.getByText(/Tu ruta de hoy/)).toBeVisible()
   await collector.getByLabel('Monto a pagar').fill('300')
-  await collector.getByRole('button', { name: 'Confirmar cobro de RD$ 300.00' }).click()
+  await collector.getByRole('button', { name: 'Registrar pago · RD$ 300.00' }).click()
   await expect(collector).toHaveURL(/\/recibos\//)
   await expect(collector.getByRole('link', { name: 'Enviar por WhatsApp' })).toBeVisible()
 

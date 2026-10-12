@@ -61,10 +61,20 @@ def _stop_payload(stop: RouteStop) -> dict:
         "visited_at": stop.visited_at,
         "payment": None
         if stop.payment_id is None
-        else {"number": stop.payment.number, "amount": str(stop.payment.amount)},
+        else {
+            "number": stop.payment.number,
+            "amount": str(stop.payment.amount),
+            "method": stop.payment.get_method_display(),
+            "at": stop.payment.paid_at,
+        },
         "action": None
         if stop.action_id is None
-        else {"result": stop.action.get_result_display(), "note": stop.action.note},
+        else {
+            "result": stop.action.get_result_display(),
+            "code": stop.action.result,
+            "note": stop.action.note,
+            "at": stop.action.created_at,
+        },
     }
 
 
@@ -270,7 +280,9 @@ class RoutesView(APIView):
                 total=Count("id"),
                 visited=Count("id", filter=Q(visited_at__isnull=False)),
                 paid=Count("id", filter=Q(payment__isnull=False)),
+                expected=Sum("amount_due"),
             )
+            stops["expected"] = str(stops["expected"] or ZERO)
             payments = (
                 Payment.objects.filter(route_session=route, status=Payment.Status.POSTED)
                 if route
@@ -364,6 +376,58 @@ class RouteMapView(APIView):
                     }
                     for a in actions
                 ],
+            }
+        )
+
+
+class RouteStopsView(APIView):
+    """A collector's stops of a day as the office follows them (decision 114):
+    the order, the result of each one and the cash still to hand over. It only
+    reads: the stops are generated when the collector opens «Mi ruta»."""
+
+    permission_classes = [CanSupervise]
+
+    def get(self, request: Request, collector_id) -> Response:
+        collector = get_object_or_404(User, pk=collector_id, company_id=request.user.company_id)
+        if not any(c.pk == collector.pk for c in _collectors(request.user)):
+            return Response(status=404)
+        day = timezone.localdate()
+        if request.query_params.get("fecha"):
+            day = dt.date.fromisoformat(request.query_params["fecha"])
+        stops = list(
+            RouteStop.objects.filter(collector=collector, date=day)
+            .select_related(
+                "loan__customer__sector", "loan__customer__municipality", "payment", "action"
+            )
+            .order_by("position")
+        )
+        route = (
+            RouteSession.objects.filter(collector=collector, business_date=day)
+            .order_by("-opened_at")
+            .first()
+        )
+        payments = (
+            Payment.objects.filter(route_session=route, status=Payment.Status.POSTED)
+            if route
+            else Payment.objects.none()
+        )
+        by_method = dict(payments.values_list("method").annotate(t=Sum("amount")).order_by())
+        return Response(
+            {
+                "collector_name": person(collector),
+                "date": day,
+                "route": None
+                if route is None
+                else {
+                    "status": route.status,
+                    "cash": str(cash.route_cash(route) if route.status == "open" else ZERO),
+                    "other_methods": str(
+                        sum((v for k, v in by_method.items() if k != Payment.Method.CASH), ZERO)
+                    ),
+                },
+                "collected": str(sum(by_method.values(), ZERO)),
+                "expected": str(sum((stop.amount_due for stop in stops), ZERO)),
+                "stops": [_stop_payload(stop) for stop in stops],
             }
         )
 

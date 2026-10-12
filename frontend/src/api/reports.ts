@@ -27,6 +27,15 @@ export interface Dashboard {
   indicators?: {
     portfolio: PortfolioFigures
     today: { collected: string; expected: string; recovery: string | null }
+    /** Decision 114: each route of the day and the office; they add up to «today». */
+    origins: {
+      kind: 'route' | 'office'
+      id: string
+      name: string | null
+      status: 'open' | 'settled' | 'closed'
+      collected: string
+      expected: string
+    }[]
     disbursed_month: { total: string; count: number }
     promises_month: { kept: number; broken: number; rate: string | null }
     cash_differences_month: { total: string; shortage: string; overage: string; count: number }

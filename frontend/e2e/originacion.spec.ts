@@ -14,7 +14,7 @@ test('una solicitud viaja del oficial a la cajera y termina en préstamo', async
   await officer.getByLabel('Producto').selectOption({ label: 'Cuota Fija (mensual)' })
   await officer.getByLabel('Monto (RD$)').fill('25000')
   await expect(officer.getByText('Total a pagar')).toBeVisible()
-  await officer.getByRole('button', { name: 'Crear borrador' }).click()
+  await officer.getByRole('button', { name: 'Continuar: garantías' }).click()
   await expect(officer).toHaveURL(/\/solicitudes\/[0-9a-f-]{36}$/)
   const applicationUrl = new URL(officer.url()).pathname
 

@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react'
 
 import { ApiError } from '../api/client'
+import type { ActionResult } from '../api/collections'
 import { listPayments } from '../api/payments'
 import {
   acceptLocationConsent,
@@ -16,10 +17,23 @@ import {
 } from '../api/routes'
 import { ActionDialog } from '../components/ActionDialog'
 import { buttonClass } from '../components/classes'
+import { ChevronDownIcon, CollectIcon, RouteIcon } from '../components/icons'
 import { Modal } from '../components/Modal'
-import { Alert, Badge, Button, Card, EmptyState, PageHeader, Spinner, Stat } from '../components/ui'
-import { errorMessage, phoneText, rd } from '../lib/format'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Segmented,
+  Spinner,
+  Stat,
+  Texture,
+} from '../components/ui'
+import { errorMessage, phoneText, plural, rd } from '../lib/format'
+import { useDocumentTitle } from '../lib/hooks'
 import { whatsappLink } from '../lib/print'
+import { nextStop, stopResult, tally } from '../lib/stops'
 import { notify } from '../lib/toast'
 
 const MapView = lazy(() => import('../components/MapView'))
@@ -73,7 +87,15 @@ function directions(stop: RouteStop) {
     : null
 }
 
-function StopCard({
+const lateText = (stop: RouteStop) =>
+  stop.reason === 'promise'
+    ? 'Promesa de hoy'
+    : stop.days_past_due
+      ? `${plural(stop.days_past_due, 'día')} de atraso`
+      : 'Vence hoy'
+
+/** The tools of a stop: call, WhatsApp, directions, a visit, the pin and the order. */
+function StopTools({
   stop,
   first,
   last,
@@ -105,33 +127,11 @@ function StopCard({
   })
   const done = Boolean(stop.payment || stop.action)
   const mapLink = directions(stop)
+  const tool = buttonClass('secondary', '!h-11 !px-2')
   return (
-    <li
-      className={`rounded-xl border bg-surface p-4 shadow-sm ${done ? 'border-success-600/40 opacity-80' : 'border-edge'}`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[12.5px] text-muted">
-            {stop.position}. Préstamo {stop.loan_number}
-          </div>
-          <div className="truncate text-base font-semibold">{stop.customer_name}</div>
-          <div className="text-[12.5px] text-muted">
-            {stop.address || 'Sin dirección registrada'}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-lg font-bold tabular-nums">{rd(stop.amount_due)}</div>
-          {stop.reason === 'promise' ? (
-            <Badge tone="info">Promesa de hoy</Badge>
-          ) : stop.reason === 'overdue' ? (
-            <Badge tone="danger">{stop.days_past_due} días</Badge>
-          ) : (
-            <Badge tone="warning">Vence hoy</Badge>
-          )}
-        </div>
-      </div>
+    <div className="space-y-2 border-t border-edge px-3.5 pb-3.5 pt-3">
       {stop.payment ? (
-        <p className="mt-2 text-sm text-success-600">
+        <p className="text-sm text-success-600">
           Cobrado {rd(stop.payment.amount)} ·{' '}
           <Link
             to="/recibos/$numero"
@@ -142,17 +142,17 @@ function StopCard({
           </Link>
         </p>
       ) : stop.action ? (
-        <p className="mt-2 text-sm text-warning-700">
+        <p className="text-sm text-warning-700">
           {stop.action.result}
           {stop.action.note ? `: ${stop.action.note}` : ''}
         </p>
       ) : null}
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="grid grid-cols-3 gap-2">
         {stop.phone ? (
           <>
             <a
               href={`tel:${stop.phone}`}
-              className={buttonClass('secondary', '!h-11 !px-2')}
+              className={tool}
               aria-label={`Llamar al ${phoneText(stop.phone)}`}
             >
               Llamar
@@ -164,19 +164,14 @@ function StopCard({
               )}
               target="_blank"
               rel="noopener"
-              className={buttonClass('secondary', '!h-11 !px-2')}
+              className={tool}
             >
               WhatsApp
             </a>
           </>
         ) : null}
         {mapLink ? (
-          <a
-            href={mapLink}
-            target="_blank"
-            rel="noopener"
-            className={buttonClass('secondary', '!h-11 !px-2')}
-          >
+          <a href={mapLink} target="_blank" rel="noopener" className={tool}>
             Cómo llegar
           </a>
         ) : null}
@@ -206,7 +201,7 @@ function StopCard({
         ) : null}
       </div>
       {open ? (
-        <div className="mt-2 flex justify-end gap-1 text-[12.5px]">
+        <div className="flex justify-end gap-1 text-[12.5px]">
           <button
             type="button"
             className="rounded px-2 py-1 text-muted hover:bg-brand-100 disabled:opacity-40"
@@ -225,6 +220,62 @@ function StopCard({
           </button>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+/** A stop in the list: number, who, where and what is owed; it unfolds into
+ * its tools. */
+function StopRow({
+  stop,
+  next,
+  children,
+}: {
+  stop: RouteStop
+  next: RouteStop | undefined
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const result = stopResult(stop, next)
+  return (
+    <li className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="press flex w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-brand-50"
+      >
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-surface-2 text-[12px] font-semibold text-muted tabular-nums">
+          {stop.position}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[14px] font-semibold">{stop.customer_name}</span>
+          <span className="block truncate text-[12px] text-muted">
+            Préstamo {stop.loan_number}
+            {stop.address ? ` · ${stop.address}` : ''}
+          </span>
+        </span>
+        <span className="shrink-0 text-right">
+          <span className="block text-[14px] font-semibold tabular-nums">
+            {rd(stop.amount_due)}
+          </span>
+          {stop.payment || stop.action ? (
+            <Badge tone={result.tone} dot>
+              {result.label}
+            </Badge>
+          ) : (
+            <span
+              className={`block text-[11.5px] ${stop.days_past_due ? 'text-warning-700' : 'text-muted'}`}
+            >
+              {lateText(stop)}
+            </span>
+          )}
+        </span>
+        <ChevronDownIcon
+          className={`size-4 shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open ? children : null}
     </li>
   )
 }
@@ -282,12 +333,16 @@ function Summary({ data, onClose }: { data: MyRoute; onClose: () => void }) {
   )
 }
 
-/** P40: the collector's day on the phone — stops, progress, map and cash. */
+/** P40, «Mi ruta de hoy» on the collector's phone (decision 114): how the
+ * day goes, the next stop in forest with its three answers, and the rest. */
 export function MyRoutePage() {
+  useDocumentTitle('Mi ruta')
   const queryClient = useQueryClient()
   const route = useQuery({ queryKey: ['my-route'], queryFn: getMyRoute })
   const [view, setView] = useState<'list' | 'map'>('list')
-  const [visiting, setVisiting] = useState<RouteStop | null>(null)
+  const [visiting, setVisiting] = useState<{ stop: RouteStop; result: ActionResult | '' } | null>(
+    null,
+  )
   const [summary, setSummary] = useState(false)
   const data = route.data
   const isOpen = data?.route?.status === 'open' && !data.route.stale
@@ -312,29 +367,57 @@ export function MyRoutePage() {
     order.splice(index + delta, 0, item)
     reorder.mutate(order)
   }
-  const pending = data.progress.stops - data.progress.visited
+  const next = nextStop(data.stops)
+  const counts = tally(data.stops)
+  const expected = data.stops.reduce((sum, stop) => sum + Number(stop.amount_due), 0)
+  const collected = Number(data.route?.collected ?? 0)
+  const share = expected > 0 ? Math.min(collected / expected, 1) : 0
+  const status = !data.route
+    ? { label: 'Sin abrir', tone: 'neutral' }
+    : data.route.status === 'settled'
+      ? { label: 'Rendida', tone: 'brand' }
+      : { label: 'En la calle', tone: 'info' }
+  const after = data.stops.filter((stop) => stop !== next && !stop.payment && !stop.action)
+  const done = data.stops.filter((stop) => stop.payment || stop.action)
+  const tools = (stop: RouteStop) => {
+    const index = data.stops.indexOf(stop)
+    return (
+      <StopTools
+        stop={stop}
+        first={index === 0}
+        last={index === data.stops.length - 1}
+        onMove={(delta) => move(index, delta)}
+        onVisit={() => setVisiting({ stop, result: '' })}
+        open={Boolean(isOpen)}
+      />
+    )
+  }
+
   return (
     <>
-      <PageHeader
-        title="Mi ruta"
-        subtitle={
-          // «Viernes, 9 de octubre», as the dashboard writes the date.
-          <span className="block first-letter:uppercase">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[12.5px] text-muted first-letter:uppercase">
             {new Date(`${data.date}T00:00:00`).toLocaleDateString('es-DO', {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
             })}
-          </span>
-        }
-        actions={
-          isOpen ? (
-            <Button variant="secondary" onClick={() => setSummary(true)}>
+          </p>
+          <h1 className="text-[26px] leading-tight sm:text-[30px]">Mi ruta de hoy</h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge tone={status.tone} dot>
+            {status.label}
+          </Badge>
+          {isOpen ? (
+            <Button variant="secondary" size="sm" onClick={() => setSummary(true)}>
               Cerrar ruta
             </Button>
-          ) : null
-        }
-      />
+          ) : null}
+        </div>
+      </div>
+
       {!data.consent ? (
         <Consent data={data} />
       ) : !data.route ? (
@@ -351,6 +434,7 @@ export function MyRoutePage() {
             onClick={() => open.mutate()}
             disabled={open.isPending}
           >
+            <RouteIcon className="size-[18px] shrink-0" />
             Abrir mi ruta de hoy
           </Button>
         </Card>
@@ -371,80 +455,197 @@ export function MyRoutePage() {
         </Card>
       ) : null}
 
-      {/* Two amounts side by side fit a phone; the visits go on their own line. */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Stat label="Cobrado hoy" value={rd(data.route?.collected ?? '0')} emphasis />
-        <Stat label="Efectivo en mano" value={rd(data.route?.cash ?? '0')} />
-        <div className="col-span-2 sm:col-span-1">
-          <Stat
-            label="Visitas"
-            value={`${data.progress.visited}/${data.progress.stops}`}
-            hint={pending ? `${pending} pendiente${pending === 1 ? '' : 's'}` : 'todas hechas'}
+      {/* How the day goes. */}
+      <section className="rounded-card border border-edge bg-surface px-[18px] py-4 shadow-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <span className="font-display text-[26px] font-bold tracking-[-0.025em]">
+            {rd(collected)}
+          </span>
+          <span className="text-[12.5px] text-muted">de {rd(expected)}</span>
+        </div>
+        <div className="mt-2 h-[7px] overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-edge">
+          <div
+            className="h-full origin-left animate-grow-x rounded-full bg-brand-700"
+            style={{ width: `${share * 100}%` }}
           />
         </div>
-      </div>
+        <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-[12px] text-muted">
+          <span>
+            {counts.visited} de {data.stops.length} visitas
+          </span>
+          <span>
+            {plural(counts.paid, 'pago')} · {plural(counts.promised, 'promesa')} · {counts.notHome}{' '}
+            no estaba
+          </span>
+        </div>
+        {data.route?.status === 'open' ? (
+          <div className="mt-3 flex justify-between border-t border-edge pt-2.5 text-[13px]">
+            <span className="text-muted">Efectivo en mano</span>
+            <span className="font-semibold tabular-nums">{rd(data.route.cash)}</span>
+          </div>
+        ) : null}
+      </section>
 
-      <div className="flex gap-2">
-        {(
-          [
-            ['list', 'Lista'],
-            ['map', 'Mapa'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={view === value}
-            onClick={() => setView(value)}
-            className={`h-10 flex-1 rounded-lg border text-sm font-semibold sm:flex-none sm:px-6 ${
-              view === value ? 'border-brand-700 bg-brand-100' : 'border-edge bg-surface'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* The next stop, with its three answers. */}
+      {next ? (
+        <ul aria-label="Siguiente parada">
+          <li className="relative overflow-hidden rounded-card bg-brand-950 px-[18px] py-4 text-on-forest shadow-lg">
+            <Texture tone="forest" />
+            <div className="relative">
+              <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-200">
+                <span>Siguiente · parada {next.position}</span>
+                {directions(next) ? (
+                  <a
+                    href={directions(next)!}
+                    target="_blank"
+                    rel="noopener"
+                    className="normal-case tracking-normal text-on-forest underline-offset-2 hover:underline"
+                  >
+                    Cómo llegar ↗
+                  </a>
+                ) : null}
+              </div>
+              <div className="mt-1.5 font-display text-[22px] font-bold leading-tight">
+                {next.customer_name}
+              </div>
+              <div className="text-[12.5px] text-brand-200">
+                Préstamo {next.loan_number}
+                {next.address ? ` · ${next.address}` : ''}
+              </div>
+              <dl className="mt-3 flex gap-6 text-[11.5px] text-brand-200">
+                <div>
+                  <dt>Cuota</dt>
+                  <dd className="font-display text-[16px] font-bold text-on-forest">
+                    {rd(next.amount_due)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Atraso</dt>
+                  <dd className="font-display text-[16px] font-bold text-on-forest">
+                    {next.days_past_due ? plural(next.days_past_due, 'día') : 'Al día'}
+                  </dd>
+                </div>
+              </dl>
+              {isOpen ? (
+                <div className="mt-3.5 grid grid-cols-[1.3fr_1fr_1fr] gap-2">
+                  <Link
+                    to="/cobrar/$numero"
+                    params={{ numero: next.loan_number }}
+                    className="press press-down flex h-11 items-center justify-center gap-2 rounded-[10px] bg-forest-accent text-[14px] font-semibold text-on-forest-accent"
+                  >
+                    <CollectIcon className="size-[18px] shrink-0" />
+                    Cobrar
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setVisiting({ stop: next, result: 'promised' })}
+                    className="press press-down h-11 rounded-[10px] bg-white/10 text-[13.5px] font-semibold ring-1 ring-inset ring-white/15 hover:bg-white/15"
+                  >
+                    Prometió
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisiting({ stop: next, result: 'not_home' })}
+                    className="press press-down h-11 rounded-[10px] bg-white/10 text-[13.5px] font-semibold ring-1 ring-inset ring-white/15 hover:bg-white/15"
+                  >
+                    No estaba
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </li>
+        </ul>
+      ) : null}
 
       {data.stops.length === 0 ? (
         <EmptyState>Hoy no tienes cobros pendientes en tu cartera.</EmptyState>
-      ) : view === 'list' ? (
-        <ul className="space-y-3">
-          {data.stops.map((stop, index) => (
-            <StopCard
-              key={stop.loan_number}
-              stop={stop}
-              first={index === 0}
-              last={index === data.stops.length - 1}
-              onMove={(delta) => move(index, delta)}
-              onVisit={() => setVisiting(stop)}
-              open={Boolean(isOpen)}
-            />
-          ))}
-        </ul>
       ) : (
-        <Suspense fallback={<Spinner label="Cargando el mapa…" />}>
-          <MapView
-            points={data.stops
-              .filter((s) => s.latitude && s.longitude)
-              .map((s) => ({
-                lat: Number(s.latitude),
-                lng: Number(s.longitude),
-                label: `${s.position}. ${s.customer_name} · ${rd(s.amount_due)}`,
-                kind: s.payment ? 'payment' : 'stop',
-              }))}
-          />
-          <p className="text-[12.5px] text-muted">
-            Solo aparecen los clientes con ubicación. Usa «Fijar ubicación» en la visita para
-            agregar los que faltan.
-          </p>
-        </Suspense>
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[16px] font-semibold">
+              {view === 'map' ? 'Mapa' : 'Después'}
+              {view === 'list' && after.length ? (
+                <span className="ml-2 text-[12.5px] font-normal text-muted">
+                  {plural(after.length, 'más', 'más')}
+                </span>
+              ) : null}
+            </h2>
+            <Segmented
+              label="Vista"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'list', label: 'Lista' },
+                { value: 'map', label: 'Mapa' },
+              ]}
+            />
+          </div>
+          {view === 'list' ? (
+            <>
+              {after.length ? (
+                <ul className="space-y-2">
+                  {after.map((stop) => (
+                    <StopRow key={stop.loan_number} stop={stop} next={next}>
+                      {tools(stop)}
+                    </StopRow>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[13px] text-muted">
+                  {next ? 'Solo queda la parada de arriba.' : 'Ya visitaste todas tus paradas.'}
+                </p>
+              )}
+              {next ? (
+                <details className="rounded-card border border-edge bg-surface shadow-sm">
+                  <summary className="cursor-pointer px-3.5 py-3 text-[13px] font-semibold">
+                    Herramientas de la parada {next.position}
+                  </summary>
+                  {tools(next)}
+                </details>
+              ) : null}
+              {done.length ? (
+                <>
+                  <h2 className="pt-2 text-[16px] font-semibold">
+                    Hechas
+                    <span className="ml-2 text-[12.5px] font-normal text-muted">{done.length}</span>
+                  </h2>
+                  <ul className="space-y-2">
+                    {done.map((stop) => (
+                      <StopRow key={stop.loan_number} stop={stop} next={next}>
+                        {tools(stop)}
+                      </StopRow>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </>
+          ) : (
+            <Suspense fallback={<Spinner label="Cargando el mapa…" />}>
+              <MapView
+                points={data.stops
+                  .filter((s) => s.latitude && s.longitude)
+                  .map((s) => ({
+                    lat: Number(s.latitude),
+                    lng: Number(s.longitude),
+                    label: `${s.position}. ${s.customer_name} · ${rd(s.amount_due)}`,
+                    kind: s.payment ? 'payment' : 'stop',
+                  }))}
+              />
+              <p className="text-[12.5px] text-muted">
+                Solo aparecen los clientes con ubicación. Usa «Fijar ubicación» en la visita para
+                agregar los que faltan.
+              </p>
+            </Suspense>
+          )}
+        </>
       )}
       {visiting ? (
         <ActionDialog
-          loanNumber={visiting.loan_number}
-          customerName={visiting.customer_name}
-          suggestedAmount={visiting.amount_due}
+          loanNumber={visiting.stop.loan_number}
+          customerName={visiting.stop.customer_name}
+          suggestedAmount={visiting.stop.amount_due}
           defaultKind="visit"
+          defaultResult={visiting.result}
           sheet
           withLocation
           onClose={() => setVisiting(null)}

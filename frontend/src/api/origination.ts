@@ -405,6 +405,9 @@ export interface InstallmentRow {
   interest_paid: string
   status: string
   total_due: string
+  paid_on?: string | null
+  late_fee_paid?: string
+  late_fee_accrued?: string
 }
 
 export function listLoans(params: {

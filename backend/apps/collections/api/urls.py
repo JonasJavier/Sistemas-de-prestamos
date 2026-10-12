@@ -9,6 +9,7 @@ from apps.collections.api.views import (
     PingView,
     ReorderView,
     RouteMapView,
+    RouteStopsView,
     RoutesView,
     VisitView,
 )
@@ -58,6 +59,7 @@ urlpatterns = [
     path("rutas/", RoutesView.as_view(), name="routes"),
     path("rutas/asignar/", AssignView.as_view(), name="routes-assign"),
     path("rutas/<uuid:collector_id>/mapa/", RouteMapView.as_view(), name="routes-map"),
+    path("rutas/<uuid:collector_id>/paradas/", RouteStopsView.as_view(), name="routes-stops"),
     path("prestamos/<str:number>/gestiones/", VisitView.as_view(), name="loan-visits"),
     path("prestamos/<str:number>/cobranza/", LoanTimelineView.as_view(), name="loan-collections"),
     path(

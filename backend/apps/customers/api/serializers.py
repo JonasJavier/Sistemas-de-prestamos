@@ -32,9 +32,30 @@ class CustomerListSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     branch_code = serializers.CharField(source="home_branch.code", read_only=True)
     document_number = serializers.SerializerMethodField()
+    portfolio = serializers.SerializerMethodField()
+    zone = serializers.SerializerMethodField()
 
     def get_document_number(self, customer: Customer) -> str:
         return mask_document(customer.document_number)
+
+    def get_zone(self, customer: Customer) -> str:
+        place = customer.sector or customer.municipality or customer.province
+        return place.name if place else customer.address_line
+
+    def get_portfolio(self, customer: Customer) -> dict | None:
+        """Decision 114: present only in the list (``listing.with_portfolio``)."""
+        if not hasattr(customer, "active_loans"):
+            return None
+        collector = (customer.collector_name or "").strip()
+        return {
+            "active_loans": customer.active_loans,
+            "balance": str(customer.balance),
+            "days_past_due": customer.worst_dpd,
+            "next_due": customer.next_due,
+            "next_amount": None if customer.next_amount is None else str(customer.next_amount),
+            "loan": customer.main_loan,
+            "collector": collector or None,
+        }
 
     class Meta:
         model = Customer
@@ -48,6 +69,8 @@ class CustomerListSerializer(serializers.ModelSerializer):
             "status",
             "branch_code",
             "created_at",
+            "zone",
+            "portfolio",
         ]
 
 

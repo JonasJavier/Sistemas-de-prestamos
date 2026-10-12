@@ -16,8 +16,8 @@ export interface RouteStop {
   days_past_due: number
   position: number
   visited_at: string | null
-  payment: { number: string; amount: string } | null
-  action: { result: string; note: string } | null
+  payment: { number: string; amount: string; method?: string; at?: string } | null
+  action: { result: string; note: string; code?: string; at?: string } | null
 }
 
 export interface MyRoute {
@@ -100,7 +100,7 @@ export interface CollectorDay {
     delivered: string | null
     difference: string | null
   } | null
-  stops: { total: number; visited: number; paid: number }
+  stops: { total: number; visited: number; paid: number; expected: string }
   collected: string
   off_route: number
   last_ping: string | null
@@ -126,6 +126,19 @@ export interface RouteMap {
 
 export const getRouteMap = (collectorId: string, date?: string): Promise<RouteMap> =>
   api(`/api/v1/rutas/${collectorId}/mapa/${toQuery({ fecha: date })}`)
+
+/** Decision 114: a collector's day as the office follows it. */
+export interface RouteStops {
+  collector_name: string | null
+  date: string
+  route: { status: 'open' | 'settled'; cash: string; other_methods: string } | null
+  collected: string
+  expected: string
+  stops: RouteStop[]
+}
+
+export const getRouteStops = (collectorId: string, date?: string): Promise<RouteStops> =>
+  api(`/api/v1/rutas/${collectorId}/paradas/${toQuery({ fecha: date })}`)
 
 export const listCollectors = (): Promise<{ id: string; name: string | null }[]> =>
   api('/api/v1/rutas/asignar/')

@@ -52,6 +52,8 @@ DEFINITIONS = {
     "prometida en el período.",
     "cash_differences": "Suma de los faltantes y sobrantes hallados al contar cajas y rendiciones "
     "en el período. La meta es cero.",
+    "origins": "Cada ruta: lo cobrado en ella frente a lo que debían sus paradas del día. La "
+    "oficina: el resto del cobrado y del esperado del día.",
 }
 
 
@@ -296,6 +298,64 @@ def day_collection(day: dt.date, *, branches: Branches = None) -> dict:
     got = collected(day, branches=branches)
     owed = expected(day, branches=branches)
     return {"date": day, "collected": got, "expected": owed, "recovery": ratio(got, owed)}
+
+
+def origins(day: dt.date, *, branches: Branches = None, total: dict | None = None) -> list[dict]:
+    """Where the day's money comes from (decision 114): one row per route of
+    the day and one for the office, which keeps what the routes don't explain,
+    so the rows always add up to the figure of the day. ``total`` is that
+    figure when the caller already has it (``day_collection``)."""
+    from apps.accounts.models import User
+    from apps.cash.models import CashSession, RouteSession
+    from apps.collections.models import RouteStop
+    from apps.core.api.errors import person
+    from apps.payments.models import Payment
+
+    stops = dict(
+        in_branches(RouteStop.objects.filter(date=day), "loan__branch_id", branches)
+        .values_list("collector_id")
+        .annotate(t=Sum("amount_due"))
+    )
+    routes = in_branches(RouteSession.objects.filter(business_date=day), "branch_id", branches)
+    status = {r.collector_id: r.status for r in routes.order_by("opened_at")}
+    got = dict(
+        in_branches(
+            Payment.objects.filter(
+                value_date=day, route_session__isnull=False, status=Payment.Status.POSTED
+            ),
+            "branch_id",
+            branches,
+        )
+        .values_list("route_session__collector_id")
+        .annotate(t=Sum("amount"))
+    )
+    collectors = {u.id: u for u in User.objects.filter(id__in={*stops, *status, *got})}
+    rows = [
+        {
+            "kind": "route",
+            "id": str(uid),
+            "name": person(collectors[uid]),
+            "status": status.get(uid, "closed"),
+            "collected": got.get(uid, ZERO),
+            "expected": stops.get(uid, ZERO),
+        }
+        for uid in sorted(collectors, key=lambda uid: person(collectors[uid]) or "")
+    ]
+    total = total or day_collection(day, branches=branches)
+    office_open = in_branches(
+        CashSession.objects.filter(status=CashSession.Status.OPEN), "branch_id", branches
+    ).exists()
+    rows.append(
+        {
+            "kind": "office",
+            "id": "office",
+            "name": "Caja oficina",
+            "status": "open" if office_open else "closed",
+            "collected": max(total["collected"] - sum(got.values(), ZERO), ZERO),
+            "expected": max(total["expected"] - sum(stops.values(), ZERO), ZERO),
+        }
+    )
+    return rows
 
 
 # --- Period figures ---------------------------------------------------------------------------

@@ -41,6 +41,7 @@ export function ActionDialog({
   suggestedAmount,
   sheet = false,
   withLocation = false,
+  defaultResult = '',
 }: {
   loanNumber: string
   customerName: string
@@ -52,10 +53,12 @@ export function ActionDialog({
   sheet?: boolean
   /** Saves where the action happened (the route, decision 031). */
   withLocation?: boolean
+  /** The result already chosen by a quick button (decision 114). */
+  defaultResult?: ActionResult | ''
 }) {
   const refresh = useRefreshCollections()
   const [kind, setKind] = useState<ActionKind>(defaultKind)
-  const [result, setResult] = useState<ActionResult | ''>('')
+  const [result, setResult] = useState<ActionResult | ''>(defaultResult)
   const [note, setNote] = useState('')
   const [promiseOn, setPromiseOn] = useState(() => todayISO(1))
   const [promiseAmount, setPromiseAmount] = useState(suggestedAmount ?? '')

@@ -3,6 +3,7 @@ from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from apps.accounts import authz
 from apps.accounts.api.permissions import role_required
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
-from apps.customers import access
+from apps.customers import access, listing
 from apps.customers.api.serializers import (
     BlockSerializer,
     CustomerListSerializer,
@@ -34,13 +35,33 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Customer]:
         queryset = access.scope_customers(
-            Customer.objects.select_related("home_branch", "score").order_by("-created_at"),
+            Customer.objects.select_related(
+                "home_branch", "score", "sector", "municipality", "province"
+            ).order_by("-created_at"),
             self.request.user,
         )
-        q = self.request.query_params.get("q", "")
+        params = self.request.query_params
+        q = params.get("q", "")
         if q.strip():
             queryset = search_customers(q, queryset)
+        collector = params.get("cobrador", "")
+        if collector:
+            try:
+                queryset = listing.by_collector(queryset, collector)
+            except ValueError as exc:
+                raise ValidationError({"cobrador": "Valor inválido."}) from exc
+        if self.action == "list":
+            # Decision 114: the portfolio of each customer and the state filter.
+            queryset = listing.by_state(listing.with_portfolio(queryset), params.get("estado", ""))
         return queryset
+
+    @action(detail=False, methods=["get"], url_path="resumen")
+    def summary(self, request: Request) -> Response:
+        """The counts of «Todos · Al día · En atraso · Sin préstamo» and the
+        active portfolio, for the same search and collector as the list."""
+        data = listing.summary(self.filter_queryset(self.get_queryset()))
+        data["principal"] = str(data["principal"])
+        return Response(data)
 
     def get_serializer_class(self):
         if self.action == "list":

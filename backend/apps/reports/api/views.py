@@ -73,9 +73,11 @@ scope_label = catalog.scope_label
 
 def _indicators(today: dt.date, branches, picked, *, with_profit: bool) -> dict:
     first = today.replace(day=1)
+    day = indicators.day_collection(today, branches=branches)
     data = {
         "portfolio": indicators.portfolio(today, branches=branches).as_dict(),
-        "today": indicators.day_collection(today, branches=branches),
+        "today": day,
+        "origins": indicators.origins(today, branches=branches, total=day),
         "disbursed_month": indicators.disbursed(today.year, today.month, branches=branches),
         "promises_month": indicators.promise_compliance(first, today, branches=branches),
         "cash_differences_month": indicators.cash_differences(first, today, branches=branches),

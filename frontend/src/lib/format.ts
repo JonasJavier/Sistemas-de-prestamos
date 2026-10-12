@@ -37,6 +37,22 @@ export function toAmount(text: string | null | undefined): string {
 export const num = (value: string | number | null | undefined) =>
   value === null || value === undefined || value === '' ? '—' : rd(value).replace('RD$ ', '')
 
+/** 68,200: a whole amount without the currency nor the cents, for the short
+ * «cobrado / esperado» pairs where the decimals only add noise. */
+export const whole = (value: string | number | null | undefined) =>
+  value === null || value === undefined || value === ''
+    ? '—'
+    : Math.round(Number(value)).toLocaleString('es-DO', { maximumFractionDigits: 0 })
+
+/** RD$ 2.22 M · RD$ 512 K: a large amount at a glance (hints, not totals). */
+export const short = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === '') return '—'
+  const number = Number(value)
+  if (Math.abs(number) >= 1_000_000) return `RD$ ${(number / 1_000_000).toFixed(2)} M`
+  if (Math.abs(number) >= 10_000) return `RD$ ${Math.round(number / 1000)} K`
+  return rd(number)
+}
+
 /** «RD$ 1,250.00» split so the currency can be drawn smaller than the figure. */
 export function splitAmount(value: unknown): { sign: string; amount: string } | null {
   if (typeof value !== 'string') return null
@@ -118,6 +134,42 @@ export function dateFromText(text: string): string | null {
   if (date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null // 31/02
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${y}-${pad(m)}-${pad(d)}`
+}
+
+const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const MONTHS_SHORT = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+]
+
+/** A date close to today the way people say it (decision 114): «Hoy»,
+ * «Mañana», «Lun 19 oct» within a week, «1 nov» farther away. */
+export function nearDay(iso: string | null | undefined, today = todayISO()): string {
+  if (!iso) return '—'
+  const date = new Date(`${iso.slice(0, 10)}T00:00:00`)
+  const base = new Date(`${today}T00:00:00`)
+  const days = Math.round((date.getTime() - base.getTime()) / 86_400_000)
+  if (days === 0) return 'Hoy'
+  if (days === 1) return 'Mañana'
+  const short = `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`
+  return Math.abs(days) <= 7 ? `${WEEKDAYS[date.getDay()]} ${short}` : short
+}
+
+/** «mar 2023»: since when, for «Cliente desde». */
+export const monthYear = (value: string | null | undefined) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return `${MONTHS_SHORT[date.getMonth()]} ${date.getFullYear()}`
 }
 
 /** Today as YYYY-MM-DD in local time (toISOString would give UTC's date). */

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
@@ -9,40 +9,26 @@ import {
   getLoanCalendar,
   getLoanDocuments,
   getLoanEvents,
-  listReasons,
   loanDocumentUrl,
-  renewLoan,
   uploadSignedNote,
-  voidLoan,
 } from '../api/origination'
 import { PaymentList } from '../components/PaymentList'
 import { buttonClass } from '../components/classes'
 import { CollectionTimeline } from '../components/CollectionTimeline'
 import { MoreMenu } from '../components/MoreMenu'
-import { ScheduleTable } from '../components/ScheduleTable'
+import { LoanCalendar } from '../components/LoanCalendar'
 import { Timeline } from '../components/Timeline'
-import {
-  CollectorDialog,
-  DateChangeDialog,
-  PayoffLetterDialog,
-  LegalCaseDialog,
-  RestructureDialog,
-  WriteOffDialog,
-} from './loan/LoanActions'
+import { useLoanMenu } from './loan/useLoanMenu'
 import {
   Alert,
   Badge,
   Button,
   Card,
-  Field,
   FilePicker,
-  Input,
   PageHeader,
-  Select,
   Spinner,
   Stat,
   Tabs,
-  Textarea,
 } from '../components/ui'
 import {
   day,
@@ -73,71 +59,11 @@ const MODE_TEXT: Record<string, string> = {
   cash: 'Cobrado en caja',
 }
 
-function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) {
-  const [reason, setReason] = useState('')
-  const [note, setNote] = useState('')
-  // Doc 08 - 5, grave action: reason, note and the loan number typed back.
-  const [typed, setTyped] = useState('')
-  const confirmed = typed.trim().toUpperCase() === number.toUpperCase()
-  const reasons = useQuery({ queryKey: ['reasons', 'void'], queryFn: () => listReasons('void') })
-  const run = useMutation({
-    meta: { inlineError: true },
-    mutationFn: () => voidLoan(number, reason, note),
-    onSuccess: onDone,
-  })
-  return (
-    <Card className="space-y-3 border-danger-600/40">
-      <h2 className="text-base font-semibold">Anular préstamo</h2>
-      <p className="text-sm text-muted">
-        Solo sin pagos. Revierte el desembolso y los cargos, devuelve el dinero a su origen y libera
-        las garantías. Nada se borra.
-      </p>
-      <Field label="Motivo">
-        <Select value={reason} onChange={(e) => setReason(e.target.value)}>
-          <option value="">Elegir…</option>
-          {reasons.data?.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.text}
-            </option>
-          ))}
-        </Select>
-      </Field>
-      <Field label="Nota">
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
-      </Field>
-      <Field label={`Para confirmar, escribe el número del préstamo (${number})`}>
-        <Input
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </Field>
-      {run.error instanceof ApiError ? (
-        <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
-      ) : null}
-      <div className="flex justify-end">
-        <Button
-          variant="danger"
-          disabled={!reason || !note.trim() || !confirmed || run.isPending}
-          onClick={() => run.mutate()}
-        >
-          Anular
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
 /** P32: header with the balance; the tabs explain any figure. */
 export function LoanDetailPage({ me }: { me: Me }) {
   const { numero } = useParams({ from: '/app/prestamos/$numero' })
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<TabKey>('resumen')
-  const [voiding, setVoiding] = useState(false)
-  const [dialog, setDialog] = useState<
-    'payoff' | 'dates' | 'collector' | 'restructure' | 'writeoff' | 'legal' | null
-  >(null)
   const loan = useQuery({ queryKey: ['loan', numero], queryFn: () => getLoan(numero) })
   const calendar = useQuery({
     queryKey: ['loan', numero, 'calendar'],
@@ -155,13 +81,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
     enabled: tab === 'cronologia',
   })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['loan', numero] })
-  const navigate = useNavigate()
-  const renewal = useMutation({
-    meta: { inlineError: true },
-    mutationFn: () => renewLoan(numero),
-    onSuccess: (application) =>
-      void navigate({ to: '/solicitudes/$id', params: { id: application.id } }),
-  })
+  const menu = useLoanMenu(me, loan.data)
   const [signed, setSigned] = useState<File | null>(null)
   const upload = useMutation({
     meta: { inlineError: true },
@@ -178,46 +98,6 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const status = LOAN_STATUS[data.status]
   const terms = data.current_terms
   const active = data.status === 'active'
-  const canVoid = active && hasRole(me, ACCESS.voidLoans)
-  const more = [
-    {
-      label: 'Estado de cuenta (PDF)',
-      onSelect: () =>
-        window.open(
-          `/api/v1/prestamos/${encodeURIComponent(numero)}/estado-de-cuenta/`,
-          '_blank',
-          'noopener',
-        ),
-    },
-    ...(active && hasRole(me, ACCESS.payoffLetters)
-      ? [{ label: 'Carta de saldo', onSelect: () => setDialog('payoff') }]
-      : []),
-    ...(active && hasRole(me, ACCESS.originate)
-      ? [
-          { label: 'Renovar', onSelect: () => renewal.mutate() },
-          { label: 'Reestructurar', onSelect: () => setDialog('restructure') },
-        ]
-      : []),
-    ...(active && hasRole(me, ACCESS.supervise)
-      ? [
-          { label: 'Cambiar fechas', onSelect: () => setDialog('dates') },
-          { label: 'Cambiar cobrador', onSelect: () => setDialog('collector') },
-        ]
-      : []),
-    ...((active || data.status === 'written_off') && !data.legal_case && hasRole(me, ['Gerente'])
-      ? [{ label: 'Enviar a la vía legal', onSelect: () => setDialog('legal') }]
-      : []),
-    ...(active && hasRole(me, ACCESS.writeOff)
-      ? [{ label: 'Castigar', onSelect: () => setDialog('writeoff'), danger: true }]
-      : []),
-    ...(canVoid && !voiding
-      ? [{ label: 'Anular', onSelect: () => setVoiding(true), danger: true }]
-      : []),
-  ]
-  const currentRows = (calendar.data?.installments ?? []).filter(
-    (row) => row.version === (terms?.version ?? 1),
-  )
-
   return (
     <>
       <PageHeader
@@ -261,7 +141,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
         }
         actions={
           <>
-            <MoreMenu items={more} />
+            <MoreMenu items={menu.items} />
             {(active || data.status === 'written_off') && hasRole(me, ACCESS.collect) ? (
               <Link to="/cobrar/$numero" params={{ numero }} className={buttonClass()}>
                 Cobrar
@@ -271,9 +151,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
         }
       />
 
-      {renewal.error instanceof ApiError ? (
-        <Alert tone="danger">{errorMessage(renewal.error.data)}</Alert>
-      ) : null}
+      {menu.error}
       {data.renewed_by_number ? (
         <Alert tone="info">
           Renovado por el préstamo{' '}
@@ -331,15 +209,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
           Pagaré firmado pendiente: súbelo escaneado en la pestaña Documentos.
         </Alert>
       ) : null}
-      {voiding ? (
-        <VoidDialog
-          number={numero}
-          onDone={() => {
-            setVoiding(false)
-            refresh()
-          }}
-        />
-      ) : null}
+      {menu.dialogs}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Capital pendiente" value={rd(data.principal_outstanding)} emphasis />
@@ -423,31 +293,15 @@ export function LoanDetailPage({ me }: { me: Me }) {
       ) : null}
 
       {tab === 'calendario' ? (
-        <Card>
+        <div className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
           {calendar.isPending ? (
-            <Spinner />
+            <div className="p-5">
+              <Spinner />
+            </div>
           ) : (
-            <>
-              <p className="mb-2 text-[12.5px] text-muted">
-                Versión {terms?.version} del calendario (desde {day(terms?.effective_from)}). Cada
-                cambio de fecha, abono a capital o reestructuración crea una versión nueva; ninguna
-                se modifica.
-              </p>
-              <ScheduleTable
-                principal={terms?.principal}
-                rows={currentRows.map((row) => ({
-                  number: row.number,
-                  due_date: row.due_date,
-                  original_due_date: row.original_due_date,
-                  principal: row.principal_due,
-                  interest: row.interest_due,
-                  total: row.total_due,
-                  status: row.status,
-                }))}
-              />
-            </>
+            <LoanCalendar rows={calendar.data?.installments ?? []} terms={terms ?? null} />
           )}
-        </Card>
+        </div>
       ) : null}
 
       {tab === 'pagos' ? (
@@ -470,48 +324,6 @@ export function LoanDetailPage({ me }: { me: Me }) {
           customerName={data.customer_name}
           canManage={active && hasRole(me, ACCESS.manageCollections)}
         />
-      ) : null}
-
-      {dialog === 'payoff' ? (
-        <PayoffLetterDialog number={numero} onClose={() => setDialog(null)} />
-      ) : null}
-      {dialog === 'legal' ? (
-        <LegalCaseDialog
-          number={numero}
-          onClose={() => setDialog(null)}
-          onOpened={(id) => void navigate({ to: '/legal/$id', params: { id } })}
-        />
-      ) : null}
-      {dialog === 'writeoff' ? (
-        <WriteOffDialog
-          number={numero}
-          me={me}
-          daysPastDue={data.days_past_due}
-          onClose={() => {
-            setDialog(null)
-            refresh()
-          }}
-        />
-      ) : null}
-      {dialog === 'restructure' && terms ? (
-        <RestructureDialog
-          number={numero}
-          current={{
-            installments: terms.installments,
-            frequency: terms.frequency,
-            rate: terms.rate,
-          }}
-          onClose={() => {
-            setDialog(null)
-            refresh()
-          }}
-        />
-      ) : null}
-      {dialog === 'dates' ? (
-        <DateChangeDialog number={numero} onClose={() => setDialog(null)} />
-      ) : null}
-      {dialog === 'collector' ? (
-        <CollectorDialog number={numero} current={data.collector} onClose={() => setDialog(null)} />
       ) : null}
 
       {tab === 'garantias' ? (

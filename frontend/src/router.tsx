@@ -296,7 +296,7 @@ const applicationNewRoute = createRoute({
     return {
       cliente: text('cliente'),
       producto: text('producto'),
-      monto: text('monto'),
+      monto: search.monto !== undefined ? String(search.monto) : undefined,
       cuotas: search.cuotas !== undefined ? String(search.cuotas) : undefined,
       frecuencia: text('frecuencia'),
       tasa: search.tasa !== undefined ? String(search.tasa) : undefined,
@@ -347,6 +347,9 @@ const receiptRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/recibos/$numero',
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.receipts),
+  // «nuevo»: just collected, the receipt opens with «Pago registrado» (decision 114).
+  validateSearch: (search: Record<string, unknown>): { nuevo?: number } =>
+    search.nuevo ? { nuevo: 1 } : {},
   component: withMe(ReceiptPage),
 })
 

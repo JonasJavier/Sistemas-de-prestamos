@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { ApiError } from '../../api/client'
-import { listReasons } from '../../api/origination'
+import { listReasons, voidLoan } from '../../api/origination'
 import type { Me } from '../../api/accounts'
 import { listProfessionals, openCase } from '../../api/legal'
 import {
@@ -20,6 +20,7 @@ import { Modal } from '../../components/Modal'
 import {
   Alert,
   Button,
+  Card,
   Field,
   Input,
   PercentInput,
@@ -491,5 +492,62 @@ export function LegalCaseDialog({
         </Button>
       </div>
     </Frame>
+  )
+}
+
+/** Doc 08 - 5, grave action: reason, note and the loan number typed back. */
+export function VoidDialog({ number, onDone }: { number: string; onDone: () => void }) {
+  const [reason, setReason] = useState('')
+  const [note, setNote] = useState('')
+  // Doc 08 - 5, grave action: reason, note and the loan number typed back.
+  const [typed, setTyped] = useState('')
+  const confirmed = typed.trim().toUpperCase() === number.toUpperCase()
+  const reasons = useQuery({ queryKey: ['reasons', 'void'], queryFn: () => listReasons('void') })
+  const run = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => voidLoan(number, reason, note),
+    onSuccess: onDone,
+  })
+  return (
+    <Card className="space-y-3 border-danger-600/40">
+      <h2 className="text-base font-semibold">Anular préstamo</h2>
+      <p className="text-sm text-muted">
+        Solo sin pagos. Revierte el desembolso y los cargos, devuelve el dinero a su origen y libera
+        las garantías. Nada se borra.
+      </p>
+      <Field label="Motivo">
+        <Select value={reason} onChange={(e) => setReason(e.target.value)}>
+          <option value="">Elegir…</option>
+          {reasons.data?.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.text}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Nota">
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
+      </Field>
+      <Field label={`Para confirmar, escribe el número del préstamo (${number})`}>
+        <Input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </Field>
+      {run.error instanceof ApiError ? (
+        <Alert tone="danger">{errorMessage(run.error.data)}</Alert>
+      ) : null}
+      <div className="flex justify-end">
+        <Button
+          variant="danger"
+          disabled={!reason || !note.trim() || !confirmed || run.isPending}
+          onClick={() => run.mutate()}
+        >
+          Anular
+        </Button>
+      </div>
+    </Card>
   )
 }
