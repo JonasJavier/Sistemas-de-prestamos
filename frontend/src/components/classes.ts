@@ -36,4 +36,9 @@ export const controlClass =
   'w-full rounded-control border border-edge bg-surface px-3 text-sm text-ink shadow-xs outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/70 hover:border-muted/40 focus-visible:border-accent-500 focus-visible:ring-3 focus-visible:ring-accent-500/25 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted'
 
 /** The white panel every screen is built from. */
-export const cardClass = 'rounded-xl border border-edge bg-surface shadow-sm'
+export const cardClass = 'rounded-card border border-edge bg-surface shadow-sm'
+
+/** A row of a <Table> (decision 116): a card line on a phone, the columns of
+ * the table from a tablet up. For links and buttons that are the row. */
+export const tableRowClass =
+  'press flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 text-[13px] outline-none hover:bg-brand-50/60 focus-visible:bg-brand-50 active:bg-brand-100/60 md:grid md:grid-cols-[var(--cols)] md:justify-normal md:gap-x-4 md:px-5'

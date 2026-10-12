@@ -3,6 +3,8 @@ import { CheckIcon } from './icons'
 export interface Step {
   label: string
   hint: string
+  /** An anchor of the page: the step takes there (the application's file). */
+  href?: string
 }
 
 /** The steps of a long task (decision 115): vertical with a line between
@@ -37,14 +39,31 @@ export function Steps({ steps, current }: { steps: Step[]; current: number }) {
               >
                 {done ? <CheckIcon /> : index + 1}
               </span>
-              <span className="min-w-0 pt-0.5" aria-current={here ? 'step' : undefined}>
-                <span
-                  className={`block text-[13.5px] ${here || done ? 'font-semibold text-ink' : 'font-medium text-muted'}`}
-                >
-                  {step.label}
-                </span>
-                <span className="block truncate text-[12px] text-muted">{step.hint}</span>
-              </span>
+              {(() => {
+                const text = (
+                  <>
+                    <span
+                      className={`block text-[13.5px] ${here || done ? 'font-semibold text-ink' : 'font-medium text-muted'}`}
+                    >
+                      {step.label}
+                    </span>
+                    <span className="block truncate text-[12px] text-muted">{step.hint}</span>
+                  </>
+                )
+                return step.href ? (
+                  <a
+                    href={step.href}
+                    aria-current={here ? 'step' : undefined}
+                    className="min-w-0 rounded-md pt-0.5 outline-none hover:[&>span:first-child]:text-brand-700 focus-visible:ring-2 focus-visible:ring-accent-500"
+                  >
+                    {text}
+                  </a>
+                ) : (
+                  <span className="min-w-0 pt-0.5" aria-current={here ? 'step' : undefined}>
+                    {text}
+                  </span>
+                )
+              })()}
             </li>
           )
         })}

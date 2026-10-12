@@ -17,6 +17,7 @@ import { buttonClass } from '../components/classes'
 import { CollectionTimeline } from '../components/CollectionTimeline'
 import { MoreMenu } from '../components/MoreMenu'
 import { LoanCalendar } from '../components/LoanCalendar'
+import { CollectIcon } from '../components/icons'
 import { Timeline } from '../components/Timeline'
 import { useLoanMenu } from './loan/useLoanMenu'
 import {
@@ -25,7 +26,7 @@ import {
   Button,
   Card,
   FilePicker,
-  PageHeader,
+  Avatar,
   Spinner,
   Stat,
   Tabs,
@@ -38,8 +39,10 @@ import {
   METHOD_TEXT,
   moment,
   pct,
+  plural,
   rd,
 } from '../lib/format'
+import { useDocumentTitle } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 
 const TABS = [
@@ -82,6 +85,7 @@ export function LoanDetailPage({ me }: { me: Me }) {
   })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['loan', numero] })
   const menu = useLoanMenu(me, loan.data)
+  useDocumentTitle(`Préstamo ${numero}`)
   const [signed, setSigned] = useState<File | null>(null)
   const upload = useMutation({
     meta: { inlineError: true },
@@ -100,56 +104,62 @@ export function LoanDetailPage({ me }: { me: Me }) {
   const active = data.status === 'active'
   return (
     <>
-      <PageHeader
-        back={
-          <Link to="/prestamos" className="hover:underline">
-            ← Préstamos
-          </Link>
-        }
-        documentTitle={`Préstamo ${data.number}`}
-        title={
-          <span className="flex flex-wrap items-center gap-2">
-            Préstamo <span className="tabular-nums">{data.number}</span>
-            <Badge tone={status?.tone}>{status?.label ?? data.status}</Badge>
-          </span>
-        }
-        subtitle={
-          <>
-            <Link
-              to="/clientes/$id"
-              params={{ id: data.customer }}
-              className="font-medium text-ink hover:underline"
-            >
-              {data.customer_name}
-            </Link>{' '}
-            · {data.product_name} · sucursal {data.branch_code}
-            {data.collector_name ? ` · cobra ${data.collector_name}` : ''}
-            {data.application ? (
-              <>
-                {' '}
-                · solicitud{' '}
-                <Link
-                  to="/solicitudes/$id"
-                  params={{ id: data.application }}
-                  className="hover:underline"
-                >
-                  {data.application_number}
+      <section className="flex flex-wrap items-center gap-x-5 gap-y-4 rounded-card border border-edge bg-surface px-4 py-4 shadow-sm sm:px-6 sm:py-5">
+        <div className="flex min-w-0 flex-1 basis-72 items-center gap-4">
+          <Avatar name={data.customer_name} size="lg" />
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow">
+              <Link to="/prestamos" className="hover:text-ink">
+                Préstamos
+              </Link>{' '}
+              · <span className="tabular-nums">{data.number}</span>
+            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <h1 className="text-[21px] leading-tight sm:text-[24px]">
+                <Link to="/clientes/$id" params={{ id: data.customer }} className="hover:underline">
+                  {data.customer_name}
                 </Link>
-              </>
-            ) : null}
-          </>
-        }
-        actions={
-          <>
-            <MoreMenu items={menu.items} />
-            {(active || data.status === 'written_off') && hasRole(me, ACCESS.collect) ? (
-              <Link to="/cobrar/$numero" params={{ numero }} className={buttonClass()}>
-                Cobrar
-              </Link>
-            ) : null}
-          </>
-        }
-      />
+              </h1>
+              <Badge tone={status?.tone} dot>
+                {status?.label ?? data.status}
+              </Badge>
+              {active && data.days_past_due > 0 ? (
+                <Badge tone={data.days_past_due > 30 ? 'danger' : 'warning'} dot>
+                  {plural(data.days_past_due, 'día')} de atraso
+                </Badge>
+              ) : null}
+            </div>
+            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-muted">
+              <span>{data.product_name}</span>
+              <span>Sucursal {data.branch_code}</span>
+              <span>
+                {data.collector_name ? `Cobra ${data.collector_name}` : 'Paga en oficina'}
+              </span>
+              {data.application ? (
+                <span>
+                  Solicitud{' '}
+                  <Link
+                    to="/solicitudes/$id"
+                    params={{ id: data.application }}
+                    className="hover:text-ink hover:underline"
+                  >
+                    {data.application_number}
+                  </Link>
+                </span>
+              ) : null}
+            </p>
+          </div>
+        </div>
+        <div className="flex w-full items-center gap-2 sm:w-auto [&>*]:max-sm:flex-1">
+          <MoreMenu items={menu.items} />
+          {(active || data.status === 'written_off') && hasRole(me, ACCESS.collect) ? (
+            <Link to="/cobrar/$numero" params={{ numero }} className={buttonClass()}>
+              <CollectIcon className="size-[18px] shrink-0" />
+              Cobrar
+            </Link>
+          ) : null}
+        </div>
+      </section>
 
       {menu.error}
       {data.renewed_by_number ? (

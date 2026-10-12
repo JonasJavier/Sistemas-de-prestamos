@@ -3,8 +3,9 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { listApplications } from '../api/origination'
-import { Card, EmptyState, PageHeader, Pagination, Spinner } from '../components/ui'
-import { day, rd } from '../lib/format'
+import { Badge, EmptyState, PageHeader, Pagination, Spinner, Table } from '../components/ui'
+import { tableRowClass } from '../components/classes'
+import { plural, rd, todayISO } from '../lib/format'
 
 /** P29: approved, still-valid applications waiting for their money. */
 export function DisbursementsPage() {
@@ -22,33 +23,70 @@ export function DisbursementsPage() {
       {query.isPending ? (
         <Spinner />
       ) : query.data && query.data.results.length > 0 ? (
-        <Card className="!p-0">
-          <ul className="divide-y divide-edge">
-            {query.data.results.map((app) => (
-              <li key={app.id}>
-                <Link
-                  to="/desembolsos/$id"
-                  params={{ id: app.id }}
-                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-brand-50/60"
-                >
-                  <div>
-                    <div className="font-semibold tabular-nums">{app.number}</div>
-                    <div className="text-sm">{app.customer_name}</div>
-                    <div className="text-[12.5px] text-muted">{app.product_name}</div>
-                  </div>
-                  <div className="sm:text-right">
-                    <div className="font-display font-bold tabular-nums">
-                      {rd(app.approved_amount)}
-                    </div>
-                    <div className="text-[12.5px] text-muted">
-                      Vence la aprobación el {day(app.valid_until)}
-                    </div>
-                  </div>
+        <Table
+          label="Por desembolsar"
+          columns="minmax(0,0.9fr) minmax(0,1.6fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.1fr)"
+          head={[
+            { label: 'Solicitud' },
+            { label: 'Cliente' },
+            { label: 'Producto' },
+            { label: 'Aprobado', align: 'right' },
+            { label: 'Vigencia' },
+          ]}
+          footer={
+            <>
+              <span>{plural(query.data.count, 'solicitud aprobada', 'solicitudes aprobadas')}</span>
+              <span className="tabular-nums">
+                {rd(
+                  query.data.results.reduce(
+                    (sum, app) => sum + Number(app.approved_amount ?? 0),
+                    0,
+                  ),
+                )}{' '}
+                en esta página
+              </span>
+            </>
+          }
+        >
+          {query.data.results.map((app, index) => {
+            const left = app.valid_until
+              ? Math.round(
+                  (new Date(`${app.valid_until}T00:00:00`).getTime() -
+                    new Date(`${todayISO()}T00:00:00`).getTime()) /
+                    86_400_000,
+                )
+              : null
+            return (
+              <li
+                key={app.id}
+                className="animate-reveal"
+                style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
+              >
+                <Link to="/desembolsos/$id" params={{ id: app.id }} className={tableRowClass}>
+                  <span className="font-semibold tabular-nums">{app.number}</span>
+                  <span className="min-w-0 max-md:order-first max-md:basis-full">
+                    <span className="block truncate text-[13.5px] font-medium">
+                      {app.customer_name}
+                    </span>
+                  </span>
+                  <span className="truncate text-muted max-md:hidden">{app.product_name}</span>
+                  <span className="text-right font-display text-[15px] font-semibold tabular-nums">
+                    {rd(app.approved_amount)}
+                  </span>
+                  <span>
+                    <Badge tone={left !== null && left <= 3 ? 'warning' : 'neutral'} dot>
+                      {left === null
+                        ? 'Sin vencimiento'
+                        : left <= 0
+                          ? 'Vence hoy'
+                          : `Vence en ${plural(left, 'día')}`}
+                    </Badge>
+                  </span>
                 </Link>
               </li>
-            ))}
-          </ul>
-        </Card>
+            )
+          })}
+        </Table>
       ) : (
         <EmptyState>No hay solicitudes aprobadas esperando desembolso.</EmptyState>
       )}

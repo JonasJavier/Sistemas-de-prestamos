@@ -12,7 +12,7 @@ import {
 import { ApiError } from '../api/client'
 import type { Me } from '../api/accounts'
 import { CashDifferences } from '../components/CashDifferences'
-import { buttonClass } from '../components/classes'
+import { buttonClass, tableRowClass } from '../components/classes'
 import {
   Alert,
   Badge,
@@ -23,11 +23,10 @@ import {
   Input,
   PageHeader,
   Pagination,
-  RowList,
+  Segmented,
   Spinner,
   Stat,
-  Tabs,
-  rowLinkClass,
+  Table,
 } from '../components/ui'
 import { day, errorMessage, moment, rd } from '../lib/format'
 
@@ -61,37 +60,73 @@ export function CashSessionsPage({ me }: { me: Me }) {
   return (
     <>
       <PageHeader title="Cajas" subtitle="Cierres por aprobar, cajas abiertas e historial" />
-      <Tabs tabs={TABS} value={tab} onChange={setTab} />
+      <Segmented
+        label="Bandeja"
+        value={tab}
+        onChange={setTab}
+        options={TABS.map(([value, label]) => ({ value, label }))}
+      />
       {tab === 'differences' ? (
         <CashDifferences me={me} />
       ) : sessions.isPending ? (
         <Spinner />
       ) : sessions.data?.results.length ? (
-        <RowList>
-          {sessions.data.results.map((s) => (
-            <li key={s.id}>
-              <Link to="/cajas/$id" params={{ id: s.id }} className={rowLinkClass}>
-                <span className="min-w-0">
-                  <span className="font-semibold tabular-nums">{s.number}</span>{' '}
-                  <span className="text-muted">
-                    · {s.cashier_name} · {s.branch_name}
+        <Table
+          label="Cajas"
+          columns="minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,0.9fr)"
+          head={[
+            { label: 'Caja' },
+            { label: 'Cajero · sucursal' },
+            { label: 'Contado', align: 'right' },
+            { label: 'Diferencia' },
+            { label: 'Estado' },
+          ]}
+        >
+          {sessions.data.results.map((s, index) => {
+            const diff = Number(s.difference ?? 0)
+            return (
+              <li
+                key={s.id}
+                className="animate-reveal"
+                style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
+              >
+                <Link to="/cajas/$id" params={{ id: s.id }} className={tableRowClass}>
+                  <span>
+                    <span className="block font-semibold tabular-nums">{s.number}</span>
+                    <span className="block text-[12px] text-muted">{day(s.business_date)}</span>
                   </span>
-                  <span className="block text-[12.5px] text-muted">{day(s.business_date)}</span>
-                </span>
-                <span className="flex items-center gap-3">
-                  {s.difference && Number(s.difference) !== 0 ? (
-                    <Badge tone="danger">
-                      {Number(s.difference) < 0 ? 'Faltan' : 'Sobran'}{' '}
-                      {rd(Math.abs(Number(s.difference)))}
+                  <span className="min-w-0 max-md:order-first max-md:basis-full">
+                    <span className="block truncate text-[13.5px] font-medium">
+                      {s.cashier_name}
+                    </span>
+                    <span className="block truncate text-[12px] text-muted">{s.branch_name}</span>
+                  </span>
+                  <span className="text-right font-display text-[15px] font-semibold tabular-nums">
+                    {rd(s.counted ?? s.expected)}
+                  </span>
+                  <span>
+                    {diff ? (
+                      <Badge tone="danger" dot>
+                        {diff < 0 ? 'Faltan' : 'Sobran'} {rd(Math.abs(diff))}
+                      </Badge>
+                    ) : s.difference !== null && s.difference !== undefined ? (
+                      <Badge tone="brand" dot>
+                        Cuadró
+                      </Badge>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </span>
+                  <span>
+                    <Badge tone={STATUS_TONE[s.status]} dot>
+                      {s.status_label}
                     </Badge>
-                  ) : null}
-                  <span className="tabular-nums">{rd(s.counted ?? s.expected)}</span>
-                  <Badge tone={STATUS_TONE[s.status]}>{s.status_label}</Badge>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </RowList>
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </Table>
       ) : (
         <EmptyState>
           {tab === 'closed'

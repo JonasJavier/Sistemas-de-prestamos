@@ -33,7 +33,9 @@ import {
   Spinner,
   Stat,
   Textarea,
+  Texture,
 } from '../components/ui'
+import { ArrowsIcon, InvoiceIcon } from '../components/icons'
 import { amountValue, errorMessage, moment, num, plural, rd, toAmount } from '../lib/format'
 import { notify } from '../lib/toast'
 
@@ -480,45 +482,81 @@ function CloseDialog({
   )
 }
 
-/** Fund + in − out = expected: the four figures add up on screen (F7), and
- * what was collected by each method sits underneath. */
-function DrawerFigures({ session }: { session: CashSession }) {
+/** Fund + in − out = expected (F7, decision 116): the figure of the drawer in
+ * big with the sum under it, and what came in by each method beside it. */
+function DrawerFigures({ session, live }: { session: CashSession; live: boolean }) {
   const movements = session.movements ?? []
   const sum = (key: 'in' | 'out') => movements.reduce((total, m) => total + Number(m[key] ?? 0), 0)
   // The opening fund is the session's first line in: it is shown on its own.
   const fund = Number(session.carried_over) + Number(session.funded_amount)
   const incoming = sum('in') - Number(session.funded_amount)
   const methods = Object.entries(session.by_method)
+  const [units, cents = '00'] = rd(session.expected).replace('RD$ ', '').split('.')
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat
-          label="Fondo de apertura"
-          value={rd(fund)}
-          // What stayed in the drawer is no movement of this session: say it.
-          hint={
-            Number(session.carried_over)
-              ? `${rd(session.carried_over)} de la caja anterior + ${rd(session.funded_amount)} recibido`
-              : undefined
-          }
-        />
-        <Stat label="Entradas" value={rd(incoming)} />
-        <Stat label="Salidas" value={rd(sum('out'))} />
-        <Stat label="Esperado en caja" value={rd(session.expected)} emphasis />
+    <section className="relative grid overflow-hidden rounded-[18px] border border-edge bg-surface shadow-sm md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <Texture tone="sand" />
+      <div className="relative px-5 py-5 sm:px-7 md:border-r md:border-edge">
+        {/* Label and figure alone in their box: what reads the drawer reads just these. */}
+        <div>
+          <span className="flex items-center gap-2 text-[13px] font-medium text-muted">
+            <span
+              aria-hidden
+              className={`size-[7px] shrink-0 rounded-full bg-brand-700 ${live ? 'animate-live' : ''}`}
+            />
+            Esperado en caja
+          </span>
+          <div className="mt-1 flex items-baseline gap-1.5 font-display tracking-[-0.035em]">
+            <span className="text-[18px] font-semibold text-muted sm:text-[22px]">RD$</span>
+            <span className="text-[40px] leading-[1.05] font-bold tabular-nums sm:text-[52px]">
+              {units}
+            </span>
+            <span className="text-lg font-semibold text-muted sm:text-2xl">.{cents}</span>
+          </div>
+        </div>
+        <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-edge pt-3 text-[12.5px]">
+          <div>
+            <dt className="text-muted">Fondo de apertura</dt>
+            <dd className="font-semibold tabular-nums">{rd(fund)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">+ Entradas</dt>
+            <dd className="font-semibold tabular-nums text-success-600">{rd(incoming)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">− Salidas</dt>
+            <dd className="font-semibold tabular-nums">{rd(sum('out'))}</dd>
+          </div>
+        </dl>
+        {Number(session.carried_over) ? (
+          <p className="mt-2 text-[12px] text-muted">
+            {rd(session.carried_over)} de la caja anterior + {rd(session.funded_amount)} recibido.
+          </p>
+        ) : null}
       </div>
-      {methods.length ? (
-        <p className="text-[12.5px] text-muted">
-          Cobrado en esta caja:{' '}
-          {methods
-            .map(
-              ([method, total]) =>
-                `${METHOD_LABEL[method] ?? method} ${rd(total.amount)} (${total.count})`,
-            )
-            .join(' · ')}
-          . Solo el efectivo entra al cajón.
-        </p>
-      ) : null}
-    </div>
+      <div className="relative border-t border-edge px-5 py-5 sm:px-7 md:border-t-0">
+        <div className="eyebrow mb-2">Cobrado en esta caja</div>
+        {methods.length ? (
+          <ul className="divide-y divide-edge text-[13.5px]">
+            {methods.map(([method, total]) => (
+              <li key={method} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={`size-2 rounded-full ${method === 'cash' ? 'bg-brand-700' : 'bg-info-700'}`}
+                  />
+                  {METHOD_LABEL[method] ?? method}
+                  <span className="text-[12px] text-muted">{plural(total.count, 'cobro')}</span>
+                </span>
+                <span className="font-semibold tabular-nums">{rd(total.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-muted">Sin cobros todavía.</p>
+        )}
+        <p className="mt-2 text-[12px] text-muted">Solo el efectivo entra al cajón.</p>
+      </div>
+    </section>
   )
 }
 
@@ -537,11 +575,23 @@ export function MyCashPage({ me }: { me: Me }) {
   return (
     <>
       <PageHeader
-        title="Mi caja"
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            Mi caja
+            {session ? (
+              <Badge tone={stale ? 'danger' : 'brand'} dot>
+                {stale ? 'De un día anterior' : 'Abierta'}
+              </Badge>
+            ) : (
+              <Badge dot>Cerrada</Badge>
+            )}
+          </span>
+        }
+        documentTitle="Mi caja"
         subtitle={
           session
             ? `${session.number} · ${session.branch_name} · abierta ${moment(session.opened_at)}`
-            : 'Sin caja abierta'
+            : 'Sin caja abierta. Ábrela con su fondo para cobrar y desembolsar en efectivo.'
         }
         actions={
           session ? <Button onClick={() => setDialog('close')}>Arqueo y cierre</Button> : null
@@ -557,117 +607,148 @@ export function MyCashPage({ me }: { me: Me }) {
               entonces no cobra, no desembolsa ni recibe rendiciones.
             </Alert>
           ) : null}
-          <DrawerFigures session={session} />
+          <DrawerFigures session={session} live={!stale} />
           {stale ? null : (
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => setDialog('move')}>
+                <ArrowsIcon className="size-[18px] shrink-0" />
                 Depositar o trasladar
               </Button>
               <Button variant="secondary" onClick={() => setDialog('petty')}>
+                <InvoiceIcon className="size-[18px] shrink-0" />
                 Gasto menor
               </Button>
             </div>
           )}
 
-          <CashDifferences me={me} mineOnly />
+          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="min-w-0 space-y-4">
+              <section className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+                <h2 className="px-5 py-3.5 text-[16px] font-semibold">Movimientos de efectivo</h2>
+                {session.movements?.length ? (
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Hora</th>
+                          <th>Tipo</th>
+                          <th className="hidden sm:table-cell">Detalle</th>
+                          <th className="hidden text-right sm:table-cell">Entra</th>
+                          <th className="hidden text-right sm:table-cell">Sale</th>
+                          {/* A phone has room for one signed amount, not two columns. */}
+                          <th className="text-right sm:hidden">RD$</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {session.movements.map((m, i) => (
+                          <tr key={i} className="align-top">
+                            <td className="whitespace-nowrap text-muted">
+                              {new Date(m.at).toLocaleTimeString('es-DO', { timeStyle: 'short' })}
+                            </td>
+                            <td>
+                              <div className="whitespace-nowrap font-medium">{m.kind}</div>
+                              {/* On a phone the detail goes under the type, not off screen. */}
+                              <div className="text-[12px] text-muted sm:hidden">
+                                {m.description}
+                              </div>
+                            </td>
+                            <td className="hidden text-muted sm:table-cell" title={m.description}>
+                              <div className="max-w-[18rem] truncate">{m.description}</div>
+                            </td>
+                            <td className="hidden whitespace-nowrap text-right font-medium text-success-600 sm:table-cell">
+                              {m.in ? rd(m.in) : ''}
+                            </td>
+                            <td className="hidden whitespace-nowrap text-right font-medium sm:table-cell">
+                              {m.out ? rd(m.out) : ''}
+                            </td>
+                            <td
+                              className={`whitespace-nowrap text-right font-medium sm:hidden ${m.out ? 'text-danger-600' : 'text-success-600'}`}
+                            >
+                              {m.in ? `+${num(m.in)}` : `−${num(m.out)}`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="px-5 pb-5">
+                    <EmptyState>Aún no hay movimientos en esta caja.</EmptyState>
+                  </div>
+                )}
+              </section>
 
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">Rendiciones por recibir</h2>
-            {data.routes_to_settle.length ? (
-              <ul className="divide-y divide-edge text-sm">
-                {data.routes_to_settle.map((route) => (
-                  <li
-                    key={route.id}
-                    className="flex flex-wrap items-center justify-between gap-2 py-2"
+              <Card className="space-y-2">
+                <h2 className="text-[16px] font-semibold">Recibos de esta caja</h2>
+                <PaymentList
+                  filter={{ cash_session: session.id }}
+                  queryKey={['payments', 'session', session.id]}
+                  describe={(p) => `${p.customer_name} · ${p.method_label}`}
+                  empty="Sin cobros todavía."
+                />
+              </Card>
+            </div>
+
+            <aside className="space-y-4">
+              <section
+                className={`relative overflow-hidden rounded-card px-5 py-4 shadow-sm ${
+                  data.routes_to_settle.length
+                    ? 'bg-brand-950 text-on-forest'
+                    : 'border border-edge bg-surface'
+                }`}
+              >
+                {data.routes_to_settle.length ? <Texture tone="forest" /> : null}
+                <div className="relative">
+                  <h2
+                    className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                      data.routes_to_settle.length ? 'text-brand-200' : 'text-muted'
+                    }`}
                   >
-                    <span>
-                      <strong>{route.collector_name}</strong> · {plural(route.payments, 'cobro')}
-                      {route.business_date < data.today ? (
-                        <Badge tone="danger">de un día anterior</Badge>
-                      ) : null}
-                    </span>
-                    <span className="flex items-center gap-3">
-                      <span className="tabular-nums">{rd(route.expected)}</span>
-                      <Button
-                        variant="secondary"
-                        disabled={Boolean(stale)}
-                        title={stale ? 'Primero cierra la caja del día anterior' : undefined}
-                        onClick={() => setSettling(route)}
-                      >
-                        Recibir
-                      </Button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">Ningún cobrador tiene efectivo pendiente.</p>
-            )}
-          </Card>
-
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">Movimientos de efectivo</h2>
-            {session.movements?.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-[12px] text-muted">
-                    <tr>
-                      <th className="py-1">Hora</th>
-                      <th>Tipo</th>
-                      <th className="hidden sm:table-cell">Detalle</th>
-                      <th className="hidden text-right sm:table-cell">Entra</th>
-                      <th className="hidden text-right sm:table-cell">Sale</th>
-                      {/* A phone has room for one signed amount, not two columns. */}
-                      <th className="text-right sm:hidden">RD$</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-edge">
-                    {session.movements.map((m, i) => (
-                      <tr key={i} className="align-top">
-                        <td className="py-1.5 whitespace-nowrap">
-                          {new Date(m.at).toLocaleTimeString('es-DO', { timeStyle: 'short' })}
-                        </td>
-                        <td className="py-1.5">
-                          <div className="whitespace-nowrap">{m.kind}</div>
-                          {/* On a phone the detail goes under the type, not off screen. */}
-                          <div className="text-[12px] text-muted sm:hidden">{m.description}</div>
-                        </td>
-                        <td
-                          className="hidden max-w-xs truncate py-1.5 text-muted sm:table-cell"
-                          title={m.description}
+                    <span aria-hidden className="size-1.5 rounded-full bg-gold-500" />
+                    Rendiciones por recibir
+                  </h2>
+                  {data.routes_to_settle.length ? (
+                    <ul className="mt-2 divide-y divide-white/10">
+                      {data.routes_to_settle.map((route) => (
+                        <li
+                          key={route.id}
+                          className="flex flex-wrap items-center justify-between gap-2 py-2.5"
                         >
-                          {m.description}
-                        </td>
-                        <td className="hidden whitespace-nowrap py-1.5 text-right tabular-nums sm:table-cell">
-                          {m.in ? rd(m.in) : ''}
-                        </td>
-                        <td className="hidden whitespace-nowrap py-1.5 text-right tabular-nums sm:table-cell">
-                          {m.out ? rd(m.out) : ''}
-                        </td>
-                        <td
-                          className={`whitespace-nowrap py-1.5 text-right font-medium tabular-nums sm:hidden ${m.out ? 'text-danger-600' : 'text-success-600'}`}
-                        >
-                          {m.in ? `+${num(m.in)}` : `−${num(m.out)}`}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <EmptyState>Aún no hay movimientos en esta caja.</EmptyState>
-            )}
-          </Card>
+                          <span className="min-w-0">
+                            <span className="block font-semibold">{route.collector_name}</span>
+                            <span className="block text-[12px] text-brand-200">
+                              {plural(route.payments, 'cobro')}
+                              {route.business_date < data.today ? ' · de un día anterior' : ''}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-3">
+                            <span className="font-display text-[17px] font-bold tabular-nums">
+                              {rd(route.expected)}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={Boolean(stale)}
+                              title={stale ? 'Primero cierra la caja del día anterior' : undefined}
+                              onClick={() => setSettling(route)}
+                              className="press press-down h-9 rounded-control bg-forest-accent px-3.5 text-[13px] font-semibold text-on-forest-accent disabled:opacity-50"
+                            >
+                              Recibir
+                            </button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-[13px] text-muted">
+                      Ningún cobrador tiene efectivo pendiente.
+                    </p>
+                  )}
+                </div>
+              </section>
+              <CashDifferences me={me} mineOnly />
+            </aside>
+          </div>
 
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">Recibos de esta caja</h2>
-            <PaymentList
-              filter={{ cash_session: session.id }}
-              queryKey={['payments', 'session', session.id]}
-              describe={(p) => `${p.customer_name} · ${p.method_label}`}
-              empty="Sin cobros todavía."
-            />
-          </Card>
           {dialog === 'move' ? <MoveDialog data={data} onClose={() => setDialog(null)} /> : null}
           {dialog === 'petty' ? (
             <ExpenseDialog

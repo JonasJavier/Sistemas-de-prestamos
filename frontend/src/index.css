@@ -253,6 +253,52 @@ h1 {
   background-image: radial-gradient(rgb(255 255 255 / 0.1) 1px, transparent 1px);
 }
 
+/* Tables of figures (decision 116): the head on the sand of surface-2,
+   13 px rows with a line between them and a soft hover; the first and last
+   columns keep the card's 20 px margin. Inside a card with no padding. */
+@layer components {
+  .data-table {
+    width: 100%;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table thead th {
+    background-color: var(--color-surface-2);
+    border-block: 1px solid var(--color-edge);
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+  .data-table tbody td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-edge);
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .data-table tbody tr {
+    transition: background-color 150ms;
+  }
+  .data-table tbody tr:hover {
+    background-color: color-mix(in oklab, var(--color-brand-50) 70%, transparent);
+  }
+  .data-table tfoot td {
+    padding: 0.65rem 0.75rem;
+    border-top: 1px solid var(--color-edge);
+    background-color: var(--color-surface-2);
+    font-weight: 600;
+  }
+  .data-table :is(th, td):first-child {
+    padding-left: 1.25rem;
+  }
+  .data-table :is(th, td):last-child {
+    padding-right: 1.25rem;
+  }
+}
+
 @layer base {
   /* Columns never run into each other («11:44 p. m.Cobro»): every cell but
      the last keeps a gap; a utility on the cell still overrides it. */

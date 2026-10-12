@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
@@ -902,4 +903,58 @@ export function RowList({ children }: { children: ReactNode }) {
 }
 
 export const rowLinkClass =
-  'press flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none hover:bg-brand-50/60 focus-visible:bg-brand-50 active:bg-brand-100/60'
+  'press flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none hover:bg-brand-50/60 focus-visible:bg-brand-50 active:bg-brand-100/60 sm:px-5'
+
+export interface Column {
+  label: ReactNode
+  align?: 'right'
+}
+
+/** A table as in the redesign (decision 116): a card with the head on
+ * surface-2 and one line per row, the columns from a tablet up (the template
+ * goes in --cols) and a card line on a phone. Rows are <li> holding a link or
+ * a button with `tableRowClass`, or a <div> with it. */
+export function Table({
+  columns,
+  head,
+  children,
+  footer,
+  label,
+  className = '',
+}: {
+  /** grid-template-columns of the rows, e.g. «minmax(0,2fr) minmax(0,1fr) 120px». */
+  columns: string
+  head?: Column[]
+  children: ReactNode
+  footer?: ReactNode
+  label?: string
+  className?: string
+}) {
+  return (
+    <div
+      className={`overflow-hidden ${cardClass} ${className}`}
+      style={{ '--cols': columns } as CSSProperties}
+    >
+      {head ? (
+        <div
+          aria-hidden
+          className="hidden gap-x-4 border-b border-edge bg-surface-2 px-5 py-2.5 text-[12px] font-medium text-muted md:grid md:grid-cols-[var(--cols)]"
+        >
+          {head.map((column, index) => (
+            <span key={index} className={column.align === 'right' ? 'text-right' : ''}>
+              {column.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <ul aria-label={label} className="divide-y divide-edge">
+        {children}
+      </ul>
+      {footer ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-edge bg-surface-2 px-5 py-3 text-[13px] font-semibold">
+          {footer}
+        </div>
+      ) : null}
+    </div>
+  )
+}

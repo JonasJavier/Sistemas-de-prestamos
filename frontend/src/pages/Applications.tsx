@@ -4,18 +4,18 @@ import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
 import { listApplications } from '../api/origination'
+import { PlusIcon } from '../components/icons'
 import {
   Badge,
   EmptyState,
   PageHeader,
   Pagination,
-  rowLinkClass,
-  RowList,
   SearchInput,
+  Segmented,
   Spinner,
-  Tabs,
+  Table,
 } from '../components/ui'
-import { buttonClass } from '../components/classes'
+import { buttonClass, tableRowClass } from '../components/classes'
 import { APPLICATION_STATUS, dateOf, day, installmentsText, rd } from '../lib/format'
 import type { ApplicationsSearch, ApplicationTab } from '../lib/applications'
 import { useDebounced } from '../lib/hooks'
@@ -67,82 +67,112 @@ export function ApplicationsPage({ me }: { me: Me }) {
       <PageHeader
         title="Solicitudes"
         subtitle="Del simulador a la aprobación: nadie aprueba lo que creó."
+        inline
         actions={
           originator ? (
-            <Link to="/solicitudes/nueva" className={buttonClass()}>
-              Nueva solicitud
+            <Link
+              to="/solicitudes/nueva"
+              aria-label="Nueva solicitud"
+              className={buttonClass('primary', 'max-sm:size-11 max-sm:px-0')}
+            >
+              <PlusIcon />
+              <span className="hidden sm:inline">Nueva solicitud</span>
             </Link>
           ) : null
         }
       />
-      <Tabs
-        tabs={tabs}
-        value={tab}
-        onChange={(next) => {
-          setPage(1)
-          void navigate({ search: { bandeja: next }, replace: true })
-        }}
-      />
-      <SearchInput
-        value={q}
-        onChange={(e) => {
-          setQ(e.target.value)
-          setPage(1)
-        }}
-        placeholder="Buscar por número, cliente o cédula…"
-      />
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Segmented
+          label="Bandeja"
+          value={tab}
+          onChange={(next) => {
+            setPage(1)
+            void navigate({ search: { bandeja: next }, replace: true })
+          }}
+          options={tabs.map(([value, label]) => ({ value, label }))}
+        />
+        <div className="hidden flex-1 lg:block" />
+        <SearchInput
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setPage(1)
+          }}
+          placeholder="Buscar por número, cliente o cédula…"
+          className="w-full max-sm:order-first sm:w-auto sm:min-w-64 sm:flex-1 lg:max-w-80 lg:flex-none"
+        />
+      </div>
       {query.isPending ? (
         <Spinner />
       ) : rows.length > 0 ? (
         <>
-          <RowList>
-            {rows.map((app) => {
+          <Table
+            label="Solicitudes"
+            columns="minmax(0,0.9fr) minmax(0,1.5fr) minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr)"
+            head={[
+              { label: 'Solicitud' },
+              { label: 'Cliente' },
+              { label: 'Producto y plazo' },
+              { label: 'Monto', align: 'right' },
+              { label: 'Estado' },
+            ]}
+          >
+            {rows.map((app, index) => {
               const status = APPLICATION_STATUS[app.status]
               return (
-                <li key={app.id}>
-                  <Link to="/solicitudes/$id" params={{ id: app.id }} className={rowLinkClass}>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold tabular-nums">{app.number}</span>
-                        <Badge tone={status?.tone}>{status?.label ?? app.status}</Badge>
-                      </div>
-                      <div className="truncate text-sm">
-                        {app.customer_name}{' '}
-                        <span className="text-muted tabular-nums">· {app.customer_document}</span>
-                      </div>
-                      <div className="text-[12.5px] text-muted">
-                        {app.product_name} · {installmentsText(app.installments, app.frequency)} ·
-                        por {app.created_by_name}
-                        {app.assigned_approver_name && app.status === 'in_review'
-                          ? ` · asignada a ${app.assigned_approver_name}`
-                          : ''}
-                      </div>
-                    </div>
-                    <div className="sm:text-right">
-                      <div className="font-display font-bold tabular-nums">
-                        {rd(app.approved_amount ?? app.amount)}
-                      </div>
-                      <div className="text-[12.5px] text-muted">
+                <li
+                  key={app.id}
+                  className="animate-reveal"
+                  style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
+                >
+                  <Link to="/solicitudes/$id" params={{ id: app.id }} className={tableRowClass}>
+                    <span className="min-w-0">
+                      <span className="block font-semibold tabular-nums">{app.number}</span>
+                      <span className="block text-[12px] text-muted">{dateOf(app.created_at)}</span>
+                    </span>
+                    <span className="min-w-0 max-md:order-first max-md:basis-full">
+                      <span className="block truncate text-[13.5px] font-medium">
+                        {app.customer_name}
+                      </span>
+                      <span className="block truncate text-[12px] text-muted tabular-nums">
+                        {app.customer_document}
+                      </span>
+                    </span>
+                    <span className="min-w-0 max-md:hidden">
+                      <span className="block truncate">{app.product_name}</span>
+                      <span className="block truncate text-[12px] text-muted">
+                        {installmentsText(app.installments, app.frequency)} · por{' '}
+                        {app.created_by_name}
+                      </span>
+                    </span>
+                    <span className="text-right font-display text-[15px] font-semibold tabular-nums">
+                      {rd(app.approved_amount ?? app.amount)}
+                    </span>
+                    <span className="min-w-0">
+                      <Badge tone={status?.tone} dot>
+                        {status?.label ?? app.status}
+                      </Badge>
+                      <span className="mt-0.5 block truncate text-[11.5px] text-muted">
                         {app.status === 'approved' && app.valid_until
                           ? `Vigente hasta ${day(app.valid_until)}`
-                          : dateOf(app.created_at)}
-                      </div>
-                    </div>
+                          : app.assigned_approver_name && app.status === 'in_review'
+                            ? `Asignada a ${app.assigned_approver_name}`
+                            : ''}
+                      </span>
+                    </span>
                   </Link>
                 </li>
               )
             })}
-          </RowList>
+          </Table>
           <Pagination page={page} count={query.data?.count ?? 0} onChange={setPage} />
         </>
       ) : (
         <EmptyState
           action={
             originator && !term ? (
-              <Link
-                to="/solicitudes/nueva"
-                className="font-semibold text-brand-700 hover:underline"
-              >
+              <Link to="/solicitudes/nueva" className={buttonClass()}>
+                <PlusIcon />
                 Crear solicitud
               </Link>
             ) : null
