@@ -18,6 +18,8 @@ ARG PUBLIC_APP_URL=https://app.cobradia.com
 RUN PUBLIC_APP_URL=$PUBLIC_APP_URL pnpm -C site build
 
 FROM ${REGISTRY}/caddy:2
-COPY infra/production/Caddyfile /etc/caddy/Caddyfile
+# The VPS edge by default; Railway builds with CADDYFILE=infra/railway/Caddyfile.
+ARG CADDYFILE=infra/production/Caddyfile
+COPY ${CADDYFILE} /etc/caddy/Caddyfile
 COPY --from=build /src/frontend/dist /srv/app
 COPY --from=build /src/site/dist /srv/site

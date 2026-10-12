@@ -7,14 +7,12 @@ lazily if that ever failed): their data is frozen, so the content is the
 same whenever they are produced.
 """
 
+import base64
 import hashlib
+import mimetypes
 import secrets
 from decimal import Decimal
-from pathlib import Path
-from urllib.parse import urlparse
-from urllib.request import url2pathname
 
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -75,16 +73,20 @@ def _monogram(company: Company) -> str:
 
 
 def check_resource(url: str) -> None:
-    """What a document may load (decision 102): embedded data (QR codes)
-    and the company's own files under MEDIA_ROOT (its logo). Nothing from
-    the network nor elsewhere on the disk, whatever ends up in the HTML."""
+    """What a document may load (decision 102): embedded data only (QR
+    codes, the company's logo). Nothing from the network nor the disk,
+    whatever ends up in the HTML."""
     if url.startswith("data:"):
         return
-    if url.startswith("file:"):
-        path = Path(url2pathname(urlparse(url).path)).resolve()
-        if path.is_relative_to(Path(settings.MEDIA_ROOT).resolve()):
-            return
     raise ValueError(f"Recurso no permitido en un documento: {url[:80]}")
+
+
+def _logo_uri(company: Company) -> str:
+    """The logo embedded in the document: it lives in the private storage
+    (disk or a bucket, decision 113), which has no path WeasyPrint can open."""
+    kind = mimetypes.guess_type(company.logo.name)[0] or "application/octet-stream"
+    with company.logo.open("rb") as handle:
+        return f"data:{kind};base64,{base64.b64encode(handle.read()).decode()}"
 
 
 def _fetcher():
@@ -95,7 +97,7 @@ def _fetcher():
             check_resource(url)
             return super().fetch(url, headers)
 
-    return DocumentFetcher(allowed_protocols={"data", "file"}, allow_redirects=False)
+    return DocumentFetcher(allowed_protocols={"data"}, allow_redirects=False)
 
 
 def render_pdf(template: str, context: dict) -> bytes:
@@ -103,7 +105,7 @@ def render_pdf(template: str, context: dict) -> bytes:
 
     company = context.get("company")
     if company is not None and getattr(company, "logo", None):
-        context = {**context, "logo_uri": Path(company.logo.path).resolve().as_uri()}
+        context = {**context, "logo_uri": _logo_uri(company)}
     html = render_to_string(template, context)
     return HTML(string=html, url_fetcher=_fetcher()).write_pdf()
 

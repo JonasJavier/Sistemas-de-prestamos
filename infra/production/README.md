@@ -1,5 +1,7 @@
 # Producción de Cobradía
 
+> Desde la decisión 113, producción corre en Railway: ver [infra/railway](../railway/README.md). Este Compose queda como alternativa para un VPS propio.
+
 Manual de operación del servidor (decisión 101). Todo corre con Docker Compose en un VPS: Caddy (HTTPS automático, la app, el sitio y los archivos estáticos), la API con Gunicorn, el *worker* y el *beat* de Celery, PostgreSQL 18 y Redis 8.
 
 | Servicio | Qué hace |

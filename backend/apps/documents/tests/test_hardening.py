@@ -16,10 +16,10 @@ from apps.reports.catalog import Column, Table
 from apps.reports.render import to_xlsx
 
 
-def test_documents_load_embedded_data_and_media_only(tmp_path) -> None:
+def test_documents_load_embedded_data_only(tmp_path) -> None:
     check_resource("data:text/plain;base64,aG9sYQ==")
-    check_resource((Path(settings.MEDIA_ROOT) / "logos" / "a.png").resolve().as_uri())
     for url in (
+        (Path(settings.MEDIA_ROOT) / "logos" / "a.png").resolve().as_uri(),
         "http://169.254.169.254/latest/meta-data/",
         "https://example.com/logo.png",
         Path(settings.BASE_DIR / "manage.py").resolve().as_uri(),

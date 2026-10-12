@@ -15,6 +15,8 @@ CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+# The platform's health check probes Gunicorn directly over plain HTTP.
+SECURE_REDIRECT_EXEMPT = [r"^api/v1/salud/$"]
 
 # Decision 102: Caddy is the one proxy of ours in front of Gunicorn.
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=1)
@@ -37,6 +39,29 @@ ENFORCE_WORKING_HOURS = env.bool("ENFORCE_WORKING_HOURS", default=True)
 # Phase 10 (decision 101): the production stack in infra/production.
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
+
+# Decision 113: on Railway the API, the worker and the beat run apart and
+# share no disk, so the private files go to an S3-compatible bucket. Never
+# public: every read goes through Django or a short-lived signed URL.
+if env("AWS_STORAGE_BUCKET_NAME", default=""):
+    STORAGES = {
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": env("AWS_STORAGE_BUCKET_NAME"),
+                "endpoint_url": env("AWS_S3_ENDPOINT_URL"),
+                "region_name": env("AWS_S3_REGION_NAME", default=None),
+                "access_key": env("AWS_ACCESS_KEY_ID"),
+                "secret_key": env("AWS_SECRET_ACCESS_KEY"),
+                "addressing_style": env("AWS_S3_ADDRESSING_STYLE", default="virtual"),
+                "default_acl": None,
+                "querystring_auth": True,
+                "querystring_expire": 300,
+                "file_overwrite": False,
+            },
+        },
+    }
 
 # The mail provider: TLS and credentials (Mailpit needs none in development).
 MAILERS = {
