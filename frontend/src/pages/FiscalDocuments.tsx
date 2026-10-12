@@ -21,9 +21,9 @@ import {
   MonthInput,
   PageHeader,
   Pagination,
-  RowList,
+  Segmented,
   Spinner,
-  Tabs,
+  Table,
 } from '../components/ui'
 import { day, errorMessage, rd, todayISO, plural } from '../lib/format'
 import { notify } from '../lib/toast'
@@ -114,65 +114,99 @@ export function FiscalDocumentsPage() {
           Por emitir (CSV)
         </a>
       </Card>
-      <Tabs
-        tabs={TABS}
+      <Segmented
+        label="Bandeja"
         value={status}
         onChange={(value) => {
           setStatus(value)
           setPage(1)
         }}
+        options={TABS.map(([value, label]) => ({ value, label }))}
       />
       {error instanceof ApiError ? <Alert tone="danger">{errorMessage(error.data)}</Alert> : null}
       {list.isPending ? (
         <Spinner />
       ) : data?.results.length ? (
         <>
-          <p className="text-sm text-muted">
-            {plural(data.totals.count, 'comprobante')} · {rd(data.totals.total)}
-          </p>
-          <RowList>
-            {data.results.map((doc) => (
-              <li
-                key={doc.id}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={doc.kind === 'E34' ? 'warning' : 'info'}>{doc.kind_label}</Badge>
-                    <span className="font-semibold">{doc.buyer_name}</span>
-                    {doc.buyer_document ? (
-                      <span className="text-[12.5px] text-muted">{doc.buyer_document}</span>
-                    ) : null}
-                    {doc.ncf ? <span className="tabular-nums">{doc.ncf}</span> : null}
-                  </div>
-                  <div className="text-[12.5px] text-muted">
-                    {day(doc.date)} · {doc.concept}
-                    {doc.modifies_ncf ? ` · modifica ${doc.modifies_ncf}` : ''}
-                    {doc.void_reason ? ` · ${doc.void_reason}` : ''}
+          <Table
+            label="Comprobantes"
+            columns={
+              status === 'pending'
+                ? 'minmax(0,1fr) 8.5rem 14rem'
+                : 'minmax(0,1fr) minmax(0,10rem) 8.5rem'
+            }
+            head={
+              status === 'pending'
+                ? [
+                    { label: 'Cliente y concepto' },
+                    { label: 'Monto', align: 'right' },
+                    { label: '' },
+                  ]
+                : [
+                    { label: 'Cliente y concepto' },
+                    { label: 'e-NCF' },
+                    { label: 'Monto', align: 'right' },
+                  ]
+            }
+            footer={
+              <>
+                <span>{plural(data.totals.count, 'comprobante')}</span>
+                <span className="tabular-nums">{rd(data.totals.total)}</span>
+              </>
+            }
+          >
+            {data.results.map((doc) => {
+              const amount = (
+                <div className="whitespace-nowrap md:text-right">
+                  <div className="font-semibold tabular-nums">{rd(doc.total)}</div>
+                  <div className="text-[12px] text-muted">
+                    {Number(doc.itbis) ? `ITBIS ${rd(doc.itbis)}` : 'exento'}
                   </div>
                 </div>
-                {/* On a phone: the amount on the left, the actions on the right. */}
-                <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end">
-                  <div className="whitespace-nowrap sm:text-right">
-                    <div className="font-bold tabular-nums">{rd(doc.total)}</div>
-                    <div className="text-[12px] text-muted">
-                      {Number(doc.itbis) ? `ITBIS ${rd(doc.itbis)}` : 'exento'}
+              )
+              return (
+                <li
+                  key={doc.id}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 text-[13px] md:grid md:grid-cols-[var(--cols)] md:px-5"
+                >
+                  <div className="min-w-0 basis-full md:basis-auto">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-semibold">{doc.buyer_name}</span>
+                      {doc.buyer_document ? (
+                        <span className="text-[12px] text-muted tabular-nums">
+                          {doc.buyer_document}
+                        </span>
+                      ) : null}
+                      <Badge tone={doc.kind === 'E34' ? 'warning' : 'info'}>{doc.kind_label}</Badge>
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted">
+                      {day(doc.date)} · {doc.concept}
+                      {doc.modifies_ncf ? ` · modifica ${doc.modifies_ncf}` : ''}
+                      {doc.void_reason ? ` · ${doc.void_reason}` : ''}
                     </div>
                   </div>
                   {doc.status === 'pending' ? (
-                    <div className="flex gap-2 whitespace-nowrap">
-                      <Button variant="secondary" size="sm" onClick={() => cancel.mutate(doc)}>
-                        No emitir
-                      </Button>
-                      <Button variant="soft" size="sm" onClick={() => issue.mutate(doc)}>
-                        Registrar e-NCF
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </RowList>
+                    <>
+                      {amount}
+                      <div className="flex gap-2 whitespace-nowrap md:justify-end">
+                        <Button variant="secondary" size="sm" onClick={() => cancel.mutate(doc)}>
+                          No emitir
+                        </Button>
+                        <Button variant="soft" size="sm" onClick={() => issue.mutate(doc)}>
+                          Registrar e-NCF
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium tabular-nums">{doc.ncf ?? '—'}</span>
+                      {amount}
+                    </>
+                  )}
+                </li>
+              )
+            })}
+          </Table>
           <Pagination page={page} count={data.count} onChange={setPage} />
         </>
       ) : (

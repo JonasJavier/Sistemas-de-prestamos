@@ -320,7 +320,7 @@ export function AccountsPage({ me }: { me: Me }) {
                   </span>
                 </button>
                 {open === account.id ? (
-                  <div className="border-t border-edge bg-surface-2 px-4 py-3">
+                  <div className="border-t border-edge bg-surface-2 px-4 py-3 sm:px-5">
                     <Movements account={account} />
                   </div>
                 ) : null}

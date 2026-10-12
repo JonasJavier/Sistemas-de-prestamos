@@ -25,17 +25,18 @@ import {
   Input,
   PageHeader,
   Pagination,
-  RowList,
   SearchInput,
+  Segmented,
   Select,
   Spinner,
   Stat,
-  Tabs,
+  Table,
 } from '../components/ui'
 import { day, errorMessage, rd, todayISO } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { notify } from '../lib/toast'
 import { DateInput } from '../components/DateInput'
+import { tableRowClass } from '../components/classes'
 
 const listPayAccounts = (): Promise<{ id: string; name: string; kind: string }[]> =>
   api('/api/v1/gastos/cuentas/')
@@ -70,7 +71,7 @@ export function PayablesPage() {
         actions={<Button onClick={() => setCreating(true)}>Nueva cuenta por pagar</Button>}
       />
       {data ? (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Stat
             label="Pendiente"
             value={rd(data.totals.outstanding)}
@@ -81,46 +82,75 @@ export function PayablesPage() {
           <Stat label="Vence en 7 días" value={rd(data.totals.next_7_days)} />
         </div>
       ) : null}
-      <Tabs
-        tabs={VIEWS}
-        value={view}
-        onChange={(value) => {
-          setView(value)
-          setPage(1)
-        }}
-      />
-      <SearchInput
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar por proveedor o descripción…"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented
+          label="Vista"
+          value={view}
+          onChange={(value) => {
+            setView(value)
+            setPage(1)
+          }}
+          options={VIEWS.map(([value, label]) => ({ value, label }))}
+        />
+        <div className="min-w-[14rem] flex-1">
+          <SearchInput
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por proveedor o descripción…"
+          />
+        </div>
+      </div>
       {list.isPending ? (
         <Spinner />
       ) : data?.results.length ? (
         <>
-          <RowList>
+          <Table
+            label="Cuentas por pagar"
+            columns="minmax(0,1.6fr) minmax(0,1fr) 7rem 9rem"
+            head={[
+              { label: 'Proveedor y concepto' },
+              { label: 'Categoría' },
+              { label: 'Vence' },
+              { label: 'Pendiente', align: 'right' },
+            ]}
+          >
             {data.results.map((row) => (
               <li key={row.id}>
                 <button
                   type="button"
                   onClick={() => setOpen(row.id)}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-2"
+                  className={`${tableRowClass} w-full text-left`}
                 >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="min-w-0 basis-full md:basis-auto">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="font-semibold">{row.party_name}</span>
-                      <span className="text-sm">{row.description}</span>
-                      {row.overdue ? <Badge tone="danger">Vencida</Badge> : null}
-                      {row.status === 'partial' ? <Badge tone="warning">Pago parcial</Badge> : null}
+                      {row.overdue ? (
+                        <Badge tone="danger" dot>
+                          Vencida
+                        </Badge>
+                      ) : null}
+                      {row.status === 'partial' ? (
+                        <Badge tone="warning" dot>
+                          Pago parcial
+                        </Badge>
+                      ) : null}
                       {row.series ? <Badge tone="info">{row.series.frequency}</Badge> : null}
                     </div>
-                    <div className="text-[12.5px] text-muted">
-                      Vence {day(row.due_on)} · {row.category_name}
+                    <div className="mt-0.5 truncate text-[12px] text-muted">
+                      {row.description}
                       {row.recognized_on ? '' : ' · se registra al vencer'}
                     </div>
                   </div>
-                  <div className="sm:text-right">
-                    <div className="font-bold tabular-nums">{rd(row.outstanding)}</div>
+                  <span className="min-w-0 truncate text-[12.5px] text-muted md:text-[13px] md:text-ink">
+                    {row.category_name}
+                  </span>
+                  <span
+                    className={`text-[12.5px] tabular-nums md:text-[13px] ${row.overdue ? 'font-semibold text-danger-600' : 'text-muted md:text-ink'}`}
+                  >
+                    {day(row.due_on)}
+                  </span>
+                  <div className="whitespace-nowrap md:text-right">
+                    <div className="font-semibold tabular-nums">{rd(row.outstanding)}</div>
                     {row.paid !== '0.00' ? (
                       <div className="text-[12px] text-muted">de {rd(row.amount)}</div>
                     ) : null}
@@ -128,7 +158,7 @@ export function PayablesPage() {
                 </button>
               </li>
             ))}
-          </RowList>
+          </Table>
           <Pagination page={page} count={data.count} onChange={setPage} />
         </>
       ) : (
@@ -195,13 +225,14 @@ function NewPayableDialog({ onClose }: { onClose: () => void }) {
         <h2 id="payable-title" className="text-lg font-semibold">
           Nueva cuenta por pagar
         </h2>
-        <Tabs
-          tabs={[
-            ['single', 'Una factura'],
-            ['recurring', 'Recurrente'],
-          ]}
+        <Segmented
+          label="Tipo de cuenta"
           value={recurring ? 'recurring' : 'single'}
           onChange={(value) => setRecurring(value === 'recurring')}
+          options={[
+            { value: 'single', label: 'Una factura' },
+            { value: 'recurring', label: 'Recurrente' },
+          ]}
         />
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Proveedor">

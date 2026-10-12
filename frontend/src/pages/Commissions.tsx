@@ -252,7 +252,7 @@ export function CommissionsPage({ me }: { me: Me }) {
         subtitle="Lo que gana cada cobrador y oficial en el mes según su regla. Al aprobarlas pasan a cuentas por pagar."
         actions={<ExportButtons report="comisiones" filters={{ mes: month }} />}
       />
-      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Mes">
@@ -280,7 +280,7 @@ export function CommissionsPage({ me }: { me: Me }) {
             <Spinner />
           ) : run ? (
             <Card className="space-y-3 !p-0">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-5">
                 <div className="flex items-center gap-2">
                   <Badge tone={run.status === 'approved' ? 'success' : 'info'}>
                     {run.status_label}
@@ -294,10 +294,10 @@ export function CommissionsPage({ me }: { me: Me }) {
                 <span className="font-display text-lg font-bold tabular-nums">{rd(run.total)}</span>
               </div>
               {run.lines.length ? (
-                <div className="-mx-4 overflow-x-auto sm:-mx-5">
-                  <table className="data-table w-full sm:min-w-max">
+                <div className="overflow-x-auto">
+                  <table className="data-table w-full">
                     <thead>
-                      <tr className="border-y text-[12.5px] text-muted">
+                      <tr className="text-[12.5px] text-muted">
                         <th className="font-medium">Empleado</th>
                         {/* On a phone: who and how much; the rule and its base
                             go under the name. */}
@@ -312,7 +312,7 @@ export function CommissionsPage({ me }: { me: Me }) {
                       {run.lines.map((line) => (
                         <tr key={line.id} className="border-edge/60">
                           <td className="py-2">
-                            <div className="font-semibold">{line.user}</div>
+                            <div className="whitespace-nowrap font-semibold">{line.user}</div>
                             <div className="text-[12px] text-muted">{line.role}</div>
                             <div className="text-[12px] text-muted sm:hidden">
                               {line.rule} · {pct(line.rate)} de {rd(line.base_amount)}
@@ -325,13 +325,13 @@ export function CommissionsPage({ me }: { me: Me }) {
                             {line.rule}
                             <div className="text-[12px] text-muted">{line.base_label}</div>
                           </td>
-                          <td className="hidden text-right tabular-nums sm:table-cell">
+                          <td className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
                             {rd(line.base_amount)}
                           </td>
-                          <td className="hidden text-right tabular-nums sm:table-cell">
+                          <td className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
                             {pct(line.rate)}
                           </td>
-                          <td className="hidden text-right tabular-nums sm:table-cell">
+                          <td className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
                             {Number(line.goal) ? rd(line.goal) : '—'}
                             {Number(line.goal) && !line.reached_goal ? (
                               <div className="text-[12px] text-warning-700">No la alcanzó</div>

@@ -16,6 +16,7 @@ import {
 import { usePrompt } from '../components/Dialog'
 import { ExpenseDialog } from '../components/ExpenseDialog'
 import { Modal } from '../components/Modal'
+import { tableRowClass } from '../components/classes'
 import {
   Alert,
   Badge,
@@ -25,12 +26,12 @@ import {
   Input,
   PageHeader,
   Pagination,
-  RowList,
   SearchInput,
+  Segmented,
   Select,
   Spinner,
   Stat,
-  Tabs,
+  Table,
 } from '../components/ui'
 import { day, errorMessage, moment, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
@@ -82,26 +83,30 @@ export function ExpensesPage({ me }: { me: Me }) {
           ) : null
         }
       />
-      <Tabs
-        tabs={[
-          ['', 'Todos'],
-          ['expense', 'Gastos'],
-          ['income', 'Ingresos'],
-        ]}
-        value={kind}
-        onChange={(value) => {
-          setKind(value)
-          setPage(1)
-        }}
-      />
-      <div className="grid items-end gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_10rem_10rem]">
-        <SearchInput
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por número, descripción, proveedor o NCF…"
+      <div className="flex flex-wrap items-end gap-2">
+        <Segmented
+          label="Tipo"
+          value={kind}
+          onChange={(value) => {
+            setKind(value)
+            setPage(1)
+          }}
+          options={[
+            { value: '', label: 'Todos' },
+            { value: 'expense', label: 'Gastos' },
+            { value: 'income', label: 'Ingresos' },
+          ]}
         />
+        <div className="min-w-[14rem] flex-1">
+          <SearchInput
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por número, descripción, proveedor o NCF…"
+          />
+        </div>
         <Select
           aria-label="Estado"
+          className="!w-auto"
           value={filters.estado ?? ''}
           onChange={(e) => set({ estado: e.target.value || undefined })}
         >
@@ -111,22 +116,28 @@ export function ExpensesPage({ me }: { me: Me }) {
           <option value="rejected">Rechazados</option>
           <option value="voided">Anulados</option>
         </Select>
+      </div>
+      <div className="flex flex-wrap items-end gap-2">
         {/* A bare date box reads «dd/mm/aaaa»: the label says which end it is. */}
-        <Field label="Desde">
-          <DateInput
-            value={filters.desde ?? ''}
-            onChange={(date) => set({ desde: date || undefined })}
-          />
-        </Field>
-        <Field label="Hasta">
-          <DateInput
-            value={filters.hasta ?? ''}
-            onChange={(date) => set({ hasta: date || undefined })}
-          />
-        </Field>
+        <div className="w-40">
+          <Field label="Desde">
+            <DateInput
+              value={filters.desde ?? ''}
+              onChange={(date) => set({ desde: date || undefined })}
+            />
+          </Field>
+        </div>
+        <div className="w-40">
+          <Field label="Hasta">
+            <DateInput
+              value={filters.hasta ?? ''}
+              onChange={(date) => set({ hasta: date || undefined })}
+            />
+          </Field>
+        </div>
       </div>
       {data ? (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Stat label="Gastos registrados" value={rd(data.totals.expense)} />
           <Stat label="Ingresos registrados" value={rd(data.totals.income)} />
           <Stat label="Por aprobar" value={String(data.totals.pending)} />
@@ -136,31 +147,49 @@ export function ExpensesPage({ me }: { me: Me }) {
         <Spinner />
       ) : data?.results.length ? (
         <>
-          <RowList>
+          <Table
+            label="Gastos e ingresos"
+            columns="minmax(0,1.5fr) minmax(0,1fr) 6.5rem 8.5rem"
+            head={[
+              { label: 'Gasto o ingreso' },
+              { label: 'Categoría y origen' },
+              { label: 'Fecha' },
+              { label: 'Monto', align: 'right' },
+            ]}
+          >
             {data.results.map((row) => (
               <li key={row.id}>
                 <button
                   type="button"
                   onClick={() => setOpen(row.id)}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-2"
+                  className={`${tableRowClass} w-full text-left`}
                 >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold tabular-nums">{row.number}</span>
-                      <span className="text-sm">{row.description}</span>
-                      <Badge tone={STATUS_TONE[row.status]}>{row.status_label}</Badge>
+                  <div className="min-w-0 basis-full md:basis-auto">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-semibold">{row.description}</span>
+                      <Badge tone={STATUS_TONE[row.status]} dot>
+                        {row.status_label}
+                      </Badge>
                       {row.nature === 'owner' ? <Badge tone="info">Del dueño</Badge> : null}
                     </div>
-                    <div className="text-[12.5px] text-muted">
-                      {day(row.date)} · {row.category_name} ·{' '}
-                      {row.from_drawer ? 'caja del cajero' : row.account_name}
-                      {row.party_name ? ` · ${row.party_name}` : ''}
+                    <div className="mt-0.5 text-[12px] text-muted tabular-nums">
+                      {row.number}
                       {row.ncf ? ` · NCF ${row.ncf}` : ''}
                       {row.files ? ` · ${plural(row.files, 'comprobante')}` : ''}
                     </div>
                   </div>
+                  <div className="min-w-0 text-[12.5px] md:text-[13px]">
+                    <div className="truncate">{row.category_name}</div>
+                    <div className="truncate text-[12px] text-muted">
+                      {row.from_drawer ? 'Caja del cajero' : row.account_name}
+                      {row.party_name ? ` · ${row.party_name}` : ''}
+                    </div>
+                  </div>
+                  <span className="text-[12.5px] text-muted tabular-nums md:text-[13px] md:text-ink">
+                    {day(row.date)}
+                  </span>
                   <span
-                    className={`font-bold tabular-nums ${row.kind === 'income' ? 'text-success-600' : ''}`}
+                    className={`whitespace-nowrap font-semibold tabular-nums md:text-right ${row.kind === 'income' ? 'text-success-600' : ''}`}
                   >
                     {row.kind === 'income' ? '+' : '−'}
                     {rd(row.amount)}
@@ -168,7 +197,7 @@ export function ExpensesPage({ me }: { me: Me }) {
                 </button>
               </li>
             ))}
-          </RowList>
+          </Table>
           <Pagination page={page} count={data.count} onChange={setPage} />
         </>
       ) : (

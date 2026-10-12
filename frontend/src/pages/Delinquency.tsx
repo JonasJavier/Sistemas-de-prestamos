@@ -12,6 +12,7 @@ import { buttonClass } from '../components/classes'
 import { Modal } from '../components/Modal'
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -19,16 +20,24 @@ import {
   Field,
   Input,
   PageHeader,
-  RowList,
   SearchInput,
   Select,
   Spinner,
-  Stat,
+  Table,
 } from '../components/ui'
 import { day, errorMessage, phoneText, rd, plural } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 import { ACCESS, hasRole } from '../lib/roles'
 import { notify } from '../lib/toast'
+
+/** One stripe per bucket, from a warning to the deepest red. */
+const SEVERITY = [
+  'bg-warning-700/45',
+  'bg-warning-700/80',
+  'bg-danger-600/50',
+  'bg-danger-600/80',
+  'bg-danger-600',
+]
 
 const BUCKETS: Record<string, string> = {
   '1_7': '1–7 días',
@@ -71,27 +80,37 @@ export function DelinquencyPage({ me }: { me: Me }) {
         subtitle="Préstamos en atraso por tramo. Mora y días se recalculan cada noche y en cada cobro."
       />
       {hasRole(me, ACCESS.writeOff) ? <WriteOffSuggestions /> : null}
-      <div role="tablist" aria-label="Tramos" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {Object.entries(BUCKETS).map(([key, label]) => {
+      {/* On a phone the buckets slide sideways; from a tablet up they sit in a row. */}
+      <div
+        role="tablist"
+        aria-label="Tramos"
+        className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0"
+      >
+        {Object.entries(BUCKETS).map(([key, label], index) => {
           const info = data?.buckets.find((b) => b.key === key)
+          const on = bucket === key
           return (
             <button
               key={key}
               type="button"
               role="tab"
-              aria-selected={bucket === key}
+              aria-selected={on}
               onClick={() => {
                 setBucket(key)
                 setSelected([])
               }}
-              className={`rounded-xl border p-3 text-left shadow-sm ${
-                bucket === key
-                  ? 'border-brand-700 bg-brand-100'
-                  : 'border-edge bg-surface hover:bg-surface-2'
+              className={`press relative w-[8.5rem] shrink-0 overflow-hidden rounded-card border p-3.5 pl-4 text-left shadow-sm sm:w-auto outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+                on
+                  ? 'border-brand-700 bg-brand-50 ring-1 ring-inset ring-brand-700'
+                  : 'border-edge bg-surface hover:border-muted/40'
               }`}
             >
-              <div className="text-[12.5px] text-muted">{label}</div>
-              <div className="text-lg font-bold tabular-nums">{info?.count ?? '—'}</div>
+              {/* The stripe darkens with the age of the debt. */}
+              <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${SEVERITY[index]}`} />
+              <div className="text-[12.5px] font-medium text-muted">{label}</div>
+              <div className="mt-0.5 font-display text-[22px] font-bold leading-tight tabular-nums">
+                {info?.count ?? '—'}
+              </div>
               <div className="text-[12px] text-muted tabular-nums">
                 {info ? rd(info.principal) : ''}
               </div>
@@ -99,13 +118,20 @@ export function DelinquencyPage({ me }: { me: Me }) {
           )
         })}
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_14rem_12rem]">
-        <SearchInput
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por número o cliente…"
-        />
-        <Select aria-label="Gestor" value={agent} onChange={(e) => setAgent(e.target.value)}>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[14rem] flex-1">
+          <SearchInput
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por número o cliente…"
+          />
+        </div>
+        <Select
+          aria-label="Gestor"
+          className="!w-auto"
+          value={agent}
+          onChange={(e) => setAgent(e.target.value)}
+        >
           <option value="">Todos los gestores</option>
           {canManage ? <option value="mios">Mis préstamos</option> : null}
           {agents.data?.map((a) => (
@@ -114,7 +140,12 @@ export function DelinquencyPage({ me }: { me: Me }) {
             </option>
           ))}
         </Select>
-        <Select aria-label="Promesa" value={promise} onChange={(e) => setPromise(e.target.value)}>
+        <Select
+          aria-label="Promesa"
+          className="!w-auto"
+          value={promise}
+          onChange={(e) => setPromise(e.target.value)}
+        >
           <option value="">Con y sin promesa</option>
           <option value="con">Con promesa pendiente</option>
           <option value="sin">Sin promesa</option>
@@ -124,82 +155,110 @@ export function DelinquencyPage({ me }: { me: Me }) {
         <Spinner />
       ) : data?.results.length ? (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <Stat
-              label={`Préstamos en ${BUCKETS[data.selected]}`}
-              value={String(data.totals.count)}
-            />
-            <Stat label="Capital de estos préstamos" value={rd(data.totals.principal)} emphasis />
-          </div>
           {canAssign && selected.length ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-700/40 bg-brand-100 px-4 py-2 text-sm">
-              <span>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-card bg-brand-950 px-4 py-2.5 text-[13px] text-on-forest shadow-sm">
+              <span className="font-semibold">
                 {plural(selected.length, 'préstamo seleccionado', 'préstamos seleccionados')}
               </span>
               <span className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setSelected([])}>
+                <button
+                  type="button"
+                  onClick={() => setSelected([])}
+                  className="press h-8 rounded-lg px-3 text-[13px] font-semibold text-brand-200 hover:bg-white/10 hover:text-on-forest"
+                >
                   Quitar selección
-                </Button>
-                <Button size="sm" onClick={() => setAssigning(true)}>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAssigning(true)}
+                  className="press press-down h-8 rounded-lg bg-forest-accent px-3 text-[13px] font-semibold text-on-forest-accent"
+                >
                   Asignar gestor
-                </Button>
+                </button>
               </span>
             </div>
           ) : null}
-          <RowList>
+          <Table
+            label={`Préstamos en ${BUCKETS[data.selected]}`}
+            columns="minmax(0,1.5fr) minmax(0,1fr) 8.5rem 15rem"
+            head={[
+              { label: 'Cliente y préstamo' },
+              { label: 'Última gestión' },
+              { label: 'Vencido con mora', align: 'right' },
+              { label: '' },
+            ]}
+            footer={
+              <>
+                <span>
+                  {plural(data.totals.count, 'préstamo')} en {BUCKETS[data.selected]}
+                </span>
+                <span className="tabular-nums">Capital {rd(data.totals.principal)}</span>
+              </>
+            }
+          >
             {data.results.map((row) => (
               <li
                 key={row.number}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 text-[13px] md:grid md:grid-cols-[var(--cols)] md:px-5 ${
+                  selected.includes(row.number) ? 'bg-brand-50' : ''
+                }`}
               >
-                <div className="flex min-w-0 items-start gap-3">
+                <div className="flex min-w-0 basis-full items-center gap-3 md:basis-auto">
                   {canAssign ? (
                     <input
                       type="checkbox"
                       aria-label={`Seleccionar ${row.number}`}
                       checked={selected.includes(row.number)}
                       onChange={() => toggle(row.number)}
-                      className="mt-1 h-4 w-4 accent-brand-700"
+                      className="size-4 shrink-0 accent-brand-700"
                     />
                   ) : null}
-                  <div className="min-w-0 space-y-0.5">
-                    <div>
+                  <Avatar name={row.customer_name} size="sm" />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <Link
                         to="/prestamos/$numero"
                         params={{ numero: row.number }}
-                        className="font-semibold tabular-nums text-brand-700 hover:underline"
+                        className="font-semibold hover:text-brand-700 hover:underline"
                       >
-                        {row.number}
-                      </Link>{' '}
-                      <span className="text-sm">{row.customer_name}</span>{' '}
+                        {row.customer_name}
+                      </Link>
+                      <Badge tone={row.days_past_due > 30 ? 'danger' : 'warning'} dot>
+                        {plural(row.days_past_due, 'día')}
+                      </Badge>
                       {row.promise ? (
-                        <Badge tone="info">
+                        <Badge tone="gold">
                           Promesa {rd(row.promise.amount)} · {day(row.promise.on)}
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="text-[12.5px] text-muted">
-                      {row.days_past_due} días · gestor {row.agent_name ?? 'sin asignar'} ·{' '}
+                    <div className="mt-0.5 text-[12px] text-muted">
+                      <span className="tabular-nums">{row.number}</span> · gestor{' '}
+                      {row.agent_name ?? 'sin asignar'} ·{' '}
                       {row.last_payment_on
                         ? `último pago ${day(row.last_payment_on)}`
                         : 'sin pagos'}
                     </div>
-                    <div className="text-[12.5px] text-muted">
-                      {row.last_action
-                        ? `Última gestión ${day(row.last_action.at.slice(0, 10))}: ${row.last_action.result}`
-                        : 'Sin gestiones'}
-                    </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="mr-1 text-right">
-                    <div className="font-bold tabular-nums text-danger-600">{rd(row.overdue)}</div>
-                    <div className="text-[12px] text-muted">vencido con mora</div>
-                  </div>
+                <div className="min-w-0 text-[12.5px] text-muted">
+                  {row.last_action ? (
+                    <>
+                      <span className="text-ink">{row.last_action.result}</span>
+                      <span> · {day(row.last_action.at.slice(0, 10))}</span>
+                    </>
+                  ) : (
+                    'Sin gestiones'
+                  )}
+                </div>
+                <div className="whitespace-nowrap font-semibold tabular-nums text-danger-600 md:text-right">
+                  {rd(row.overdue)}
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 md:flex-nowrap md:justify-end">
                   {row.customer_phone ? (
                     <a
                       href={`tel:${row.customer_phone}`}
-                      className={buttonClass('secondary', '', 'sm')}
+                      className={buttonClass('ghost', '', 'sm')}
                       title={phoneText(row.customer_phone)}
                     >
                       Llamar
@@ -222,7 +281,7 @@ export function DelinquencyPage({ me }: { me: Me }) {
                 </div>
               </li>
             ))}
-          </RowList>
+          </Table>
           {data.totals.count > data.results.length ? (
             <p className="text-[12.5px] text-muted">
               Se muestran los {data.results.length} con más atraso; usa la búsqueda para encontrar

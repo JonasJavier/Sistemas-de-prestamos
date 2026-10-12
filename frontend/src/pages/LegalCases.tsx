@@ -20,8 +20,10 @@ import {
 } from '../api/legal'
 import { listAccounts } from '../api/origination'
 import { Modal } from '../components/Modal'
+import { tableRowClass } from '../components/classes'
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -29,11 +31,11 @@ import {
   Field,
   Input,
   PageHeader,
-  RowList,
+  Segmented,
   Select,
   Spinner,
   Stat,
-  Tabs,
+  Table,
   Textarea,
 } from '../components/ui'
 import { day, errorMessage, rd } from '../lib/format'
@@ -53,26 +55,34 @@ const STATUS_TONE: Record<string, string> = {
 
 function CaseRow({ legalCase }: { legalCase: LegalCase }) {
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/legal/$id"
-            params={{ id: legalCase.id }}
-            className="font-semibold text-brand-700 hover:underline"
-          >
-            {legalCase.number}
-          </Link>
-          <Badge tone={STATUS_TONE[legalCase.status]}>{legalCase.status_label}</Badge>
-          <span className="font-medium">{legalCase.loan.customer}</span>
+    <li>
+      <Link to="/legal/$id" params={{ id: legalCase.id }} className={tableRowClass}>
+        <div className="flex min-w-0 basis-full items-center gap-3 md:basis-auto">
+          <Avatar name={legalCase.loan.customer} size="sm" />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-semibold">{legalCase.loan.customer}</span>
+              <Badge tone={STATUS_TONE[legalCase.status]} dot>
+                {legalCase.status_label}
+              </Badge>
+            </div>
+            <div className="mt-0.5 text-[12px] text-muted tabular-nums">
+              {legalCase.number} · préstamo {legalCase.loan.number} · {legalCase.loan.days_past_due}{' '}
+              días de atraso
+              {legalCase.outcome_label ? ` · ${legalCase.outcome_label}` : ''}
+            </div>
+          </div>
         </div>
-        <div className="text-[12.5px] text-muted">
-          Préstamo {legalCase.loan.number} · {legalCase.loan.days_past_due} días de atraso · abogado{' '}
-          {legalCase.lawyer.name} · desde {day(legalCase.opened_on)}
-          {legalCase.outcome_label ? ` · ${legalCase.outcome_label}` : ''}
-        </div>
-      </div>
-      <span className="tabular-nums">{rd(legalCase.loan.principal_outstanding)}</span>
+        <span className="min-w-0 truncate text-[12.5px] text-muted md:text-[13px] md:text-ink">
+          {legalCase.lawyer.name}
+        </span>
+        <span className="text-[12.5px] text-muted tabular-nums md:text-[13px] md:text-ink">
+          {day(legalCase.opened_on)}
+        </span>
+        <span className="whitespace-nowrap font-semibold tabular-nums md:text-right">
+          {rd(legalCase.loan.principal_outstanding)}
+        </span>
+      </Link>
     </li>
   )
 }
@@ -87,15 +97,29 @@ export function LegalCasesPage() {
         title="Casos legales"
         subtitle="Préstamos enviados a la vía legal: abogado, alguacil, documentos, costas y estado. Se abren desde el préstamo."
       />
-      <Tabs tabs={TABS} value={tab} onChange={setTab} />
+      <Segmented
+        label="Casos"
+        value={tab}
+        onChange={setTab}
+        options={TABS.map(([value, label]) => ({ value, label }))}
+      />
       {cases.isPending ? (
         <Spinner />
       ) : cases.data?.length ? (
-        <RowList>
+        <Table
+          label="Casos legales"
+          columns="minmax(0,1.6fr) minmax(0,1fr) 6.5rem 9rem"
+          head={[
+            { label: 'Cliente y caso' },
+            { label: 'Abogado' },
+            { label: 'Desde' },
+            { label: 'Capital pendiente', align: 'right' },
+          ]}
+        >
           {cases.data.map((c) => (
             <CaseRow key={c.id} legalCase={c} />
           ))}
-        </RowList>
+        </Table>
       ) : (
         <EmptyState>
           {tab === 'abiertos'
