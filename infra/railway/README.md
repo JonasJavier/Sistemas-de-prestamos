@@ -1,6 +1,20 @@
 # Cobradía en Railway
 
-Manual de operación de producción en Railway (decisión 113). Proyecto `cobradia`, entorno `production`, región de Virginia. Cada *push* a `main` vuelve a desplegar solo los servicios cuyos archivos cambiaron.
+Manual de operación de producción en Railway (decisión 113). Proyecto `cobradia`, entorno `production`, región de Virginia.
+
+- App: <https://web-production-5025e0.up.railway.app> (hasta tener `app.cobradia.com`).
+- Correos de prueba (Mailpit): <https://mailpit-production-de9d.up.railway.app>, usuario y clave en la variable `MP_UI_AUTH` del servicio `mailpit`.
+
+**Cómo se despliega.** Mientras la app de Railway en GitHub no tenga acceso a este repositorio, se sube desde la raíz del repositorio con la CLI (cada servicio ya sabe su carpeta y su Dockerfile):
+
+```bash
+railway up --service api --detach      # primero: migra antes de entrar
+railway up --service worker --detach
+railway up --service beat --detach
+railway up --service web --detach
+```
+
+Cuando el dueño le dé acceso (GitHub → *Settings* → *Applications* → *Railway* → *Repository access*), se conecta cada servicio con `railway service source connect --repo JonasJavier/Sistemas-de-prestamos --branch main --service <servicio>` y desde ahí cada *push* a `main` despliega solo los servicios cuyos archivos cambiaron. `APP_VERSION` toma el commit de GitHub; con `railway up` queda vacío.
 
 | Servicio | Qué hace | Origen |
 | --- | --- | --- |
