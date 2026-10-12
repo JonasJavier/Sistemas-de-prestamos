@@ -96,7 +96,7 @@ function Tile({
       >
         <Figure value={value ?? '…'} />
       </div>
-      <div className="mt-1.5 hidden text-[12px] leading-snug text-muted @min-[10.5rem]:block">
+      <div className="mt-1.5 hidden text-[12px] leading-snug text-muted sm:block">
         {hint}
       </div>
     </Link>
@@ -107,12 +107,21 @@ const tileIcon = 'size-[18px] shrink-0'
 
 /** The cards reveal one after another (decision 112); the columns follow
  * how many there are so the rows come out even. */
-function Grid({ label, children }: { label?: string; children: ReactNode }) {
+function Grid({
+  label,
+  children,
+  row = false,
+}: {
+  label?: string
+  children: ReactNode
+  /** Six in one row on a wide screen (the work queue of decision 115). */
+  row?: boolean
+}) {
   const items = Children.toArray(children)
   const count = items.length
   const columns =
     count >= 6
-      ? 'md:grid-cols-3 min-[1340px]:grid-cols-6'
+      ? `md:grid-cols-3 ${row ? 'min-[83.75rem]:grid-cols-6' : ''}`
       : count === 5
         ? 'md:grid-cols-3 xl:grid-cols-5'
         : count === 4
@@ -177,7 +186,7 @@ function Today({ me }: { me: Me }) {
   if (!reader) return null
   return (
     <Section title="Tu trabajo de hoy" aside="Lo que espera por ti">
-      <Grid label="Tu trabajo de hoy">
+      <Grid label="Tu trabajo de hoy" row>
         {decider ? (
           <Tile
             to="/solicitudes"
