@@ -17,6 +17,7 @@ import {
   ChatIcon,
   ClockAlertIcon,
   CoinsIcon,
+  CollectIcon,
   DisburseIcon,
   DrawerIcon,
   HashIcon,
@@ -128,8 +129,10 @@ export function navFor(me: Me): NavGroup[] {
   const reports: NavLeaf[] = []
   if (hasRole(me, ACCESS.reports))
     reports.push(leaf('/reportes', 'Centro de reportes', <ChartIcon className={sub} />))
-  if (hasRole(me, ACCESS.indicators))
+  if (hasRole(me, ACCESS.indicators)) {
     reports.push(leaf('/reportes/cartera', 'Cartera', <PieIcon className={sub} />))
+    reports.push(leaf('/reportes/cobros', 'Cobros', <CollectIcon className={sub} />))
+  }
   if (hasRole(me, ACCESS.scores))
     reports.push(leaf('/reportes/clasificacion', 'Clasificación', <AwardIcon className={sub} />))
   if (hasRole(me, ACCESS.commissions))

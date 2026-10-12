@@ -1,4 +1,4 @@
-"""P20, the customer list of the redesign (decision 114): each customer with
+"""P20, the customer list of the redesign (decision 115): each customer with
 the portfolio a manager reads at a glance — balance, next installment, the
 worst arrears and who collects — and the filters by state and collector.
 

@@ -201,7 +201,7 @@ export function ReceiptPage({ me }: { me: Me }) {
   return (
     <>
       {nuevo && r.status === 'posted' ? (
-        // The payment just went through: a check that pops and the amount (decision 114).
+        // The payment just went through: a check that pops and the amount (decision 115).
         <section
           role="status"
           className="relative flex items-center gap-4 overflow-hidden rounded-card bg-brand-950 px-5 py-4 text-on-forest shadow-sm"

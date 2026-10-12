@@ -43,7 +43,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
         return place.name if place else customer.address_line
 
     def get_portfolio(self, customer: Customer) -> dict | None:
-        """Decision 114: present only in the list (``listing.with_portfolio``)."""
+        """Decision 115: present only in the list (``listing.with_portfolio``)."""
         if not hasattr(customer, "active_loans"):
             return None
         collector = (customer.collector_name or "").strip()

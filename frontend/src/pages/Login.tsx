@@ -7,7 +7,8 @@ import { z } from 'zod'
 
 import { authErrorCode, login, mfaAuthenticate } from '../api/auth'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
+import { ArrowRightIcon } from '../components/icons'
+import { Alert, Button, Card, Field, Input, PasswordInput, PublicPage } from '../components/ui'
 import { safeReturn } from '../lib/navigation'
 
 const schema = z.object({
@@ -131,44 +132,54 @@ export function LoginPage() {
   }
 
   return (
-    <PublicPage subtitle="Inicia sesión para trabajar">
-      <Card>
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-          noValidate
-        >
-          {message ? (
-            <Alert tone="warning">{message}</Alert>
-          ) : motivo === 'sesion' ? (
-            <Alert tone="info">
-              Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.
-            </Alert>
-          ) : motivo === 'horario' ? (
-            <Alert tone="info">
-              Estás fuera del horario de tu sucursal. Si necesitas seguir trabajando, pídele una
-              extensión a tu supervisor.
-            </Alert>
-          ) : null}
-          <Field label="Correo" error={form.formState.errors.email?.message}>
-            <Input type="email" autoComplete="email" autoFocus {...form.register('email')} />
-          </Field>
-          <Field label="Contraseña" error={form.formState.errors.password?.message}>
-            <Input type="password" autoComplete="current-password" {...form.register('password')} />
-          </Field>
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Entrando…' : 'Entrar'}
-          </Button>
-          <p className="text-center text-sm">
-            <Link to="/recuperar" className="font-medium text-brand-700 hover:underline">
+    <PublicPage tab="entrar" subtitle="Hola de nuevo" lead="Inicia sesión para trabajar.">
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        noValidate
+      >
+        {message ? (
+          <Alert tone="warning">{message}</Alert>
+        ) : motivo === 'sesion' ? (
+          <Alert tone="info">Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.</Alert>
+        ) : motivo === 'horario' ? (
+          <Alert tone="info">
+            Estás fuera del horario de tu sucursal. Si necesitas seguir trabajando, pídele una
+            extensión a tu supervisor.
+          </Alert>
+        ) : null}
+        <Field label="Correo" error={form.formState.errors.email?.message}>
+          <Input
+            type="email"
+            autoComplete="email"
+            autoFocus
+            className="sm:h-11"
+            {...form.register('email')}
+          />
+        </Field>
+        <Field
+          label="Contraseña"
+          error={form.formState.errors.password?.message}
+          aside={
+            <Link to="/recuperar" className="font-semibold text-brand-700 hover:underline">
               ¿Olvidaste tu contraseña?
             </Link>
-          </p>
-        </form>
-      </Card>
-      <p className="text-center text-sm text-muted">
+          }
+        >
+          <PasswordInput
+            autoComplete="current-password"
+            className="sm:h-11"
+            {...form.register('password')}
+          />
+        </Field>
+        <Button type="submit" className="w-full sm:h-11" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Entrando…' : 'Entrar'}
+          {mutation.isPending ? null : <ArrowRightIcon />}
+        </Button>
+      </form>
+      <p className="text-center text-[13.5px] text-muted">
         ¿Tu financiera aún no usa Cobradía?{' '}
-        <Link to="/registro" className="font-medium text-brand-700 hover:underline">
+        <Link to="/registro" className="font-semibold text-brand-700 hover:underline">
           Pruébala gratis
         </Link>
       </p>

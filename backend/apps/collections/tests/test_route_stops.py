@@ -1,4 +1,4 @@
-"""The office follows a collector's stops (decision 114)."""
+"""The office follows a collector's stops (decision 115)."""
 
 from decimal import Decimal
 

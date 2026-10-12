@@ -33,7 +33,7 @@ const STEPS = [
   { label: 'Revisión', hint: 'Enviar a decisión' },
 ]
 
-/** P27, the new application as a guided task (decision 114): who, then the
+/** P27, the new application as a guided task (decision 115): who, then the
  * conditions with «Así queda» recomputed live by the server. Guarantees,
  * documents and the review follow on the draft itself. */
 export function ApplicationNewPage() {

@@ -5,7 +5,7 @@ import { day, FREQUENCY_TEXT, pct, plural, RATE_UNIT_TEXT, rd, whole } from '../
 import type { Conditions } from '../lib/conditions'
 import { Field, PercentInput, Segmented, Select, Texture } from './ui'
 
-/** Round amounts a person asks for, inside the product's range (decision 114). */
+/** Round amounts a person asks for, inside the product's range (decision 115). */
 const NICE = [
   5_000, 10_000, 15_000, 25_000, 50_000, 75_000, 100_000, 150_000, 200_000, 300_000, 500_000,
   1_000_000,
@@ -29,7 +29,7 @@ const FREQUENCY_SHORT: Record<string, string> = {
 }
 
 /** Product, a big amount with round shortcuts, the frequency side by side,
- * the installments with − and + and the rate (decision 114). */
+ * the installments with − and + and the rate (decision 115). */
 export function ConditionsForm({
   products,
   value,
@@ -199,7 +199,7 @@ export function ConditionsForm({
   )
 }
 
-/** «Así queda» (decision 114): the installment in big, what it costs in all
+/** «Así queda» (decision 115): the installment in big, what it costs in all
  * and the first installments, on forest, recomputed by the server as the
  * conditions change (the same quote as the simulator). */
 export function QuoteBlock({

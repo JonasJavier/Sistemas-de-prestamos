@@ -64,7 +64,7 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 
 ### Reglas de uso
 
-1. **Un solo bloque de color: el menú.** El bosque vive en el lateral; el área de trabajo es arena y blanco. Si aparece otro bloque grande de color, sobra. La textura de marca no cuenta como bloque: es un fondo tenue, no un color. El dorado es firma, no botón: nunca para acciones.
+1. **El bosque es para lo que importa ahora (decisión 115).** El menú es el bloque fijo; en el área de trabajo, arena y blanco. Un bloque bosque aparece solo para **lo que la persona tiene que mirar o decidir en ese momento**: «Así queda» al cotizar, la siguiente parada del cobrador, la ruta elegida, el efectivo por rendir, el plan recomendado y «Pago registrado». Nunca dos compitiendo en la misma vista. Dentro del bosque, el acento es `forest-accent`. La textura de marca no cuenta como bloque. El dorado es firma, no botón: nunca para acciones.
 2. **El dinero no se colorea por sí mismo.** Un importe es texto normal; el color lo da su **estado** (insignia), no el signo de pesos.
 3. **Estados de cuota y préstamo:** al día `brand-100`/`brand-800` · pagada `success` · parcial `info` · vencida 1–30 `warning` · vencida 31+ o legal `danger` · saldado gris. Siempre color **más texto**: nunca solo color (accesibilidad).
 4. **El ámbar ya no es identidad:** queda únicamente como color semántico de advertencia (`warning`).
@@ -130,6 +130,15 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Botones de fila | `Button size="sm"` · `variant="soft"` | La acción principal de cada fila de una lista es tonal (verde suave), nunca el verde relleno de la acción de la pantalla |
 | Progreso | `TopProgress` | Barra fina arriba mientras una pantalla carga sus datos o se guarda algo; espera 180 ms para no parpadear |
 | Lista de pagos | `PaymentList` | Recibos de un préstamo, un cliente o una caja, paginados de 25 en 25 |
+| Insignia de estado | `Badge` (`dot`) | Decisión 115: tinte suave del estado, sin borde, 11 px; con punto cuando es un estado («● Al día», «● 3 días de atraso») |
+| Selector segmentado | `Segmented` | Opciones lado a lado en una caja: filtros con su cuenta, frecuencia, mensual/anual; la elegida en menta |
+| Tablas | rejilla CSS | Encabezado en `surface-2` de 12.5 px, filas de 13–13.5 px con `minmax(0, Nfr)`, cifras a la derecha y cortas sin partir; en el celular, una tarjeta por fila |
+| Calendario del préstamo | `LoanCalendar` | Cuotas pagadas con su barra, la próxima resaltada en `brand-50`, estados con color (pagada, con atraso, parcial, vencida, próxima, pendiente); se abre alrededor de la próxima y se despliega entera |
+| Pasos | `Steps` | Tareas largas (la solicitud): verticales con línea en escritorio, barras cortas en el celular |
+| Cotización | `QuoteBlock` | «Así queda»: la cuota en grande sobre bosque, total, interés, neto, última cuota y las primeras cuotas; la misma cotización del servidor en la solicitud y el simulador |
+| Acciones del préstamo | `useLoanMenu` | Las mismas acciones (y sus diálogos) en «Más» del préstamo y en la lista de la ficha del cliente; las destructivas al final, en rojo |
+| Contraseña | `PasswordInput` | Con su ojo para ver lo escrito |
+| Pantallas públicas | `PublicPage` | Mitad bosque con la promesa de la marca y mitad arena con el formulario de 420 px; en el celular, el bosque arriba y el formulario en una hoja que sube |
 
 **Jerarquía de acciones por pantalla:** 1 primaria (verde, rellena) · secundarias (borde) · el resto en «Más» (menú). Las destructivas, en rojo y al final.
 
@@ -159,7 +168,7 @@ La interfaz responde a la mano: nada se queda plano al tocarlo. Un solo *easing*
 | Avisos y estados vacíos | `animate-fade` y `animate-rise` |
 | Interruptor de tema | El ícono nuevo entra con `animate-pop` al cambiar |
 
-Lo que no se anima, a propósito: las cifras (nunca «cuentan» hacia arriba, el dinero se lee de una vez), las tablas largas y los campos de formulario más allá del borde y el anillo de foco.
+Lo que no se anima, a propósito: las cifras, salvo **la cifra del día del inicio**, que cuenta hasta su valor en 1.2 s (`useCountUp`, con su valor real para los lectores de pantalla y quieta con `prefers-reduced-motion`); las tablas largas y los campos de formulario más allá del borde y el anillo de foco.
 
 ## 7. Accesibilidad (WCAG 2.2 AA)
 

@@ -51,7 +51,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             except ValueError as exc:
                 raise ValidationError({"cobrador": "Valor inválido."}) from exc
         if self.action == "list":
-            # Decision 114: the portfolio of each customer and the state filter.
+            # Decision 115: the portfolio of each customer and the state filter.
             queryset = listing.by_state(listing.with_portfolio(queryset), params.get("estado", ""))
         return queryset
 

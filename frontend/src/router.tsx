@@ -46,6 +46,10 @@ const PortfolioReportPage = lazyRouteComponent(
   () => import('./pages/PortfolioReport'),
   'PortfolioReportPage',
 )
+const CollectionsReportPage = lazyRouteComponent(
+  () => import('./pages/CollectionsReport'),
+  'CollectionsReportPage',
+)
 const FiscalDocumentsPage = lazyRouteComponent(
   () => import('./pages/FiscalDocuments'),
   'FiscalDocumentsPage',
@@ -347,7 +351,7 @@ const receiptRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/recibos/$numero',
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.receipts),
-  // «nuevo»: just collected, the receipt opens with «Pago registrado» (decision 114).
+  // «nuevo»: just collected, the receipt opens with «Pago registrado» (decision 115).
   validateSearch: (search: Record<string, unknown>): { nuevo?: number } =>
     search.nuevo ? { nuevo: 1 } : {},
   component: withMe(ReceiptPage),
@@ -483,6 +487,13 @@ const portfolioReportRoute = createRoute({
   path: '/reportes/cartera',
   beforeLoad: ({ context }) => rolesOnly(context, ACCESS.indicators),
   component: withMe(PortfolioReportPage),
+})
+
+const collectionsReportRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/reportes/cobros',
+  beforeLoad: ({ context }) => rolesOnly(context, ACCESS.indicators),
+  component: CollectionsReportPage,
 })
 
 const fiscalRoute = createRoute({
@@ -683,6 +694,7 @@ const routeTree = rootRoute.addChildren([
     payablesRoute,
     resultsRoute,
     portfolioReportRoute,
+    collectionsReportRoute,
     reportsRoute,
     scoresRoute,
     legalCasesRoute,

@@ -256,3 +256,61 @@ class PortfolioReportView(APIView):
                 }
             )
         )
+
+
+class CollectionsReportView(APIView):
+    """«Cobros» (decision 115): collected against what fell due, day by day
+    and by route, with the same definitions as the dashboard."""
+
+    permission_classes = [CanReadIndicators]
+
+    def get(self, request: Request) -> Response:
+        today = timezone.localdate()
+        date_to = _date(request, "hasta", today)
+        date_from = _date(request, "desde", date_to.replace(day=1))
+        if date_to > today:
+            raise ValidationError({"hasta": "La fecha no puede ser futura."})
+        if date_from > date_to:
+            raise ValidationError({"desde": "El inicio va antes del final."})
+        if (date_to - date_from).days >= indicators.MAX_REPORT_DAYS:
+            raise ValidationError({"desde": "Elige un período de hasta dos meses."})
+        branches, _ = scope_of(request)
+        days = indicators.collections_by_day(date_from, date_to, branches=branches)
+        collected = sum((d["collected"] for d in days), Decimal("0.00"))
+        expected = sum((d["expected"] for d in days), Decimal("0.00"))
+        active = [d for d in days if d["collected"] or d["expected"]]
+        routes = indicators.collections_by_route(date_from, date_to, branches=branches)
+        office = collected - sum((r["collected"] for r in routes), Decimal("0.00"))
+        # The same span just before, to say whether the period goes better.
+        span = (date_to - date_from).days + 1
+        before_to = date_from - dt.timedelta(days=1)
+        before = indicators.collections_by_day(
+            before_to - dt.timedelta(days=span - 1), before_to, branches=branches
+        )
+        before_active = [d for d in before if d["collected"] or d["expected"]]
+        before_collected = sum((d["collected"] for d in before), Decimal("0.00"))
+        average = (collected / len(active)).quantize(Decimal("0.01")) if active else Decimal("0.00")
+        before_average = (
+            (before_collected / len(before_active)).quantize(Decimal("0.01"))
+            if before_active
+            else None
+        )
+        return Response(
+            plain(
+                {
+                    "from": date_from,
+                    "to": date_to,
+                    "scope": scope_label(branches),
+                    "collected": collected,
+                    "expected": expected,
+                    "recovery": indicators.ratio(collected, expected),
+                    "days_with_activity": len(active),
+                    "daily_average": average,
+                    "previous_daily_average": before_average,
+                    "days": days,
+                    "routes": routes,
+                    "office": max(office, Decimal("0.00")),
+                    "definitions": indicators.DEFINITIONS,
+                }
+            )
+        )

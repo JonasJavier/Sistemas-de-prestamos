@@ -52,7 +52,7 @@ const COLUMNS =
   'grid grid-cols-[22px_minmax(0,1.3fr)_minmax(0,1fr)_auto] items-center gap-x-3 @min-[600px]:grid-cols-[28px_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.2fr)]'
 const WIDE = 'hidden @min-[600px]:block'
 
-/** The schedule of a loan (decision 114): how many are paid with a bar, then
+/** The schedule of a loan (decision 115): how many are paid with a bar, then
  * each installment with its date, amounts, late fee and state; the next one
  * stands out. It opens around the next installment and unfolds whole. */
 export function LoanCalendar({ rows, terms }: { rows: Row[]; terms: LoanTerms | null }) {

@@ -152,7 +152,7 @@ const MONTHS_SHORT = [
   'dic',
 ]
 
-/** A date close to today the way people say it (decision 114): «Hoy»,
+/** A date close to today the way people say it (decision 115): «Hoy»,
  * «Mañana», «Lun 19 oct» within a week, «1 nov» farther away. */
 export function nearDay(iso: string | null | undefined, today = todayISO()): string {
   if (!iso) return '—'

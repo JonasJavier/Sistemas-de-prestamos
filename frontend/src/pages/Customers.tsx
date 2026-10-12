@@ -86,7 +86,7 @@ function OtherBranch({ document }: { document: string }) {
 const COLUMNS =
   'grid grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1.05fr)_20px] items-center gap-x-4'
 
-/** The quick view of a customer (decision 114): balance, the progress of the
+/** The quick view of a customer (decision 115): balance, the progress of the
  * loan due soonest, the next installment and the two actions. */
 function QuickView({ customer, me }: { customer: CustomerListItem; me: Me }) {
   const p = customer.portfolio
@@ -199,7 +199,7 @@ function QuickView({ customer, me }: { customer: CustomerListItem; me: Me }) {
   )
 }
 
-/** P20, the customers (decision 114): filters by state with their counts,
+/** P20, the customers (decision 115): filters by state with their counts,
  * by collector, a readable table and a quick view that spares opening the
  * file. On a phone, one card per customer. */
 export function CustomersPage({ me }: { me: Me }) {

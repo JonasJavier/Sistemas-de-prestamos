@@ -163,7 +163,7 @@ function LoanGuarantees({ loan }: { loan: Loan }) {
   )
 }
 
-/** The loan's actions as a list (decision 114); the destructive ones in red. */
+/** The loan's actions as a list (decision 115); the destructive ones in red. */
 function ActionList({ items }: { items: MoreItem[] }) {
   if (!items.length) return null
   return (
@@ -188,7 +188,7 @@ function ActionList({ items }: { items: MoreItem[] }) {
   )
 }
 
-/** P21, the customer's file (decision 114): who they are, their loans as
+/** P21, the customer's file (decision 115): who they are, their loans as
  * tabs, the four figures of the loan in view, its calendar and everything
  * else of the file, with the loan's actions at the right. */
 export function CustomerDetailPage({ me }: { me: Me }) {

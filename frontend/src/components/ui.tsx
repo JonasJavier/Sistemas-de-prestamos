@@ -7,6 +7,8 @@ import {
   type ReactNode,
 } from 'react'
 
+import { Link } from '@tanstack/react-router'
+
 import { ApiError } from '../api/client'
 import {
   errorMessage,
@@ -23,7 +25,17 @@ import {
   type ButtonSize,
   type ButtonVariant,
 } from './classes'
-import { AlertIcon, CheckCircleIcon, CheckIcon, InfoIcon, SearchIcon } from './icons'
+import { useDarkTheme } from '../lib/theme'
+import {
+  AlertIcon,
+  CheckCircleIcon,
+  EyeIcon,
+  EyeOffIcon,
+  InfoIcon,
+  MoonIcon,
+  SearchIcon,
+  SunIcon,
+} from './icons'
 
 /** Base building blocks using the Cobradía tokens (doc 08). shadcn/ui
  * replaces these as screens grow; the class vocabulary stays the same. */
@@ -45,17 +57,23 @@ export function Field({
   label,
   error,
   hint,
+  aside,
   children,
 }: {
   label: string
   error?: string
   /** One line under the control saying what the value does. */
   hint?: string
+  /** Something at the right of the label (a link such as «¿La olvidaste?»). */
+  aside?: ReactNode
   children: ReactNode
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="block text-[13px] font-medium text-ink/85">{label}</span>
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="block text-[13px] font-medium text-ink/85">{label}</span>
+        {aside ? <span className="text-[12.5px]">{aside}</span> : null}
+      </span>
       {children}
       {error ? (
         <span className="block text-[12.5px] font-medium text-danger-600">{error}</span>
@@ -168,7 +186,7 @@ export function Texture({ tone }: { tone: 'forest' | 'sand' }) {
   )
 }
 
-/** A titled group of a screen (decision 114): the title in Sora 17 and a
+/** A titled group of a screen (decision 115): the title in Sora 17 and a
  * quiet note at its right; the gold dot now marks only the eyebrows. */
 export function Section({
   title,
@@ -361,7 +379,7 @@ const TONES: Record<string, string> = {
 }
 
 /** A state always reads as color AND text (doc 07 - section 5): a soft tint
- * of the state, and a dot before the words when it is a status (decision 114). */
+ * of the state, and a dot before the words when it is a status (decision 115). */
 export function Badge({
   tone = 'neutral',
   dot = false,
@@ -381,7 +399,7 @@ export function Badge({
   )
 }
 
-/** Choices side by side in one rounded box (decision 114): the filters of a
+/** Choices side by side in one rounded box (decision 115): the filters of a
  * list with their counts, the frequency of a loan, monthly or yearly. */
 export function Segmented<T extends string>({
   label,
@@ -690,66 +708,136 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   )
 }
 
-/** Layout of the screens outside the app: sign in, sign up, links. On wide
- * screens a brand panel keeps the first impression in Cobradía's identity. */
+/** The «Entrar · Crear cuenta» switch of the sign-in and sign-up screens. */
+function AccessTabs({ tab }: { tab: 'entrar' | 'registro' }) {
+  const item = (to: '/entrar' | '/registro', label: string, on: boolean) => (
+    <Link
+      to={to}
+      aria-current={on ? 'page' : undefined}
+      className={`press flex h-10 flex-1 items-center justify-center rounded-lg text-[13.5px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+        on ? 'bg-brand-950 text-on-forest shadow-sm' : 'text-muted hover:text-ink'
+      }`}
+    >
+      {label}
+    </Link>
+  )
+  return (
+    <nav
+      aria-label="Acceso"
+      className="flex gap-1 rounded-xl bg-surface p-1 shadow-xs ring-1 ring-inset ring-edge"
+    >
+      {item('/entrar', 'Entrar', tab === 'entrar')}
+      {item('/registro', 'Crear cuenta', tab === 'registro')}
+    </nav>
+  )
+}
+
+function PublicThemeToggle() {
+  const [dark, toggle] = useDarkTheme()
+  const label = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      title={label}
+      aria-label={label}
+      className="press press-down grid size-10 place-items-center rounded-control bg-white/[0.07] text-on-forest ring-1 ring-inset ring-white/10 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-gold-500"
+    >
+      <span key={String(dark)} className="grid animate-pop">
+        {dark ? <SunIcon /> : <MoonIcon />}
+      </span>
+    </button>
+  )
+}
+
+const YEAR = new Date().getFullYear()
+
+const WORDMARK = (
+  <span className="font-display text-[26px] font-bold tracking-[-0.03em] text-on-forest">
+    Cobrad<span className="text-gold-500">í</span>a
+  </span>
+)
+
+/** The screens outside the app (decision 115): on a desktop, half forest
+ * with the brand's promise and half sand with the form; on a phone, the
+ * forest on top and the form in a sheet that rises from below. */
 export function PublicPage({
   subtitle,
   lead,
+  tab,
   children,
 }: {
+  /** The title over the form. */
   subtitle?: string
-  /** A second, quieter line under the subtitle. */
-  lead?: string
+  /** A second, quieter line under it. */
+  lead?: ReactNode
+  /** Sign in or sign up: shows the switch between both. */
+  tab?: 'entrar' | 'registro'
   children: ReactNode
 }) {
   return (
-    <div className="flex min-h-screen">
-      <aside className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden bg-brand-950 p-10 text-white lg:flex xl:p-12">
-        {/* A soft light from the corner and a fine dot grid: depth without noise. */}
+    <div className="flex min-h-screen flex-col bg-brand-950 lg:flex-row lg:bg-canvas">
+      <aside className="relative flex flex-col overflow-hidden bg-brand-950 px-6 pb-12 pt-6 text-on-forest lg:w-1/2 lg:justify-between lg:px-14 lg:py-12">
         <Texture tone="forest" />
-        <Brand className="relative text-2xl" tone="light" />
-        <div className="relative space-y-8">
-          <h2 className="text-[2.1rem] font-semibold leading-[1.15]">
-            Tu cartera al día,
-            <br />
-            <span className="text-gold-500">cada día.</span>
-          </h2>
-          <ul className="space-y-4 text-[15px] text-brand-200">
-            {[
-              'Cuotas, intereses y mora calculados al centavo.',
-              'Desembolsos y caja que siempre cuadran con el libro.',
-              'Los datos de tu financiera, aislados y protegidos.',
-            ].map((line) => (
-              <li key={line} className="flex items-start gap-3">
-                <span
-                  aria-hidden
-                  className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/10 text-gold-500 ring-1 ring-white/15"
-                >
-                  <CheckIcon />
-                </span>
-                {line}
-              </li>
-            ))}
-          </ul>
+        <div className="relative flex items-center justify-between">
+          {WORDMARK}
+          <PublicThemeToggle />
         </div>
-        <p className="relative text-[12.5px] text-brand-200/80">
-          Hecho en República Dominicana para financieras dominicanas.
-        </p>
+        <div className="relative mt-6 max-w-xl animate-rise lg:mt-0">
+          <p className="mb-4 hidden items-center gap-2 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-brand-200 lg:flex">
+            <span aria-hidden className="size-1.5 rounded-full bg-gold-500" />
+            Para financieras y prestamistas
+          </p>
+          <p className="font-display text-[27px] font-bold leading-[1.08] tracking-[-0.035em] lg:text-[52px]">
+            Tu cartera, tus rutas<span className="hidden lg:inline"> y tu caja</span>, cuadradas
+            cada día.
+          </p>
+          <p className="mt-5 hidden max-w-md text-[15px] leading-relaxed text-brand-200 lg:block">
+            Desde la solicitud hasta el último recibo, con la cifra del día siempre a la vista.
+          </p>
+        </div>
+        <div className="relative hidden justify-between text-[12.5px] text-brand-200 lg:flex">
+          <span>© {YEAR} Cobradía · hecho en República Dominicana</span>
+          <a href="mailto:hola@cobradia.com" className="hover:text-on-forest">
+            hola@cobradia.com
+          </a>
+        </div>
       </aside>
-      <main className="flex flex-1 items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm space-y-6 animate-fade">
-          <div className="space-y-1.5 text-center">
-            <Brand className="text-[1.7rem] lg:hidden" />
-            {subtitle ? (
-              <h1 className="font-sans text-sm font-normal tracking-normal text-muted lg:font-display lg:text-[1.4rem] lg:font-semibold lg:tracking-tight lg:text-ink">
-                {subtitle}
-              </h1>
-            ) : null}
-            {lead ? <p className="text-sm text-muted">{lead}</p> : null}
-          </div>
+      <main className="relative -mt-6 flex flex-1 animate-sheet justify-center rounded-t-3xl bg-canvas px-5 pb-10 pt-6 lg:mt-0 lg:animate-none lg:items-center lg:rounded-none lg:px-10 lg:py-12">
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-2.5 h-1 w-10 -translate-x-1/2 rounded-full bg-edge lg:hidden"
+        />
+        <div className="w-full max-w-[420px] space-y-5 animate-fade">
+          {tab ? <AccessTabs tab={tab} /> : null}
+          {subtitle ? (
+            <div className="space-y-1">
+              <h1 className="text-[24px] leading-tight lg:text-[28px]">{subtitle}</h1>
+              {lead ? <div className="text-[13.5px] text-muted">{lead}</div> : null}
+            </div>
+          ) : null}
           {children}
         </div>
       </main>
+    </div>
+  )
+}
+
+/** A password with its eye: the person can check what they typed. */
+export function PasswordInput({ className = '', ...props }: ComponentProps<'input'>) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div className="relative">
+      <Input {...props} type={shown ? 'text' : 'password'} className={`pr-11 ${className}`} />
+      <button
+        type="button"
+        onClick={() => setShown((value) => !value)}
+        aria-label={shown ? 'Ocultar lo escrito' : 'Mostrar lo escrito'}
+        aria-pressed={shown}
+        className="absolute inset-y-0 right-1 grid w-10 place-items-center rounded-lg text-muted outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500"
+      >
+        {shown ? <EyeOffIcon /> : <EyeIcon />}
+      </button>
     </div>
   )
 }

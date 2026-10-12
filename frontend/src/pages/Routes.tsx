@@ -196,7 +196,7 @@ const STOP_COLUMNS =
 
 const hour = (at: string) => new Date(at).toLocaleTimeString('es-DO', { timeStyle: 'short' })
 
-/** One collector's day (decision 114): the strip of figures, the stops in
+/** One collector's day (decision 115): the strip of figures, the stops in
  * his order with their results, the live feed and what he must hand in. */
 function RouteDay({
   collector,
@@ -460,7 +460,7 @@ function RouteDay({
   )
 }
 
-/** P45, «Rutas de cobro» (decision 114): one card per route of the day (the
+/** P45, «Rutas de cobro» (decision 115): one card per route of the day (the
  * chosen one in forest) and that route followed stop by stop. */
 export function RoutesPage() {
   const [date, setDate] = useState(todayISO())

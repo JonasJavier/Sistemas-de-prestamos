@@ -1,7 +1,7 @@
 import type { CustomerListItem } from '../api/customers'
 import { nearDay, plural } from './format'
 
-/** The state of a customer at a glance: a chip with its dot (decision 114). */
+/** The state of a customer at a glance: a chip with its dot (decision 115). */
 export function customerState(customer: CustomerListItem): { label: string; tone: string } {
   const p = customer.portfolio
   if (customer.status === 'blocked') return { label: 'Bloqueado', tone: 'danger' }

@@ -13,8 +13,6 @@ import {
   EmptyState,
   PageHeader,
   Pagination,
-  rowLinkClass,
-  RowList,
   SearchInput,
   Select,
   Spinner,
@@ -28,6 +26,9 @@ export interface LoansSearch {
   /** A collector's id, or «none» for the loans without one (P45). */
   cobrador?: string
 }
+
+const LOAN_COLUMNS =
+  'md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1.1fr)] md:items-center'
 
 /** P31: loans with filters; the totals respect the filters (doc 07 - 5).
  * Supervisors assign the portfolio to collectors from here (P45). */
@@ -164,68 +165,97 @@ export function LoansPage({ me }: { me: Me }) {
         <Spinner />
       ) : rows.length > 0 ? (
         <>
-          <RowList>
-            {rows.map((loan) => {
-              const s = LOAN_STATUS[loan.status]
-              return (
-                <li key={loan.id} className="flex items-stretch">
-                  {supervisor && loan.status === 'active' ? (
-                    <label className="flex items-center pl-4">
-                      <input
-                        type="checkbox"
-                        aria-label={`Seleccionar ${loan.number}`}
-                        checked={selected.includes(loan.number)}
-                        onChange={() => toggle(loan.number)}
-                      />
-                    </label>
-                  ) : null}
-                  <Link
-                    to="/prestamos/$numero"
-                    params={{ numero: loan.number }}
-                    className={`${rowLinkClass} flex-1`}
+          <div className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+            <div
+              className={`${LOAN_COLUMNS} hidden gap-x-4 border-b border-edge bg-surface-2 py-2.5 pr-5 text-[12.5px] font-medium text-muted md:grid ${
+                supervisor ? 'pl-12' : 'pl-5'
+              }`}
+            >
+              <span>Préstamo</span>
+              <span>Cliente</span>
+              <span className="text-right">Saldo de capital</span>
+              <span>Próxima cuota</span>
+              <span>Estado</span>
+            </div>
+            <ul className="divide-y divide-edge">
+              {rows.map((loan, index) => {
+                const s = LOAN_STATUS[loan.status]
+                const late = loan.status === 'active' && loan.days_past_due > 0
+                return (
+                  <li
+                    key={loan.id}
+                    className="flex animate-reveal items-stretch"
+                    style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
                   >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold tabular-nums">{loan.number}</span>
-                        <Badge tone={s?.tone}>{s?.label ?? loan.status}</Badge>
-                        {loan.status === 'active' && loan.days_past_due > 0 ? (
-                          <Badge tone="danger">{loan.days_past_due} días de atraso</Badge>
+                    {supervisor ? (
+                      <label className="flex w-12 shrink-0 items-center justify-center">
+                        {loan.status === 'active' ? (
+                          <input
+                            type="checkbox"
+                            aria-label={`Seleccionar ${loan.number}`}
+                            checked={selected.includes(loan.number)}
+                            onChange={() => toggle(loan.number)}
+                          />
                         ) : null}
-                      </div>
-                      <div className="truncate text-sm">
-                        {loan.customer_name}{' '}
-                        <span className="text-muted tabular-nums">· {loan.customer_document}</span>
-                      </div>
-                      <div className="text-[12.5px] text-muted">{loan.product_name}</div>
-                    </div>
-                    <div className="sm:text-right">
-                      <div className="font-display font-bold tabular-nums">
+                      </label>
+                    ) : null}
+                    <Link
+                      to="/prestamos/$numero"
+                      params={{ numero: loan.number }}
+                      className={`press flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3 pr-4 outline-none hover:bg-brand-50/60 focus-visible:bg-brand-50 md:grid ${LOAN_COLUMNS} ${
+                        supervisor ? '' : 'pl-4 md:pl-5'
+                      } md:pr-5`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-semibold tabular-nums">{loan.number}</span>
+                        <span className="block truncate text-[12px] text-muted">
+                          {loan.product_name}
+                        </span>
+                      </span>
+                      <span className="min-w-0 max-md:order-first max-md:basis-full">
+                        <span className="block truncate text-[13.5px] font-medium">
+                          {loan.customer_name}
+                        </span>
+                        <span className="block truncate text-[12px] text-muted tabular-nums">
+                          {loan.customer_document}
+                        </span>
+                      </span>
+                      <span className="text-right font-display text-[15px] font-semibold tabular-nums">
                         {rd(loan.principal_outstanding)}
-                      </div>
+                      </span>
                       {/* A date already past is not «próxima»: it is the oldest one unpaid. */}
-                      <div
-                        className={`text-[12.5px] ${loan.days_past_due > 0 ? 'text-danger-600' : 'text-muted'}`}
+                      <span
+                        className={`text-[12.5px] max-md:hidden ${late ? 'text-danger-600' : 'text-muted'}`}
                       >
                         {!loan.next_due_date
                           ? 'Sin cuotas pendientes'
-                          : loan.status === 'active' && loan.days_past_due > 0
+                          : late
                             ? `Vencida desde ${day(loan.next_due_date)}`
-                            : `Próxima cuota ${day(loan.next_due_date)}`}
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              )
-            })}
-            <li className="flex flex-wrap items-center justify-between gap-2 bg-surface-2 px-4 py-3 text-sm font-semibold">
-              <span>
-                {count} préstamo{count === 1 ? '' : 's'}
-              </span>
-              <span className="tabular-nums">
-                Capital pendiente {rd(query.data?.totals.principal_outstanding)}
-              </span>
-            </li>
-          </RowList>
+                            : day(loan.next_due_date)}
+                      </span>
+                      <span className="flex flex-wrap gap-1.5">
+                        {late ? (
+                          <Badge tone={loan.days_past_due > 30 ? 'danger' : 'warning'} dot>
+                            {plural(loan.days_past_due, 'día')} de atraso
+                          </Badge>
+                        ) : (
+                          <Badge tone={s?.tone} dot>
+                            {loan.status === 'active' ? 'Al día' : (s?.label ?? loan.status)}
+                          </Badge>
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+              <li className="flex flex-wrap items-center justify-between gap-2 bg-surface-2 px-5 py-3 text-sm font-semibold">
+                <span>{plural(count, 'préstamo')}</span>
+                <span className="tabular-nums">
+                  Capital pendiente {rd(query.data?.totals.principal_outstanding)}
+                </span>
+              </li>
+            </ul>
+          </div>
           <Pagination page={page} count={count} onChange={setPage} />
         </>
       ) : (

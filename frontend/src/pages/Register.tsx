@@ -8,7 +8,7 @@ import { errorMessage } from '../lib/format'
 
 import { ApiError } from '../api/client'
 import { registerCompany } from '../api/platform'
-import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
+import { Alert, Button, Card, Field, Input, PasswordInput, PublicPage } from '../components/ui'
 
 const schema = z.object({
   company_legal_name: z.string().min(3, 'Escribe el nombre de tu financiera.'),
@@ -67,8 +67,13 @@ export function RegisterPage() {
 
   return (
     <PublicPage
+      tab="registro"
       subtitle="Crea la cuenta de tu financiera"
-      lead="30 días de prueba gratis, sin tarjeta."
+      lead={
+        <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-[12.5px] font-semibold text-gold-800 ring-1 ring-inset ring-gold-500/30">
+          ★ 30 días gratis · sin tarjeta
+        </span>
+      }
     >
       <Card>
         <form
@@ -105,7 +110,7 @@ export function RegisterPage() {
             error={form.formState.errors.password?.message}
             hint="Al menos 12 caracteres."
           >
-            <Input type="password" autoComplete="new-password" {...form.register('password')} />
+            <PasswordInput autoComplete="new-password" {...form.register('password')} />
           </Field>
           {/* Decision 103: the accepted version is recorded with the company. */}
           <div className="space-y-1">

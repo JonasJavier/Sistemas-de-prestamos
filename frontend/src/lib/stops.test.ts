@@ -21,7 +21,7 @@ const stop = (position: number, extra: Partial<RouteStop> = {}): RouteStop => ({
   ...extra,
 })
 
-describe('the stops of a route (decision 114)', () => {
+describe('the stops of a route (decision 115)', () => {
   const paid = stop(1, {
     visited_at: '2026-10-12T14:04:00Z',
     payment: { number: 'R1', amount: '1000.00', method: 'Efectivo', at: '2026-10-12T14:04:00Z' },

@@ -17,7 +17,7 @@ export function MoreMenu({
   compact = false,
 }: {
   items: MoreItem[]
-  /** A square «⋯» button instead of «Más» (decision 114). */
+  /** A square «⋯» button instead of «Más» (decision 115). */
   compact?: boolean
 }) {
   const [open, setOpen] = useState(false)

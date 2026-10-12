@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.reports.api.views import DashboardView, PortfolioReportView
+from apps.reports.api.views import CollectionsReportView, DashboardView, PortfolioReportView
 from apps.reports.api.views_center import (
     CatalogView,
     ExportFileView,
@@ -20,6 +20,7 @@ urlpatterns = [
     path("tablero/", DashboardView.as_view(), name="dashboard"),
     path("reportes/", CatalogView.as_view(), name="report-catalog"),
     path("reportes/cartera/", PortfolioReportView.as_view(), name="report-portfolio"),
+    path("reportes/cobros/", CollectionsReportView.as_view(), name="report-collections"),
     path("clasificacion/", ScoresView.as_view(), name="customer-scores"),
     path("comisiones/", RunView.as_view(), name="commissions"),
     path("comisiones/reglas/", RulesView.as_view(), name="commission-rules"),

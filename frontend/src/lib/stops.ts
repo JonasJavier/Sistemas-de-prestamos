@@ -8,7 +8,7 @@ export interface StopResult {
   next?: boolean
 }
 
-/** The result of a stop as a chip (decision 114): a payment (whole or part),
+/** The result of a stop as a chip (decision 115): a payment (whole or part),
  * what the visit left (a promise, nobody home…), the next one or pending. */
 export function stopResult(stop: RouteStop, next: RouteStop | undefined): StopResult {
   if (stop.payment)
@@ -46,7 +46,7 @@ export interface Activity {
   position: number
 }
 
-/** The live feed (decision 114): what happened at each stop, newest first. */
+/** The live feed (decision 115): what happened at each stop, newest first. */
 export function activityOf(stops: RouteStop[]): Activity[] {
   const events: Activity[] = []
   for (const stop of stops) {

@@ -80,7 +80,7 @@ interface Option {
   hint?: string
 }
 
-/** «¿Cuánto paga?» (decision 114): what is late, the installment (or two),
+/** «¿Cuánto paga?» (decision 115): what is late, the installment (or two),
  * settling the loan, another amount and, when allowed, a capital payment. */
 function optionsOf(screen: PaymentScreen): Option[] {
   const s = screen.summary
@@ -200,7 +200,7 @@ const SEGMENTS = [
   { key: 'principal', label: 'Capital', className: 'bg-brand-700' },
 ] as const
 
-/** «Cómo se aplica» (decision 114): the payment split as one bar (late fee,
+/** «Cómo se aplica» (decision 115): the payment split as one bar (late fee,
  * interest, capital) and what remains after it. */
 function HowApplied({
   result,
@@ -287,7 +287,7 @@ function HowApplied({
   )
 }
 
-/** The 80 mm receipt as it will print (decision 114), with the torn edge. */
+/** The 80 mm receipt as it will print (decision 115), with the torn edge. */
 function ReceiptPreview({ result }: { result: Receipt }) {
   const row = (label: string, value: string, strong = false) => (
     <div className={`flex justify-between gap-3 ${strong ? 'font-bold' : ''}`}>
@@ -342,7 +342,7 @@ function ReceiptPreview({ result }: { result: Receipt }) {
   )
 }
 
-/** P33 (and P41 on the collector's phone), «Registrar pago» (decision 114):
+/** P33 (and P41 on the collector's phone), «Registrar pago» (decision 115):
  * how much, how, and the exact split and receipt before confirming. */
 export function CollectPage({ me }: { me: Me }) {
   const { numero } = useParams({ from: '/app/cobrar/$numero' })

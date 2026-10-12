@@ -12,6 +12,7 @@ import {
   type ReportSpec,
 } from '../api/reports'
 import { ApiError } from '../api/client'
+import { Kpi } from '../components/Kpi'
 import { ExportButtons } from '../components/ExportButtons'
 import {
   Alert,
@@ -144,18 +145,14 @@ function ReportBody({ spec, catalog }: { spec: ReportSpec; catalog: ReportCatalo
             </Alert>
           ) : null}
           {data.summary.length ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
               {data.summary.map((item) => (
-                <div
+                <Kpi
                   key={item.label}
-                  className="rounded-lg border border-edge bg-surface px-3 py-2"
-                >
-                  <div className="text-[12px] text-muted">{item.label}</div>
-                  <div className="font-semibold tabular-nums">
-                    {item.kind === 'money' ? rd(item.value) : cell(item.value, item.kind)}
-                  </div>
-                  {item.hint ? <div className="text-[11.5px] text-muted">{item.hint}</div> : null}
-                </div>
+                  label={item.label}
+                  value={item.kind === 'money' ? rd(item.value) : cell(item.value, item.kind)}
+                  hint={item.hint || undefined}
+                />
               ))}
             </div>
           ) : null}
@@ -307,14 +304,15 @@ export function ReportsPage() {
       ) : !data || !current ? (
         <EmptyState>Tu rol no tiene reportes.</EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[15rem_1fr]">
-          <nav aria-label="Reportes" className="space-y-3">
+        <div className="space-y-5">
+          <nav
+            aria-label="Reportes"
+            className="flex flex-wrap gap-x-6 gap-y-3 rounded-card border border-edge bg-surface px-4 py-3.5 shadow-sm"
+          >
             {groups.map((group) => (
-              <div key={group}>
-                <div className="px-2 text-[12px] font-semibold uppercase tracking-wide text-muted">
-                  {group}
-                </div>
-                <ul className="mt-1 flex flex-wrap gap-1 lg:flex-col">
+              <div key={group} className="min-w-0">
+                <div className="eyebrow mb-1.5">{group}</div>
+                <ul className="flex flex-wrap gap-1.5">
                   {data.reports
                     .filter((r) => r.group === group)
                     .map((r) => (
@@ -323,10 +321,10 @@ export function ReportsPage() {
                           type="button"
                           aria-current={r.key === current.key ? 'page' : undefined}
                           onClick={() => setSelected(r.key)}
-                          className={`w-full rounded-lg px-2 py-1.5 text-left text-sm ${
+                          className={`press press-down h-8 rounded-full px-3 text-[13px] ring-1 ring-inset outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
                             r.key === current.key
-                              ? 'bg-brand-100 font-semibold text-brand-800'
-                              : 'hover:bg-surface-2'
+                              ? 'bg-brand-100 font-semibold text-brand-800 ring-brand-700/30'
+                              : 'font-medium text-ink ring-edge hover:bg-brand-50'
                           }`}
                         >
                           {r.title}

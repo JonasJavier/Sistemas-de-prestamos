@@ -8,7 +8,7 @@ const calm = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** The figure of the day counts up to its value in 1.2 s with a cubic ease-out
- * (decision 114); each refresh glides from the last value to the new one.
+ * (decision 115); each refresh glides from the last value to the new one.
  * With reduced motion it just shows the value. */
 export function useCountUp(target: number, duration = 1200): number {
   const still = calm()

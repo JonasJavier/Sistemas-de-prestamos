@@ -333,7 +333,7 @@ function Summary({ data, onClose }: { data: MyRoute; onClose: () => void }) {
   )
 }
 
-/** P40, «Mi ruta de hoy» on the collector's phone (decision 114): how the
+/** P40, «Mi ruta de hoy» on the collector's phone (decision 115): how the
  * day goes, the next stop in forest with its three answers, and the rest. */
 export function MyRoutePage() {
   useDocumentTitle('Mi ruta')

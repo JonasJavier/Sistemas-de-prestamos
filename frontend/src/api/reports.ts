@@ -65,6 +65,41 @@ export function getDashboard(sucursal?: string): Promise<Dashboard> {
   return api(`/api/v1/tablero/${toQuery({ sucursal })}`)
 }
 
+/** Decision 114: «Cobros», collected against what fell due. */
+export interface CollectionsReport {
+  from: string
+  to: string
+  scope: string
+  collected: string
+  expected: string
+  recovery: string | null
+  days_with_activity: number
+  daily_average: string
+  previous_daily_average: string | null
+  days: { date: string; collected: string; expected: string; recovery: string | null }[]
+  routes: {
+    kind: 'route'
+    id: string
+    name: string | null
+    collected: string
+    expected: string
+    recovery: string | null
+    stops: number
+    visited: number
+    promises: number
+  }[]
+  office: string
+  definitions: Record<string, string>
+}
+
+export function getCollectionsReport(params: {
+  desde?: string
+  hasta?: string
+  sucursal?: string
+}): Promise<CollectionsReport> {
+  return api(`/api/v1/reportes/cobros/${toQuery(params)}`)
+}
+
 export type PortfolioCut = 'sucursal' | 'cobrador' | 'producto'
 
 export interface PortfolioFilters {

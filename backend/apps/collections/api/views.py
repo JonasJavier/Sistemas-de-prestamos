@@ -381,7 +381,7 @@ class RouteMapView(APIView):
 
 
 class RouteStopsView(APIView):
-    """A collector's stops of a day as the office follows them (decision 114):
+    """A collector's stops of a day as the office follows them (decision 115):
     the order, the result of each one and the cash still to hand over. It only
     reads: the stops are generated when the collector opens «Mi ruta»."""
 

@@ -54,6 +54,7 @@ DEFINITIONS = {
     "en el período. La meta es cero.",
     "origins": "Cada ruta: lo cobrado en ella frente a lo que debían sus paradas del día. La "
     "oficina: el resto del cobrado y del esperado del día.",
+    "daily_average": "Cobrado del período entre los días con algo esperado o cobrado.",
 }
 
 
@@ -301,7 +302,7 @@ def day_collection(day: dt.date, *, branches: Branches = None) -> dict:
 
 
 def origins(day: dt.date, *, branches: Branches = None, total: dict | None = None) -> list[dict]:
-    """Where the day's money comes from (decision 114): one row per route of
+    """Where the day's money comes from (decision 115): one row per route of
     the day and one for the office, which keeps what the routes don't explain,
     so the rows always add up to the figure of the day. ``total`` is that
     figure when the caller already has it (``day_collection``)."""
@@ -355,6 +356,95 @@ def origins(day: dt.date, *, branches: Branches = None, total: dict | None = Non
             "expected": max(total["expected"] - sum(stops.values(), ZERO), ZERO),
         }
     )
+    return rows
+
+
+MAX_REPORT_DAYS = 62
+
+
+def collections_by_day(date_from: dt.date, date_to: dt.date, *, branches: Branches = None) -> list:
+    """«Cobros» day by day (decision 115): the same figure of the day as the
+    dashboard, for each date of the period."""
+    days = []
+    day = date_from
+    while day <= date_to:
+        days.append(day_collection(day, branches=branches))
+        day += dt.timedelta(days=1)
+    return days
+
+
+def collections_by_route(
+    date_from: dt.date, date_to: dt.date, *, branches: Branches = None
+) -> list:
+    """Each collector over the period: what his stops owed, what he collected
+    on his routes, his visits and the promises he took; the office keeps the
+    rest of the period's collection."""
+    from apps.accounts.models import User
+    from apps.collections.models import CollectionAction, RouteStop
+    from apps.core.api.errors import person
+    from apps.payments.models import Payment
+
+    stops = (
+        in_branches(
+            RouteStop.objects.filter(date__gte=date_from, date__lte=date_to),
+            "loan__branch_id",
+            branches,
+        )
+        .values("collector_id")
+        .annotate(
+            expected=Sum("amount_due"),
+            total=Count("id"),
+            visited=Count("id", filter=Q(visited_at__isnull=False)),
+        )
+    )
+    by_collector = {row["collector_id"]: row for row in stops}
+    got = dict(
+        in_branches(
+            Payment.objects.filter(
+                value_date__gte=date_from,
+                value_date__lte=date_to,
+                route_session__isnull=False,
+                status=Payment.Status.POSTED,
+            ),
+            "branch_id",
+            branches,
+        )
+        .values_list("route_session__collector_id")
+        .annotate(t=Sum("amount"))
+    )
+    promised = dict(
+        in_branches(
+            CollectionAction.objects.filter(
+                created_at__date__gte=date_from,
+                created_at__date__lte=date_to,
+                result=CollectionAction.Result.PROMISED,
+            ),
+            "loan__branch_id",
+            branches,
+        )
+        .values_list("user_id")
+        .annotate(n=Count("id"))
+    )
+    users = {u.id: u for u in User.objects.filter(id__in={*by_collector, *got})}
+    rows = []
+    for uid, user in users.items():
+        row = by_collector.get(uid, {})
+        collected = got.get(uid, ZERO)
+        expected_total = row.get("expected") or ZERO
+        rows.append(
+            {
+                "kind": "route",
+                "id": str(uid),
+                "name": person(user),
+                "collected": collected,
+                "expected": expected_total,
+                "recovery": ratio(collected, expected_total),
+                "stops": row.get("total", 0),
+                "visited": row.get("visited", 0),
+                "promises": promised.get(uid, 0),
+            }
+        )
+    rows.sort(key=lambda r: r["collected"], reverse=True)
     return rows
 
 

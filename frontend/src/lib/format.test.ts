@@ -176,7 +176,7 @@ describe('moment', () => {
   })
 })
 
-describe('short figures (decision 114)', () => {
+describe('short figures (decision 115)', () => {
   it('drops the cents and the currency for the «cobrado / esperado» pairs', () => {
     expect(whole('68200.40')).toBe('68,200')
     expect(whole(4500)).toBe('4,500')
@@ -190,7 +190,7 @@ describe('short figures (decision 114)', () => {
   })
 })
 
-describe('dates near today (decision 114)', () => {
+describe('dates near today (decision 115)', () => {
   it('says today, tomorrow, the weekday within a week and the date beyond', () => {
     expect(nearDay('2026-10-12', '2026-10-12')).toBe('Hoy')
     expect(nearDay('2026-10-13', '2026-10-12')).toBe('Mañana')

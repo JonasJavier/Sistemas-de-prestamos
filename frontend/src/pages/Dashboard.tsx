@@ -39,7 +39,7 @@ const WELL: Record<Tone, string> = {
   bad: 'bg-danger-100 text-danger-600',
 }
 
-/** One queue of «Tu trabajo de hoy» (decision 114): icon, label, the count in
+/** One queue of «Tu trabajo de hoy» (decision 115): icon, label, the count in
  * Sora 28 and what it means. An empty queue stays quiet. */
 function Tile({
   to,
@@ -314,7 +314,7 @@ const BUCKET_COLOR = [
   'bg-danger-600',
 ]
 
-/** «Mora por tramos» (decision 114): one bar at 100 % split by bucket and the
+/** «Mora por tramos» (decision 115): one bar at 100 % split by bucket and the
  * table under it, with the count, the capital and its share. */
 function Buckets({ data }: { data: Dashboard }) {
   const p = data.indicators!.portfolio
@@ -439,7 +439,7 @@ function Indicators({ data, scope }: { data: Dashboard; scope?: string }) {
   )
 }
 
-/** «Operación de hoy» (decision 114): one card split in four. */
+/** «Operación de hoy» (decision 115): one card split in four. */
 function Operations({ data }: { data: Dashboard }) {
   const ops = data.operations
   if (!ops) return null
@@ -591,7 +591,7 @@ function Officer({ data }: { data: Dashboard }) {
 }
 
 /** The board's data, shared by the welcome card and the sections below so
- * both read the same figures. The branch comes from the top bar (decision 114). */
+ * both read the same figures. The branch comes from the top bar (decision 115). */
 function useBoard(me: Me) {
   const [scope] = useBranchScope()
   const wide = hasRole(me, ACCESS.allBranches)
@@ -641,7 +641,7 @@ const ORIGIN_STATUS: Record<string, { label: string; className: string }> = {
   'office-closed': { label: 'Cerrada', className: 'bg-surface-2 text-muted' },
 }
 
-/** «Por origen» (decision 114): each route and the office, with a short bar
+/** «Por origen» (decision 115): each route and the office, with a short bar
  * and «cobrado / esperado». */
 function Origins({ origins }: { origins: Origin[] }) {
   const routes = origins.filter((o) => o.kind === 'route')
@@ -701,7 +701,7 @@ function Origins({ origins }: { origins: Origin[] }) {
 }
 
 /** «Cobrado hoy · en vivo»: the figure of the day in Sora 60, counting up to
- * its value, with the bar against what fell due (decision 114). */
+ * its value, with the bar against what fell due (decision 115). */
 function DayFigure({
   today,
   definitions,

@@ -5,7 +5,7 @@ export interface Step {
   hint: string
 }
 
-/** The steps of a long task (decision 114): vertical with a line between
+/** The steps of a long task (decision 115): vertical with a line between
  * them on a desktop — done ones checked, the current one ringed — and a row
  * of short bars on a phone. */
 export function Steps({ steps, current }: { steps: Step[]; current: number }) {

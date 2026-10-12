@@ -180,7 +180,7 @@ def test_indicators_never_cross_companies(tenant, other_tenant) -> None:
 
 
 def test_origins_split_the_day_between_routes_and_the_office(tenant) -> None:
-    """Decision 114: each route against its stops, the office with the rest,
+    """Decision 115: each route against its stops, the office with the rest,
     and the rows add up to the figure of the day."""
     from apps.cash.tests.test_cash import _route
     from apps.collections.models import RouteStop
@@ -219,3 +219,27 @@ def test_origins_split_the_day_between_routes_and_the_office(tenant) -> None:
     assert sum(r["expected"] for r in rows) == day["expected"]
     manager = tenant.client("gerente").get("/api/v1/tablero/").json()
     assert [o["kind"] for o in manager["indicators"]["origins"]] == ["route", "office"]
+
+
+def test_the_collections_report_goes_day_by_day_and_by_route(tenant) -> None:
+    """Decision 115: «Cobros» with the dashboard's figure for each day."""
+    loan = make_loan(tenant, first_due_in=0)
+    pay(tenant, loan, "350.00")
+    day = today().isoformat()
+    report = tenant.client("gerente").get(f"/api/v1/reportes/cobros/?desde={day}&hasta={day}")
+    assert report.status_code == 200, report.content
+    data = report.json()
+    assert len(data["days"]) == 1
+    assert (D(data["collected"]), D(data["expected"])) == (D("350.00"), D("350.00"))
+    assert data["recovery"] == "1.0000"
+    assert D(data["daily_average"]) == D("350.00")
+    assert D(data["office"]) == D("350.00")  # nobody collected it on a route
+    assert data["routes"] == []
+
+    month = tenant.client("gerente").get("/api/v1/reportes/cobros/").json()
+    assert month["to"] == day and D(month["collected"]) >= D("350.00")
+    too_long = tenant.client("gerente").get(
+        "/api/v1/reportes/cobros/?desde=2026-01-01&hasta=2026-06-01"
+    )
+    assert too_long.status_code == 400
+    assert tenant.client("oficial").get("/api/v1/reportes/cobros/").status_code == 403

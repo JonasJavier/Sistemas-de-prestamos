@@ -18,11 +18,18 @@ export function Kpi({
   hint?: ReactNode
   help?: string
   to?: string
-  tone?: 'good' | 'bad'
+  tone?: 'good' | 'bad' | 'warn'
 }) {
   const [open, setOpen] = useState(false)
   const id = useId()
-  const color = tone === 'bad' ? 'text-danger-600' : tone === 'good' ? 'text-success-600' : ''
+  const color =
+    tone === 'bad'
+      ? 'text-danger-600'
+      : tone === 'good'
+        ? 'text-success-600'
+        : tone === 'warn'
+          ? 'text-warning-700'
+          : ''
   return (
     <div
       className={`@container relative min-w-0 p-4 transition-shadow duration-200 hover:shadow-md ${cardClass}`}
