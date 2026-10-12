@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,300..600,0..1,0&display=block">
+<style>
+:root,[data-theme="light"]{--forest:#143B2C;--forest-2:#1C4E3B;--nav:#B9CDC1;--on-forest:#FFFFFF;--forest-accent:#35B585;--emerald:#0E6B4F;--emerald-h:#0B5C43;--on-brand:#FFFFFF;--mint:#DCEFE4;--mint-50:#EFF7F2;--badge-ink:#0B5C43;--gold:#C9A227;--cream:#F7EED8;--gold-ink:#7D5F10;--sand:#F6F3EC;--surface:#FFFFFF;--surface-2:#FAF8F3;--ink:#1F2925;--muted:#6B6659;--edge:#E8E2D5;--ok:#047857;--warn:#B45309;--danger:#DC2626;--info:#0369A1;--sh-sm:0 1px 2px 0 rgb(20 59 44/.05),0 1px 3px 0 rgb(20 59 44/.04);--sh-lg:0 12px 32px -8px rgb(20 59 44/.18),0 4px 8px -4px rgb(20 59 44/.08);--dots:rgb(20 59 44/.16);--glow:rgb(201 162 39/.22);color-scheme:light}
+[data-theme="dark"]{--forest:#0F231A;--forest-2:#1A3A2C;--nav:#8FAE9D;--on-forest:#E8EDE8;--forest-accent:#35B585;--emerald:#35B585;--emerald-h:#5CC79D;--on-brand:#0B1F17;--mint:#1A3A2B;--mint-50:#18271F;--badge-ink:#9FE0C3;--gold:#D4AF37;--cream:#3B3114;--gold-ink:#E3C86A;--sand:#121714;--surface:#1A211D;--surface-2:#171D19;--ink:#E8EDE8;--muted:#9DA69D;--edge:#2C3530;--ok:#34D399;--warn:#F59E0B;--danger:#F87171;--info:#38BDF8;--sh-sm:0 1px 2px 0 rgb(0 0 0/.25);--sh-lg:0 12px 32px -8px rgb(0 0 0/.6),0 4px 8px -4px rgb(0 0 0/.4);--dots:rgb(255 255 255/.1);--glow:rgb(212 175 55/.16);color-scheme:dark}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@keyframes sheet{from{opacity:.4;transform:translateY(28px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes growY{from{transform:scaleY(0)}}
+body{margin:0;background:#E7E1D3;font-family:Inter,system-ui,sans-serif;color:#1F2925;-webkit-font-smoothing:antialiased}
+a{color:#0E6B4F;text-decoration:none}a:hover{color:#0B5C43}
+</style>
+</helmet>
+<section id="turn-4" style="padding:80px 88px 120px;display:flex;flex-direction:column;gap:72px">
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6B6659">Cobradía · Bosque y Arena · Cuenta</div>
+    <h1 style="margin:0;font-family:Sora,sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.03em;color:#143B2C">Entrada, reportes y suscripción</h1>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#6B6659;text-wrap:pretty">Entrar y crear cuenta (<a href="#4a">4a</a>), el reporte de cobros (<a href="#4b">4b</a>) y el plan con el periodo de prueba (<a href="#4c">4c</a>). Prueba las pestañas «Entrar / Crear cuenta», haz clic en las barras del reporte y cambia mensual / anual.</p>
+  </header>
+
+  <div id="4a" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:14px;white-space:nowrap"><span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">4a</span><span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em">Entrar / crear cuenta</span><span style="font-size:14px;color:#6B6659">El bosque y su textura presentan la marca; el formulario se queda sobrio.</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div data-theme="{{ thLogin }}" data-screen-label="4a Entrar · escritorio" style="width:1440px;height:900px;flex-shrink:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+        <div style="position:relative;overflow:hidden;background:var(--forest);color:var(--on-forest);display:flex;flex-direction:column;justify-content:space-between;padding:48px 56px">
+          <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(60% 50% at 100% 0%,rgb(53 181 133/.24),transparent 70%),radial-gradient(55% 45% at 0% 100%,rgb(201 162 39/.18),transparent 70%)"></div>
+          <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.08) 1px,transparent 1px);background-size:24px 24px;-webkit-mask-image:linear-gradient(to bottom,black,transparent 90%);mask-image:linear-gradient(to bottom,black,transparent 90%)"></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.03em">Cobrad<span style="color:var(--gold)">í</span>a</span><div onClick="{{ toggleLogin }}" style="width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--nav);background:rgb(255 255 255/.06);transition:background-color 150ms" style-hover="background:rgb(255 255 255/.12)"><span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">{{ iconLogin }}</span></div></div>
+          <div style="position:relative;display:flex;flex-direction:column;gap:22px;max-width:520px;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--nav)"><span style="width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>Para financieras y prestamistas</div>
+            <div style="font-family:Sora,sans-serif;font-size:52px;font-weight:700;letter-spacing:-0.035em;line-height:1.04;text-wrap:balance">Tu cartera, tus rutas y tu caja, cuadradas cada día.</div>
+            <div style="font-size:16px;line-height:1.55;color:var(--nav);text-wrap:pretty;max-width:440px">Desde la solicitud hasta el último recibo, con la cifra del día siempre a la vista.</div>
+          </div>
+          <div style="position:relative;display:flex;justify-content:space-between;font-size:12.5px;color:var(--nav);white-space:nowrap"><span>© 2026 Cobradía</span><span>hola@cobradia.com</span></div>
+        </div>
+        <div style="display:grid;place-items:center;padding:40px">
+          <div style="width:420px;display:flex;flex-direction:column;gap:18px;animation:rise 320ms cubic-bezier(.2,.8,.2,1) 80ms backwards">
+            <div style="display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)">
+              <sc-for list="{{ authTabs }}" as="t" hint-placeholder-count="2"><div onClick="{{ t.pick }}" style="height:38px;border-radius:9px;display:grid;place-items:center;font-size:13.5px;font-weight:{{ t.weight }};cursor:pointer;background:{{ t.bg }};color:{{ t.ink }};transition:background-color 180ms,color 180ms;white-space:nowrap">{{ t.label }}</div></sc-for>
+            </div>
+            <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:18px;animation:rise 220ms cubic-bezier(.2,.8,.2,1) backwards">
+                <div><div style="font-family:Sora,sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.025em">Bienvenida de vuelta</div><div style="margin-top:4px;font-size:14px;color:var(--muted)">Inicia sesión para trabajar.</div></div>
+                <div style="display:flex;gap:10px;padding:11px 14px;border-radius:12px;background:color-mix(in oklab,var(--info) 9%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--info) 22%,transparent);color:var(--ink);font-size:13px;line-height:1.45"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1;color:var(--info);flex-shrink:0">info</span><span style="flex:1;min-width:0">Tu sesión se cerró por seguridad. Vuelve a entrar para seguir.</span></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500">Correo</div><div style="height:46px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 2px var(--emerald),0 0 0 4px color-mix(in oklab,var(--emerald) 15%,transparent);display:flex;align-items:center;font-size:14.5px;white-space:nowrap">carolina@inversionespena.do<span style="width:1.5px;height:20px;margin-left:1px;background:var(--emerald)"></span></div></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><div style="display:flex;justify-content:space-between;white-space:nowrap"><span style="font-size:13px;font-weight:500">Contraseña</span><span style="font-size:13px;font-weight:600;color:var(--emerald);cursor:pointer">¿Olvidaste tu contraseña?</span></div><div style="height:46px;padding:0 12px 0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;justify-content:space-between;font-size:18px;letter-spacing:3px;color:var(--ink)">••••••••••<span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;letter-spacing:0;color:var(--muted)">visibility</span></div></div>
+                <div style="height:48px;border-radius:12px;background:var(--emerald);color:var(--on-brand);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:var(--sh-sm);white-space:nowrap;transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.98)">Entrar<span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">arrow_forward</span></div>
+                <div style="text-align:center;font-size:13.5px;color:var(--muted)">¿Tu financiera aún no usa Cobradía? <span onClick="{{ goRegister }}" style="font-weight:600;color:var(--emerald);cursor:pointer">Pruébala gratis</span></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isRegister }}">
+              <div style="display:flex;flex-direction:column;gap:16px;animation:rise 220ms cubic-bezier(.2,.8,.2,1) backwards">
+                <div><div style="font-family:Sora,sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.025em">Crea tu financiera</div><div style="margin-top:8px;align-self:flex-start;display:inline-flex;gap:8px;padding:5px 12px;border-radius:999px;background:var(--cream);color:var(--gold-ink);font-size:12.5px;font-weight:600;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--gold) 32%,transparent);white-space:nowrap">14 días gratis · sin tarjeta</div></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500">Nombre de la financiera</div><div style="height:44px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14.5px;white-space:nowrap">Inversiones Peña, SRL</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500">Tu nombre</div><div style="height:44px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14.5px;white-space:nowrap">Carolina Peña</div></div>
+                  <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500;white-space:nowrap">WhatsApp</div><div style="height:44px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14.5px;white-space:nowrap">(809) 555-0100</div></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500">Correo</div><div style="height:44px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14.5px;white-space:nowrap">carolina@inversionespena.do</div></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><div style="font-size:13px;font-weight:500">Contraseña</div><div style="height:44px;padding:0 14px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:18px;letter-spacing:3px">••••••••••••</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px"><span style="height:3px;border-radius:2px;background:var(--emerald)"></span><span style="height:3px;border-radius:2px;background:var(--emerald)"></span><span style="height:3px;border-radius:2px;background:var(--emerald)"></span><span style="height:3px;border-radius:2px;background:var(--edge)"></span></div></div>
+                <div style="height:48px;border-radius:12px;background:var(--emerald);color:var(--on-brand);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh-sm);white-space:nowrap;transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.98)">Empezar la prueba gratis</div>
+                <div style="text-align:center;font-size:12.5px;color:var(--muted);line-height:1.45;text-wrap:pretty">Te enviamos un enlace para confirmar el correo. Al crear la cuenta aceptas los términos y la política de privacidad.</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+
+      <div data-theme="{{ thLogin }}" data-screen-label="4a Entrar · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--forest);color:var(--on-forest);font-family:Inter,system-ui,sans-serif;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+        <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(80% 45% at 100% 0%,rgb(53 181 133/.26),transparent 70%),radial-gradient(70% 40% at 0% 45%,rgb(201 162 39/.16),transparent 70%)"></div>
+        <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.08) 1px,transparent 1px);background-size:20px 20px;-webkit-mask-image:linear-gradient(to bottom,black,transparent 50%);mask-image:linear-gradient(to bottom,black,transparent 50%)"></div>
+        <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+        <div style="position:relative;height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+        <div style="position:relative;padding:40px 28px 0;display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:Sora,sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.03em">Cobrad<span style="color:var(--gold)">í</span>a</span>
+          <div style="font-family:Sora,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;text-wrap:balance">Tu cartera y tus rutas, cuadradas cada día.</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:var(--sand);color:var(--ink);border-radius:28px 28px 0 0;padding:22px 22px 40px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -12px 32px -8px rgb(0 0 0/.25);animation:sheet 320ms cubic-bezier(.2,.8,.2,1) backwards">
+          <span style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--edge);margin-top:-8px"></span>
+          <div style="font-family:Sora,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.02em">Inicia sesión</div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:500">Correo</div><div style="height:48px;padding:0 14px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:15px;white-space:nowrap">pedro@inversionespena.do</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:500">Contraseña</div><div style="height:48px;padding:0 12px 0 14px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 2px var(--emerald),0 0 0 4px color-mix(in oklab,var(--emerald) 15%,transparent);display:flex;align-items:center;justify-content:space-between;font-size:18px;letter-spacing:3px">••••••••<span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;letter-spacing:0;color:var(--muted)">visibility</span></div></div>
+          <div style="height:52px;border-radius:14px;background:var(--emerald);color:var(--on-brand);font-size:15.5px;font-weight:600;display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:transform 150ms" style-active="transform:scale(.98)">Entrar</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;white-space:nowrap"><span style="font-weight:600;color:var(--emerald)">¿Olvidaste tu contraseña?</span><span style="font-weight:600;color:var(--emerald)">Pruébala gratis</span></div>
+          <span style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.9"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="4b" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:14px;white-space:nowrap"><span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">4b</span><span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em">Reportes · cobros</span><span style="font-size:14px;color:#6B6659">Las mismas cifras que el panel, con el detalle por día y por ruta.</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div data-theme="{{ thRep }}" data-screen-label="4b Reportes · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+        <dc-import name="Sidebar" active="reportes" collapsed="{{ colRep }}" on-toggle="{{ toggleColRep }}" hint-size="248px,100%"></dc-import>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <dc-import name="Topbar" section="Reportes" crumb="Cobros" dark="{{ dkRep }}" on-theme="{{ toggleRep }}" hint-size="100%,64px"></dc-import>
+          <main style="padding:28px 32px 36px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;align-items:start;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <nav style="display:flex;flex-direction:column;gap:2px;padding-top:4px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 10px 8px">Reportes</div>
+              <sc-for list="{{ repNav }}" as="n" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:9px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.ink }};background:{{ n.bg }};cursor:pointer;white-space:nowrap;transition:background-color 150ms" style-hover="background:var(--mint-50)"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">{{ n.icon }}</span>{{ n.label }}</div>
+              </sc-for>
+            </nav>
+            <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+                <div style="flex:1;min-width:0"><h1 style="margin:0;font-family:Sora,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.025em">Cobros</h1><div style="margin-top:4px;font-size:13.5px;color:var(--muted)">Lo cobrado frente a lo que vencía, por día y por ruta.</div></div>
+                <div style="display:flex;gap:8px;white-space:nowrap">
+                  <div style="height:40px;padding:0 12px 0 14px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1;color:var(--muted)">calendar_month</span>1 – 12 oct 2026<span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1;color:var(--muted)">expand_more</span></div>
+                  <div style="height:40px;padding:0 16px;border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge),var(--sh-sm);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background-color 150ms,transform 150ms" style-hover="background:var(--mint-50)" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">download</span>Exportar</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+                <sc-for list="{{ repKpis }}" as="k" hint-placeholder-count="4">
+                  <div style="background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:16px 18px;box-shadow:var(--sh-sm);white-space:nowrap;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ k.delay }}ms"><div style="font-size:12.5px;font-weight:500;color:var(--muted)">{{ k.label }}</div><div style="margin-top:8px;font-family:Sora,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.02em;color:{{ k.tone }}">{{ k.value }}</div><div style="margin-top:4px;font-size:12px;color:var(--muted)">{{ k.hint }}</div></div>
+                </sc-for>
+              </div>
+              <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);padding:18px 22px 16px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;white-space:nowrap">
+                  <div><div style="font-family:Sora,sans-serif;font-size:16px;font-weight:600">Por día</div><div style="font-size:12.5px;color:var(--muted);margin-top:2px">{{ dayLine }}</div></div>
+                  <div style="display:flex;gap:16px;font-size:12px;color:var(--muted)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--emerald)"></span>Cobrado</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--mint)"></span>Esperado</span></div>
+                </div>
+                <div style="position:relative;margin-top:18px;height:220px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:18px;align-items:end;padding:0 4px;border-bottom:1px solid var(--edge)">
+                  <sc-for list="{{ days }}" as="d" hint-placeholder-count="10">
+                    <div onClick="{{ d.pick }}" style="position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;border-radius:8px 8px 0 0;background:{{ d.hl }};transition:background-color 150ms">
+                      <div style="position:relative;width:62%;height:{{ d.eh }}%;border-radius:7px 7px 0 0;background:var(--mint);transform-origin:bottom;animation:growY 700ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ d.delay }}ms">
+                        <div style="position:absolute;left:0;right:0;bottom:0;height:{{ d.ch }}%;border-radius:7px 7px 0 0;background:{{ d.fill }}"></div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:18px;padding:8px 4px 0">
+                  <sc-for list="{{ days }}" as="d" hint-placeholder-count="10"><div style="text-align:center;white-space:nowrap"><div style="font-size:12px;font-weight:{{ d.w }};color:{{ d.ink }}">{{ d.label }}</div><div style="font-size:11px;color:var(--muted)">{{ d.pct }} %</div></div></sc-for>
+                </div>
+              </section>
+              <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden">
+                <div style="padding:14px 22px;font-family:Sora,sans-serif;font-size:16px;font-weight:600;border-bottom:1px solid var(--edge);white-space:nowrap">Por ruta</div>
+                <div style="display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr)) minmax(0,1.6fr) minmax(0,1fr);gap:14px;padding:10px 22px;background:var(--surface-2);border-bottom:1px solid var(--edge);font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap"><span>Ruta · cobrador</span><span style="text-align:right">Cobrado</span><span style="text-align:right">Esperado</span><span style="text-align:right">Visitas</span><span>Recuperación</span><span style="text-align:right">Promesas cumplidas</span></div>
+                <sc-for list="{{ byRoute }}" as="r" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr)) minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:center;padding:12px 22px;border-top:{{ r.rule }};font-size:13.5px;white-space:nowrap">
+                    <div style="min-width:0"><div style="font-weight:600">{{ r.name }}</div><div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">{{ r.who }}</div></div>
+                    <span style="text-align:right;font-weight:600">{{ r.c }}</span><span style="text-align:right;color:var(--muted)">{{ r.e }}</span><span style="text-align:right">{{ r.v }}</span>
+                    <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:6px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.bar }};transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div><span style="width:44px;text-align:right;font-weight:600;color:{{ r.tone }}">{{ r.pct }} %</span></div>
+                    <span style="text-align:right">{{ r.p }}</span>
+                  </div>
+                </sc-for>
+              </section>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <div data-theme="{{ thRep }}" data-screen-label="4b Reportes · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+        <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+        <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+        <div style="padding:10px 18px 0;display:flex;flex-direction:column;gap:14px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;white-space:nowrap"><div><div style="font-size:12px;color:var(--muted)">Reportes</div><div style="font-family:Sora,sans-serif;font-size:25px;font-weight:700;letter-spacing:-0.025em">Cobros</div></div><span style="height:34px;padding:0 12px;border-radius:17px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600">1–12 oct<span style="font-family:'Material Symbols Rounded';font-size:16px;width:1em;overflow:hidden;line-height:1">expand_more</span></span></div>
+          <div style="background:var(--surface);border:1px solid var(--edge);border-radius:16px;padding:14px 16px;box-shadow:var(--sh-sm)">
+            <div style="font-size:12px;color:var(--muted)">Cobrado del periodo</div>
+            <div style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.03em">RD$ 1,912,350</span><span style="font-size:13px;font-weight:600;color:var(--emerald)">87.1 %</span></div>
+            <div style="font-size:12px;color:var(--muted);white-space:nowrap">de RD$ 2,195,800 esperado</div>
+            <div style="position:relative;margin-top:14px;height:120px;display:grid;grid-template-columns:repeat(10,1fr);gap:7px;align-items:end;border-bottom:1px solid var(--edge)">
+              <sc-for list="{{ days }}" as="d" hint-placeholder-count="10"><div onClick="{{ d.pick }}" style="position:relative;height:{{ d.eh }}%;border-radius:5px 5px 0 0;background:var(--mint);transform-origin:bottom;animation:growY 700ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ d.delay }}ms;cursor:pointer"><div style="position:absolute;left:0;right:0;bottom:0;height:{{ d.ch }}%;border-radius:5px 5px 0 0;background:{{ d.fill }}"></div></div></sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:7px;margin-top:6px"><sc-for list="{{ days }}" as="d" hint-placeholder-count="10"><span style="text-align:center;font-size:10px;font-weight:{{ d.w }};color:{{ d.ink }}">{{ d.num }}</span></sc-for></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--edge);font-size:12.5px;white-space:nowrap">{{ dayLineShort }}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:15px;font-weight:600">Por ruta</span><span style="font-size:12.5px;color:var(--muted)">Recuperación</span></div>
+          <div style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-top:-4px">
+            <sc-for list="{{ byRoute }}" as="r" hint-placeholder-count="4">
+              <div style="padding:11px 14px;border-top:{{ r.rule }};display:flex;flex-direction:column;gap:7px;white-space:nowrap">
+                <div style="display:flex;justify-content:space-between;font-size:13.5px"><span style="font-weight:600">{{ r.name }}</span><span style="font-weight:600;color:{{ r.tone }}">{{ r.pct }} %</span></div>
+                <div style="height:5px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.bar }};transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)"><span>{{ r.c }} de {{ r.e }}</span><span>{{ r.p }} promesas</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <dc-import name="TabBar" active="mas" hint-size="100%,84px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div id="4c" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:14px;white-space:nowrap"><span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">4c</span><span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em">Plan y periodo de prueba</span><span style="font-size:14px;color:#6B6659">El dorado aparece aquí con intención: la prueba y el plan recomendado.</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div data-theme="{{ thPlan }}" data-screen-label="4c Plan · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+        <dc-import name="Sidebar" active="ajustes" collapsed="{{ colPlan }}" on-toggle="{{ toggleColPlan }}" hint-size="248px,100%"></dc-import>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <dc-import name="Topbar" section="Ajustes" crumb="Suscripción" dark="{{ dkPlan }}" on-theme="{{ togglePlan }}" hint-size="100%,64px"></dc-import>
+          <main style="padding:28px 32px 40px;display:flex;flex-direction:column;gap:20px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px"><div style="flex:1;min-width:0"><h1 style="margin:0;font-family:Sora,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.025em">Suscripción</h1><div style="margin-top:4px;font-size:13.5px;color:var(--muted)">El plan de tu financiera y hasta cuándo está pagado.</div></div></div>
+            <section style="position:relative;overflow:hidden;border-radius:18px;background:var(--cream);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--gold) 35%,transparent)">
+              <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--dots) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:radial-gradient(50% 120% at 100% 0%,black,transparent 80%);mask-image:radial-gradient(50% 120% at 100% 0%,black,transparent 80%)"></div>
+              <div style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) 360px auto;gap:32px;align-items:center;padding:22px 26px">
+                <div style="display:flex;flex-direction:column;gap:6px;color:var(--gold-ink)">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap"><span style="width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>Prueba gratis</div>
+                  <div style="font-family:Sora,sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);white-space:nowrap">Te quedan 9 días</div>
+                  <div style="font-size:13.5px;white-space:nowrap">Termina el miércoles 21 de octubre. Tus datos se quedan contigo.</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:3px">
+                    <sc-for list="{{ trialDays }}" as="t" hint-placeholder-count="14"><span style="height:22px;border-radius:4px;background:{{ t.bg }};box-shadow:{{ t.ring }};animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ t.delay }}ms"></span></sc-for>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-ink);white-space:nowrap"><span>7 oct · inicio</span><span>Hoy, día 6</span><span>21 oct</span></div>
+                </div>
+                <div style="height:42px;padding:0 18px;border-radius:11px;background:var(--emerald);color:var(--on-brand);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap;box-shadow:var(--sh-sm);transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.97)">Activar el plan</div>
+              </div>
+            </section>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px">
+              <sc-for list="{{ usage }}" as="u" hint-placeholder-count="3">
+                <div style="background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:16px 18px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:10px;white-space:nowrap">
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)"><span>{{ u.label }}</span><sc-if value="{{ u.full }}"><span style="font-weight:600;color:var(--warn)">En el límite</span></sc-if></div>
+                  <div style="display:flex;align-items:baseline;gap:6px"><span style="font-family:Sora,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.02em;color:{{ u.tone }}">{{ u.used }}</span><span style="font-size:13px;color:var(--muted)">de {{ u.limit }}</span></div>
+                  <div style="height:6px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ u.pct }}%;height:100%;background:{{ u.bar }};transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 250ms backwards"></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <section style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;white-space:nowrap">
+                <div style="display:flex;align-items:baseline;gap:12px"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:18px;font-weight:600;letter-spacing:-0.015em">Planes</h2><span style="font-size:12.5px;color:var(--muted)">Precios de referencia; los definitivos se publican antes del lanzamiento.</span></div>
+                <div style="display:flex;padding:3px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)">
+                  <sc-for list="{{ billing }}" as="b" hint-placeholder-count="2"><div onClick="{{ b.pick }}" style="height:32px;padding:0 14px;border-radius:7px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:{{ b.weight }};cursor:pointer;background:{{ b.bg }};color:{{ b.ink }};transition:background-color 150ms">{{ b.label }}<sc-if value="{{ b.hasTag }}"><span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--cream);color:var(--gold-ink)">2 meses gratis</span></sc-if></div></sc-for>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch">
+                <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+                  <div style="position:relative;overflow:hidden;background:{{ p.bg }};color:{{ p.ink }};border-radius:16px;box-shadow:{{ p.ring }};padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px;transition:transform 180ms cubic-bezier(.2,.8,.2,1),box-shadow 180ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ p.delay }}ms" style-hover="transform:translateY(-2px)">
+                    <sc-if value="{{ p.featured }}"><div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 50% at 100% 0%,rgb(53 181 133/.25),transparent 70%),radial-gradient(rgb(255 255 255/.06) 1px,transparent 1px);background-size:auto,20px 20px"></div><span style="position:absolute;left:0;right:0;top:0;height:3px;background:var(--gold)"></span></sc-if>
+                    <div style="position:relative;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:18px;font-weight:600">{{ p.name }}</span><sc-if value="{{ p.featured }}"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--gold);color:#2A2108">Tu plan en la prueba</span></sc-if></div>
+                    <div style="position:relative;display:flex;align-items:baseline;gap:6px;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.03em">{{ p.price }}</span><span style="font-size:13px;color:{{ p.sub }}">{{ p.per }}</span></div>
+                    <div style="position:relative;font-size:13px;color:{{ p.sub }};margin-top:-8px;white-space:nowrap">{{ p.blurb }}</div>
+                    <div style="position:relative;display:flex;flex-direction:column;gap:9px;padding-top:14px;border-top:{{ p.rule }}">
+                      <sc-for list="{{ p.feats }}" as="f" hint-placeholder-count="4"><div style="display:flex;gap:10px;align-items:center;font-size:13px;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1;color:{{ p.check }}">check</span>{{ f }}</div></sc-for>
+                    </div>
+                    <div style="flex:1"></div>
+                    <div style="position:relative;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ p.btnBg }};color:{{ p.btnInk }};box-shadow:{{ p.btnRing }};transition:transform 150ms,filter 150ms" style-hover="filter:brightness(1.06)" style-active="transform:scale(.97)">{{ p.cta }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+            <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);padding:18px 22px;display:flex;gap:16px;align-items:flex-start">
+              <span style="width:36px;height:36px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;background:var(--mint-50);color:var(--emerald)"><span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">account_balance</span></span>
+              <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">¿Cómo activo o renuevo mi suscripción?</div><div style="margin-top:4px;font-size:13px;line-height:1.5;color:var(--muted);text-wrap:pretty">Por ahora el pago es por transferencia o depósito. Escríbenos a <span style="font-weight:600;color:var(--emerald)">hola@cobradia.com</span> y te enviamos los datos bancarios; al confirmar tu pago, activamos la cuenta el mismo día.</div></div>
+            </section>
+          </main>
+        </div>
+      </div>
+
+      <div data-theme="{{ thPlan }}" data-screen-label="4c Plan · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+        <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+        <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+        <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:14px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+          <div style="display:flex;align-items:center;gap:12px"><span style="width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)"><span style="font-family:'Material Symbols Rounded';font-size:22px;width:1em;overflow:hidden;line-height:1">arrow_back</span></span><span style="font-family:Sora,sans-serif;font-size:21px;font-weight:700;letter-spacing:-0.02em">Suscripción</span></div>
+          <div style="border-radius:16px;background:var(--cream);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--gold) 35%,transparent);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:18px;font-weight:700">Te quedan 9 días</span><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink)">Prueba gratis</span></div>
+            <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:2px"><sc-for list="{{ trialDays }}" as="t" hint-placeholder-count="14"><span style="height:14px;border-radius:3px;background:{{ t.bg }};box-shadow:{{ t.ring }}"></span></sc-for></div>
+            <div style="font-size:12.5px;color:var(--gold-ink);white-space:nowrap">Termina el miércoles 21 de octubre.</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;overflow:hidden">
+            <sc-for list="{{ usage }}" as="u" hint-placeholder-count="3">
+              <div style="padding:11px 14px;border-top:{{ u.rule }};display:flex;flex-direction:column;gap:6px;white-space:nowrap"><div style="display:flex;justify-content:space-between;font-size:13px"><span>{{ u.label }}</span><span style="font-weight:600;color:{{ u.tone }}">{{ u.used }} de {{ u.limit }}</span></div><div style="height:5px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ u.pct }}%;height:100%;background:{{ u.bar }}"></div></div></div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:11px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)">
+            <sc-for list="{{ billing }}" as="b" hint-placeholder-count="2"><div onClick="{{ b.pick }}" style="height:34px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:{{ b.weight }};cursor:pointer;background:{{ b.bg }};color:{{ b.ink }};white-space:nowrap">{{ b.labelM }}</div></sc-for>
+          </div>
+          <div style="position:relative;overflow:hidden;border-radius:18px;background:var(--forest);color:var(--on-forest);padding:18px;box-shadow:var(--sh-lg);display:flex;flex-direction:column;gap:12px">
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 60% at 100% 0%,rgb(53 181 133/.25),transparent 70%)"></div>
+            <span style="position:absolute;left:0;right:0;top:0;height:3px;background:var(--gold)"></span>
+            <div style="position:relative;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:17px;font-weight:600">{{ featured.name }}</span><span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--gold);color:#2A2108">Tu plan en la prueba</span></div>
+            <div style="position:relative;display:flex;align-items:baseline;gap:6px;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.03em">{{ featured.price }}</span><span style="font-size:12.5px;color:var(--nav)">{{ featured.per }}</span></div>
+            <div style="position:relative;display:flex;flex-direction:column;gap:7px"><sc-for list="{{ featured.feats }}" as="f" hint-placeholder-count="4"><div style="display:flex;gap:8px;align-items:center;font-size:12.5px;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:16px;width:1em;overflow:hidden;line-height:1;color:#35B585">check</span>{{ f }}</div></sc-for></div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 18px 34px;background:var(--sand);border-top:1px solid var(--edge)"><div style="height:50px;border-radius:14px;background:var(--emerald);color:var(--on-brand);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:transform 150ms" style-active="transform:scale(.97)">Activar el plan</div><span style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.9"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Claro&quot;,&quot;Oscuro&quot;],&quot;default&quot;:&quot;Claro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;menuPlegado&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Vista&quot;}}">
+class Component extends DCLogic {
+  state = { dark: {}, col: {}, auth: 0, day: 8, annual: false };
+  renderVals() {
+    const base = (this.props.modo ?? 'Claro') === 'Oscuro';
+    const baseCol = !!this.props.menuPlegado;
+    const dark = (k) => this.state.dark[k] ?? base;
+    const col = (k) => this.state.col[k] ?? baseCol;
+    const flip = (bag, k, cur) => () => this.setState((s) => ({ [bag]: { ...s[bag], [k]: !cur } }));
+    const money = (n) => 'RD$ ' + Math.round(n).toLocaleString('en-US');
+    const authTabs = ['Entrar', 'Crear cuenta'].map((label, i) => { const on = i === this.state.auth; return { label, pick: () => this.setState({ auth: i }), weight: on ? 600 : 500, bg: on ? 'var(--forest)' : 'transparent', ink: on ? 'var(--on-forest)' : 'var(--muted)' }; });
+    const repNav = [['account_balance_wallet', 'Cartera'], ['stacked_bar_chart', 'Mora por tramos'], ['payments', 'Cobros'], ['trending_up', 'Resultados'], ['outbox', 'Desembolsos'], ['point_of_sale', 'Cajas'], ['badge', 'Cobradores'], ['event_available', 'Promesas']]
+      .map(([icon, label]) => { const on = label === 'Cobros'; return { icon, label, weight: on ? 600 : 500, ink: on ? 'var(--badge-ink)' : 'var(--ink)', bg: on ? 'var(--mint)' : 'transparent' }; });
+    const D = [['Jue', 1, 196400, 221300], ['Vie', 2, 188100, 214200], ['Sáb', 3, 151300, 176400], ['Lun', 5, 212500, 230100], ['Mar', 6, 198200, 228300], ['Mié', 7, 205400, 230000], ['Jue', 8, 221300, 235200], ['Vie', 9, 193400, 227100], ['Sáb', 10, 164200, 201400], ['Lun', 12, 184350, 231800]];
+    const max = 240000, di = this.state.day;
+    const days = D.map(([wd, n, c, e], i) => { const on = i === di, pct = Math.round((c / e) * 100);
+      return { label: `${wd} ${n}`, num: n, pct, eh: (e / max) * 100, ch: (c / e) * 100, delay: 120 + i * 45, pick: () => this.setState({ day: i }),
+        fill: on ? 'var(--emerald)' : pct >= 90 ? 'color-mix(in oklab, var(--emerald) 70%, var(--mint))' : 'color-mix(in oklab, var(--emerald) 55%, var(--mint))',
+        hl: on ? 'var(--mint-50)' : 'transparent', w: on ? 700 : 500, ink: on ? 'var(--ink)' : 'var(--muted)' }; });
+    const d = D[di]; const dp = ((d[2] / d[3]) * 100).toFixed(1);
+    const names = { Lun: 'Lunes', Mar: 'Martes', Mié: 'Miércoles', Jue: 'Jueves', Vie: 'Viernes', Sáb: 'Sábado' };
+    const dayLine = `${names[d[0]]} ${d[1]} de octubre${di === 9 ? ' (en curso)' : ''}: ${money(d[2])} de ${money(d[3])} · ${dp} %`;
+    const dayLineShort = `${names[d[0]]} ${d[1]}: ${money(d[2])} · ${dp} %`;
+    const repKpis = [['Cobrado', 'RD$ 1,912,350', '10 días hábiles', 'var(--ink)'], ['Esperado', 'RD$ 2,195,800', 'Cuotas que vencían', 'var(--ink)'], ['Recuperación', '87.1 %', 'Meta 90 % · faltan 2.9 pts', 'var(--warn)'], ['Promedio diario', 'RD$ 191,235', '+4.2 % frente a septiembre', 'var(--ink)']]
+      .map(([label, value, hint, tone], i) => ({ label, value, hint, tone, delay: 80 + i * 45 }));
+    const byRoute = [['Ruta Norte', 'Pedro Encarnación', 742300, 826400, '286 de 312', '41 de 52'], ['Ruta Este', 'Yudelka Santana', 598200, 712500, '231 de 268', '28 de 39'], ['Ruta Oeste', 'Ramón Félix', 412850, 455900, '178 de 181', '19 de 22'], ['Caja oficina', 'Sucursal Centro y Los Mina', 159000, 201000, '—', '6 de 9']]
+      .map(([name, who, c, e, v, p], i) => { const pct = Math.round((c / e) * 100); return { name, who, c: money(c), e: money(e), v, p, pct, rule: i ? '1px solid var(--edge)' : 'none',
+        bar: pct >= 90 ? 'var(--emerald)' : 'var(--warn)', tone: pct >= 90 ? 'var(--emerald)' : 'var(--warn)' }; });
+    const trialDays = Array.from({ length: 14 }, (_, i) => ({ delay: 100 + i * 25,
+      bg: i < 5 ? 'var(--gold)' : i === 5 ? 'var(--surface)' : 'color-mix(in oklab, var(--gold) 18%, var(--cream))',
+      ring: i === 5 ? 'inset 0 0 0 2px var(--gold)' : 'none' }));
+    const usage = [['Usuarios (con invitaciones)', 7, 10], ['Sucursales activas', 3, 3], ['Préstamos activos', 1284, 2000]].map(([label, used, limit], i) => {
+      const full = used >= limit; return { label, used: used.toLocaleString('en-US'), limit: limit.toLocaleString('en-US'), pct: Math.min(100, (used / limit) * 100), full, rule: i ? '1px solid var(--edge)' : 'none',
+        bar: full ? 'var(--warn)' : 'var(--emerald)', tone: full ? 'var(--warn)' : 'var(--ink)' }; });
+    const an = this.state.annual;
+    const billing = [['Mensual', 'Mensual', false], ['Anual', 'Anual · 2 meses gratis', true]].map(([label, labelM, tag], i) => { const on = (i === 1) === an;
+      return { label, labelM, hasTag: tag, pick: () => this.setState({ annual: i === 1 }), weight: on ? 600 : 500, bg: on ? 'var(--mint)' : 'transparent', ink: on ? 'var(--badge-ink)' : 'var(--muted)' }; });
+    const P = [
+      ['Esencial', 2900, 'Para empezar a ordenar la cartera', ['1 sucursal · 3 usuarios', 'Hasta 300 préstamos activos', 'Caja y recibos de 80 mm', 'Reportes de cartera y mora'], false],
+      ['Profesional', 6900, 'Rutas, cobradores y varias sucursales', ['3 sucursales · 10 usuarios', 'Hasta 2,000 préstamos activos', 'Rutas y app del cobrador', 'Promesas, agenda y antifraude'], true],
+      ['Empresa', 14900, 'Para financieras con contabilidad propia', ['Sucursales y usuarios sin límite', 'Préstamos sin límite', 'Contabilidad y conciliaciones', 'Vía legal y auditoría'], false],
+    ];
+    const plans = P.map(([name, m, blurb, feats, featured], i) => ({ name, blurb, feats, featured, delay: 120 + i * 60,
+      price: money(an ? m * 10 : m), per: an ? '/ año' : '/ mes',
+      bg: featured ? 'var(--forest)' : 'var(--surface)', ink: featured ? 'var(--on-forest)' : 'var(--ink)', sub: featured ? 'var(--nav)' : 'var(--muted)',
+      ring: featured ? 'var(--sh-lg)' : 'inset 0 0 0 1px var(--edge),var(--sh-sm)', rule: featured ? '1px solid rgb(255 255 255/.12)' : '1px solid var(--edge)', check: featured ? '#35B585' : 'var(--emerald)',
+      cta: featured ? 'Activar Profesional' : 'Elegir ' + name, btnBg: featured ? 'var(--forest-accent)' : 'var(--surface)', btnInk: featured ? '#0B1F17' : 'var(--ink)', btnRing: featured ? 'none' : 'inset 0 0 0 1px var(--edge)' }));
+    const t = (k) => ({ ['th' + k]: dark(k) ? 'dark' : 'light', ['dk' + k]: dark(k), ['toggle' + k]: flip('dark', k, dark(k)), ['col' + k]: col(k), ['toggleCol' + k]: flip('col', k, col(k)) });
+    return {
+      ...t('Login'), ...t('Rep'), ...t('Plan'), iconLogin: dark('Login') ? 'light_mode' : 'dark_mode',
+      authTabs, isLogin: this.state.auth === 0, isRegister: this.state.auth === 1, goRegister: () => this.setState({ auth: 1 }),
+      repNav, days, dayLine, dayLineShort, repKpis, byRoute,
+      trialDays, usage, billing, plans, featured: plans[1],
+    };
+  }
+}
+</script>
+</body>
+</html>

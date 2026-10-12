@@ -39,11 +39,12 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 - **Encabezado de cada pantalla:**
   - Migas de pan, el título y **una** acción principal, siempre a la derecha.
   - Las acciones secundarias van en un menú «Más».
-- **Menú lateral:** muestra solo lo que el rol puede usar y se pliega a íconos con «.
-- **Celular:**
-  - El menú lateral pasa a una barra inferior.
-  - Oficina: **Inicio · Buscar · Cobrar · Más**.
-  - Cobrador: **Mi ruta · Buscar · Cobrar · Más**.
+- **Menú lateral:** muestra solo lo que el rol puede usar, en tres grupos (Operación · Cobro · Gestión), y se pliega a íconos con «Plegar menú». Reportes, Finanzas y Ajustes abren su propio submenú junto al contenido (decisión 114).
+- **Celular** (decisión 114):
+  - El menú lateral pasa a una barra inferior con el botón redondo **«Cobrar»** en el centro; buscar, los avisos y el usuario van en la barra de arriba.
+  - Oficina: **Inicio · Clientes · Cobrar · Ruta · Más** (el cajero tiene **Caja** en lugar de Ruta).
+  - Cobrador: **Ruta · Clientes · Cobrar · Cobranza · Más**.
+  - Quien no cobra: **Inicio · Clientes · Solicitudes · Préstamos · Más**.
 - **Direcciones en español:** por ejemplo, `/prestamos/SD-000125` o `/clientes/…`. Son legibles y los filtros van en la dirección (decisión 003).
 
 ## 3. Pantallas del sistema interno

@@ -46,5 +46,5 @@ Reglas:
 - Multitenant: todo registro operativo lleva `company`; RLS en PostgreSQL es la segunda barrera (042). Las pruebas de cruce de empresa son obligatorias en cada módulo.
 - Dinero: `Decimal`/`NUMERIC`, nunca float. El motor financiero vive en `backend/engine/` (Python puro).
 - Backend: `cd backend` y `uv run …` (pytest, ruff, manage.py). Frontend: `pnpm -C frontend …`.
-- Servicios locales: `docker compose -f infra/compose.yml up -d` → Postgres en **54320**, Redis en **63790**, Mailpit en 8025 (puertos no estándar: hay un Postgres local en 5432).
+- Servicios locales: `docker compose -f infra/compose.yml up -d` → Postgres en **54320**, Redis en **16379**, Mailpit en 8025 (puertos no estándar: hay un Postgres local en 5432).
 - Commits por hito verificado, con mensaje descriptivo; no se commitea con pruebas rotas.

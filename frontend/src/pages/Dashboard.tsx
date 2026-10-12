@@ -20,10 +20,11 @@ import {
   WalletIcon,
 } from '../components/icons'
 import { Kpi } from '../components/Kpi'
-import { Alert, Field, Figure, LoadError, Section, Select, Texture } from '../components/ui'
+import { Alert, Figure, LoadError, Section, Texture } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { pct, plural, rd } from '../lib/format'
 import { ACCESS, hasRole } from '../lib/roles'
+import { useBranchScope } from '../lib/scope'
 
 function Tile({
   to,
@@ -255,8 +256,6 @@ function Today({ me }: { me: Me }) {
   )
 }
 
-const ALL_BRANCHES = ['Gerente', 'Contabilidad', 'Auditoría']
-
 /** P10 · indicators (decision 086): the same figures as the reports. The
  * day's collection lives in the welcome card above, not here twice. */
 function Indicators({ data, scope }: { data: Dashboard; scope?: string }) {
@@ -456,42 +455,33 @@ function Officer({ data }: { data: Dashboard }) {
   )
 }
 
-/** The board's data and its branch filter, shared by the welcome card and
- * the sections below so both read the same figures. */
+/** The board's data, shared by the welcome card and the sections below so
+ * both read the same figures. The branch comes from the top bar (decision 114). */
 function useBoard(me: Me) {
-  const [branch, setBranch] = useState('')
-  const wide = hasRole(me, ALL_BRANCHES)
+  const [scope] = useBranchScope()
+  const wide = hasRole(me, ACCESS.allBranches)
   const branches = useQuery({ queryKey: ['branches'], queryFn: listBranches, enabled: wide })
+  const list = branches.data?.results ?? []
+  // A branch kept from another session that no longer exists reads as «all».
+  const branch = list.some((b) => b.id === scope) ? scope : ''
   const board = useQuery({
     queryKey: ['dashboard', branch],
     queryFn: () => getDashboard(branch || undefined),
     refetchInterval: 60_000,
+    // Wait for the list before narrowing, so a stale branch never asks.
+    enabled: !wide || !scope || branches.isFetched,
   })
-  const several = wide && (branches.data?.results.length ?? 0) > 1
-  return { branch, setBranch, branches, board, several }
+  const several = wide && list.length > 1
+  return { board, several }
 }
 
 function Board({ state }: { state: ReturnType<typeof useBoard> }) {
-  const { branch, setBranch, branches, board, several } = state
+  const { board, several } = state
   const data = board.data
   if (board.isError && !data) return <LoadError error={board.error} />
   if (!data || !(data.indicators || data.operations || data.books || data.officer)) return null
   return (
     <div className="space-y-7">
-      {several ? (
-        <div className="max-w-xs">
-          <Field label="Sucursal">
-            <Select value={branch} onChange={(e) => setBranch(e.target.value)}>
-              <option value="">Toda la empresa</option>
-              {branches.data?.results.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      ) : null}
       <Indicators data={data} scope={several ? undefined : data.scope} />
       <Operations data={data} />
       <Books data={data} />

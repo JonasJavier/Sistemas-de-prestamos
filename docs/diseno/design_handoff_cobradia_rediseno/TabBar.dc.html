@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:8px 10px 26px;background:var(--surface);border-top:1px solid var(--edge);display:grid;grid-template-columns:repeat(5,1fr);align-items:end;font-family:Inter,system-ui,sans-serif">
+  <sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+    <sc-if value="{{ it.fab }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer">
+        <span style="width:52px;height:52px;margin-top:-22px;border-radius:26px;display:grid;place-items:center;background:var(--emerald);color:var(--on-brand);box-shadow:var(--sh-lg),0 0 0 4px var(--surface);transition:transform 150ms" style-active="transform:scale(.94)">
+          <span style="font-family:'Material Symbols Rounded';font-size:24px;width:1em;overflow:hidden;line-height:1">payments</span>
+        </span>
+        <span style="font-size:10.5px;font-weight:600;color:var(--ink)">Cobrar</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ it.tab }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ it.color }}">
+        <span style="width:56px;height:30px;border-radius:15px;display:grid;place-items:center;background:{{ it.bg }};transition:background-color 200ms">
+          <span style="font-family:'Material Symbols Rounded';font-size:22px;width:1em;overflow:hidden;line-height:1;font-variation-settings:'FILL' {{ it.fill }}">{{ it.icon }}</span>
+        </span>
+        <span style="font-size:10.5px;font-weight:{{ it.weight }}">{{ it.label }}</span>
+      </div>
+    </sc-if>
+  </sc-for>
+  <span style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.9"></span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:100},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;clientes&quot;,&quot;ruta&quot;,&quot;mas&quot;],&quot;default&quot;:&quot;inicio&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.active ?? 'inicio';
+    const items = [['inicio','home','Inicio'],['clientes','group','Clientes'],['cobrar','',''],['ruta','route','Ruta'],['mas','menu','Más']];
+    return { items: items.map(([key, icon, label]) => {
+      const on = key === a, fab = key === 'cobrar';
+      return { key, icon, label, fab, tab: !fab, color: on ? 'var(--ink)' : 'var(--muted)', bg: on ? 'var(--mint)' : 'transparent', fill: on ? 1 : 0, weight: on ? 600 : 500 };
+    }) };
+  }
+}
+</script>
+</body>
+</html>

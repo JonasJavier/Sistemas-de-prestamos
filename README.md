@@ -25,7 +25,7 @@ Requisitos: Docker, Python 3.14 con [uv](https://docs.astral.sh/uv/), Node 24 co
 docker compose -f infra/compose.yml up -d
 ```
 
-Los puertos no son los estándar para convivir con otros servicios: PostgreSQL en **54320**, Redis en **63790**, Mailpit en http://localhost:8025. Los pasos del backend, las cuentas de prueba y el recorrido de la demo están en [`backend/DEV.md`](backend/DEV.md); el frontend arranca con `pnpm -C frontend dev` (http://localhost:5173, con proxy de `/api` al backend en el puerto 8800) y el sitio de promoción con `pnpm -C site dev` (http://localhost:4321).
+Los puertos no son los estándar para convivir con otros servicios: PostgreSQL en **54320**, Redis en **16379**, Mailpit en http://localhost:8025. Los pasos del backend, las cuentas de prueba y el recorrido de la demo están en [`backend/DEV.md`](backend/DEV.md); el frontend arranca con `pnpm -C frontend dev` (http://localhost:5173, con proxy de `/api` al backend en el puerto 8800) y el sitio de promoción con `pnpm -C site dev` (http://localhost:4321).
 
 ## Calidad
 

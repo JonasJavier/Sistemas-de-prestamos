@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,300..600,0..1,0&display=block">
+<style>
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+body{margin:0;background:#F6F3EC;font-family:Inter,system-ui,sans-serif;color:#1F2925;-webkit-font-smoothing:antialiased}
+a{color:#0E6B4F;text-decoration:none}a:hover{color:#0B5C43}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:relative;overflow:hidden;background:#143B2C;color:#FFFFFF;padding:56px clamp(24px,6vw,88px) 64px">
+    <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(50% 70% at 100% 0%,rgb(53 181 133/.24),transparent 70%),radial-gradient(45% 60% at 0% 100%,rgb(201 162 39/.16),transparent 70%)"></div>
+    <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.08) 1px,transparent 1px);background-size:24px 24px;-webkit-mask-image:linear-gradient(to bottom,black,transparent 95%);mask-image:linear-gradient(to bottom,black,transparent 95%)"></div>
+    <div style="position:relative;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards">
+      <span style="font-family:Sora,sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.03em">Cobrad<span style="color:#C9A227">í</span>a</span>
+      <h1 style="margin:0;font-family:Sora,sans-serif;font-size:clamp(34px,5vw,56px);font-weight:700;letter-spacing:-0.035em;line-height:1.04;max-width:820px;text-wrap:balance">Rediseño con «Bosque y Arena»</h1>
+      <p style="margin:0;max-width:640px;font-size:16px;line-height:1.55;color:#B9CDC1;text-wrap:pretty">Nueve pantallas en escritorio y móvil, modo claro y oscuro, para el gerente. Cada lienzo tiene en Tweaks el modo y el menú plegado, y una luna en el encabezado para cambiar cada pantalla.</p>
+    </div>
+  </header>
+  <main style="max-width:1200px;width:100%;box-sizing:border-box;margin:0 auto;padding:40px clamp(24px,6vw,88px) 80px;display:flex;flex-direction:column;gap:48px">
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:-80px;position:relative">
+      <sc-for list="{{ files }}" as="f" hint-placeholder-count="4">
+        <a href="{{ f.href }}" style="display:flex;flex-direction:column;gap:12px;padding:20px 22px;border-radius:16px;background:#FFFFFF;color:#1F2925;border:1px solid #E8E2D5;box-shadow:0 12px 32px -8px rgb(20 59 44/.18),0 4px 8px -4px rgb(20 59 44/.08);transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ f.delay }}ms" style-hover="transform:translateY(-2px);border-color:#9FC9B4">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="height:28px;padding:0 10px;border-radius:7px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:13px;display:grid;place-items:center">{{ f.code }}</span><span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;color:#6B6659">arrow_outward</span></div>
+          <div style="font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.015em">{{ f.title }}</div>
+          <div style="font-size:13.5px;line-height:1.5;color:#6B6659;text-wrap:pretty">{{ f.desc }}</div>
+        </a>
+      </sc-for>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:16px">
+      <h2 style="margin:0;font-family:Sora,sans-serif;font-size:20px;font-weight:600;letter-spacing:-0.015em">Paleta · claro y oscuro</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+        <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="12">
+          <div style="border-radius:12px;overflow:hidden;border:1px solid #E8E2D5;background:#FFFFFF">
+            <div style="display:grid;grid-template-columns:1fr 1fr;height:64px"><span style="background:{{ s.light }}"></span><span style="background:{{ s.dark }}"></span></div>
+            <div style="padding:10px 12px"><div style="font-size:13px;font-weight:600">{{ s.name }}</div><div style="font-size:11.5px;color:#6B6659;font-family:ui-monospace,Menlo,Consolas,monospace">{{ s.light }} · {{ s.dark }}</div><div style="margin-top:4px;font-size:12px;color:#6B6659;line-height:1.4">{{ s.use }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+      <div style="background:#FFFFFF;border:1px solid #E8E2D5;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6659">Tipografía</div>
+        <div style="font-family:Sora,sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.035em;line-height:1">RD$ 184,350</div>
+        <div style="font-size:13px;color:#6B6659">Sora 700 · títulos y cifras grandes</div>
+        <div style="font-size:15px;line-height:1.5;padding-top:12px;border-top:1px solid #E8E2D5">Cuota 13 de 24 vence el lunes 19 de octubre · RD$ 3,354.77</div>
+        <div style="font-size:13px;color:#6B6659">Inter 400–600 · texto y tablas, cifras tabulares</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E8E2D5;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6659">Dos sombras, tinte verde</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;background:#F6F3EC;border-radius:12px">
+          <div style="height:84px;border-radius:12px;background:#FFFFFF;border:1px solid #E8E2D5;box-shadow:0 1px 2px 0 rgb(20 59 44/.05),0 1px 3px 0 rgb(20 59 44/.04);display:grid;place-items:center;font-size:12.5px;font-weight:500">Tarjeta en reposo</div>
+          <div style="height:84px;border-radius:12px;background:#FFFFFF;box-shadow:0 12px 32px -8px rgb(20 59 44/.18),0 4px 8px -4px rgb(20 59 44/.08);display:grid;place-items:center;font-size:12.5px;font-weight:500">Lo que flota</div>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E8E2D5;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6659">Movimiento · 150–320 ms</div>
+        <sc-for list="{{ motion }}" as="m" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #E8E2D5;font-size:13.5px"><span style="flex:1;min-width:0">{{ m.what }}</span><span style="font-weight:600;white-space:nowrap">{{ m.ms }}</span></div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const files = [
+      ['1a–1c', 'Panel principal', 'Tres variantes de «la cifra del día»: tarjetas, editorial con toque Modernist y centro de mando.', 'Panel%20principal.dc.html'],
+      ['2a–2c', 'Clientes y préstamos', 'Lista con vista rápida, ficha del cliente con su calendario y nueva solicitud por pasos.', 'Clientes%20y%20prestamos.dc.html'],
+      ['3a–3b', 'Ruta y cobro', 'Rutas en vivo para el gerente, la ruta del cobrador en el móvil y el registro de un pago.', 'Ruta%20y%20cobro.dc.html'],
+      ['4a–4c', 'Cuenta y reportes', 'Entrar y crear cuenta, el reporte de cobros y la suscripción con su periodo de prueba.', 'Cuenta%20y%20reportes.dc.html'],
+    ].map(([code, title, desc, href], i) => ({ code, title, desc, href, delay: 120 + i * 60 }));
+    const swatches = [
+      ['Verde bosque', '#143B2C', '#0F231A', 'Menú lateral y bloques de marca'],
+      ['Esmeralda', '#0E6B4F', '#35B585', 'Botones y enlaces'],
+      ['Dorado', '#C9A227', '#D4AF37', 'La «í», menú activo, plan recomendado'],
+      ['Arena', '#F6F3EC', '#121714', 'Fondo de la aplicación'],
+      ['Superficie', '#FFFFFF', '#1A211D', 'Tarjetas'],
+      ['Tinta', '#1F2925', '#E8EDE8', 'Texto principal'],
+      ['Menta', '#DCEFE4', '#1A3A2B', '«Al día» y selecciones'],
+      ['Crema dorado', '#F7EED8', '#3B3114', 'Aviso de prueba'],
+      ['Gris cálido', '#6B6659', '#9DA69D', 'Texto secundario'],
+      ['Borde', '#E8E2D5', '#2C3530', 'Líneas y bordes'],
+      ['Éxito', '#047857', '#34D399', 'Estados positivos'],
+      ['Advertencia', '#B45309', '#F59E0B', 'Atrasos'],
+      ['Peligro', '#DC2626', '#F87171', 'Vía legal, antifraude'],
+      ['Información', '#0369A1', '#38BDF8', 'En la calle, avisos'],
+    ].map(([name, light, dark, use]) => ({ name, light, dark, use }));
+    const motion = [['Pantalla que sube al entrar', '260 ms'], ['Tarjetas que aparecen en cascada', '320 ms + 45 ms'], ['Botón que se hunde al presionar', '150 ms'], ['Menú que se pliega', '240 ms']].map(([what, ms]) => ({ what, ms }));
+    return { files, swatches, motion };
+  }
+}
+</script>
+</body>
+</html>

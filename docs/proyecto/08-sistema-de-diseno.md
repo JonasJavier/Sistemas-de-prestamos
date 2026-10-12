@@ -46,6 +46,9 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 | `--text` | `#1F2925` | Texto principal |
 | `--muted` | `#6B6659` | Texto secundario (5:1 sobre la arena) |
 | `--border` | `#E8E2D5` | Bordes y separadores |
+| `--on-forest` | `#FFFFFF` (oscuro `#E8EDE8`) | Texto sobre el bosque: el menú y los bloques verdes (decisión 114) |
+| `--forest-accent` / `--on-forest-accent` | `#35B585` / `#0B1F17` (los dos modos) | Acento sobre el bosque: barras, anillos y el botón principal dentro de un bloque verde, con su texto |
+| `--success-100` · `--warning-100` · `--danger-100` · `--info-100` | el estado al 12 % sobre `--surface` | Tintes suaves para chips y fondos de íconos; siguen el modo solos porque mezclan con la superficie del momento |
 
 ### Oscuro (opcional)
 
@@ -88,12 +91,13 @@ Formato regional fijo (es-DO): `RD$ 1,250.00`, fechas `04/10/2026`, sin notacion
 | Elemento | Valor |
 | --- | --- |
 | Escala de espaciado | Múltiplos de 4 px; secciones separadas por 24 px |
-| Radios | 8 px en controles; 12 px en tarjetas y menús; 16 px en diálogos; 24 px arriba en las hojas del celular; 999 px en insignias y avatares |
+| Radios | 8–10 px en controles (`rounded-control`, 10 px, en la barra superior); 12 px en tarjetas KPI y menús; 14 px en tarjetas grandes (`rounded-card`); 16 px en diálogos; 20 px en los bloques verdes (`rounded-block`); 24 px arriba en las hojas del celular; 999 px en insignias y avatares |
 | Sombras | Dos niveles teñidos de bosque: tarjeta (`0 1px 2px` y `0 1px 3px` al 4–5 %) y flotante (`0 12px 32px -8px` al 18 %), más un `xs` de 1 px para controles. Nada más |
 | Altura de controles | 36 px en escritorio; 44 px mínimo en móvil (objetivo táctil) |
 | Filas de tabla | 40 px (densa pero legible); modo compacto opcional de 32 px en reportes |
-| Menú lateral | 240 px; **plegado, 64 px**: un riel con un ícono por opción, una burbuja que nombra la opción al pasar o enfocar, las insignias como punto dorado y una línea fina por cada grupo. Se pliega con «Plegar el menú» al pie y la elección se recuerda en el navegador |
-| Barra superior | 56 px |
+| Menú lateral | **248 px; plegado, 76 px** (decisión 114): un riel con un ícono por opción, una burbuja que nombra la opción al pasar o enfocar y las insignias como punto dorado. Se pliega con «Plegar menú» al pie y la elección se recuerda en el navegador. **En la tableta (640–1023 px) siempre va plegado**: el contenido necesita el espacio |
+| Barra superior | 64 px en tableta y escritorio; 56 px en el celular |
+| Contenido | Margen de 32 px a los lados en escritorio (24 en tableta, 16 en el celular); ancho máximo de 1152 px, o 1280 px cuando la sección tiene submenú |
 | Puntos de quiebre | Los de Tailwind (`sm 640 · md 768 · lg 1024 · xl 1280`); el diseño de cobro y «Mi ruta» se hace primero para 360–430 px |
 
 ## 5. Componentes
@@ -113,11 +117,15 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Formularios | `Field` + React Hook Form + Zod; tasas con `PercentInput` (se escriben en %) | Error junto al campo; borrador automático en los largos |
 | Línea de tiempo | propia | Cronología del préstamo y del cliente (`DomainEvent`) |
 | Calendario de cuotas | propia | Tabla con insignias y barra de progreso del préstamo |
-| Menú lateral | `AppShell` | Ícono de línea por ítem, marcador dorado del activo, grupos plegables (Ajustes plegado por defecto; el grupo de la pantalla en uso siempre abierto; la elección se recuerda en el navegador), desplazamiento automático al ítem activo, la textura de marca de fondo y el riel plegado de la §4 |
+| Menú lateral | `shell/Sidebar` (modelo en `shell/menu.tsx`) | Decisión 114: la marca en Sora con la í dorada, la tarjeta de la empresa, tres grupos (**Operación · Cobro · Gestión**) con filas de 38 px; el activo sobre `brand-900`, en blanco, con el trazo del ícono más grueso y **la barrita dorada de 3 px contra el borde**; insignias en un círculo translúcido. Reportes, Finanzas y Ajustes son una sola entrada cada uno: sus pantallas viven en el submenú de sección (una sección con una sola pantalla se muestra como esa pantalla). Al pie, el usuario y «Plegar menú». Desplazamiento automático al ítem activo, la textura de marca y el riel de la §4 |
+| Submenú de sección | `shell/SectionNav` | Las pantallas de Reportes, Finanzas o Ajustes: una columna de 208 px a la izquierda del contenido en escritorio (etiqueta superior y filas con ícono; la activa en `brand-100`/`brand-800`) y una tira de pastillas que se desliza en tableta y celular. Se queda quieta al cambiar de pantalla: solo sube el contenido |
+| Barra superior | `shell/Topbar` | Migas (sección › pantalla › detalle, todas menos la última enlazan), el buscador de 340 px con su atajo (⌘K o Ctrl K según el equipo), el selector de sucursal, el tema y la campana con un punto rojo (la cuenta va en su nombre accesible). En el celular: la marca, buscar, la campana y el avatar |
+| Selector de sucursal | `BranchPicker` + `lib/scope.ts` | «Toda la empresa» o una sucursal (punto esmeralda o dorado). Solo para quien ve todas las sucursales, solo con más de una y solo en las pantallas que lo respetan (`SCOPED_PATHS`, hoy el inicio): un filtro que no filtra no se muestra. En el celular va en la hoja «Más». Dura lo que la pestaña del navegador |
+| Barra inferior del celular | `shell/MobileBar` | Pestañas con una píldora menta de 56×30 en la activa y, en el centro, **«Cobrar»: un círculo esmeralda de 52 px que sobresale 22 px** (solo para quien cobra). Oficina: Inicio · Clientes · Cobrar · Ruta · Más; cajero: Caja en lugar de Ruta; cobrador: Ruta · Clientes · Cobrar · Cobranza · Más; quien no cobra: Inicio · Clientes · Solicitudes · Préstamos · Más. «Más» abre el menú completo en una hoja verde |
 | Textura de marca | `Texture` | Dos capas absolutas detrás del contenido (luz suave y retícula de puntos), tono `forest` o `sand`; el contenedor va `relative` (y `overflow-hidden` si tiene esquinas redondeadas) |
 | Título de sección | `Section` | El punto dorado, el título en 15 px y una nota a la derecha (el alcance de las cifras) |
 | Tarjeta de bienvenida | `Welcome` (Inicio) | Textura en dorado sobre arena, la fecha como etiqueta superior, el saludo grande, la prueba gratis como chip dorado, las acciones y la cifra del día: lo cobrado hoy frente a lo que vencía, con su barra de avance (solo para quien lee los indicadores) |
-| Menú de usuario | `AppShell` | Avatar con iniciales y nombre con rol; dentro: Mi cuenta, tema claro/oscuro y Cerrar sesión (reemplaza el botón «Salir») |
+| Menú de usuario | `shell/UserMenu` | Al pie del menú lateral (en el celular, el avatar de la barra superior): avatar menta con iniciales, nombre y rol; dentro: Mi cuenta, Cerrar sesión y, en el celular, el tema. El panel va fijo a la página para que el menú no lo recorte |
 | Avatar | `Avatar` | Iniciales en un círculo con un tono suave fijo por nombre: clientes, usuario y empresa |
 | Botones de fila | `Button size="sm"` · `variant="soft"` | La acción principal de cada fila de una lista es tonal (verde suave), nunca el verde relleno de la acción de la pantalla |
 | Progreso | `TopProgress` | Barra fina arriba mientras una pantalla carga sus datos o se guarda algo; espera 180 ms para no parpadear |
@@ -138,7 +146,10 @@ La interfaz responde a la mano: nada se queda plano al tocarlo. Un solo *easing*
 | Pieza | Movimiento |
 | --- | --- |
 | Botones (`buttonClass`) | Se elevan 1 px al pasar (el primario gana sombra) y se encogen al 97 % al pulsar; desactivados, quietos |
-| Enlaces del menú, barra del celular, botones de ícono | La misma pulsación (`press` + `press-down`); en el menú desplegado el ícono se desliza 2 px a la derecha al pasar |
+| Enlaces del menú, barra del celular, botones de ícono | La misma pulsación (`press` + `press-down`); el botón «Cobrar» se encoge al 94 % |
+| Menú lateral | Se pliega y despliega en 240 ms (`duration-240 ease-out-soft`) |
+| Barras de avance y columnas (decisión 114) | Crecen desde la izquierda (`animate-grow-x`, 1 s con 250 ms de espera) o desde la base (`animate-grow-y`, 700 ms) |
+| Indicador «en vivo» | Un punto esmeralda que respira cada 2 s (`animate-live`) |
 | Filas de lista (`rowLinkClass`) | Fondo al pasar y un tono más fuerte mientras se pulsa |
 | Mosaicos del inicio (`Tile`) | `lift`: suben 2 px con sombra al pasar y vuelven al pulsar; los KPI solo ganan sombra |
 | Entrada de cada pantalla | El contenido de `main` sube 8 px y aparece (`animate-rise`, 260 ms); la clave es la ruta, así que cada navegación lo repite |

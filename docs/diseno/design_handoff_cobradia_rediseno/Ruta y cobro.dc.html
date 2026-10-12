@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,300..600,0..1,0&display=block">
+<style>
+:root,[data-theme="light"]{--forest:#143B2C;--forest-2:#1C4E3B;--nav:#B9CDC1;--on-forest:#FFFFFF;--forest-accent:#35B585;--emerald:#0E6B4F;--emerald-h:#0B5C43;--on-brand:#FFFFFF;--mint:#DCEFE4;--mint-50:#EFF7F2;--badge-ink:#0B5C43;--gold:#C9A227;--cream:#F7EED8;--gold-ink:#7D5F10;--sand:#F6F3EC;--surface:#FFFFFF;--surface-2:#FAF8F3;--ink:#1F2925;--muted:#6B6659;--edge:#E8E2D5;--ok:#047857;--warn:#B45309;--danger:#DC2626;--info:#0369A1;--sh-sm:0 1px 2px 0 rgb(20 59 44/.05),0 1px 3px 0 rgb(20 59 44/.04);--sh-lg:0 12px 32px -8px rgb(20 59 44/.18),0 4px 8px -4px rgb(20 59 44/.08);--dots:rgb(20 59 44/.16);--glow:rgb(201 162 39/.22);color-scheme:light}
+[data-theme="dark"]{--forest:#0F231A;--forest-2:#1A3A2C;--nav:#8FAE9D;--on-forest:#E8EDE8;--forest-accent:#35B585;--emerald:#35B585;--emerald-h:#5CC79D;--on-brand:#0B1F17;--mint:#1A3A2B;--mint-50:#18271F;--badge-ink:#9FE0C3;--gold:#D4AF37;--cream:#3B3114;--gold-ink:#E3C86A;--sand:#121714;--surface:#1A211D;--surface-2:#171D19;--ink:#E8EDE8;--muted:#9DA69D;--edge:#2C3530;--ok:#34D399;--warn:#F59E0B;--danger:#F87171;--info:#38BDF8;--sh-sm:0 1px 2px 0 rgb(0 0 0/.25);--sh-lg:0 12px 32px -8px rgb(0 0 0/.6),0 4px 8px -4px rgb(0 0 0/.4);--dots:rgb(255 255 255/.1);--glow:rgb(212 175 55/.16);color-scheme:dark}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}60%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgb(14 138 100/.45)}70%{box-shadow:0 0 0 7px rgb(14 138 100/0)}100%{box-shadow:0 0 0 0 rgb(14 138 100/0)}}
+body{margin:0;background:#E7E1D3;font-family:Inter,system-ui,sans-serif;color:#1F2925;-webkit-font-smoothing:antialiased}
+a{color:#0E6B4F;text-decoration:none}a:hover{color:#0B5C43}
+</style>
+</helmet>
+<section id="turn-3" style="padding:80px 88px 120px;display:flex;flex-direction:column;gap:72px">
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6B6659">Cobradía · Bosque y Arena · Cobro</div>
+    <h1 style="margin:0;font-family:Sora,sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.03em;color:#143B2C">Ruta de cobro y registrar pago</h1>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#6B6659;text-wrap:pretty">La ruta en vivo para el gerente y, en el móvil, la del cobrador (<a href="#3a">3a</a>). El pago muestra cómo se aplica antes de confirmarlo (<a href="#3b">3b</a>). Pulsa «Registrar pago» para ver la confirmación; en el móvil, el teclado funciona.</p>
+  </header>
+
+  <div id="3a" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:14px;white-space:nowrap"><span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">3a</span><span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em">Ruta de cobro del día</span><span style="font-size:14px;color:#6B6659">Escritorio: el gerente sigue cada ruta. Móvil: el cobrador ve su siguiente parada.</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div data-theme="{{ thRuta }}" data-screen-label="3a Ruta · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+        <dc-import name="Sidebar" active="rutas" collapsed="{{ colRuta }}" on-toggle="{{ toggleColRuta }}" hint-size="248px,100%"></dc-import>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <dc-import name="Topbar" section="Rutas de cobro" crumb="Hoy" dark="{{ dkRuta }}" on-theme="{{ toggleRuta }}" hint-size="100%,64px"></dc-import>
+          <main style="padding:28px 32px 36px;display:flex;flex-direction:column;gap:20px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="display:flex;gap:10px">
+              <sc-for list="{{ routeTabs }}" as="r" hint-placeholder-count="3">
+                <div onClick="{{ r.pick }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;background:{{ r.bg }};color:{{ r.ink }};box-shadow:{{ r.ring }};transition:background-color 200ms,box-shadow 200ms,transform 150ms" style-active="transform:scale(.98)">
+                  <span style="width:38px;height:38px;border-radius:19px;flex-shrink:0;display:grid;place-items:center;background:{{ r.avBg }};color:{{ r.avInk }};font-size:12px;font-weight:700">{{ r.ini }}</span>
+                  <div style="flex:1;min-width:0;white-space:nowrap"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ r.name }}<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:{{ r.chipBg }};color:{{ r.chipInk }}">{{ r.status }}</span></div><div style="font-size:12px;color:{{ r.sub }}">{{ r.who }}</div></div>
+                  <div style="text-align:right;white-space:nowrap"><div style="font-family:Sora,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.015em">{{ r.pct }} %</div><div style="font-size:11.5px;color:{{ r.sub }}">{{ r.cobrado }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+            <section style="background:var(--surface);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--sh-sm);display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(0,1fr))">
+              <div style="padding:18px 22px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--muted);white-space:nowrap"><span style="width:7px;height:7px;border-radius:4px;background:var(--emerald);animation:pulse 2s infinite"></span>{{ cur.name }} · cobrado</div>
+                <div style="display:flex;align-items:baseline;gap:8px;font-family:Sora,sans-serif;letter-spacing:-0.03em;white-space:nowrap"><span style="font-size:30px;font-weight:700">{{ cur.cobrado }}</span><span style="font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0">de {{ cur.esperado }}</span></div>
+                <div style="height:7px;border-radius:4px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ cur.pct }}%;height:100%;border-radius:4px;background:var(--emerald);transition:width 500ms cubic-bezier(.2,.8,.2,1)"></div></div>
+              </div>
+              <sc-for list="{{ cur.stats }}" as="k" hint-placeholder-count="4">
+                <div style="padding:18px 20px;border-left:1px solid var(--edge);white-space:nowrap"><div style="font-size:12.5px;color:var(--muted)">{{ k.label }}</div><div style="margin-top:6px;font-family:Sora,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.02em;color:{{ k.tone }}">{{ k.value }}</div><div style="margin-top:2px;font-size:12px;color:var(--muted)">{{ k.hint }}</div></div>
+              </sc-for>
+            </section>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start">
+              <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--edge);white-space:nowrap">
+                  <h2 style="margin:0;font-family:Sora,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em">Paradas</h2>
+                  <span style="font-size:12.5px;color:var(--muted)">en el orden del cobrador</span>
+                  <div style="flex:1"></div>
+                  <div style="height:34px;padding:0 12px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background-color 150ms" style-hover="background:var(--mint-50)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">swap_horiz</span>Reasignar</div>
+                  <div style="height:34px;padding:0 12px;border-radius:9px;background:var(--emerald);color:var(--on-brand);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">inventory_2</span>Recibir rendición</div>
+                </div>
+                <div style="display:grid;grid-template-columns:34px minmax(0,2fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr) 64px;gap:14px;padding:9px 20px;background:var(--surface-2);border-bottom:1px solid var(--edge);font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap"><span></span><span>Cliente</span><span style="text-align:right">Cuota</span><span>Resultado</span><span style="text-align:right">Cobrado</span><span style="text-align:right">Hora</span></div>
+                <sc-for list="{{ stops }}" as="s" hint-placeholder-count="10">
+                  <div style="display:grid;grid-template-columns:34px minmax(0,2fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr) 64px;gap:14px;align-items:center;padding:10px 20px;border-top:{{ s.rule }};background:{{ s.bg }};white-space:nowrap;cursor:pointer;transition:background-color 150ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ s.delay }}ms" style-hover="background:var(--mint-50)">
+                    <span style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:{{ s.numBg }};color:{{ s.numInk }};box-shadow:{{ s.numRing }}">{{ s.n }}</span>
+                    <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div><div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">{{ s.addr }}</div></div>
+                    <div style="text-align:right"><div style="font-size:13px">{{ s.cuota }}</div><div style="font-size:11.5px;color:{{ s.atrasoInk }}">{{ s.atraso }}</div></div>
+                    <div><span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:{{ s.stBg }};color:{{ s.stInk }}"><span style="font-family:'Material Symbols Rounded';font-size:14px;width:1em;overflow:hidden;line-height:1">{{ s.stIcon }}</span>{{ s.estado }}</span></div>
+                    <span style="text-align:right;font-size:13.5px;font-weight:600;color:{{ s.amtInk }}">{{ s.cobrado }}</span>
+                    <span style="text-align:right;font-size:12.5px;color:var(--muted)">{{ s.hora }}</span>
+                  </div>
+                </sc-for>
+                <div style="padding:12px 20px;border-top:1px solid var(--edge);font-size:13px;font-weight:600;color:var(--emerald);white-space:nowrap;cursor:pointer">Ver las 32 paradas →</div>
+              </section>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);padding:16px 18px 6px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:15px;font-weight:600">Actividad</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:6px;height:6px;border-radius:3px;background:var(--emerald);animation:pulse 2s infinite"></span>en vivo</span></div>
+                  <div style="margin-top:12px;display:flex;flex-direction:column">
+                    <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
+                      <div style="display:grid;grid-template-columns:16px minmax(0,1fr);gap:12px;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ f.delay }}ms">
+                        <div style="display:flex;flex-direction:column;align-items:center"><span style="width:10px;height:10px;margin-top:4px;border-radius:5px;background:{{ f.dot }};box-shadow:0 0 0 3px var(--surface)"></span><sc-if value="{{ f.line }}"><span style="width:1.5px;flex:1;background:var(--edge);margin-top:2px"></span></sc-if></div>
+                        <div style="padding-bottom:14px"><div style="font-size:13px;line-height:1.4;text-wrap:pretty"><strong style="font-weight:600">{{ f.title }}</strong> {{ f.text }}</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">{{ f.time }}</div></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </section>
+                <section style="position:relative;overflow:hidden;border-radius:14px;background:var(--forest);color:var(--on-forest);padding:16px 18px;box-shadow:var(--sh-lg)">
+                  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 90% at 100% 0%,rgb(53 181 133/.22),transparent 70%)"></div>
+                  <div style="position:relative">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--nav);white-space:nowrap"><span style="width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>Por rendir en caja</div>
+                    <div style="margin-top:8px;font-family:Sora,sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.03em;white-space:nowrap">{{ cur.efectivo }}</div>
+                    <div style="margin-top:2px;font-size:12.5px;color:var(--nav);white-space:nowrap">en efectivo · {{ cur.transfer }} por transferencia</div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <div data-theme="{{ thRuta }}" data-screen-label="3a Ruta · móvil (cobrador)" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+        <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+        <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+        <div style="padding:10px 18px 0;display:flex;flex-direction:column;gap:14px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;white-space:nowrap"><div><div style="font-size:12px;color:var(--muted)">Lunes 12 oct · Pedro Encarnación</div><div style="font-family:Sora,sans-serif;font-size:25px;font-weight:700;letter-spacing:-0.025em">Mi ruta de hoy</div></div><span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:color-mix(in oklab,var(--info) 12%,var(--surface));color:var(--info)">En la calle</span></div>
+          <div style="background:var(--surface);border:1px solid var(--edge);border-radius:16px;padding:14px 16px;box-shadow:var(--sh-sm)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.025em">RD$ 68,200</span><span style="font-size:12.5px;color:var(--muted)">de RD$ 82,500</span></div>
+            <div style="margin-top:10px;height:7px;border-radius:4px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:83%;height:100%;background:var(--emerald);transform-origin:left;animation:grow 1000ms cubic-bezier(.2,.8,.2,1) 200ms backwards"></div></div>
+            <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);white-space:nowrap"><span>24 de 32 visitas</span><span>19 pagos · 4 promesas · 1 no estaba</span></div>
+          </div>
+          <div style="position:relative;overflow:hidden;border-radius:18px;background:var(--forest);color:var(--on-forest);box-shadow:var(--sh-lg);animation:rise 320ms cubic-bezier(.2,.8,.2,1) 120ms backwards">
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 80% at 100% 0%,rgb(53 181 133/.25),transparent 70%)"></div>
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.07) 1px,transparent 1px);background-size:18px 18px"></div>
+            <div style="position:relative;padding:14px 16px 16px">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--nav);white-space:nowrap"><span>Siguiente · parada 25</span><span style="display:flex;align-items:center;gap:4px;letter-spacing:0;text-transform:none;font-size:12px;font-weight:500"><span style="font-family:'Material Symbols Rounded';font-size:15px;width:1em;overflow:hidden;line-height:1">near_me</span>350 m</span></div>
+              <div style="margin-top:10px;font-family:Sora,sans-serif;font-size:21px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap">Carmen Rosa Guzmán</div>
+              <div style="font-size:12.5px;color:var(--nav);white-space:nowrap">C/ Hermanas Mirabal 42, Villa Mella</div>
+              <div style="margin-top:12px;display:flex;gap:18px;white-space:nowrap"><div><div style="font-size:11.5px;color:var(--nav)">Cuota</div><div style="font-size:16px;font-weight:600">RD$ 1,850</div></div><div><div style="font-size:11.5px;color:var(--nav)">Atrasado</div><div style="font-size:16px;font-weight:600">RD$ 0</div></div><div><div style="font-size:11.5px;color:var(--nav)">Último pago</div><div style="font-size:16px;font-weight:600">Lun 5 oct</div></div></div>
+              <div style="margin-top:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px">
+                <div style="height:44px;border-radius:12px;background:var(--forest-accent);color:#0B1F17;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:transform 150ms" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">payments</span>Cobrar</div>
+                <div style="height:44px;border-radius:12px;background:rgb(255 255 255/.08);box-shadow:inset 0 0 0 1px rgb(255 255 255/.14);font-size:13px;font-weight:600;display:grid;place-items:center;white-space:nowrap">Prometió</div>
+                <div style="height:44px;border-radius:12px;background:rgb(255 255 255/.08);box-shadow:inset 0 0 0 1px rgb(255 255 255/.14);font-size:13px;font-weight:600;display:grid;place-items:center;white-space:nowrap">No estaba</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap"><span style="font-family:Sora,sans-serif;font-size:15px;font-weight:600">Después</span><span style="font-size:12.5px;color:var(--muted)">7 más</span></div>
+          <div style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-top:-4px">
+            <sc-for list="{{ nextStops }}" as="s" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 14px;border-top:{{ s.rule }};white-space:nowrap">
+                <span style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:11.5px;font-weight:700;box-shadow:inset 0 0 0 1px var(--edge);color:var(--muted)">{{ s.n }}</span>
+                <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div><div style="font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">{{ s.addr }}</div></div>
+                <div style="text-align:right"><div style="font-size:13px;font-weight:600">{{ s.cuota }}</div><div style="font-size:11px;color:{{ s.atrasoInk }}">{{ s.atraso }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <dc-import name="TabBar" active="ruta" hint-size="100%,84px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div id="3b" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:14px;white-space:nowrap"><span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">3b</span><span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em">Registrar pago</span><span style="font-size:14px;color:#6B6659">Monto, método y una vista previa de cómo se reparte entre mora, interés y capital.</span></div>
+    <div style="display:flex;gap:56px;align-items:flex-start">
+      <div data-theme="{{ thPago }}" data-screen-label="3b Pago · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+        <dc-import name="Sidebar" active="caja" collapsed="{{ colPago }}" on-toggle="{{ toggleColPago }}" hint-size="248px,100%"></dc-import>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <dc-import name="Topbar" section="Caja" crumb="Registrar pago" dark="{{ dkPago }}" on-theme="{{ toggleColPagoTheme }}" hint-size="100%,64px"></dc-import>
+          <main style="padding:28px 32px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <section style="background:var(--surface);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--sh-sm);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:14px;padding:18px 24px;border-bottom:1px solid var(--edge);background:var(--surface-2)">
+                <span style="width:44px;height:44px;border-radius:22px;flex-shrink:0;display:grid;place-items:center;background:var(--mint);color:var(--badge-ink);font-size:14px;font-weight:700">MP</span>
+                <div style="flex:1;min-width:0;white-space:nowrap"><div style="font-size:15px;font-weight:600">María Altagracia Peña</div><div style="font-size:12.5px;color:var(--muted)">P-2024-0381 · cuota 13 de 24 vence lun 19 oct · saldo RD$ 34,412.90</div></div>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--mint);color:var(--badge-ink);white-space:nowrap"><span style="width:6px;height:6px;border-radius:3px;background:currentColor"></span>Al día</span>
+                <span style="font-size:13px;font-weight:600;color:var(--emerald);white-space:nowrap;cursor:pointer">Cambiar</span>
+              </div>
+              <div style="padding:24px;display:flex;flex-direction:column;gap:22px">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="font-size:13px;font-weight:500">¿Cuánto paga?</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+                    <sc-for list="{{ amounts }}" as="a" hint-placeholder-count="4">
+                      <div onClick="{{ a.pick }}" style="padding:12px 14px;border-radius:12px;cursor:pointer;background:{{ a.bg }};box-shadow:{{ a.ring }};transition:background-color 180ms,box-shadow 180ms,transform 150ms;white-space:nowrap" style-active="transform:scale(.98)">
+                        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px;font-weight:500;color:var(--muted)">{{ a.label }}</span><span style="width:16px;height:16px;border-radius:8px;box-shadow:{{ a.radio }};background:var(--surface)"></span></div>
+                        <div style="margin-top:6px;font-family:Sora,sans-serif;font-size:18px;font-weight:600;letter-spacing:-0.015em">{{ a.value }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="height:68px;padding:0 20px;border-radius:14px;box-shadow:inset 0 0 0 2px var(--emerald),0 0 0 4px color-mix(in oklab,var(--emerald) 15%,transparent);display:flex;align-items:center;gap:10px;font-family:Sora,sans-serif;white-space:nowrap"><span style="font-size:20px;font-weight:600;color:var(--muted)">RD$</span><span style="font-size:34px;font-weight:700;letter-spacing:-0.03em">{{ amtTxt }}</span><span style="width:2px;height:34px;background:var(--emerald)"></span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="font-size:13px;font-weight:500">Método</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+                    <sc-for list="{{ methods }}" as="m" hint-placeholder-count="4">
+                      <div onClick="{{ m.pick }}" style="height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;font-weight:{{ m.weight }};cursor:pointer;background:{{ m.bg }};color:{{ m.ink }};box-shadow:{{ m.ring }};white-space:nowrap;transition:background-color 180ms,box-shadow 180ms"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">{{ m.icon }}</span>{{ m.label }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;font-weight:500">{{ recibidoLabel }}</div><div style="height:44px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14px;font-weight:500;white-space:nowrap">{{ recibido }}</div></div>
+                  <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;font-weight:500">{{ devueltaLabel }}</div><div style="height:44px;padding:0 14px;border-radius:10px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--emerald);white-space:nowrap">{{ devuelta }}</div></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;font-weight:500">Nota <span style="color:var(--muted);font-weight:400">(opcional)</span></div><div style="height:44px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:14px;color:var(--muted);white-space:nowrap">Ej.: pagó en la oficina con su hija</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid var(--edge);background:var(--surface-2);white-space:nowrap">
+                <span style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:18px;height:18px;border-radius:5px;background:var(--emerald);color:var(--on-brand);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:15px;width:1em;overflow:hidden;line-height:1">check</span></span>Imprimir recibo (80 mm)</span>
+                <span style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:18px;height:18px;border-radius:5px;background:var(--emerald);color:var(--on-brand);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:15px;width:1em;overflow:hidden;line-height:1">check</span></span>Enviar por WhatsApp</span>
+                <div style="flex:1"></div>
+                <div style="height:40px;padding:0 16px;border-radius:10px;display:flex;align-items:center;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer">Cancelar</div>
+                <div onClick="{{ confirmar }}" style="height:44px;padding:0 20px;border-radius:11px;background:var(--emerald);color:var(--on-brand);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--sh-sm);transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.97)">{{ ctaLabel }}</div>
+              </div>
+            </section>
+            <aside style="display:flex;flex-direction:column;gap:16px">
+              <sc-if value="{{ notPaid }}" hint-placeholder-val="{{ true }}">
+                <section style="background:var(--surface);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--sh-sm);padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+                  <div style="font-family:Sora,sans-serif;font-size:15px;font-weight:600;white-space:nowrap">Cómo se aplica</div>
+                  <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px">
+                    <sc-for list="{{ alloc }}" as="x" hint-placeholder-count="3"><span style="width:{{ x.w }}%;background:{{ x.color }};transition:width 400ms cubic-bezier(.2,.8,.2,1)"></span></sc-for>
+                  </div>
+                  <div style="display:flex;flex-direction:column">
+                    <sc-for list="{{ alloc }}" as="x" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--edge);font-size:13px;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ x.color }}"></span><span style="flex:1">{{ x.label }}</span><span style="font-weight:600">{{ x.value }}</span></div>
+                    </sc-for>
+                  </div>
+                  <div style="padding:12px 14px;border-radius:12px;background:var(--mint-50);display:flex;flex-direction:column;gap:6px;white-space:nowrap">
+                    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Saldo después</span><span style="font-weight:600">{{ saldoDespues }}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Próxima cuota</span><span style="font-weight:600">{{ proxDespues }}</span></div>
+                  </div>
+                  <div style="font-size:12px;line-height:1.45;color:var(--muted);text-wrap:pretty">Orden de aplicación: mora, interés vencido, interés del período y capital. Lo que sobre adelanta cuotas.</div>
+                </section>
+              </sc-if>
+              <sc-if value="{{ paid }}">
+                <section style="position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--edge);border-radius:16px;box-shadow:var(--sh-lg);padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+                  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 60% at 50% 0%,var(--glow),transparent 70%)"></div>
+                  <span style="position:relative;width:60px;height:60px;border-radius:30px;display:grid;place-items:center;background:var(--emerald);color:var(--on-brand);animation:pop 420ms cubic-bezier(.2,.8,.2,1) backwards"><span style="font-family:'Material Symbols Rounded';font-size:34px;width:1em;overflow:hidden;line-height:1">check</span></span>
+                  <div style="position:relative;font-family:Sora,sans-serif;font-size:20px;font-weight:700;letter-spacing:-0.02em">Pago registrado</div>
+                  <div style="position:relative;font-size:13px;color:var(--muted)">{{ amtFull }} · {{ methodName }} · recibo C-004218</div>
+                  <div style="position:relative;display:flex;gap:8px;margin-top:6px"><div onClick="{{ reset }}" style="height:38px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--edge);display:flex;align-items:center;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Otro pago</div><div style="height:38px;padding:0 14px;border-radius:10px;background:var(--emerald);color:var(--on-brand);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">print</span>Reimprimir</div></div>
+                </section>
+              </sc-if>
+              <section style="align-self:center;width:300px;background:var(--surface);color:var(--ink);padding:20px 22px 18px;box-shadow:var(--sh-lg);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.55;white-space:nowrap;-webkit-mask-image:radial-gradient(circle at 6px 100%,transparent 5px,black 5.5px);-webkit-mask-size:12px 100%;-webkit-mask-repeat:repeat-x;mask-image:radial-gradient(circle at 6px 100%,transparent 5px,black 5.5px);mask-size:12px 100%;mask-repeat:repeat-x;padding-bottom:26px">
+                <div style="text-align:center;font-family:Sora,sans-serif;font-size:15px;font-weight:700;letter-spacing:-0.02em">Inversiones Peña</div>
+                <div style="text-align:center;color:var(--muted)">RNC 1-31-45678-2 · Sucursal Centro</div>
+                <div style="border-top:1px dashed var(--edge);margin:10px 0"></div>
+                <div style="display:flex;justify-content:space-between"><span>Recibo</span><span>C-004218</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Fecha</span><span>12/10/2026 10:42</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Cliente</span><span>M. A. Peña</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Préstamo</span><span>P-2024-0381</span></div>
+                <div style="border-top:1px dashed var(--edge);margin:10px 0"></div>
+                <sc-for list="{{ alloc }}" as="x" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between"><span>{{ x.label }}</span><span>{{ x.plain }}</span></div></sc-for>
+                <div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-top:4px"><span>TOTAL</span><span>{{ amtFull }}</span></div>
+                <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>{{ methodName }}</span><span>Cajero: C. Peña</span></div>
+                <div style="border-top:1px dashed var(--edge);margin:10px 0"></div>
+                <div style="text-align:center;color:var(--muted)">Saldo: {{ saldoDespues }}</div>
+                <div style="text-align:center;font-family:Sora,sans-serif;font-weight:700;margin-top:6px">Cobrad<span style="color:var(--gold)">í</span>a</div>
+              </section>
+            </aside>
+          </main>
+        </div>
+      </div>
+
+      <div data-theme="{{ thPago }}" data-screen-label="3b Pago · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+        <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+        <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+        <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+          <div style="display:flex;align-items:center;gap:12px"><span style="width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge)"><span style="font-family:'Material Symbols Rounded';font-size:22px;width:1em;overflow:hidden;line-height:1">close</span></span><div style="flex:1;min-width:0;white-space:nowrap"><div style="font-size:12px;color:var(--muted)">Cobrar · cuota 13 de 24</div><div style="font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis">María Altagracia Peña</div></div></div>
+          <div style="text-align:center;padding:14px 0 2px"><div style="display:flex;justify-content:center;align-items:baseline;gap:6px;font-family:Sora,sans-serif;letter-spacing:-0.035em;white-space:nowrap"><span style="font-size:20px;font-weight:600;color:var(--muted)">RD$</span><span style="font-size:52px;font-weight:700">{{ mAmt }}</span></div><div style="font-size:12.5px;color:var(--muted);margin-top:2px">{{ mHint }}</div></div>
+          <div style="display:flex;gap:6px;justify-content:center;white-space:nowrap">
+            <sc-for list="{{ mChips }}" as="c" hint-placeholder-count="3"><div onClick="{{ c.pick }}" style="height:32px;padding:0 12px;border-radius:16px;display:flex;align-items:center;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);transition:transform 150ms" style-active="transform:scale(.95)">{{ c.label }}</div></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+            <sc-for list="{{ methods }}" as="m" hint-placeholder-count="4"><div onClick="{{ m.pick }}" style="height:40px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:{{ m.weight }};cursor:pointer;background:{{ m.bg }};color:{{ m.ink }};box-shadow:{{ m.ring }};white-space:nowrap">{{ m.short }}</div></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:2px">
+            <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><div onClick="{{ k.press }}" style="height:52px;border-radius:12px;display:grid;place-items:center;font-family:Sora,sans-serif;font-size:22px;font-weight:500;cursor:pointer;background:{{ k.bg }};transition:background-color 120ms,transform 120ms" style-active="transform:scale(.94);background:var(--mint)"><span style="font-family:{{ k.ff }};font-size:{{ k.fs }}px;line-height:1">{{ k.label }}</span></div></sc-for>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 18px 34px"><div onClick="{{ confirmarM }}" style="height:52px;border-radius:14px;background:var(--emerald);color:var(--on-brand);font-size:15.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;cursor:pointer;box-shadow:var(--sh-lg);transition:transform 150ms" style-active="transform:scale(.97)">{{ mCta }}</div><span style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.9"></span></div>
+        <sc-if value="{{ mPaid }}">
+          <div style="position:absolute;inset:0;z-index:4;background:var(--forest);color:var(--on-forest);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 32px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 50% at 50% 30%,rgb(53 181 133/.3),transparent 70%),radial-gradient(rgb(255 255 255/.07) 1px,transparent 1px);background-size:auto,20px 20px"></div>
+            <span style="position:relative;width:84px;height:84px;border-radius:42px;display:grid;place-items:center;background:var(--forest-accent);color:#0B1F17;animation:pop 460ms cubic-bezier(.2,.8,.2,1) 80ms backwards"><span style="font-family:'Material Symbols Rounded';font-size:46px;width:1em;overflow:hidden;line-height:1">check</span></span>
+            <div style="position:relative;font-family:Sora,sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.025em">Cobrado</div>
+            <div style="position:relative;font-family:Sora,sans-serif;font-size:36px;font-weight:700;letter-spacing:-0.035em;white-space:nowrap">RD$ {{ mAmt }}</div>
+            <div style="position:relative;font-size:13.5px;color:var(--nav)">María Altagracia Peña · recibo enviado por WhatsApp</div>
+            <div onClick="{{ resetM }}" style="position:relative;margin-top:18px;height:48px;padding:0 22px;border-radius:14px;background:rgb(255 255 255/.1);box-shadow:inset 0 0 0 1px rgb(255 255 255/.16);display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap">Siguiente parada<span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">arrow_forward</span></div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Claro&quot;,&quot;Oscuro&quot;],&quot;default&quot;:&quot;Claro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;menuPlegado&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Vista&quot;}}">
+class Component extends DCLogic {
+  state = { dark: {}, col: {}, route: 0, amt: 0, method: 0, paid: false, mStr: '3354.77', mMethod: 0, mPaid: false };
+  renderVals() {
+    const base = (this.props.modo ?? 'Claro') === 'Oscuro';
+    const baseCol = !!this.props.menuPlegado;
+    const dark = (k) => this.state.dark[k] ?? base;
+    const col = (k) => this.state.col[k] ?? baseCol;
+    const flip = (bag, k, cur) => () => this.setState((s) => ({ [bag]: { ...s[bag], [k]: !cur } }));
+    const tint = (c, p) => `color-mix(in oklab, var(${c}) ${p}%, var(--surface))`;
+    const money = (n, d = 0) => 'RD$ ' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const R = [
+      { name: 'Ruta Norte', who: 'Pedro Encarnación · Villa Mella', ini: 'PE', status: 'En la calle', c: 68200, e: 82500, v: '24 de 32', pay: 19, prom: 4, no: 1, ef: 61700, tr: 6500 },
+      { name: 'Ruta Este', who: 'Yudelka Santana · Los Mina', ini: 'YS', status: 'En la calle', c: 51900, e: 74300, v: '17 de 26', pay: 14, prom: 2, no: 1, ef: 47400, tr: 4500 },
+      { name: 'Ruta Oeste', who: 'Ramón Félix · Herrera', ini: 'RF', status: 'Rendida', c: 40150, e: 45000, v: '18 de 18', pay: 16, prom: 1, no: 1, ef: 0, tr: 0 },
+    ];
+    const ri = this.state.route;
+    const routeTabs = R.map((r, i) => {
+      const on = i === ri, done = r.status === 'Rendida';
+      return { ...r, pct: Math.round((r.c / r.e) * 100), cobrado: money(r.c), pick: () => this.setState({ route: i }),
+        bg: on ? 'var(--forest)' : 'var(--surface)', ink: on ? 'var(--on-forest)' : 'var(--ink)', sub: on ? 'var(--nav)' : 'var(--muted)',
+        ring: on ? 'var(--sh-lg)' : 'inset 0 0 0 1px var(--edge),var(--sh-sm)',
+        avBg: on ? 'rgb(255 255 255/.1)' : 'var(--mint)', avInk: on ? 'var(--on-forest)' : 'var(--badge-ink)',
+        chipBg: done ? 'var(--mint)' : on ? 'rgb(255 255 255/.12)' : tint('--info', 12), chipInk: done ? 'var(--badge-ink)' : on ? 'var(--on-forest)' : 'var(--info)' };
+    });
+    const r = R[ri];
+    const cur = { name: r.name, cobrado: money(r.c), esperado: money(r.e), pct: Math.round((r.c / r.e) * 100),
+      efectivo: r.ef ? money(r.ef) : 'Rendida 3:12 p. m.', transfer: money(r.tr),
+      stats: [['Visitas', r.v, `${r.pay} con pago`, 'var(--ink)'], ['Promesas', String(r.prom), 'Para esta semana', 'var(--ink)'], ['No estaba', String(r.no), 'Reprogramar visita', r.no ? 'var(--warn)' : 'var(--ink)'], ['Falta', money(r.e - r.c), 'Por cobrar hoy', 'var(--ink)']]
+        .map(([label, value, hint, tone]) => ({ label, value, hint, tone })) };
+    const st = {
+      pago: ['Pagó', 'check_circle', 'var(--mint)', 'var(--badge-ink)'], parcial: ['Pago parcial', 'contrast', tint('--info', 12), 'var(--info)'],
+      prom: ['Prometió', 'event_available', 'var(--cream)', 'var(--gold-ink)'], no: ['No estaba', 'person_off', tint('--warn', 13), 'var(--warn)'],
+      pend: ['Pendiente', 'schedule', 'var(--surface-2)', 'var(--muted)'], sig: ['Siguiente', 'near_me', 'var(--forest)', 'var(--on-forest)'],
+    };
+    const S = [
+      [20, 'Wendy Castillo', 'C/ 3ra 15, Villa Mella', 800, '', 'pago', 800, '10:04'],
+      [21, 'Bienvenido Ureña', 'Av. Hermanas Mirabal 210', 2400, '1 cuota atrasada', 'parcial', 1200, '10:12'],
+      [22, 'Rosa Elena Batista', 'C/ Duarte 8, Los Guaricanos', 1650, '', 'prom', 0, '10:19'],
+      [23, 'Nelson Ogando', 'C/ Primera 77, Villa Mella', 3100, '2 cuotas atrasadas', 'no', 0, '10:31'],
+      [24, 'María Altagracia Peña', 'C/ Respaldo Los Ríos 4', 3355, '', 'pago', 3355, '10:42'],
+      [25, 'Carmen Rosa Guzmán', 'C/ Hermanas Mirabal 42', 1850, '', 'sig', 0, '—'],
+      [26, 'Juan Carlos Lantigua', 'C/ Central 19, Sabana Perdida', 2750, '', 'pend', 0, '—'],
+      [27, 'Dulce María Frías', 'Res. Los Prados, apto 3B', 1200, '3 días de atraso', 'pend', 0, '—'],
+      [28, 'Luis Ernesto Polanco', 'C/ 8 n.º 33, Sabana Perdida', 5200, 'Vía legal · no cobrar', 'pend', 0, '—'],
+      [29, 'Kelvin Almánzar', 'C/ Mella 102, Villa Mella', 1450, '', 'pend', 0, '—'],
+    ];
+    const stops = S.map(([n, name, addr, cuota, atraso, k, cob, hora], j) => {
+      const t = st[k]; const sig = k === 'sig';
+      return { n, name, addr, cuota: money(cuota), atraso: atraso || 'Al día', atrasoInk: atraso ? 'var(--warn)' : 'var(--muted)', estado: t[0], stIcon: t[1], stBg: t[2], stInk: t[3],
+        cobrado: cob ? money(cob) : '—', amtInk: cob ? 'var(--ink)' : 'var(--muted)', hora, delay: 80 + j * 35, rule: j ? '1px solid var(--edge)' : 'none',
+        bg: sig ? 'var(--mint-50)' : 'transparent', numBg: k === 'pend' ? 'var(--surface)' : sig ? 'var(--emerald)' : 'var(--surface-2)', numInk: sig ? 'var(--on-brand)' : 'var(--muted)', numRing: k === 'pend' ? 'inset 0 0 0 1px var(--edge)' : 'none' };
+    });
+    const nextStops = stops.slice(6, 10).map((s, j) => ({ ...s, rule: j ? '1px solid var(--edge)' : 'none' }));
+    const feed = [
+      ['var(--emerald)', 'Cobro', 'RD$ 3,355 a María Altagracia Peña · efectivo', '10:42 a. m. · parada 24'],
+      ['var(--warn)', 'No estaba', 'Nelson Ogando. Pedro dejó aviso con la vecina.', '10:31 a. m. · parada 23'],
+      ['var(--gold)', 'Promesa', 'Rosa Elena Batista pagará RD$ 1,650 el miércoles', '10:19 a. m. · parada 22'],
+      ['var(--info)', 'Pago parcial', 'RD$ 1,200 de Bienvenido Ureña · transferencia', '10:12 a. m. · parada 21'],
+      ['var(--emerald)', 'Cobro', 'RD$ 800 a Wendy Castillo · efectivo', '10:04 a. m. · parada 20'],
+    ].map(([dot, title, text, time], i, a) => ({ dot, title, text, time, line: i < a.length - 1, delay: 120 + i * 50 }));
+
+    // Pago
+    const cuota = 3354.77, intP = 860.32, bal = 34412.9;
+    const A = [['Cuota 13', cuota], ['Cuotas 13 y 14', cuota * 2], ['Saldar el préstamo', bal + intP], ['Otro monto', 5000]];
+    const ai = this.state.amt, amt = A[ai][1];
+    const amounts = A.map(([label, v], i) => { const on = i === ai; return { label, value: money(v, 2), pick: () => this.setState({ amt: i, paid: false }),
+      bg: on ? 'var(--mint-50)' : 'var(--surface)', ring: on ? 'inset 0 0 0 2px var(--emerald)' : 'inset 0 0 0 1px var(--edge)', radio: on ? 'inset 0 0 0 5px var(--emerald)' : 'inset 0 0 0 1.5px var(--edge)' }; });
+    const M = [['payments', 'Efectivo', 'Efectivo'], ['account_balance', 'Transferencia', 'Transf.'], ['receipt_long', 'Cheque', 'Cheque'], ['credit_card', 'Tarjeta', 'Tarjeta']];
+    const mk = (key) => M.map(([icon, label, short], i) => { const on = i === this.state[key]; return { icon, label, short, pick: () => this.setState({ [key]: i }), weight: on ? 600 : 500,
+      bg: on ? 'var(--forest)' : 'var(--surface)', ink: on ? 'var(--on-forest)' : 'var(--ink)', ring: on ? 'none' : 'inset 0 0 0 1px var(--edge)' }; });
+    let rest = amt; const mora = 0; const intA = Math.min(rest, intP); rest -= intA; const capA = Math.min(rest, bal); rest -= capA;
+    const parts = [['Mora', mora, 'var(--danger)'], ['Interés del período', intA, 'var(--gold)'], ['Capital', capA, 'var(--emerald)']];
+    const alloc = parts.filter((p) => p[0] !== 'Mora' || p[1] > 0).map(([label, v, color]) => ({ label, value: money(v, 2), plain: v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), color, w: (v / amt) * 100 }));
+    alloc.unshift({ label: 'Mora', value: 'RD$ 0.00', plain: '0.00', color: 'var(--danger)', w: 0 });
+    const after = bal - capA;
+    const cash = this.state.method === 0;
+    const recibidoV = Math.ceil(amt / 500) * 500;
+    const mDigits = this.state.mStr;
+    const mNum = parseFloat(mDigits || '0');
+    const [mi, md] = mDigits.split('.');
+    const mAmt = (parseInt(mi || '0', 10)).toLocaleString('en-US') + (md !== undefined ? '.' + md : '');
+    const press = (k) => () => this.setState((s) => {
+      let v = s.mStr;
+      if (k === 'del') v = v.slice(0, -1);
+      else if (k === '.') { if (!v.includes('.')) v = (v || '0') + '.'; }
+      else { if (v.includes('.') && v.split('.')[1].length >= 2) return null; if (v.replace('.', '').length >= 8) return null; v = v === '0' ? k : v + k; }
+      return { mStr: v };
+    });
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map((k) => ({ label: k === 'del' ? 'backspace' : k, press: press(k),
+      ff: k === 'del' ? "'Material Symbols Rounded'" : 'Sora,sans-serif', fs: k === 'del' ? 24 : 24, bg: k === 'del' || k === '.' ? 'transparent' : 'var(--surface)' }));
+    const mChips = [['Cuota', '3354.77'], ['2 cuotas', '6709.54'], ['Saldar', '35273.22']].map(([label, v]) => ({ label, pick: () => this.setState({ mStr: v }) }));
+    const mHint = mNum >= 35273.22 ? 'Salda el préstamo' : mNum >= 6709.54 ? 'Cubre las cuotas 13 y 14' : mNum >= 3354.77 ? 'Cubre la cuota 13 · vence lun 19 oct' : mNum > 0 ? 'Pago parcial de la cuota 13' : 'Escribe el monto';
+    return {
+      thRuta: dark('Ruta') ? 'dark' : 'light', dkRuta: dark('Ruta'), toggleRuta: flip('dark', 'Ruta', dark('Ruta')), colRuta: col('Ruta'), toggleColRuta: flip('col', 'Ruta', col('Ruta')),
+      thPago: dark('Pago') ? 'dark' : 'light', dkPago: dark('Pago'), toggleColPagoTheme: flip('dark', 'Pago', dark('Pago')), colPago: col('Pago'), toggleColPago: flip('col', 'Pago', col('Pago')),
+      routeTabs, cur, stops, nextStops, feed,
+      amounts, methods: mk('method'), alloc, amtTxt: amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), amtFull: money(amt, 2),
+      recibidoLabel: cash ? 'Recibido en efectivo' : 'Referencia', recibido: cash ? money(recibidoV, 2) : 'TRF-88213904 · Banreservas',
+      devueltaLabel: cash ? 'Devuelta' : 'Fecha del depósito', devuelta: cash ? money(recibidoV - amt, 2) : 'Hoy, 12 oct 2026',
+      saldoDespues: money(Math.max(0, after), 2), proxDespues: after <= 0.01 ? 'Préstamo saldado' : ai === 1 ? 'Lun 2 nov · cuota 15' : 'Lun 26 oct · cuota 14',
+      methodName: M[this.state.method][1], ctaLabel: this.state.paid ? 'Registrado ✓' : 'Registrar pago · ' + money(amt, 2),
+      paid: this.state.paid, notPaid: !this.state.paid, confirmar: () => this.setState({ paid: true }), reset: () => this.setState({ paid: false, amt: 0 }),
+      mAmt, mHint, mChips, keys, mCta: 'Cobrar RD$ ' + mAmt, mPaid: this.state.mPaid, confirmarM: () => this.setState({ mPaid: true }), resetM: () => this.setState({ mPaid: false, mStr: '3354.77' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

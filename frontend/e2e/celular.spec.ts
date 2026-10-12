@@ -4,13 +4,13 @@ import { MODELO, signIn } from './helpers'
 
 /** Decision 028: web only, made for the phone. Cashiers and collectors work there. */
 test.describe('en el celular', () => {
-  test('la barra inferior navega, busca y cobra (doc 07 - 2)', async ({ page }) => {
+  test('la barra inferior navega y cobra; la de arriba busca (decisión 114)', async ({ page }) => {
     await signIn(page, MODELO.cajera)
     const bar = page.getByRole('navigation', { name: 'Accesos rápidos' })
     await bar.getByRole('link', { name: 'Caja' }).click()
     await expect(page.getByRole('heading', { name: 'Mi caja' })).toBeVisible()
 
-    await bar.getByRole('button', { name: 'Buscar' }).click()
+    await page.getByRole('button', { name: 'Buscar', exact: true }).click()
     await page.getByRole('textbox', { name: 'Buscar' }).fill('Pérez')
     await expect(page.getByRole('option', { name: /José Pérez Santana/ }).first()).toBeVisible()
     await page.keyboard.press('Escape')

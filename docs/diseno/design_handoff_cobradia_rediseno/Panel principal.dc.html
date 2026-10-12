@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,300..600,0..1,0&display=block">
+<style>
+:root,[data-theme="light"]{--forest:#143B2C;--forest-2:#1C4E3B;--nav:#B9CDC1;--on-forest:#FFFFFF;--forest-accent:#35B585;--emerald:#0E6B4F;--emerald-h:#0B5C43;--on-brand:#FFFFFF;--mint:#DCEFE4;--mint-50:#EFF7F2;--badge-ink:#0B5C43;--gold:#C9A227;--cream:#F7EED8;--gold-ink:#7D5F10;--sand:#F6F3EC;--surface:#FFFFFF;--surface-2:#FAF8F3;--ink:#1F2925;--muted:#6B6659;--edge:#E8E2D5;--ok:#047857;--warn:#B45309;--danger:#DC2626;--info:#0369A1;--sh-sm:0 1px 2px 0 rgb(20 59 44/.05),0 1px 3px 0 rgb(20 59 44/.04);--sh-lg:0 12px 32px -8px rgb(20 59 44/.18),0 4px 8px -4px rgb(20 59 44/.08);--dots:rgb(20 59 44/.16);--glow:rgb(201 162 39/.22);color-scheme:light}
+[data-theme="dark"]{--forest:#0F231A;--forest-2:#1A3A2C;--nav:#8FAE9D;--on-forest:#E8EDE8;--forest-accent:#35B585;--emerald:#35B585;--emerald-h:#5CC79D;--on-brand:#0B1F17;--mint:#1A3A2B;--mint-50:#18271F;--badge-ink:#9FE0C3;--gold:#D4AF37;--cream:#3B3114;--gold-ink:#E3C86A;--sand:#121714;--surface:#1A211D;--surface-2:#171D19;--ink:#E8EDE8;--muted:#9DA69D;--edge:#2C3530;--ok:#34D399;--warn:#F59E0B;--danger:#F87171;--info:#38BDF8;--sh-sm:0 1px 2px 0 rgb(0 0 0/.25);--sh-lg:0 12px 32px -8px rgb(0 0 0/.6),0 4px 8px -4px rgb(0 0 0/.4);--dots:rgb(255 255 255/.1);--glow:rgb(212 175 55/.16);color-scheme:dark}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes growY{from{transform:scaleY(0)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgb(14 138 100/.45)}70%{box-shadow:0 0 0 7px rgb(14 138 100/0)}100%{box-shadow:0 0 0 0 rgb(14 138 100/0)}}
+body{margin:0;background:#E7E1D3;font-family:Inter,system-ui,sans-serif;color:#1F2925;-webkit-font-smoothing:antialiased}
+a{color:#0E6B4F;text-decoration:none}a:hover{color:#0B5C43}
+</style>
+</helmet>
+<section id="turn-1" style="padding:80px 88px 120px;display:flex;flex-direction:column;gap:48px">
+  <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px;max-width:1880px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6B6659">Cobradía · Bosque y Arena · Gerente</div>
+      <h1 style="margin:0;font-family:Sora,sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.03em;color:#143B2C">Panel principal — tres caminos</h1>
+      <p style="margin:0;max-width:720px;font-size:16px;line-height:1.55;color:#6B6659;text-wrap:pretty">Las tres variantes ponen «la cifra del día» arriba. Cambian el carácter: <a href="#1a">1a</a> es cálida y en tarjetas, <a href="#1b">1b</a> es editorial con el toque Modernist y <a href="#1c">1c</a> es un centro de mando sobre bosque. Prueba la luna del encabezado y «Plegar menú» en cada una.</p>
+    </div>
+    <div onClick="{{ replay }}" style="height:44px;padding:0 18px;border-radius:10px;background:#143B2C;color:#FFFFFF;font-size:14px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;transition:transform 150ms" style-active="transform:scale(.97)">
+      <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">replay</span>Repetir animaciones
+    </div>
+  </header>
+  <sc-if value="{{ shown }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-wrap:wrap;gap:96px;align-items:flex-start">
+
+    <div id="1a" style="display:flex;flex-direction:column;gap:20px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">1a</span>
+        <span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em;white-space:nowrap">La cifra del día</span>
+        <span style="font-size:14px;color:#6B6659">Evolución del panel actual: más jerarquía, el cobro desglosado por origen.</span>
+      </div>
+      <div style="display:flex;gap:56px;align-items:flex-start">
+        <div data-theme="{{ themeA }}" data-screen-label="1a Panel · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1);transition:background-color 200ms">
+          <dc-import name="Sidebar" active="inicio" collapsed="{{ colA }}" on-toggle="{{ toggleColA }}" hint-size="248px,100%"></dc-import>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <dc-import name="Topbar" section="Inicio" dark="{{ darkA }}" on-theme="{{ toggleThemeA }}" hint-size="100%,64px"></dc-import>
+            <main style="padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+              <section style="position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--sh-sm)">
+                <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(55% 90% at 100% 0%,var(--glow),transparent 70%)"></div>
+                <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--dots) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:radial-gradient(55% 90% at 100% 0%,black,transparent 80%);mask-image:radial-gradient(55% 90% at 100% 0%,black,transparent 80%)"></div>
+                <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px 32px 26px">
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)"><span style="width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>Lunes, 12 de octubre de 2026</div>
+                    <h1 style="margin:0;font-family:Sora,sans-serif;font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1">Buenos días, Carolina</h1>
+                    <div style="align-self:flex-start;white-space:nowrap;display:flex;align-items:center;gap:10px;padding:5px 14px 5px 12px;border-radius:999px;background:var(--cream);color:var(--gold-ink);font-size:12.5px;font-weight:500;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--gold) 32%,transparent)"><span>Te quedan <strong>9 días</strong> de prueba gratis.</span><span style="font-weight:600;cursor:pointer">Ver la suscripción →</span></div>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <div style="height:40px;padding:0 16px;border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge),var(--sh-sm);font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background-color 150ms,transform 150ms" style-hover="background:var(--mint-50)" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">calculate</span>Simular</div>
+                    <div style="height:40px;padding:0 16px;border-radius:10px;background:var(--emerald);color:var(--on-brand);font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--sh-sm);transition:background-color 150ms,transform 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">add</span>Nueva solicitud</div>
+                  </div>
+                </div>
+                <div style="position:relative;border-top:1px solid var(--edge);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)">
+                  <div style="padding:24px 32px 28px;border-right:1px solid var(--edge);display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted)"><span style="width:7px;height:7px;border-radius:4px;background:var(--emerald);animation:pulse 2s infinite"></span>Cobrado hoy · en vivo</div>
+                    <div style="display:flex;align-items:baseline;gap:8px;font-family:Sora,sans-serif;letter-spacing:-0.035em">
+                      <span style="font-size:22px;font-weight:600;color:var(--muted)">RD$</span>
+                      <span style="font-size:60px;font-weight:700;line-height:1.05">{{ cifra }}</span>
+                      <span style="font-size:24px;font-weight:600;color:var(--muted)">.00</span>
+                    </div>
+                    <div style="margin-top:12px;height:8px;border-radius:4px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:79.5%;height:100%;border-radius:4px;background:var(--emerald);transform-origin:left;animation:grow 1100ms cubic-bezier(.2,.8,.2,1) 200ms backwards"></div></div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:4px;white-space:nowrap"><span>de <strong style="color:var(--ink);font-weight:600">RD$ 231,800</strong> esperado · {{ pct }} %</span><span>Faltan RD$ 47,450</span></div>
+                  </div>
+                  <div style="padding:20px 28px 22px;display:flex;flex-direction:column;gap:4px">
+                    <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Por origen</div>
+                    <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4">
+                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 96px 104px;align-items:center;gap:14px;padding:7px 0">
+                        <div style="min-width:0;display:flex;align-items:center;gap:10px">
+                          <span style="font-size:13.5px;font-weight:600;white-space:nowrap">{{ r.name }}</span>
+                          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:{{ r.chipBg }};color:{{ r.chipInk }};white-space:nowrap">{{ r.status }}</span>
+                        </div>
+                        <div style="height:5px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;border-radius:3px;background:var(--emerald);transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 350ms backwards"></div></div>
+                        <div style="text-align:right;font-size:13px;white-space:nowrap"><strong style="font-weight:600">{{ r.cobrado }}</strong> <span style="color:var(--muted)">/ {{ r.esperadoK }}</span></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </section>
+
+              <section style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Tu trabajo de hoy</h2><span style="font-size:12.5px;color:var(--muted);white-space:nowrap">Lo que espera por ti</span></div>
+                <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
+                  <sc-for list="{{ queue }}" as="q" hint-placeholder-count="6">
+                    <div style="background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:14px 16px 16px;box-shadow:var(--sh-sm);cursor:pointer;transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms,box-shadow 180ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ q.delay }}ms" style-hover="transform:translateY(-2px);border-color:color-mix(in oklab,var(--emerald) 35%,var(--edge));box-shadow:var(--sh-lg)">
+                      <div style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:{{ q.iconBg }};color:{{ q.iconInk }}"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">{{ q.icon }}</span></span><span style="flex:1;min-width:0;font-size:12.5px;font-weight:500;color:var(--muted);line-height:1.2">{{ q.label }}</span></div>
+                      <div style="margin-top:14px;font-family:Sora,sans-serif;font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1">{{ q.value }}</div>
+                      <div style="margin-top:6px;font-size:12px;line-height:1.35;color:var(--muted);text-wrap:pretty">{{ q.hint }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <div style="display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px">
+                <section style="display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Cartera y cobros</h2><span style="font-size:12.5px;color:var(--muted);white-space:nowrap">Octubre · toda la empresa</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+                    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+                      <div style="background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:16px;box-shadow:var(--sh-sm);animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ k.delay }}ms">
+                        <div style="font-size:12.5px;font-weight:500;color:var(--muted)">{{ k.label }}</div>
+                        <div style="margin-top:8px;font-family:Sora,sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.02em;color:{{ k.tone }};white-space:nowrap">{{ k.value }}</div>
+                        <div style="margin-top:4px;font-size:12px;color:var(--muted)">{{ k.hint }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </section>
+                <section style="display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Mora por tramos</h2><span style="font-size:12.5px;color:var(--muted);white-space:nowrap">Capital pendiente</span></div>
+                  <div style="flex:1;background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:18px 20px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;transform-origin:left;animation:grow 1000ms cubic-bezier(.2,.8,.2,1) 250ms backwards">
+                      <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="6"><span style="width:{{ b.share }}%;background:{{ b.color }}"></span></sc-for>
+                    </div>
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="6">
+                        <div style="display:grid;grid-template-columns:12px minmax(0,1fr) 48px 112px 54px;white-space:nowrap;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--edge);font-size:13px">
+                          <span style="width:8px;height:8px;border-radius:2px;background:{{ b.color }}"></span>
+                          <span>{{ b.label }}</span>
+                          <span style="text-align:right;color:var(--muted)">{{ b.count }}</span>
+                          <span style="text-align:right;font-weight:500">{{ b.amount }}</span>
+                          <span style="text-align:right;color:var(--muted)">{{ b.shareTxt }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <section style="display:flex;flex-direction:column;gap:12px">
+                <h2 style="margin:0;font-family:Sora,sans-serif;font-size:17px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Operación de hoy</h2>
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--edge);border-radius:12px;box-shadow:var(--sh-sm)">
+                  <sc-for list="{{ ops }}" as="o" hint-placeholder-count="4">
+                    <div style="padding:16px 20px;border-left:{{ o.rule }};display:flex;align-items:center;gap:14px">
+                      <span style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:{{ o.iconBg }};color:{{ o.iconInk }}"><span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">{{ o.icon }}</span></span>
+                      <div style="flex:1;min-width:0"><div style="font-size:12.5px;color:var(--muted)">{{ o.label }}</div><div style="font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.015em">{{ o.value }}</div><div style="font-size:12px;color:var(--muted)">{{ o.hint }}</div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+            </main>
+          </div>
+        </div>
+
+        <div data-theme="{{ themeA }}" data-screen-label="1a Panel · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+          <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+          <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+          <div style="padding:14px 20px 120px;display:flex;flex-direction:column;gap:18px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)"><span style="width:5px;height:5px;border-radius:3px;background:var(--gold)"></span>Lunes, 12 de octubre</div>
+                <div style="font-family:Sora,sans-serif;font-size:25px;font-weight:700;letter-spacing:-0.025em;line-height:1.1">Buenos días, Carolina</div>
+              </div>
+              <span style="width:38px;height:38px;border-radius:19px;display:grid;place-items:center;background:var(--mint);color:var(--badge-ink);font-size:13px;font-weight:700">CP</span>
+            </div>
+            <div style="align-self:flex-start;white-space:nowrap;display:flex;gap:8px;padding:5px 12px;border-radius:999px;background:var(--cream);color:var(--gold-ink);font-size:12px;font-weight:500;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--gold) 32%,transparent)"><span>Te quedan <strong>9 días</strong> de prueba</span><span style="font-weight:600">Ver →</span></div>
+            <div style="position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--sh-sm);padding:18px 18px 16px">
+              <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 90% at 100% 0%,var(--glow),transparent 70%)"></div>
+              <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--dots) 1px,transparent 1px);background-size:16px 16px;-webkit-mask-image:radial-gradient(70% 90% at 100% 0%,black,transparent 80%);mask-image:radial-gradient(70% 90% at 100% 0%,black,transparent 80%)"></div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--muted)"><span style="width:6px;height:6px;border-radius:3px;background:var(--emerald);animation:pulse 2s infinite"></span>Cobrado hoy</div>
+                <div style="display:flex;align-items:baseline;gap:6px;font-family:Sora,sans-serif;letter-spacing:-0.035em"><span style="font-size:17px;font-weight:600;color:var(--muted)">RD$</span><span style="font-size:42px;font-weight:700;line-height:1.1">{{ cifra }}</span><span style="font-size:18px;font-weight:600;color:var(--muted)">.00</span></div>
+                <div style="margin-top:8px;height:7px;border-radius:4px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:79.5%;height:100%;border-radius:4px;background:var(--emerald);transform-origin:left;animation:grow 1100ms cubic-bezier(.2,.8,.2,1) 200ms backwards"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap"><span>de RD$ 231,800 · {{ pct }} %</span><span>Faltan RD$ 47,450</span></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="height:46px;border-radius:12px;background:var(--emerald);color:var(--on-brand);font-size:14px;font-weight:600;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 150ms" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">add</span>Nueva solicitud</div>
+              <div style="height:46px;border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge);font-size:14px;font-weight:600;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 150ms" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">calculate</span>Simular</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="font-family:Sora,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Tu trabajo de hoy</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <sc-for list="{{ queueM }}" as="q" hint-placeholder-count="4">
+                  <div style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:12px 14px 14px;box-shadow:var(--sh-sm);animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ q.delay }}ms">
+                    <span style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:{{ q.iconBg }};color:{{ q.iconInk }}"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">{{ q.icon }}</span></span>
+                    <div style="margin-top:10px;font-size:12px;font-weight:500;color:var(--muted)">{{ q.label }}</div>
+                    <div style="margin-top:2px;font-family:Sora,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.02em">{{ q.value }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <dc-import name="TabBar" active="inicio" hint-size="100%,84px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="1b" style="display:flex;flex-direction:column;gap:20px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">1b</span>
+        <span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em;white-space:nowrap">Editorial</span>
+        <span style="font-size:14px;color:#6B6659">Toque Modernist: reglas de 2 px, rejilla visible, sin tarjetas ni redondeos. La cifra manda.</span>
+      </div>
+      <div style="display:flex;gap:56px;align-items:flex-start">
+        <div data-theme="{{ themeB }}" data-screen-label="1b Panel · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+          <dc-import name="Sidebar" active="inicio" collapsed="{{ colB }}" on-toggle="{{ toggleColB }}" hint-size="248px,100%"></dc-import>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <dc-import name="Topbar" section="Inicio" dark="{{ darkB }}" on-theme="{{ toggleThemeB }}" hint-size="100%,64px"></dc-import>
+            <main style="padding:32px 40px 44px;display:flex;flex-direction:column;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:16px">
+                <div style="display:flex;align-items:baseline;gap:16px;white-space:nowrap">
+                  <span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.02em">Buenos días, Carolina.</span>
+                  <span style="font-size:13px;color:var(--muted)">Lunes 12 · 10 · 2026</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;white-space:nowrap">
+                  <span style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--gold-ink)"><span style="width:8px;height:8px;background:var(--gold)"></span>Prueba gratis · 9 días</span>
+                  <div style="height:38px;padding:0 16px;background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;cursor:pointer;transition:transform 150ms,background-color 150ms" style-hover="background:var(--surface)" style-active="transform:scale(.97)">Simular</div>
+                  <div style="height:38px;padding:0 16px;background:var(--emerald);color:var(--on-brand);font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform 150ms,background-color 150ms" style-hover="background:var(--emerald-h)" style-active="transform:scale(.97)">Nueva solicitud<span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">arrow_forward</span></div>
+                </div>
+              </div>
+              <div style="height:2px;background:var(--ink)"></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px">
+                <div style="padding:28px 40px 28px 0;display:flex;flex-direction:column;gap:18px">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase"><span style="width:8px;height:8px;border-radius:4px;background:var(--emerald);animation:pulse 2s infinite"></span>Cobrado hoy</div>
+                  <div style="display:flex;align-items:flex-start;gap:12px;font-family:Sora,sans-serif">
+                    <span style="font-size:28px;font-weight:500;margin-top:16px;color:var(--muted)">RD$</span>
+                    <span style="font-size:148px;font-weight:600;letter-spacing:-0.06em;line-height:.9">{{ cifra }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+                    <div style="display:grid;grid-template-columns:82.5fr 74.3fr 45fr 30fr;gap:3px;height:14px">
+                      <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4"><div style="background:var(--mint);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:var(--emerald);transform-origin:left;animation:grow 1000ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div></sc-for>
+                    </div>
+                    <div style="display:grid;grid-template-columns:82.5fr 74.3fr 45fr 30fr;gap:3px">
+                      <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4"><div style="font-size:12px;white-space:nowrap;display:flex;flex-direction:column;gap:1px;padding-top:4px;border-top:1px solid var(--ink)"><span style="font-weight:600">{{ r.short }} · {{ r.pct }} %</span><span style="color:var(--muted)">{{ r.cobrado }} de {{ r.esperadoK }}</span></div></sc-for>
+                    </div>
+                  </div>
+                </div>
+                <div style="border-left:2px solid var(--ink);display:flex;flex-direction:column">
+                  <div style="padding:24px 0 18px 28px;border-bottom:1px solid var(--ink)"><div style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Esperado</div><div style="margin-top:6px;font-family:Sora,sans-serif;font-size:34px;font-weight:600;letter-spacing:-0.03em">RD$ 231,800</div></div>
+                  <div style="padding:18px 0 18px 28px;border-bottom:1px solid var(--ink)"><div style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Recuperación</div><div style="margin-top:6px;font-family:Sora,sans-serif;font-size:34px;font-weight:600;letter-spacing:-0.03em;color:var(--emerald)">{{ pct }} %</div></div>
+                  <div style="padding:18px 0 18px 28px"><div style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Falta por cobrar</div><div style="margin-top:6px;font-family:Sora,sans-serif;font-size:34px;font-weight:600;letter-spacing:-0.03em">RD$ 47,450</div></div>
+                </div>
+              </div>
+              <div style="height:2px;background:var(--ink)"></div>
+
+              <div style="display:flex;align-items:baseline;gap:16px;white-space:nowrap;padding:28px 0 14px"><span style="font-family:Sora,sans-serif;font-size:13px;font-weight:600;color:var(--gold-ink);white-space:nowrap">01</span><span style="font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.015em">Tu trabajo de hoy</span></div>
+              <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)">
+                <sc-for list="{{ queue }}" as="q" hint-placeholder-count="6">
+                  <div style="padding:16px 18px 18px;border-left:{{ q.ruleB }};cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:background-color 150ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ q.delay }}ms" style-hover="background:var(--surface)">
+                    <span style="font-size:12.5px;font-weight:500;color:var(--muted)">{{ q.label }}</span>
+                    <span style="font-family:Sora,sans-serif;font-size:46px;font-weight:600;letter-spacing:-0.04em;line-height:1;color:{{ q.inkB }}">{{ q.value }}</span>
+                    <span style="font-size:12px;line-height:1.35;color:var(--muted);text-wrap:pretty">{{ q.hint }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;padding-top:28px">
+                <div>
+                  <div style="display:flex;align-items:baseline;gap:16px;white-space:nowrap;padding-bottom:14px"><span style="font-family:Sora,sans-serif;font-size:13px;font-weight:600;color:var(--gold-ink);white-space:nowrap">02</span><span style="font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.015em">Cartera y cobros</span><span style="margin-left:auto;font-size:12.5px;color:var(--muted)">Octubre</span></div>
+                  <div style="border-top:2px solid var(--ink)">
+                    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+                      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--edge)">
+                        <div><div style="font-size:13.5px;font-weight:500">{{ k.label }}</div><div style="font-size:12px;color:var(--muted)">{{ k.hint }}</div></div>
+                        <div style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.02em;color:{{ k.tone }};white-space:nowrap">{{ k.value }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;align-items:baseline;gap:16px;white-space:nowrap;padding-bottom:14px"><span style="font-family:Sora,sans-serif;font-size:13px;font-weight:600;color:var(--gold-ink);white-space:nowrap">03</span><span style="font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.015em">Mora por tramos</span><span style="margin-left:auto;font-size:12.5px;color:var(--muted)">PAR30 9.4 %</span></div>
+                  <div style="border-top:2px solid var(--ink);padding-top:16px;display:flex;flex-direction:column;gap:6px">
+                    <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="6">
+                      <div style="display:grid;grid-template-columns:92px minmax(0,1fr) 112px;align-items:center;gap:14px;font-size:13px;padding:3px 0">
+                        <span style="font-weight:500">{{ b.label }}</span>
+                        <div style="height:18px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge)"><div style="width:{{ b.rel }}%;height:100%;background:{{ b.color }};transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div>
+                        <span style="text-align:right"><strong style="font-weight:600">{{ b.amountK }}</strong> <span style="color:var(--muted)">· {{ b.count }}</span></span>
+                      </div>
+                    </sc-for>
+                    <div style="font-size:12px;color:var(--muted);padding-top:8px">Las barras de atraso están a la escala de «Al día» ÷ 4 para que se lean.</div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+
+        <div data-theme="{{ themeB }}" data-screen-label="1b Panel · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+          <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+          <div style="height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+          <div style="padding:16px 22px 120px;display:flex;flex-direction:column;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px"><span style="font-family:Sora,sans-serif;font-size:18px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap">Buenos días, Carolina.</span><span style="font-size:12px;color:var(--muted)">12 · 10</span></div>
+            <div style="height:2px;background:var(--ink)"></div>
+            <div style="padding:18px 0 16px;display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase"><span style="width:7px;height:7px;border-radius:4px;background:var(--emerald);animation:pulse 2s infinite"></span>Cobrado hoy</div>
+              <div style="display:flex;align-items:flex-start;gap:6px;font-family:Sora,sans-serif"><span style="font-size:16px;font-weight:500;margin-top:8px;color:var(--muted)">RD$</span><span style="font-size:74px;font-weight:600;letter-spacing:-0.06em;line-height:.95">{{ cifra }}</span></div>
+              <div style="display:grid;grid-template-columns:82.5fr 74.3fr 45fr 30fr;gap:2px;height:10px;margin-top:10px">
+                <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4"><div style="background:var(--mint);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:var(--emerald);transform-origin:left;animation:grow 1000ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div></sc-for>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink);border-bottom:2px solid var(--ink)">
+              <div style="padding:12px 12px 12px 0"><div style="font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Esperado</div><div style="font-family:Sora,sans-serif;font-size:20px;font-weight:600;letter-spacing:-0.02em">RD$ 231,800</div></div>
+              <div style="padding:12px 0 12px 14px;border-left:1px solid var(--ink)"><div style="font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Recuperación</div><div style="font-family:Sora,sans-serif;font-size:20px;font-weight:600;letter-spacing:-0.02em;color:var(--emerald)">{{ pct }} %</div></div>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;padding:20px 0 8px"><span style="font-family:Sora,sans-serif;font-size:12px;font-weight:600;color:var(--gold-ink)">01</span><span style="font-family:Sora,sans-serif;font-size:16px;font-weight:600">Tu trabajo de hoy</span></div>
+            <sc-for list="{{ queueM }}" as="q" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--edge);animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ q.delay }}ms">
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500">{{ q.label }}</div><div style="font-size:12px;color:var(--muted)">{{ q.hint }}</div></div>
+                <span style="font-family:Sora,sans-serif;font-size:28px;font-weight:600;letter-spacing:-0.03em;color:{{ q.inkB }}">{{ q.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <dc-import name="TabBar" active="inicio" hint-size="100%,84px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div id="1c" style="display:flex;flex-direction:column;gap:20px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="height:30px;padding:0 12px;border-radius:8px;background:#143B2C;color:#C9A227;font-family:Sora,sans-serif;font-weight:700;font-size:15px;display:grid;place-items:center">1c</span>
+        <span style="font-family:Sora,sans-serif;font-size:22px;font-weight:600;color:#1F2925;letter-spacing:-0.02em;white-space:nowrap">Centro de mando</span>
+        <span style="font-size:14px;color:#6B6659">El bosque sale del menú y abraza la cifra; rutas en vivo y lo que pide tu decisión.</span>
+      </div>
+      <div style="display:flex;gap:56px;align-items:flex-start">
+        <div data-theme="{{ themeC }}" data-screen-label="1c Panel · escritorio" style="width:1440px;flex-shrink:0;display:flex;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -40px rgb(20 59 44/.45),0 0 0 1px rgb(20 59 44/.1)">
+          <dc-import name="Sidebar" active="inicio" collapsed="{{ colC }}" on-toggle="{{ toggleColC }}" hint-size="248px,100%"></dc-import>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <dc-import name="Topbar" section="Inicio" dark="{{ darkC }}" on-theme="{{ toggleThemeC }}" hint-size="100%,64px"></dc-import>
+            <main style="padding:28px 32px 40px;display:flex;flex-direction:column;gap:24px;animation:rise 260ms cubic-bezier(.2,.8,.2,1) backwards">
+              <section style="position:relative;overflow:hidden;border-radius:20px;background:var(--forest);color:var(--on-forest);box-shadow:var(--sh-lg)">
+                <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(45% 80% at 100% 0%,rgb(53 181 133/.25),transparent 70%),radial-gradient(40% 70% at 0% 100%,rgb(201 162 39/.16),transparent 70%)"></div>
+                <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.07) 1px,transparent 1px);background-size:22px 22px"></div>
+                <div style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) 200px minmax(0,1fr);gap:32px;align-items:center;padding:28px 32px">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--nav)"><span style="width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>Lunes, 12 de octubre · Buenos días, Carolina</div>
+                    <div style="font-size:13px;color:var(--nav);margin-top:14px">Cobrado hoy</div>
+                    <div style="display:flex;align-items:baseline;gap:8px;font-family:Sora,sans-serif;letter-spacing:-0.035em"><span style="font-size:22px;font-weight:600;color:var(--nav)">RD$</span><span style="font-size:58px;font-weight:700;line-height:1.05">{{ cifra }}</span><span style="font-size:22px;font-weight:600;color:var(--nav)">.00</span></div>
+                    <div style="font-size:13px;color:var(--nav)">de <strong style="color:var(--on-forest);font-weight:600">RD$ 231,800</strong> esperado · faltan RD$ 47,450</div>
+                    <div style="display:flex;gap:8px;margin-top:16px">
+                      <div style="height:40px;padding:0 16px;border-radius:10px;background:var(--forest-accent);color:#0B1F17;font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform 150ms,filter 150ms" style-hover="filter:brightness(1.08)" style-active="transform:scale(.97)"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">add</span>Nueva solicitud</div>
+                      <div style="height:40px;padding:0 16px;border-radius:10px;background:rgb(255 255 255/.08);box-shadow:inset 0 0 0 1px rgb(255 255 255/.14);color:var(--on-forest);font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform 150ms,background-color 150ms" style-hover="background:rgb(255 255 255/.14)" style-active="transform:scale(.97)">Simular</div>
+                    </div>
+                  </div>
+                  <div style="position:relative;width:200px;height:200px">
+                    <svg width="200" height="200" viewBox="0 0 200 200" style="transform:rotate(-90deg)"><circle cx="100" cy="100" r="84" fill="none" stroke="rgb(255 255 255/.1)" stroke-width="14"></circle><circle cx="100" cy="100" r="84" fill="none" stroke="#35B585" stroke-width="14" stroke-linecap="round" stroke-dasharray="527.8" stroke-dashoffset="{{ ringOffset }}"></circle></svg>
+                    <span style="position:absolute;top:6px;left:50%;width:3px;height:20px;margin-left:-1.5px;background:var(--gold);border-radius:2px"></span>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-family:Sora,sans-serif;font-size:40px;font-weight:700;letter-spacing:-0.03em">{{ pct }}<span style="font-size:20px;color:var(--nav)"> %</span></span><span style="font-size:12px;color:var(--nav)">recuperación</span></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <div style="display:flex;justify-content:space-between;white-space:nowrap;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--nav);margin-bottom:6px"><span>Rutas y caja · en vivo</span><span>41 de 58 visitas</span></div>
+                    <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4">
+                      <div style="display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;background:rgb(255 255 255/.04);animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ r.delay }}ms">
+                        <span style="width:30px;height:30px;border-radius:15px;display:grid;place-items:center;background:rgb(255 255 255/.1);font-size:11px;font-weight:700">{{ r.ini }}</span>
+                        <div style="min-width:0;display:flex;flex-direction:column;gap:5px">
+                          <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-weight:600">{{ r.name }}</span><span style="color:var(--nav);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.line }}</span></div>
+                          <div style="height:4px;border-radius:2px;background:rgb(255 255 255/.1);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;border-radius:2px;background:#35B585;transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div>
+                        </div>
+                        <span style="font-size:13px;font-weight:600;text-align:right">{{ r.cobrado }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </section>
+
+              <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px">
+                <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--edge)"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Requiere tu atención</h2><span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--mint);color:var(--badge-ink)">6 pendientes</span></div>
+                  <sc-for list="{{ attention }}" as="t" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto 20px;align-items:center;gap:14px;padding:12px 20px;border-top:{{ t.rule }};cursor:pointer;transition:background-color 150ms;animation:rise 320ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ t.delay }}ms" style-hover="background:var(--mint-50)">
+                      <span style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:{{ t.iconBg }};color:{{ t.iconInk }}"><span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">{{ t.icon }}</span></span>
+                      <div style="min-width:0"><div style="font-size:14px;font-weight:600">{{ t.title }}</div><div style="font-size:12.5px;color:var(--muted)">{{ t.hint }}</div></div>
+                      <span style="font-family:Sora,sans-serif;font-size:20px;font-weight:600;letter-spacing:-0.02em;color:{{ t.tone }}">{{ t.value }}</span>
+                      <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;color:var(--muted)">chevron_right</span>
+                    </div>
+                  </sc-for>
+                </section>
+                <div style="display:flex;flex-direction:column;gap:20px;flex-shrink:0">
+                  <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);padding:16px 20px 18px">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Últimos 7 días</h2><span style="font-size:12.5px;color:var(--muted);white-space:nowrap">Recuperación diaria</span></div>
+                    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;align-items:end;height:132px;margin-top:16px">
+                      <sc-for list="{{ week }}" as="w" hint-placeholder-count="7">
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                          <span style="font-size:11.5px;font-weight:600;color:{{ w.ink }}">{{ w.pct }}%</span>
+                          <div style="width:100%;height:{{ w.h }}%;border-radius:6px 6px 2px 2px;background:{{ w.bg }};transform-origin:bottom;animation:growY 700ms cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ w.delay }}ms"></div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;margin-top:6px">
+                      <sc-for list="{{ week }}" as="w" hint-placeholder-count="7"><span style="text-align:center;font-size:11.5px;color:var(--muted)">{{ w.day }}</span></sc-for>
+                    </div>
+                  </section>
+                  <section style="background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm);padding:16px 20px 18px;display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="margin:0;font-family:Sora,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em;white-space:nowrap">Mora por tramos</h2><span style="font-size:12.5px;color:var(--muted);white-space:nowrap">PAR30 9.4 % · PAR90 3.9 %</span></div>
+                    <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;transform-origin:left;animation:grow 1000ms cubic-bezier(.2,.8,.2,1) 250ms backwards">
+                      <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="6"><span style="width:{{ b.share }}%;background:{{ b.color }}"></span></sc-for>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px 16px">
+                      <sc-for list="{{ buckets }}" as="b" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ b.color }}"></span>{{ b.label }} <strong style="color:var(--ink);font-weight:600">{{ b.shareTxt }}</strong></span></sc-for>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              <section style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:var(--surface);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--sh-sm)">
+                <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+                  <div style="padding:16px 18px;border-left:{{ k.rule }}">
+                    <div style="font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.label }}</div>
+                    <div style="margin-top:6px;font-family:Sora,sans-serif;font-size:19px;font-weight:600;letter-spacing:-0.02em;color:{{ k.tone }};white-space:nowrap">{{ k.value }}</div>
+                    <div style="margin-top:2px;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.hint }}</div>
+                  </div>
+                </sc-for>
+              </section>
+            </main>
+          </div>
+        </div>
+
+        <div data-theme="{{ themeC }}" data-screen-label="1c Panel · móvil" style="width:390px;height:844px;flex-shrink:0;position:relative;overflow:hidden;border-radius:48px;background:var(--sand);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;box-shadow:0 0 0 10px #101512,0 0 0 11px #2A302C,0 50px 90px -30px rgb(20 59 44/.5)">
+          <div style="position:relative;overflow:hidden;background:var(--forest);color:var(--on-forest);padding-bottom:44px">
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 60% at 100% 0%,rgb(53 181 133/.28),transparent 70%),radial-gradient(60% 60% at 0% 100%,rgb(201 162 39/.16),transparent 70%)"></div>
+            <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.07) 1px,transparent 1px);background-size:20px 20px"></div>
+            <div style="position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:3"></div>
+            <div style="position:relative;height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px 36px;font-size:15px;font-weight:600"><span>9:41</span><span style="display:flex;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:17px;width:1em;overflow:hidden;line-height:1">battery_full</span></span></div>
+            <div style="position:relative;padding:14px 22px 0;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:Sora,sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.03em">Cobrad<span style="color:var(--gold)">í</span>a</span><span style="width:34px;height:34px;border-radius:17px;display:grid;place-items:center;background:var(--mint);color:var(--badge-ink);font-size:12px;font-weight:700">CP</span></div>
+              <div style="display:flex;align-items:center;gap:16px;white-space:nowrap">
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                  <span style="font-size:12.5px;color:var(--nav)">Buenos días, Carolina · cobrado hoy</span>
+                  <span style="display:flex;align-items:baseline;gap:5px;font-family:Sora,sans-serif;letter-spacing:-0.035em"><span style="font-size:15px;font-weight:600;color:var(--nav)">RD$</span><span style="font-size:38px;font-weight:700;line-height:1.1">{{ cifra }}</span></span>
+                  <span style="font-size:12px;color:var(--nav)">de RD$ 231,800 esperado</span>
+                </div>
+                <div style="position:relative;width:96px;height:96px;flex-shrink:0">
+                  <svg width="96" height="96" viewBox="0 0 200 200" style="transform:rotate(-90deg)"><circle cx="100" cy="100" r="84" fill="none" stroke="rgb(255 255 255/.12)" stroke-width="18"></circle><circle cx="100" cy="100" r="84" fill="none" stroke="#35B585" stroke-width="18" stroke-linecap="round" stroke-dasharray="527.8" stroke-dashoffset="{{ ringOffset }}"></circle></svg>
+                  <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:Sora,sans-serif;font-size:22px;font-weight:700">{{ pct }}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="position:relative;margin:-28px 14px 0;display:flex;flex-direction:column;gap:12px;animation:rise 320ms cubic-bezier(.2,.8,.2,1) 120ms backwards">
+            <div style="background:var(--surface);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--sh-lg);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px"><span style="font-family:Sora,sans-serif;font-size:15px;font-weight:600;white-space:nowrap">Requiere tu atención</span><span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--mint);color:var(--badge-ink)">6</span></div>
+              <sc-for list="{{ attentionM }}" as="t" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--edge)">
+                  <span style="width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:{{ t.iconBg }};color:{{ t.iconInk }}"><span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">{{ t.icon }}</span></span>
+                  <div style="min-width:0"><div style="font-size:13.5px;font-weight:600">{{ t.title }}</div><div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.hint }}</div></div>
+                  <span style="font-family:Sora,sans-serif;font-size:18px;font-weight:600;color:{{ t.tone }}">{{ t.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--sh-sm);padding:14px 16px">
+              <div style="display:flex;justify-content:space-between;white-space:nowrap;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><span>Rutas en la calle</span><span>2 de 3</span></div>
+              <sc-for list="{{ routesM }}" as="r" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span style="font-size:13px;font-weight:600;width:86px">{{ r.name }}</span><div style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge);overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:var(--emerald);transform-origin:left;animation:grow 900ms cubic-bezier(.2,.8,.2,1) 300ms backwards"></div></div><span style="font-size:12.5px;font-weight:600;white-space:nowrap">{{ r.pct }} %</span></div>
+              </sc-for>
+            </div>
+          </div>
+          <dc-import name="TabBar" active="inicio" hint-size="100%,84px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Claro&quot;,&quot;Oscuro&quot;],&quot;default&quot;:&quot;Claro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;menuPlegado&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Vista&quot;}}">
+class Component extends DCLogic {
+  state = { dark: {}, col: {}, shown: true, t: 1 };
+  componentDidMount() { this.run(); }
+  componentWillUnmount() { clearTimeout(this.raf); }
+  run() {
+    clearTimeout(this.raf);
+    const start = Date.now();
+    const tick = () => {
+      const p = Math.min(1, (Date.now() - start) / 1200);
+      this.setState({ t: 1 - Math.pow(1 - p, 3) });
+      if (p < 1) this.raf = setTimeout(tick, 16);
+    };
+    this.raf = setTimeout(tick, 16);
+  }
+  renderVals() {
+    const base = (this.props.modo ?? 'Claro') === 'Oscuro';
+    const baseCol = !!this.props.menuPlegado;
+    const dark = (k) => this.state.dark[k] ?? base;
+    const col = (k) => this.state.col[k] ?? baseCol;
+    const flip = (bag, k, cur) => () => this.setState((s) => ({ [bag]: { ...s[bag], [k]: !cur } }));
+    const t = this.state.t;
+    const tint = (c, p) => `color-mix(in oklab, var(${c}) ${p}%, var(--surface))`;
+    const routes = [
+      ['Ruta Norte', 'Norte', 'En la calle', 'Pedro Encarnación', 'PE', 68200, 82500, 'info'],
+      ['Ruta Este', 'Este', 'En la calle', 'Yudelka Santana', 'YS', 51900, 74300, 'info'],
+      ['Ruta Oeste', 'Oeste', 'Rendida', 'Ramón Félix', 'RF', 40150, 45000, 'ok'],
+      ['Caja oficina', 'Caja', 'Abierta', 'Sucursal Centro', 'CO', 24100, 30000, 'idle'],
+    ].map(([name, short, status, who, ini, c, e, tone], i) => ({
+      name, short, who, ini, delay: 120 + i * 60, status,
+      line: tone === 'idle' ? `${who} · ${status.toLowerCase()}` : `${who} · ${status.toLowerCase()}`,
+      cobrado: c.toLocaleString('en-US'), esperadoK: e.toLocaleString('en-US'), pct: Math.round((c / e) * 100),
+      chipBg: tone === 'info' ? tint('--info', 12) : tone === 'ok' ? 'var(--mint)' : 'var(--surface-2)',
+      chipInk: tone === 'info' ? 'var(--info)' : tone === 'ok' ? 'var(--badge-ink)' : 'var(--muted)',
+    }));
+    const q = [
+      ['Por aprobar', '7', 'Solicitudes que puedes decidir', 'description', 'go'],
+      ['Por desembolsar', '4', 'Aprobadas y vigentes', 'payments', 'go'],
+      ['Por autorizar', '2', 'Reversos, condonaciones y descuentos', 'verified_user', 'go'],
+      ['Cierres por aprobar', '1', 'Cajas que esperan tu visto bueno', 'inventory_2', 'go'],
+      ['Agenda de hoy', '12', 'Promesas que vencen y seguimientos', 'event_note', 'go'],
+      ['En atraso', '223', 'RD$ 2.22 M de capital en riesgo', 'schedule', 'warn'],
+    ];
+    const queue = q.map(([label, value, hint, icon, tone], i) => ({
+      label, value, hint, icon, delay: 140 + i * 45,
+      iconBg: tone === 'warn' ? tint('--warn', 12) : 'var(--mint-50)', iconInk: tone === 'warn' ? 'var(--warn)' : 'var(--emerald)',
+      ruleB: i ? '1px solid var(--edge)' : 'none', inkB: tone === 'warn' ? 'var(--warn)' : 'var(--ink)',
+    }));
+    const queueM = [queue[0], queue[1], queue[4], queue[5]].map((x, i) => ({ ...x, delay: 160 + i * 45 }));
+    const kpis = [
+      ['Cartera activa', 'RD$ 12,846,200', '1,284 préstamos', 'var(--ink)'],
+      ['Cartera en riesgo (PAR30)', '9.4 %', 'PAR7 13.3 % · PAR90 3.9 %', 'var(--ink)'],
+      ['Desembolsado del mes', 'RD$ 2,140,000', '86 desembolsos', 'var(--ink)'],
+      ['Ganancia cobrada del mes', 'RD$ 618,450', 'RD$ 702,900 cobrado − RD$ 84,450 de gastos', 'var(--ink)'],
+      ['Promesas cumplidas', '74 %', '52 de 70 resueltas', 'var(--ink)'],
+      ['Diferencias de caja', 'RD$ 0.00', 'Ninguna: la meta es cero', 'var(--ok)'],
+    ].map(([label, value, hint, tone], i) => ({ label, value, hint, tone, delay: 200 + i * 45, rule: i ? '1px solid var(--edge)' : 'none' }));
+    const bk = [
+      ['Al día', 1061, 10624000, 82.7, 'var(--emerald)'],
+      ['1–7 días', 64, 512400, 4.0, tint('--warn', 35)],
+      ['8–30 días', 72, 498300, 3.9, tint('--warn', 60)],
+      ['31–60 días', 41, 421800, 3.3, tint('--warn', 85)],
+      ['61–90 días', 22, 285500, 2.2, 'var(--warn)'],
+      ['Más de 90', 24, 504200, 3.9, 'var(--danger)'],
+    ];
+    const buckets = bk.map(([label, count, amt, share, color]) => ({
+      label, count: count.toLocaleString('en-US'), amount: 'RD$ ' + amt.toLocaleString('en-US'), share, shareTxt: share.toFixed(1) + ' %', color,
+      amountK: amt >= 1e6 ? `RD$ ${(amt / 1e6).toFixed(2)} M` : `RD$ ${Math.round(amt / 1000)} K`,
+      rel: Math.min(100, label === 'Al día' ? 100 : (amt / (10624000 / 4)) * 100),
+    }));
+    const ops = [
+      ['Rutas en la calle', '2 de 3', '1 ya rendida', 'route', 'go'],
+      ['Visitas de las rutas', '41 de 58', '33 con pago', 'where_to_vote', 'go'],
+      ['Cajas abiertas', '3', 'Centro, Los Mina, Herrera', 'point_of_sale', 'go'],
+      ['Alertas antifraude', '1', 'Por revisar', 'gpp_maybe', 'bad'],
+    ].map(([label, value, hint, icon, tone], i) => ({ label, value, hint, icon, rule: i ? '1px solid var(--edge)' : 'none',
+      iconBg: tone === 'bad' ? tint('--danger', 12) : 'var(--mint-50)', iconInk: tone === 'bad' ? 'var(--danger)' : 'var(--emerald)' }));
+    const att = [
+      ['Solicitudes por aprobar', '3 superan RD$ 150,000', '7', 'description', 'go'],
+      ['Reversos y condonaciones', 'Pedidos por cajeros y cobradores', '2', 'verified_user', 'go'],
+      ['Cierre de caja', 'Caja Los Mina · sobrante RD$ 200', '1', 'inventory_2', 'warn'],
+      ['Alerta antifraude', 'Dos pagos iguales en 3 minutos', '1', 'gpp_maybe', 'bad'],
+      ['Promesas que vencen hoy', 'RD$ 38,600 comprometidos', '12', 'event_note', 'go'],
+      ['Préstamos en atraso', 'RD$ 2.22 M de capital en riesgo', '223', 'schedule', 'warn'],
+    ];
+    const attention = att.map(([title, hint, value, icon, tone], i) => ({ title, hint, value, icon, delay: 160 + i * 45, rule: i ? '1px solid var(--edge)' : 'none',
+      iconBg: tone === 'bad' ? tint('--danger', 12) : tone === 'warn' ? tint('--warn', 12) : 'var(--mint-50)',
+      iconInk: tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warn)' : 'var(--emerald)',
+      tone: tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warn)' : 'var(--ink)' }));
+    const week = [['Lun 5', 92, 212], ['Mar 6', 87, 198], ['Mié 7', 89, 205], ['Jue 8', 94, 221], ['Vie 9', 85, 193], ['Sáb 10', 81, 164], ['Hoy', 80, 184]]
+      .map(([day, pct, k], i) => ({ day, pct, h: Math.round((k / 230) * 82), delay: 200 + i * 50,
+        bg: i === 6 ? 'var(--emerald)' : 'var(--mint)', ink: i === 6 ? 'var(--emerald)' : 'var(--muted)' }));
+    return {
+      shown: this.state.shown,
+      replay: () => { this.setState({ shown: false }); setTimeout(() => { this.setState({ shown: true }); this.run(); }, 40); },
+      cifra: Math.round(184350 * t).toLocaleString('en-US'),
+      pct: Math.round(80 * t),
+      ringOffset: (527.8 * (1 - 0.795 * t)).toFixed(1),
+      themeA: dark('a') ? 'dark' : 'light', darkA: dark('a'), toggleThemeA: flip('dark', 'a', dark('a')), colA: col('a'), toggleColA: flip('col', 'a', col('a')),
+      themeB: dark('b') ? 'dark' : 'light', darkB: dark('b'), toggleThemeB: flip('dark', 'b', dark('b')), colB: col('b'), toggleColB: flip('col', 'b', col('b')),
+      themeC: dark('c') ? 'dark' : 'light', darkC: dark('c'), toggleThemeC: flip('dark', 'c', dark('c')), colC: col('c'), toggleColC: flip('col', 'c', col('c')),
+      routes, routesM: routes.slice(0, 2), queue, queueM, kpis, buckets, ops, attention, attentionM: attention.slice(0, 4), week,
+    };
+  }
+}
+</script>
+</body>
+</html>

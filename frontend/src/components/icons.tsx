@@ -340,6 +340,31 @@ export const ChevronDownIcon = (p: IconProps) => (
   </Svg>
 )
 
+export const ChevronRightIcon = (p: IconProps) => (
+  <Svg className="size-4 shrink-0" {...p}>
+    <path d="m9 6 6 6-6 6" />
+  </Svg>
+)
+
+/** Ajustes: a gear of eight short teeth around a hub. */
+export const SettingsIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6" />
+    <circle cx="12" cy="12" r="6.3" />
+  </Svg>
+)
+
+/** Finanzas: a stack of coins. */
+export const CoinsIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <ellipse cx="9" cy="7" rx="5.5" ry="2.5" />
+    <path d="M3.5 7v4c0 1.4 2.5 2.5 5.5 2.5M3.5 11v4c0 1.4 2.5 2.5 5.5 2.5" />
+    <ellipse cx="15" cy="13" rx="5.5" ry="2.5" />
+    <path d="M9.5 13v4c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4" />
+  </Svg>
+)
+
 /** The sidebar toggle: a panel whose left column folds and unfolds (doc 08 - 4). */
 export const PanelFoldIcon = (p: IconProps) => (
   <Svg className="size-[18px] shrink-0" {...p}>

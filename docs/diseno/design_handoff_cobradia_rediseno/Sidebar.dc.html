@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<aside style="width:{{ width }}px;height:100%;min-height:100%;background:var(--forest);color:var(--nav);display:flex;flex-direction:column;position:relative;overflow:hidden;flex-shrink:0;font-family:Inter,system-ui,sans-serif;transition:width 240ms cubic-bezier(.2,.8,.2,1)">
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(60% 40% at 100% 0%,rgb(53 181 133/.22),transparent 70%),radial-gradient(60% 35% at 0% 100%,rgb(201 162 39/.14),transparent 70%)"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgb(255 255 255/.07) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:linear-gradient(to bottom,black,transparent 60%);mask-image:linear-gradient(to bottom,black,transparent 60%)"></div>
+  <div style="position:relative;height:68px;display:flex;align-items:center;padding:0 20px;gap:10px">
+    <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+      <span style="font-family:Sora,sans-serif;font-weight:700;font-size:21px;letter-spacing:-0.03em;color:var(--on-forest)">Cobrad<span style="color:var(--gold)">í</span>a</span>
+    </sc-if>
+    <sc-if value="{{ collapsed }}">
+      <span style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgb(255 255 255/.07);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);font-family:Sora,sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.03em;color:var(--on-forest)"><span>C<span style="color:var(--gold)">í</span></span></span>
+    </sc-if>
+  </div>
+  <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative;margin:0 14px 10px;padding:10px 12px;border-radius:10px;background:rgb(255 255 255/.05);box-shadow:inset 0 0 0 1px rgb(255 255 255/.08);display:flex;align-items:center;gap:10px;cursor:pointer">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--on-forest);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Inversiones Peña</div>
+        <div style="font-size:11.5px;color:var(--nav)">3 sucursales</div>
+      </div>
+      <span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1">unfold_more</span>
+    </div>
+  </sc-if>
+  <nav style="position:relative;flex:1;padding:4px 12px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <sc-for list="{{ groups }}" as="group" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--nav);opacity:.7;padding:0 10px 6px">{{ group.title }}</div>
+        </sc-if>
+        <sc-for list="{{ group.items }}" as="it" hint-placeholder-count="4">
+          <div title="{{ it.label }}" style="position:relative;display:flex;align-items:center;gap:12px;height:38px;padding:0 {{ itemPad }}px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:{{ it.weight }};color:{{ it.color }};background:{{ it.bg }};transition:background-color 150ms,color 150ms" style-hover="color:var(--on-forest);background:rgb(255 255 255/.06)">
+            <sc-if value="{{ it.active }}">
+              <span style="position:absolute;left:-12px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)"></span>
+            </sc-if>
+            <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;flex-shrink:0;font-variation-settings:'FILL' {{ it.fill }},'wght' 400">{{ it.icon }}</span>
+            <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+              <span style="flex:1;white-space:nowrap">{{ it.label }}</span>
+              <sc-if value="{{ it.hasBadge }}">
+                <span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:rgb(255 255 255/.1);color:var(--on-forest);font-size:11px;font-weight:600;display:grid;place-items:center">{{ it.badge }}</span>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ it.dot }}">
+              <span style="position:absolute;top:8px;right:12px;width:6px;height:6px;border-radius:3px;background:var(--gold)"></span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </nav>
+  <div style="position:relative;padding:12px;border-top:1px solid rgb(255 255 255/.08);display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px {{ footPad }}px">
+      <span style="width:32px;height:32px;border-radius:16px;flex-shrink:0;display:grid;place-items:center;background:var(--mint);color:var(--badge-ink);font-size:12px;font-weight:700">CP</span>
+      <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--on-forest);white-space:nowrap">Carolina Peña</div>
+          <div style="font-size:11.5px">Gerente</div>
+        </div>
+      </sc-if>
+    </div>
+    <div onClick="{{ toggle }}" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 {{ itemPad }}px;border-radius:9px;cursor:pointer;font-size:13px;transition:background-color 150ms,transform 150ms" style-hover="background:rgb(255 255 255/.06);color:var(--on-forest)" style-active="transform:scale(.97)">
+      <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1;flex-shrink:0">{{ toggleIcon }}</span>
+      <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap">Plegar menú</span></sc-if>
+    </div>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:248,&quot;height&quot;:860},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;clientes&quot;,&quot;solicitudes&quot;,&quot;prestamos&quot;,&quot;desembolsos&quot;,&quot;rutas&quot;,&quot;cobranza&quot;,&quot;caja&quot;,&quot;atrasos&quot;,&quot;reportes&quot;,&quot;contabilidad&quot;,&quot;ajustes&quot;],&quot;default&quot;:&quot;inicio&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;collapsed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToggle&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.active ?? 'inicio';
+    const c = !!this.props.collapsed;
+    const groups = [
+      ['Operación', [['inicio','space_dashboard','Inicio'],['clientes','group','Clientes'],['solicitudes','description','Solicitudes','7'],['prestamos','account_balance_wallet','Préstamos'],['desembolsos','payments','Desembolsos','4']]],
+      ['Cobro', [['rutas','route','Rutas de cobro'],['cobranza','event_note','Cobranza','12'],['caja','point_of_sale','Caja'],['atrasos','schedule','Atrasos']]],
+      ['Gestión', [['reportes','monitoring','Reportes'],['contabilidad','menu_book','Contabilidad'],['ajustes','settings','Ajustes']]],
+    ];
+    return {
+      collapsed: c, expanded: !c, width: c ? 76 : 248, itemPad: c ? 16 : 12, footPad: c ? 8 : 4,
+      toggle: () => this.props.onToggle && this.props.onToggle(),
+      toggleIcon: c ? 'left_panel_open' : 'left_panel_close',
+      groups: groups.map(([title, items]) => ({ title, items: items.map(([key, icon, label, badge]) => {
+        const on = key === a;
+        return { key, icon, label, badge, hasBadge: !!badge, active: on, dot: c && !!badge,
+          color: on ? 'var(--on-forest)' : 'var(--nav)', bg: on ? 'var(--forest-2)' : 'transparent', weight: on ? 600 : 500, fill: on ? 1 : 0 };
+      }) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -93,7 +93,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Default ports point at infra/compose.yml, which maps to non-standard host
-# ports (54320/63790) so it never clashes with a locally installed service.
+# ports (54320/16379) so it never clashes with a locally installed service.
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
@@ -103,7 +103,7 @@ DATABASES = {
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 CACHES = {
-    "default": env.cache("REDIS_CACHE_URL", default="redis://localhost:63790/0"),
+    "default": env.cache("REDIS_CACHE_URL", default="redis://localhost:16379/0"),
 }
 
 # Authentication -------------------------------------------------------------
@@ -223,8 +223,8 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Celery ---------------------------------------------------------------------
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:63790/1")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:63790/2")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:16379/1")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:16379/2")
 CELERY_TIMEZONE = "America/Santo_Domingo"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 

@@ -1,7 +1,7 @@
 # Desarrollo local
 
 ```bash
-docker compose -f ../infra/compose.yml up -d   # Postgres 54320, Redis 63790, Mailpit 8025
+docker compose -f ../infra/compose.yml up -d   # Postgres 54320, Redis 16379, Mailpit 8025
 cp .env.example .env
 uv sync
 uv run python manage.py migrate

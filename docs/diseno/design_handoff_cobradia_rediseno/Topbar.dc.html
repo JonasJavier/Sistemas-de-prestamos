@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<header style="height:64px;flex-shrink:0;display:flex;align-items:center;gap:16px;padding:0 32px;border-bottom:1px solid var(--edge);background:var(--sand);font-family:Inter,system-ui,sans-serif;color:var(--ink)">
+  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0">
+    <span style="white-space:nowrap">{{ section }}</span>
+    <sc-if value="{{ hasCrumb }}">
+      <span style="font-family:'Material Symbols Rounded';font-size:16px;width:1em;overflow:hidden;line-height:1">chevron_right</span>
+      <span style="color:var(--ink);font-weight:500;white-space:nowrap">{{ crumb }}</span>
+    </sc-if>
+  </div>
+  <div style="flex:1"></div>
+  <div style="width:340px;height:38px;display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--edge);color:var(--muted);font-size:13px">
+    <span style="font-family:'Material Symbols Rounded';font-size:19px;width:1em;overflow:hidden;line-height:1">search</span>
+    <span style="flex:1;white-space:nowrap">Buscar cliente, cédula o préstamo…</span>
+    <span style="font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--edge)">⌘K</span>
+  </div>
+  <div style="height:38px;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--edge);font-size:13px;font-weight:500;white-space:nowrap">
+    <span style="width:6px;height:6px;border-radius:3px;background:var(--emerald)"></span>Toda la empresa
+    <span style="font-family:'Material Symbols Rounded';font-size:18px;width:1em;overflow:hidden;line-height:1;color:var(--muted)">expand_more</span>
+  </div>
+  <div style="display:flex;gap:4px">
+    <div onClick="{{ theme }}" title="Modo claro / oscuro" style="width:38px;height:38px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);transition:background-color 150ms,transform 150ms" style-hover="background:var(--mint-50);color:var(--ink)" style-active="transform:scale(.94)">
+      <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">{{ themeIcon }}</span>
+    </div>
+    <div style="position:relative;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--muted);transition:background-color 150ms" style-hover="background:var(--mint-50);color:var(--ink)">
+      <span style="font-family:'Material Symbols Rounded';font-size:20px;width:1em;overflow:hidden;line-height:1">notifications</span>
+      <span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:4px;background:var(--danger);box-shadow:0 0 0 2px var(--sand)"></span>
+    </div>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1192,&quot;height&quot;:64},&quot;section&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Inicio&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;crumb&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onTheme&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      section: this.props.section ?? 'Inicio',
+      crumb: this.props.crumb ?? '',
+      hasCrumb: !!this.props.crumb,
+      themeIcon: this.props.dark ? 'light_mode' : 'dark_mode',
+      theme: () => this.props.onTheme && this.props.onTheme(),
+    };
+  }
+}
+</script>
+</body>
+</html>
