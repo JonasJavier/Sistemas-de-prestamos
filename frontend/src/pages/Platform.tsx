@@ -145,14 +145,14 @@ export function PlatformPage() {
       <Card>
         {companies.isPending ? <Spinner /> : null}
         {companies.data ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="-mx-4 overflow-x-auto sm:-mx-5">
+            <table className="data-table w-full">
               <thead>
-                <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                  <th className="py-2 pr-3">Empresa</th>
-                  <th className="py-2 pr-3">Estado</th>
-                  <th className="py-2 pr-3">Prueba hasta</th>
-                  <th className="py-2 pr-3">Pagada hasta</th>
+                <tr className="text-[12.5px] text-muted">
+                  <th className="pr-3">Empresa</th>
+                  <th className="pr-3">Estado</th>
+                  <th className="pr-3">Prueba hasta</th>
+                  <th className="pr-3">Pagada hasta</th>
                   <th className="py-2" />
                 </tr>
               </thead>
@@ -160,25 +160,23 @@ export function PlatformPage() {
                 {companies.data.results.map((company) => {
                   const badge = STATUS_BADGES[company.status]
                   return (
-                    <tr key={company.id} className="border-b border-edge/60 last:border-0">
-                      <td className="py-2 pr-3">
+                    <tr key={company.id} className="last:border-0">
+                      <td className="pr-3">
                         <div className="font-medium">
                           {company.trade_name || company.legal_name}
                         </div>
                         <div className="text-muted">{company.rnc || 'Sin RNC'}</div>
                       </td>
-                      <td className="py-2 pr-3">
+                      <td className="pr-3">
                         <span
                           className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${badge.classes}`}
                         >
                           {badge.text}
                         </span>
                       </td>
-                      <td className="py-2 pr-3 tabular-nums">{company.trial_ends_on ?? '—'}</td>
-                      <td className="py-2 pr-3 tabular-nums">
-                        {day(company.subscription?.paid_until)}
-                      </td>
-                      <td className="py-2 text-right">
+                      <td className="tabular-nums">{company.trial_ends_on ?? '—'}</td>
+                      <td className="tabular-nums">{day(company.subscription?.paid_until)}</td>
+                      <td className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="secondary" onClick={() => setHelping(company)}>
                             Soporte

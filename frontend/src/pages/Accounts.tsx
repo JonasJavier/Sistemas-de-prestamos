@@ -42,27 +42,27 @@ function Movements({ account }: { account: FinancialAccount }) {
   const rows = query.data?.results ?? []
   if (rows.length === 0) return <p className="text-sm text-muted">Sin movimientos.</p>
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[520px] text-sm">
+    <div className="-mx-4 overflow-x-auto sm:-mx-5">
+      <table className="data-table w-full min-w-[520px]">
         <thead>
-          <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-            <th className="py-2 pr-3">Fecha</th>
-            <th className="py-2 pr-3">Asiento</th>
-            <th className="py-2 pr-3">Descripción</th>
-            <th className="py-2 pr-3 text-right">Entra</th>
-            <th className="py-2 text-right">Sale</th>
+          <tr className="text-[12.5px] text-muted">
+            <th className="pr-3">Fecha</th>
+            <th className="pr-3">Asiento</th>
+            <th className="pr-3">Descripción</th>
+            <th className="text-right">Entra</th>
+            <th className="text-right">Sale</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.id} className="border-b border-edge/60 last:border-0">
-              <td className="py-1.5 pr-3 tabular-nums">{day(row.date)}</td>
-              <td className="py-1.5 pr-3 tabular-nums text-muted">{row.number}</td>
-              <td className="py-1.5 pr-3">{row.description}</td>
-              <td className="py-1.5 pr-3 text-right tabular-nums text-success-600">
+            <tr key={row.id} className="last:border-0">
+              <td className="tabular-nums">{day(row.date)}</td>
+              <td className="tabular-nums text-muted">{row.number}</td>
+              <td className="pr-3">{row.description}</td>
+              <td className="text-right tabular-nums text-success-600">
                 {Number(row.debit) ? rd(row.debit) : ''}
               </td>
-              <td className="py-1.5 text-right tabular-nums">
+              <td className="text-right tabular-nums">
                 {Number(row.credit) ? rd(row.credit) : ''}
               </td>
             </tr>

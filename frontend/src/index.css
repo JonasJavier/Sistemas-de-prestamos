@@ -292,10 +292,18 @@ h1 {
     font-weight: 600;
   }
   .data-table :is(th, td):first-child {
-    padding-left: 1.25rem;
+    padding-left: 1rem;
   }
   .data-table :is(th, td):last-child {
-    padding-right: 1.25rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 40rem) {
+    .data-table :is(th, td):first-child {
+      padding-left: 1.25rem;
+    }
+    .data-table :is(th, td):last-child {
+      padding-right: 1.25rem;
+    }
   }
 }
 

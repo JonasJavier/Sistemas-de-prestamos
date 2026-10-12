@@ -7,6 +7,8 @@ import { ApiError } from '../api/client'
 import { listNotices, markAllNoticesRead, markNoticeRead } from '../api/notifications'
 import { cancelApproval, decideApproval, listApprovals, type Approval } from '../api/payments'
 import { Modal } from '../components/Modal'
+import { BellIcon, ShieldIcon } from '../components/icons'
+import { buttonClass } from '../components/classes'
 import {
   Alert,
   Badge,
@@ -38,6 +40,25 @@ const STATUS_TONE: Record<Approval['status'], string> = {
   rejected: 'danger',
   cancelled: 'neutral',
   expired: 'neutral',
+}
+
+/** Notices by day (decision 116): «Hoy», «Ayer», then the date. */
+function groupByDay<T extends { created_at: string }>(items: T[]): [string, T[]][] {
+  const groups = new Map<string, T[]>()
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  const same = (a: Date, b: Date) => a.toDateString() === b.toDateString()
+  for (const item of items) {
+    const at = new Date(item.created_at)
+    const label = same(at, today)
+      ? 'Hoy'
+      : same(at, yesterday)
+        ? 'Ayer'
+        : at.toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })
+    groups.set(label, [...(groups.get(label) ?? []), item])
+  }
+  return [...groups.entries()]
 }
 
 function useRefresh() {
@@ -162,15 +183,25 @@ function ApprovalRow({
         {approval.target_label}
       </Link>
     )
+  const pending = approval.status === 'pending'
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">
-      <div className="min-w-0 space-y-0.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium">{approval.kind_label}</span> {link}
-          <span className="tabular-nums">{rd(approval.amount)}</span>
-          <Badge tone={STATUS_TONE[approval.status]}>{approval.status_label}</Badge>
+    <li className="flex flex-wrap items-start gap-3 px-4 py-3.5 sm:px-5">
+      <span
+        aria-hidden
+        className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-[10px] ${
+          pending ? 'bg-warning-100 text-warning-700' : 'bg-surface-2 text-muted'
+        }`}
+      >
+        <ShieldIcon className="size-[18px] shrink-0" />
+      </span>
+      <div className="min-w-0 flex-1 basis-64 space-y-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13.5px]">
+          <span className="font-semibold">{approval.kind_label}</span> {link}
+          <Badge tone={STATUS_TONE[approval.status]} dot>
+            {approval.status_label}
+          </Badge>
         </div>
-        <div className="text-sm text-muted">
+        <div className="text-[13px] text-muted">
           {approval.reason_text ? `${approval.reason_text}: ` : ''}
           {approval.note}
         </div>
@@ -181,20 +212,32 @@ function ApprovalRow({
           {approval.decision_note ? `: ${approval.decision_note}` : ''}
         </div>
       </div>
-      {mine ? (
-        approval.status === 'pending' || approval.status === 'approved' ? (
-          <Button variant="secondary" onClick={() => cancel.mutate()} disabled={cancel.isPending}>
-            Cancelar pedido
-          </Button>
-        ) : null
-      ) : (
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => onDecide(false)}>
-            Rechazar
-          </Button>
-          <Button onClick={() => onDecide(true)}>Autorizar</Button>
-        </div>
-      )}
+      <div className="flex shrink-0 flex-wrap items-center gap-3 max-sm:w-full max-sm:justify-between">
+        <span className="font-display text-[17px] font-bold tabular-nums">
+          {rd(approval.amount)}
+        </span>
+        {mine ? (
+          approval.status === 'pending' || approval.status === 'approved' ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => cancel.mutate()}
+              disabled={cancel.isPending}
+            >
+              Cancelar pedido
+            </Button>
+          ) : null
+        ) : (
+          <span className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => onDecide(false)}>
+              Rechazar
+            </Button>
+            <Button size="sm" onClick={() => onDecide(true)}>
+              Autorizar
+            </Button>
+          </span>
+        )}
+      </div>
     </li>
   )
 }
@@ -243,48 +286,67 @@ export function NoticesPage({ me }: { me: Me }) {
         notices.isPending ? (
           <Spinner />
         ) : notices.data?.results.length ? (
-          <Card className="!p-0">
-            <ul className="divide-y divide-edge">
-              {notices.data.results.map((n) => (
-                <li key={n.id} className="flex items-start justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <div className={`text-sm ${n.read_at ? 'text-muted' : 'font-medium'}`}>
-                      {!n.read_at ? (
-                        <span
-                          aria-label="Sin leer"
-                          className="mr-2 inline-block size-2 rounded-full bg-brand-700 align-middle"
-                        />
-                      ) : null}
-                      {n.text}
-                    </div>
-                    <div className="text-[12px] text-muted">
-                      {n.kind_label} · {moment(n.created_at)}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    {n.link ? (
-                      <Link
-                        to={n.link}
-                        className="text-sm font-medium text-brand-700 hover:underline"
-                        onClick={() => !n.read_at && read.mutate(n.id)}
+          <div className="space-y-4">
+            {groupByDay(notices.data.results).map(([label, items]) => (
+              <section key={label} className="space-y-2">
+                <h2 className="eyebrow px-1">{label}</h2>
+                <ul className="divide-y divide-edge overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+                  {items.map((n) => (
+                    <li
+                      key={n.id}
+                      className={`flex items-start gap-3 px-4 py-3 sm:px-5 ${n.read_at ? '' : 'bg-brand-50/60'}`}
+                    >
+                      <span
+                        aria-hidden
+                        className={`relative mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${
+                          n.read_at ? 'bg-surface-2 text-muted' : 'bg-brand-100 text-brand-800'
+                        }`}
                       >
-                        Ver
-                      </Link>
-                    ) : null}
-                    {!n.read_at ? (
-                      <button
-                        type="button"
-                        className="text-sm text-muted hover:underline"
-                        onClick={() => read.mutate(n.id)}
-                      >
-                        Leído
-                      </button>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
+                        <BellIcon className="size-4 shrink-0" />
+                        {!n.read_at ? (
+                          <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-brand-700 ring-2 ring-surface" />
+                        ) : null}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={`text-[13.5px] ${n.read_at ? 'text-muted' : 'font-medium'}`}
+                        >
+                          {!n.read_at ? <span className="sr-only">Sin leer: </span> : null}
+                          {n.text}
+                        </div>
+                        <div className="mt-0.5 text-[12px] text-muted">
+                          {n.kind_label} ·{' '}
+                          {new Date(n.created_at).toLocaleTimeString('es-DO', {
+                            timeStyle: 'short',
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {n.link ? (
+                          <Link
+                            to={n.link}
+                            className={buttonClass('soft', '', 'sm')}
+                            onClick={() => !n.read_at && read.mutate(n.id)}
+                          >
+                            Ver
+                          </Link>
+                        ) : null}
+                        {!n.read_at ? (
+                          <button
+                            type="button"
+                            className={buttonClass('ghost', '!text-muted', 'sm')}
+                            onClick={() => read.mutate(n.id)}
+                          >
+                            Leído
+                          </button>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
         ) : (
           <EmptyState>No tienes avisos.</EmptyState>
         )

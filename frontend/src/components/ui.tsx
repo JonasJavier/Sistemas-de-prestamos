@@ -120,8 +120,8 @@ export function Alert({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    // 16 px of padding on a phone, 24 from a tablet up: the content gets the width.
-    <div className={`${cardClass} p-4 sm:p-6 ${className}`}>{children}</div>
+    // 16 px of padding on a phone, 20 from a tablet up (decision 116).
+    <div className={`${cardClass} p-4 sm:p-5 ${className}`}>{children}</div>
   )
 }
 

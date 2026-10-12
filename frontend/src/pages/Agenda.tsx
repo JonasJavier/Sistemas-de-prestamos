@@ -15,7 +15,8 @@ import { ActionDialog } from '../components/ActionDialog'
 import { useRefreshCollections } from '../lib/collections'
 import { buttonClass } from '../components/classes'
 import { usePrompt } from '../components/Dialog'
-import { Badge, Button, Card, EmptyState, PageHeader, Spinner, Tabs } from '../components/ui'
+import { Kpi } from '../components/Kpi'
+import { Avatar, Badge, Button, EmptyState, PageHeader, Segmented, Spinner } from '../components/ui'
 import { day, pct, phoneText, rd, todayISO } from '../lib/format'
 import { whatsappLink } from '../lib/print'
 import { ACCESS, hasRole } from '../lib/roles'
@@ -63,95 +64,114 @@ export function AgendaPage({ me }: { me: Me }) {
     : []
   const canCollect = hasRole(me, ACCESS.collect)
 
+  const list = (items: Item[], compact = false) => (
+    <ul className="divide-y divide-edge">
+      {items.map((item) => (
+        <AgendaRow
+          key={`${item.type}-${item.type === 'task' ? item.task.id : item.promise.id}`}
+          item={item}
+          today={data!.today}
+          canCollect={canCollect}
+          compact={compact}
+          onAct={(loan, amount) => setActing({ loan, amount })}
+        />
+      ))}
+    </ul>
+  )
+
   return (
     <>
       <PageHeader
         title="Agenda de cobranza"
-        subtitle={
-          data?.month.rate !== null && data?.month.rate !== undefined
-            ? `Promesas del mes: ${data.month.kept} cumplidas de ${
-                data.month.kept + data.month.broken
-              } (${pct(data.month.rate)}).`
-            : 'Promesas que vencen hoy, seguimientos y casos escalados.'
-        }
+        subtitle="Promesas que vencen hoy, seguimientos y casos escalados."
         actions={
           data?.can_switch ? (
-            <Tabs
-              tabs={[
-                ['mine', 'Mías'],
-                ['branch', 'De la sucursal'],
-              ]}
+            <Segmented
+              label="Agenda"
               value={scope}
               onChange={setScope}
+              options={[
+                { value: 'mine', label: 'Mías' },
+                { value: 'branch', label: 'De la sucursal' },
+              ]}
             />
           ) : null
         }
       />
       {agenda.isPending ? <Spinner /> : null}
       {data ? (
-        <div className="space-y-4">
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">
-              Hoy <span className="text-sm font-normal text-muted">({todayItems.length})</span>
-            </h2>
-            {todayItems.length ? (
-              <ul className="divide-y divide-edge">
-                {todayItems.map((item) => (
-                  <AgendaRow
-                    key={`${item.type}-${item.type === 'task' ? item.task.id : item.promise.id}`}
-                    item={item}
-                    today={data.today}
-                    canCollect={canCollect}
-                    onAct={(loan, amount) => setActing({ loan, amount })}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <EmptyState>Nada pendiente para hoy.</EmptyState>
-            )}
-          </Card>
-
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">
-              Incumplidas en los últimos 7 días{' '}
-              <span className="text-sm font-normal text-muted">({data.broken.length})</span>
-            </h2>
-            {data.broken.length ? (
-              <ul className="divide-y divide-edge">
-                {promiseItems(data.broken).map((item) => (
-                  <AgendaRow
-                    key={item.type === 'promise' ? item.promise.id : ''}
-                    item={item}
-                    today={data.today}
-                    canCollect={canCollect}
-                    onAct={(loan, amount) => setActing({ loan, amount })}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <EmptyState>Ninguna promesa incumplida.</EmptyState>
-            )}
-          </Card>
-
-          <Card className="space-y-2">
-            <h2 className="text-base font-semibold">Próximos 7 días</h2>
-            {upcoming.length ? (
-              <ul className="divide-y divide-edge">
-                {upcoming.map((item) => (
-                  <AgendaRow
-                    key={`${item.type}-${item.type === 'task' ? item.task.id : item.promise.id}`}
-                    item={item}
-                    today={data.today}
-                    canCollect={canCollect}
-                    onAct={(loan, amount) => setActing({ loan, amount })}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <EmptyState>Sin promesas ni seguimientos programados.</EmptyState>
-            )}
-          </Card>
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+            <Kpi
+              label="Para hoy"
+              value={String(todayItems.length)}
+              hint="Promesas y seguimientos"
+            />
+            <Kpi
+              label="Incumplidas (7 días)"
+              value={String(data.broken.length)}
+              hint="Promesas que no se pagaron"
+              tone={data.broken.length ? 'warn' : undefined}
+            />
+            <Kpi label="Próximos 7 días" value={String(upcoming.length)} hint="Ya programado" />
+            <Kpi
+              label="Cumplimiento del mes"
+              value={data.month.rate === null ? '—' : pct(data.month.rate, 0)}
+              hint={`${data.month.kept} cumplidas de ${data.month.kept + data.month.broken}`}
+              tone={data.month.rate !== null && Number(data.month.rate) < 0.7 ? 'warn' : 'good'}
+            />
+          </div>
+          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <section className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+              <h2 className="flex items-center gap-2 border-b border-edge px-5 py-3.5 text-[16px] font-semibold">
+                Hoy
+                <span className="rounded-full bg-brand-100 px-2 text-[12px] font-semibold text-brand-800">
+                  {todayItems.length}
+                </span>
+              </h2>
+              {todayItems.length ? (
+                list(todayItems)
+              ) : (
+                <div className="p-5">
+                  <EmptyState>Nada pendiente para hoy.</EmptyState>
+                </div>
+              )}
+            </section>
+            <div className="space-y-4">
+              <section className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+                <h2 className="flex items-center gap-2 border-b border-edge px-5 py-3.5 text-[16px] font-semibold">
+                  Incumplidas en los últimos 7 días
+                  <span
+                    className={`rounded-full px-2 text-[12px] font-semibold ${
+                      data.broken.length
+                        ? 'bg-warning-100 text-warning-700'
+                        : 'bg-surface-2 text-muted'
+                    }`}
+                  >
+                    {data.broken.length}
+                  </span>
+                </h2>
+                {data.broken.length ? (
+                  list(promiseItems(data.broken), true)
+                ) : (
+                  <p className="px-5 py-4 text-[13px] text-muted">Ninguna promesa incumplida.</p>
+                )}
+              </section>
+              <section className="overflow-hidden rounded-card border border-edge bg-surface shadow-sm">
+                <h2 className="border-b border-edge px-5 py-3.5 text-[16px] font-semibold">
+                  Próximos 7 días
+                </h2>
+                {upcoming.length ? (
+                  list(upcoming, true)
+                ) : (
+                  <p className="px-5 py-4 text-[13px] text-muted">
+                    Sin promesas ni seguimientos programados.
+                  </p>
+                )}
+              </section>
+            </div>
+          </div>
+        </>
       ) : null}
       {acting ? (
         <ActionDialog
@@ -170,11 +190,14 @@ function AgendaRow({
   today,
   canCollect,
   onAct,
+  compact = false,
 }: {
   item: Item
   today: string
   canCollect: boolean
   onAct: (loan: LoanBrief, amount?: string) => void
+  /** The side lists keep two lines: who and what is due. */
+  compact?: boolean
 }) {
   const refresh = useRefreshCollections()
   const [dialog, ask] = usePrompt()
@@ -218,50 +241,64 @@ function AgendaRow({
   })
   const late = item.on < today
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 py-3">
+    <li className="flex flex-wrap items-start justify-between gap-3 px-5 py-3.5">
       {dialog}
-      <div className="min-w-0 space-y-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/prestamos/$numero"
-            params={{ numero: loan.number }}
-            className="font-semibold text-brand-700 hover:underline"
-          >
-            {loan.customer_name}
-          </Link>
-          <span className="text-[12.5px] text-muted">{loan.number}</span>
-          {loan.days_past_due ? (
-            <Badge tone="danger">{loan.days_past_due} días</Badge>
+      <div className="flex min-w-0 flex-1 basis-64 gap-3">
+        <Avatar name={loan.customer_name} size="sm" />
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link
+              to="/prestamos/$numero"
+              params={{ numero: loan.number }}
+              className="text-[13.5px] font-semibold hover:text-brand-700 hover:underline"
+            >
+              {loan.customer_name}
+            </Link>
+            <span className="text-[12px] text-muted tabular-nums">{loan.number}</span>
+            {loan.days_past_due ? (
+              <Badge tone={loan.days_past_due > 30 ? 'danger' : 'warning'} dot>
+                {loan.days_past_due} días
+              </Badge>
+            ) : (
+              <Badge tone="brand" dot>
+                Al día
+              </Badge>
+            )}
+          </div>
+          {item.type === 'promise' ? (
+            <p className="flex flex-wrap items-center gap-2 text-[13px]">
+              <Badge tone={item.promise.status === 'broken' ? 'danger' : 'gold'}>
+                {item.promise.status === 'broken' ? 'Promesa incumplida' : 'Promesa'}
+              </Badge>
+              <span>
+                <strong className="font-semibold">{rd(item.promise.amount)}</strong> para el{' '}
+                {day(item.promise.promised_on)}
+                {item.promise.status === 'broken'
+                  ? ` · pagó ${rd(item.promise.paid)}`
+                  : late
+                    ? ' · venció'
+                    : ''}
+              </span>
+            </p>
           ) : (
-            <Badge tone="success">Al día</Badge>
+            <p className="flex flex-wrap items-center gap-2 text-[13px]">
+              <Badge tone={TASK_TONE[item.task.kind]}>
+                {item.task.action_label ?? item.task.kind_label}
+              </Badge>
+              <span>
+                {day(item.task.due_on)}
+                {late ? ' · atrasado' : ''}
+                {item.task.note ? <span className="text-muted"> · {item.task.note}</span> : null}
+              </span>
+            </p>
+          )}
+          {compact ? null : (
+            <p className="text-[12px] text-muted">
+              {loan.branch_name} · gestor {loan.agent_name ?? 'sin asignar'}
+              {loan.phone ? ` · ${phoneText(loan.phone)}` : ''}
+            </p>
           )}
         </div>
-        {item.type === 'promise' ? (
-          <p className="text-sm">
-            <Badge tone={item.promise.status === 'broken' ? 'danger' : 'info'}>
-              {item.promise.status === 'broken' ? 'Promesa incumplida' : 'Promesa'}
-            </Badge>{' '}
-            {rd(item.promise.amount)} para el {day(item.promise.promised_on)}
-            {item.promise.status === 'broken'
-              ? ` · pagó ${rd(item.promise.paid)}`
-              : late
-                ? ' · venció'
-                : ''}
-          </p>
-        ) : (
-          <p className="text-sm">
-            <Badge tone={TASK_TONE[item.task.kind]}>
-              {item.task.action_label ?? item.task.kind_label}
-            </Badge>{' '}
-            {day(item.task.due_on)}
-            {late ? ' · atrasado' : ''}
-            {item.task.note ? <span className="text-muted"> · {item.task.note}</span> : null}
-          </p>
-        )}
-        <p className="text-[12.5px] text-muted">
-          {loan.branch_name} · gestor {loan.agent_name ?? 'sin asignar'}
-          {loan.phone ? ` · ${phoneText(loan.phone)}` : ''}
-        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {loan.phone ? (
@@ -290,7 +327,7 @@ function AgendaRow({
           <Link
             to="/cobrar/$numero"
             params={{ numero: loan.number }}
-            className={buttonClass('secondary', '', 'sm')}
+            className={buttonClass('soft', '', 'sm')}
           >
             Cobrar
           </Link>

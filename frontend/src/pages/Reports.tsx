@@ -159,9 +159,9 @@ function ReportBody({ spec, catalog }: { spec: ReportSpec; catalog: ReportCatalo
           <Card className="!p-0">
             {data.rows.length ? (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-max text-sm">
+                <table className="data-table w-full min-w-max">
                   <thead>
-                    <tr className="border-b border-edge text-left text-[12.5px] text-muted">
+                    <tr className="text-[12.5px] text-muted">
                       {data.columns.map((column) => (
                         <th
                           key={column.key}
@@ -174,7 +174,7 @@ function ReportBody({ spec, catalog }: { spec: ReportSpec; catalog: ReportCatalo
                   </thead>
                   <tbody>
                     {data.rows.map((row, index) => (
-                      <tr key={index} className="border-b border-edge/60">
+                      <tr key={index} className="border-edge/60">
                         {data.columns.map((column) => (
                           <td
                             key={column.key}

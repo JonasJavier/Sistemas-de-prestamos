@@ -294,28 +294,24 @@ export function CommissionsPage({ me }: { me: Me }) {
                 <span className="font-display text-lg font-bold tabular-nums">{rd(run.total)}</span>
               </div>
               {run.lines.length ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm sm:min-w-max">
+                <div className="-mx-4 overflow-x-auto sm:-mx-5">
+                  <table className="data-table w-full sm:min-w-max">
                     <thead>
-                      <tr className="border-y border-edge text-left text-[12.5px] text-muted">
-                        <th className="px-4 py-2 font-medium">Empleado</th>
+                      <tr className="border-y text-[12.5px] text-muted">
+                        <th className="font-medium">Empleado</th>
                         {/* On a phone: who and how much; the rule and its base
                             go under the name. */}
-                        <th className="hidden px-3 py-2 font-medium sm:table-cell">Regla</th>
-                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
-                          Base
-                        </th>
-                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">%</th>
-                        <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
-                          Meta
-                        </th>
-                        <th className="px-4 py-2 text-right font-medium">Comisión</th>
+                        <th className="hidden font-medium sm:table-cell">Regla</th>
+                        <th className="hidden text-right font-medium sm:table-cell">Base</th>
+                        <th className="hidden text-right font-medium sm:table-cell">%</th>
+                        <th className="hidden text-right font-medium sm:table-cell">Meta</th>
+                        <th className="text-right font-medium">Comisión</th>
                       </tr>
                     </thead>
                     <tbody>
                       {run.lines.map((line) => (
-                        <tr key={line.id} className="border-b border-edge/60">
-                          <td className="px-4 py-2">
+                        <tr key={line.id} className="border-edge/60">
+                          <td className="py-2">
                             <div className="font-semibold">{line.user}</div>
                             <div className="text-[12px] text-muted">{line.role}</div>
                             <div className="text-[12px] text-muted sm:hidden">
@@ -325,23 +321,23 @@ export function CommissionsPage({ me }: { me: Me }) {
                                 : ''}
                             </div>
                           </td>
-                          <td className="hidden px-3 py-2 sm:table-cell">
+                          <td className="hidden sm:table-cell">
                             {line.rule}
                             <div className="text-[12px] text-muted">{line.base_label}</div>
                           </td>
-                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
+                          <td className="hidden text-right tabular-nums sm:table-cell">
                             {rd(line.base_amount)}
                           </td>
-                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
+                          <td className="hidden text-right tabular-nums sm:table-cell">
                             {pct(line.rate)}
                           </td>
-                          <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
+                          <td className="hidden text-right tabular-nums sm:table-cell">
                             {Number(line.goal) ? rd(line.goal) : '—'}
                             {Number(line.goal) && !line.reached_goal ? (
                               <div className="text-[12px] text-warning-700">No la alcanzó</div>
                             ) : null}
                           </td>
-                          <td className="whitespace-nowrap px-4 py-2 text-right font-semibold tabular-nums">
+                          <td className="whitespace-nowrap text-right font-semibold tabular-nums">
                             {rd(line.amount)}
                             {/* Approved: where it went to be paid, under the figure. */}
                             {line.payable ? (

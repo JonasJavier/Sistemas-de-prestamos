@@ -155,10 +155,10 @@ function Table({
   narrow?: boolean
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className={`w-full text-sm ${narrow ? '' : 'min-w-[560px]'}`}>
+    <div className="-mx-4 overflow-x-auto sm:-mx-5">
+      <table className={`data-table w-full ${narrow ? '' : 'min-w-[560px]'}`}>
         <thead>
-          <tr className="border-b border-edge text-left text-[12.5px] text-muted">{head}</tr>
+          <tr className="text-[12.5px] text-muted">{head}</tr>
         </thead>
         <tbody>{children}</tbody>
       </table>

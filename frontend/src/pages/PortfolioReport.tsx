@@ -144,23 +144,23 @@ export function PortfolioReportPage({ me }: { me: Me }) {
           <Card className="space-y-2">
             <h2 className="text-base font-semibold">Antigüedad</h2>
             <p className="text-[12px] text-muted">{data.definitions.buckets}</p>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] text-sm">
+            <div className="-mx-4 overflow-x-auto sm:-mx-5">
+              <table className="data-table w-full min-w-[420px]">
                 <thead>
-                  <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                    <th className="py-2 pr-3 font-medium">Tramo</th>
-                    <th className="py-2 pr-3 text-right font-medium">Préstamos</th>
-                    <th className="py-2 pr-3 text-right font-medium">Capital</th>
-                    <th className="py-2 text-right font-medium">% de la cartera</th>
+                  <tr className="text-[12.5px] text-muted">
+                    <th className="font-medium">Tramo</th>
+                    <th className="text-right font-medium">Préstamos</th>
+                    <th className="text-right font-medium">Capital</th>
+                    <th className="text-right font-medium">% de la cartera</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.totals.buckets.map((b) => (
-                    <tr key={b.key} className="border-b border-edge/60">
-                      <td className="py-1.5 pr-3">{b.label}</td>
-                      <td className="py-1.5 pr-3 text-right tabular-nums">{b.count}</td>
-                      <td className="py-1.5 pr-3 text-right tabular-nums">{rd(b.principal)}</td>
-                      <td className="py-1.5 text-right tabular-nums">
+                    <tr key={b.key} className="border-edge/60">
+                      <td className="pr-3">{b.label}</td>
+                      <td className="text-right tabular-nums">{b.count}</td>
+                      <td className="text-right tabular-nums">{rd(b.principal)}</td>
+                      <td className="text-right tabular-nums">
                         {Number(data.totals.principal)
                           ? pct(Number(b.principal) / Number(data.totals.principal), 1)
                           : '—'}
@@ -174,44 +174,40 @@ export function PortfolioReportPage({ me }: { me: Me }) {
           <Card className="space-y-2">
             <h2 className="text-base font-semibold">Por {cutLabel?.toLowerCase()}</h2>
             {data.rows.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-sm">
+              <div className="-mx-4 overflow-x-auto sm:-mx-5">
+                <table className="data-table w-full min-w-[620px]">
                   <thead>
-                    <tr className="border-b border-edge text-left text-[12.5px] text-muted">
-                      <th className="py-2 pr-3 font-medium">{cutLabel}</th>
-                      <th className="py-2 pr-3 text-right font-medium">Préstamos</th>
-                      <th className="py-2 pr-3 text-right font-medium">En atraso</th>
-                      <th className="py-2 pr-3 text-right font-medium">Capital</th>
-                      <th className="py-2 pr-3 text-right font-medium">En riesgo 30</th>
-                      <th className="py-2 text-right font-medium">PAR30</th>
+                    <tr className="text-[12.5px] text-muted">
+                      <th className="font-medium">{cutLabel}</th>
+                      <th className="text-right font-medium">Préstamos</th>
+                      <th className="text-right font-medium">En atraso</th>
+                      <th className="text-right font-medium">Capital</th>
+                      <th className="text-right font-medium">En riesgo 30</th>
+                      <th className="text-right font-medium">PAR30</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.rows.map((row) => (
-                      <tr key={row.key || row.name} className="border-b border-edge/60">
-                        <td className="py-1.5 pr-3">{row.name}</td>
-                        <td className="py-1.5 pr-3 text-right tabular-nums">{row.count}</td>
-                        <td className="py-1.5 pr-3 text-right tabular-nums">{row.in_arrears}</td>
-                        <td className="py-1.5 pr-3 text-right tabular-nums">{rd(row.principal)}</td>
-                        <td className="py-1.5 pr-3 text-right tabular-nums">{rd(row.at_risk30)}</td>
-                        <td className="py-1.5 text-right tabular-nums">{pct(row.par30, 1)}</td>
+                      <tr key={row.key || row.name} className="border-edge/60">
+                        <td className="pr-3">{row.name}</td>
+                        <td className="text-right tabular-nums">{row.count}</td>
+                        <td className="text-right tabular-nums">{row.in_arrears}</td>
+                        <td className="text-right tabular-nums">{rd(row.principal)}</td>
+                        <td className="text-right tabular-nums">{rd(row.at_risk30)}</td>
+                        <td className="text-right tabular-nums">{pct(row.par30, 1)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr className="font-semibold">
-                      <td className="py-2 pr-3">Total</td>
-                      <td className="py-2 pr-3 text-right tabular-nums">{data.totals.count}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
+                      <td className="pr-3">Total</td>
+                      <td className="text-right tabular-nums">{data.totals.count}</td>
+                      <td className="text-right tabular-nums">
                         {data.rows.reduce((sum, row) => sum + row.in_arrears, 0)}
                       </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {rd(data.totals.principal)}
-                      </td>
-                      <td className="py-2 pr-3 text-right tabular-nums">
-                        {rd(data.totals.at_risk30)}
-                      </td>
-                      <td className="py-2 text-right tabular-nums">{pct(data.totals.par30, 1)}</td>
+                      <td className="text-right tabular-nums">{rd(data.totals.principal)}</td>
+                      <td className="text-right tabular-nums">{rd(data.totals.at_risk30)}</td>
+                      <td className="text-right tabular-nums">{pct(data.totals.par30, 1)}</td>
                     </tr>
                   </tfoot>
                 </table>
