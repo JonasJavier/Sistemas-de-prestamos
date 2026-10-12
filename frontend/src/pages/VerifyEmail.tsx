@@ -3,7 +3,8 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import { verifyEmail } from '../api/auth'
-import { Alert, Card, PublicPage } from '../components/ui'
+import { buttonClass } from '../components/classes'
+import { Card, Outcome, PublicPage } from '../components/ui'
 
 export function VerifyEmailPage() {
   const { key } = useParams({ from: '/verificar-correo/$key' })
@@ -27,18 +28,20 @@ export function VerifyEmailPage() {
         {mutation.isPending ? <p className="text-sm text-muted">Confirmando tu correo…</p> : null}
         {mutation.isSuccess ? (
           <>
-            <Alert tone="success">Tu correo quedó confirmado.</Alert>
-            <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
+            <Outcome tone="success" title="Tu correo quedó confirmado">
+              Ya puedes entrar a Cobradía.
+            </Outcome>
+            <Link to="/entrar" className={buttonClass('primary', 'w-full')}>
               Iniciar sesión
             </Link>
           </>
         ) : null}
         {mutation.isError ? (
           <>
-            <Alert tone="danger">
-              El enlace no es válido o ya venció. Vuelve a iniciar sesión para pedir otro.
-            </Alert>
-            <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
+            <Outcome tone="danger" title="El enlace no sirve">
+              No es válido o ya venció. Vuelve a iniciar sesión para pedir otro.
+            </Outcome>
+            <Link to="/entrar" className={buttonClass('secondary', 'w-full')}>
               Ir a iniciar sesión
             </Link>
           </>

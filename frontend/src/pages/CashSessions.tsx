@@ -16,10 +16,8 @@ import { buttonClass, tableRowClass } from '../components/classes'
 import {
   Alert,
   Badge,
-  Button,
   Card,
   EmptyState,
-  Field,
   Input,
   PageHeader,
   Pagination,
@@ -27,6 +25,7 @@ import {
   Spinner,
   Stat,
   Table,
+  Texture,
 } from '../components/ui'
 import { day, errorMessage, moment, rd } from '../lib/format'
 
@@ -195,7 +194,8 @@ export function CashSessionDetailPage() {
         <Stat
           label="Diferencia"
           value={s.difference ? rd(s.difference) : '—'}
-          hint={diff < 0 ? 'faltante' : diff > 0 ? 'sobrante' : undefined}
+          hint={diff < 0 ? 'faltante' : diff > 0 ? 'sobrante' : s.difference ? 'cuadra' : undefined}
+          danger={diff < 0}
         />
         <Stat label="Trasladado al cerrar" value={rd(s.returned_amount)} />
       </div>
@@ -205,73 +205,114 @@ export function CashSessionDetailPage() {
         </Alert>
       ) : null}
       {s.status === 'closed' && s.can_approve ? (
-        <Card className="space-y-3">
-          <h2 className="text-base font-semibold">Aprobar el cierre</h2>
-          <p className="text-sm text-muted">
-            {diff < 0
-              ? 'El faltante queda como cuenta por cobrar al cajero.'
-              : diff > 0
-                ? 'El sobrante queda como ingreso extraordinario.'
-                : 'La caja cuadra.'}{' '}
-            Nadie aprueba su propia caja.
-          </p>
-          <Field label="Nota (opcional)">
-            <Input value={note} onChange={(e) => setNote(e.target.value)} />
-          </Field>
-          {approve.error instanceof ApiError ? (
-            <Alert tone="danger">{errorMessage(approve.error.data)}</Alert>
-          ) : null}
-          <div className="flex justify-end">
-            <Button onClick={() => approve.mutate()} disabled={approve.isPending}>
-              Aprobar cierre
-            </Button>
+        // The supervisor's next step: on forest, the one thing to do now.
+        <section className="relative overflow-hidden rounded-card bg-brand-950 p-5 text-on-forest shadow-sm">
+          <Texture tone="forest" />
+          <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:items-end">
+            <div>
+              <h2 className="font-display text-[19px] font-bold">Aprobar el cierre</h2>
+              <p className="mt-1 text-[13px] text-brand-200">
+                {diff < 0
+                  ? 'El faltante queda como cuenta por cobrar al cajero.'
+                  : diff > 0
+                    ? 'El sobrante queda como ingreso extraordinario.'
+                    : 'La caja cuadra.'}{' '}
+                Nadie aprueba su propia caja.
+              </p>
+            </div>
+            <div className="flex items-end gap-2">
+              <label className="block min-w-0 flex-1 space-y-1.5">
+                <span className="block text-[12.5px] font-medium text-brand-200">
+                  Nota (opcional)
+                </span>
+                <Input value={note} onChange={(e) => setNote(e.target.value)} />
+              </label>
+              <button
+                type="button"
+                onClick={() => approve.mutate()}
+                disabled={approve.isPending}
+                className="press press-down h-11 shrink-0 rounded-control bg-forest-accent px-4 text-[13.5px] font-semibold text-on-forest-accent disabled:opacity-50 sm:h-[38px]"
+              >
+                Aprobar cierre
+              </button>
+            </div>
           </div>
-        </Card>
+          {approve.error instanceof ApiError ? (
+            <div className="relative mt-3">
+              <Alert tone="danger">{errorMessage(approve.error.data)}</Alert>
+            </div>
+          ) : null}
+        </section>
       ) : s.status === 'approved' ? (
         <Alert tone="success">
           Aprobado por {s.approved_by_name} el {moment(s.approved_at)}.
         </Alert>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* min-w-0: a long description truncates instead of widening the
             card past a phone's screen. */}
-        <Card className="min-w-0">
-          <h2 className="mb-2 text-base font-semibold">Movimientos</h2>
-          <ul className="divide-y divide-edge text-sm">
-            {s.movements?.map((m, i) => (
-              <li key={i} className="flex justify-between gap-3 py-1.5">
-                <span className="min-w-0">
-                  <span className="font-medium">{m.kind}</span>{' '}
-                  <span className="text-muted">{moment(m.at)}</span>
-                  <span className="block truncate text-[12.5px] text-muted" title={m.description}>
-                    {m.description}
-                  </span>
-                </span>
-                <span
-                  className={`shrink-0 whitespace-nowrap tabular-nums ${m.out ? 'text-danger-600' : 'text-success-600'}`}
-                >
-                  {m.in ? `+${rd(m.in)}` : `−${rd(m.out)}`}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Card className="min-w-0 overflow-hidden !p-0">
+          <h2 className="px-4 pb-2 pt-4 text-[17px] font-semibold sm:px-5">Movimientos</h2>
+          <table className="data-table w-full table-fixed">
+            <thead>
+              <tr>
+                <th>Movimiento</th>
+                <th className="w-36 text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.movements?.map((m, i) => (
+                <tr key={i}>
+                  <td>
+                    <div className="truncate">
+                      <span className="font-semibold">{m.kind}</span>{' '}
+                      <span className="text-[12px] text-muted">{moment(m.at)}</span>
+                    </div>
+                    <div className="truncate text-[12px] text-muted" title={m.description}>
+                      {m.description}
+                    </div>
+                  </td>
+                  <td
+                    className={`whitespace-nowrap text-right font-semibold tabular-nums ${m.out ? 'text-danger-600' : 'text-success-600'}`}
+                  >
+                    {m.in ? `+${rd(m.in)}` : `−${rd(m.out)}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Card>
-        <Card className="min-w-0">
-          <h2 className="mb-2 text-base font-semibold">Arqueo</h2>
+        <Card className="min-w-0 overflow-hidden !p-0">
+          <h2 className="px-4 pb-2 pt-4 text-[17px] font-semibold sm:px-5">Arqueo</h2>
           {s.counts?.length ? (
-            <table className="w-full text-sm tabular-nums">
-              <tbody className="divide-y divide-edge">
+            <table className="data-table w-full tabular-nums">
+              <thead>
+                <tr>
+                  <th>Denominación</th>
+                  <th className="text-right">Cantidad</th>
+                  <th className="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
                 {s.counts.map((c) => (
                   <tr key={c.denomination}>
-                    <td className="py-1">RD$ {Number(c.denomination).toLocaleString('es-DO')}</td>
+                    <td>RD$ {Number(c.denomination).toLocaleString('es-DO')}</td>
                     <td className="text-right">× {c.quantity}</td>
                     <td className="text-right">{rd(Number(c.denomination) * c.quantity)}</td>
                   </tr>
                 ))}
               </tbody>
+              {s.counted ? (
+                <tfoot>
+                  <tr>
+                    <td colSpan={2}>Contado</td>
+                    <td className="text-right">{rd(s.counted)}</td>
+                  </tr>
+                </tfoot>
+              ) : null}
             </table>
           ) : (
-            <p className="text-sm text-muted">
+            <p className="px-4 pb-4 text-[13px] text-muted sm:px-5">
               {s.status === 'open' ? 'Aún abierta.' : 'Sin efectivo contado.'}
             </p>
           )}

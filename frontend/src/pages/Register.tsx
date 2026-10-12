@@ -8,7 +8,17 @@ import { errorMessage } from '../lib/format'
 
 import { ApiError } from '../api/client'
 import { registerCompany } from '../api/platform'
-import { Alert, Button, Card, Field, Input, PasswordInput, PublicPage } from '../components/ui'
+import { buttonClass } from '../components/classes'
+import {
+  Alert,
+  Button,
+  Card,
+  Field,
+  Input,
+  Outcome,
+  PasswordInput,
+  PublicPage,
+} from '../components/ui'
 
 const schema = z.object({
   company_legal_name: z.string().min(3, 'Escribe el nombre de tu financiera.'),
@@ -53,11 +63,10 @@ export function RegisterPage() {
     return (
       <PublicPage>
         <Card className="space-y-4 text-center">
-          <h1 className="text-xl font-semibold">¡Tu prueba de 30 días empezó!</h1>
-          <p className="text-sm text-muted">
+          <Outcome tone="success" title="¡Tu prueba de 30 días empezó!">
             Te enviamos un correo para confirmar tu cuenta. Confírmalo y luego inicia sesión.
-          </p>
-          <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
+          </Outcome>
+          <Link to="/entrar" className={buttonClass('primary', 'w-full')}>
             Ir a iniciar sesión
           </Link>
         </Card>

@@ -958,3 +958,37 @@ export function Table({
     </div>
   )
 }
+
+const OUTCOME_TONE = {
+  success: 'bg-success-100 text-success-600',
+  danger: 'bg-danger-100 text-danger-600',
+  warning: 'bg-warning-100 text-warning-700',
+}
+
+/** The answer a public page gives (decision 116): a seal, a title and one
+ * line saying what to do next. */
+export function Outcome({
+  tone,
+  title,
+  children,
+}: {
+  tone: keyof typeof OUTCOME_TONE
+  title: string
+  children?: ReactNode
+}) {
+  const Icon = tone === 'success' ? CheckCircleIcon : AlertIcon
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span
+        aria-hidden
+        className={`grid size-14 animate-pop place-items-center rounded-full ${OUTCOME_TONE[tone]}`}
+      >
+        <Icon className="size-7" />
+      </span>
+      <h2 className="mt-3 text-[19px] font-semibold tracking-[-0.01em]">{title}</h2>
+      {children ? (
+        <div className="mt-1 max-w-sm text-[13.5px] leading-relaxed text-muted">{children}</div>
+      ) : null}
+    </div>
+  )
+}

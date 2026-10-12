@@ -8,7 +8,8 @@ import { errorMessage } from '../lib/format'
 
 import { acceptInvitation, getInvitation } from '../api/accounts'
 import { ApiError } from '../api/client'
-import { Alert, Button, Card, Field, Input, PublicPage, Spinner } from '../components/ui'
+import { buttonClass } from '../components/classes'
+import { Alert, Button, Card, Field, Input, Outcome, PublicPage, Spinner } from '../components/ui'
 
 const schema = z.object({
   first_name: z.string().min(1, 'Escribe tu nombre.'),
@@ -43,24 +44,31 @@ export function InvitationAcceptPage() {
   if (invitation.isError) {
     return (
       <Wrapper>
-        <Alert tone="danger">La invitación no existe o ya fue usada.</Alert>
+        <Outcome tone="danger" title="Invitación no válida">
+          La invitación no existe o ya fue usada. Si ya creaste tu cuenta, inicia sesión.
+        </Outcome>
+        <Link to="/entrar" className={buttonClass('secondary', 'w-full')}>
+          Ir a iniciar sesión
+        </Link>
       </Wrapper>
     )
   }
   if (invitation.data?.is_expired) {
     return (
       <Wrapper>
-        <Alert tone="warning">
-          Esta invitación venció. Pide al administrador de tu empresa que te envíe otra.
-        </Alert>
+        <Outcome tone="warning" title="La invitación venció">
+          Pide al administrador de tu empresa que te envíe otra.
+        </Outcome>
       </Wrapper>
     )
   }
   if (accept.isSuccess) {
     return (
       <Wrapper>
-        <Alert tone="success">Tu cuenta quedó creada.</Alert>
-        <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
+        <Outcome tone="success" title="Tu cuenta quedó creada">
+          Ya puedes entrar con tu correo y la contraseña que elegiste.
+        </Outcome>
+        <Link to="/entrar" className={buttonClass('primary', 'w-full')}>
           Iniciar sesión
         </Link>
       </Wrapper>

@@ -142,10 +142,18 @@ export function PlatformPage() {
       {message ? <Alert tone="info">{message}</Alert> : null}
       <PlatformDashboard />
 
-      <Card>
+      <Card className="overflow-hidden !p-0">
+        <div className="flex items-baseline justify-between gap-3 px-4 pb-3 pt-4 sm:px-5">
+          <h2 className="text-[17px] font-semibold">Empresas</h2>
+          {companies.data ? (
+            <span className="text-[12.5px] text-muted tabular-nums">
+              {companies.data.count} en total
+            </span>
+          ) : null}
+        </div>
         {companies.isPending ? <Spinner /> : null}
         {companies.data ? (
-          <div className="-mx-4 overflow-x-auto sm:-mx-5">
+          <div className="overflow-x-auto">
             <table className="data-table w-full">
               <thead>
                 <tr className="text-[12.5px] text-muted">
@@ -162,31 +170,34 @@ export function PlatformPage() {
                   return (
                     <tr key={company.id} className="last:border-0">
                       <td className="pr-3">
-                        <div className="font-medium">
+                        <div className="font-semibold">
                           {company.trade_name || company.legal_name}
                         </div>
-                        <div className="text-muted">{company.rnc || 'Sin RNC'}</div>
+                        <div className="text-[12px] text-muted tabular-nums">
+                          {company.rnc || 'Sin RNC'}
+                        </div>
                       </td>
                       <td className="pr-3">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[12.5px] font-medium ${badge.classes}`}
+                          className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[12px] font-semibold ${badge.classes}`}
                         >
                           {badge.text}
                         </span>
                       </td>
-                      <td className="tabular-nums">{company.trial_ends_on ?? '—'}</td>
+                      <td className="tabular-nums">{day(company.trial_ends_on)}</td>
                       <td className="tabular-nums">{day(company.subscription?.paid_until)}</td>
                       <td className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="secondary" onClick={() => setHelping(company)}>
+                        <div className="flex justify-end gap-1.5">
+                          <Button variant="secondary" size="sm" onClick={() => setHelping(company)}>
                             Soporte
                           </Button>
-                          <Button variant="secondary" onClick={() => setPaying(company)}>
+                          <Button variant="secondary" size="sm" onClick={() => setPaying(company)}>
                             Registrar pago
                           </Button>
                           {company.status === 'suspended' ? (
                             <Button
                               variant="secondary"
+                              size="sm"
                               onClick={() =>
                                 reactivate.mutate({
                                   id: company.id,
@@ -198,7 +209,8 @@ export function PlatformPage() {
                             </Button>
                           ) : (
                             <Button
-                              variant="secondary"
+                              variant="ghost"
+                              size="sm"
                               onClick={async () => {
                                 const reason = await ask({
                                   title: `Suspender ${company.trade_name || company.legal_name}`,
@@ -225,7 +237,7 @@ export function PlatformPage() {
             </table>
           </div>
         ) : null}
-        <div className="mt-3">
+        <div className="px-4 pb-3 sm:px-5">
           <Pagination page={page} count={companies.data?.count ?? 0} onChange={setPage} />
         </div>
       </Card>

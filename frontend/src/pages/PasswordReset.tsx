@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { authErrorCode, authErrorMessage, resetPassword } from '../api/auth'
-import { Alert, Button, Card, Field, Input, PublicPage } from '../components/ui'
+import { buttonClass } from '../components/classes'
+import { Alert, Button, Card, Field, Input, Outcome, PublicPage } from '../components/ui'
 
 const schema = z
   .object({
@@ -33,21 +34,19 @@ export function PasswordResetPage() {
       <Card>
         {mutation.isSuccess ? (
           <div className="space-y-4">
-            <Alert tone="success">Listo: tu contraseña cambió.</Alert>
-            <Link
-              to="/entrar"
-              className="block text-center font-medium text-brand-700 hover:underline"
-            >
+            <Outcome tone="success" title="Listo: tu contraseña cambió">
+              Entra con tu correo y la contraseña nueva.
+            </Outcome>
+            <Link to="/entrar" className={buttonClass('primary', 'w-full')}>
               Iniciar sesión
             </Link>
           </div>
         ) : badKey ? (
           <div className="space-y-4">
-            <Alert tone="danger">El enlace no es válido o ya se usó.</Alert>
-            <Link
-              to="/recuperar"
-              className="block text-center font-medium text-brand-700 hover:underline"
-            >
+            <Outcome tone="danger" title="El enlace no sirve">
+              No es válido o ya se usó. Pide otro: llega en un minuto.
+            </Outcome>
+            <Link to="/recuperar" className={buttonClass('primary', 'w-full')}>
               Pedir un enlace nuevo
             </Link>
           </div>

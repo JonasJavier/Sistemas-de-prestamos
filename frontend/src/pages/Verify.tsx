@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 
 import { api } from '../api/client'
-import { Alert, Card, PublicPage, Spinner } from '../components/ui'
+import { Card, Outcome, PublicPage, Spinner } from '../components/ui'
 import { dateOf, rd } from '../lib/format'
 
 interface Verification {
@@ -33,44 +33,46 @@ export function VerifyPage() {
       {check.isPending ? (
         <Spinner />
       ) : !data ? (
-        <Alert tone="danger">
-          Este código no corresponde a ningún documento emitido con Cobradía. Si te lo presentaron
-          como auténtico, desconfía.
-        </Alert>
+        <Card>
+          <Outcome tone="danger" title="Código desconocido">
+            Este código no corresponde a ningún documento emitido con Cobradía. Si te lo presentaron
+            como auténtico, desconfía.
+          </Outcome>
+        </Card>
       ) : (
-        <Card className="space-y-2">
-          <div
-            className={`text-lg font-semibold ${data.valid && !data.reversed ? 'text-success-600' : 'text-danger-600'}`}
+        <Card className="space-y-4">
+          <Outcome
+            tone={data.valid && !data.reversed ? 'success' : data.reversed ? 'warning' : 'danger'}
+            title={
+              data.reversed
+                ? 'Recibo auténtico, pero fue reversado'
+                : data.valid
+                  ? 'Documento auténtico'
+                  : 'Documento revocado'
+            }
           >
-            {data.reversed
-              ? 'Recibo auténtico, pero fue reversado'
-              : data.valid
-                ? 'Documento auténtico'
-                : 'Documento revocado'}
-          </div>
-          <dl className="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 text-sm">
-            <dt className="text-muted">Emitido por</dt>
-            <dd>{data.company}</dd>
-            <dt className="text-muted">Documento</dt>
-            <dd>{data.label}</dd>
-            <dt className="text-muted">Folio</dt>
-            <dd className="tabular-nums">{data.folio}</dd>
-            <dt className="text-muted">Fecha</dt>
-            <dd>{dateOf(data.issued_at)}</dd>
-            {data.amount ? (
-              <>
-                <dt className="text-muted">Monto</dt>
-                <dd className="tabular-nums">{rd(data.amount)}</dd>
-              </>
-            ) : null}
+            Emitido por {data.company}.
+          </Outcome>
+          <dl className="divide-y divide-edge rounded-xl border border-edge text-[13.5px]">
+            {[
+              ['Documento', data.label],
+              ['Folio', data.folio],
+              ['Fecha', dateOf(data.issued_at)],
+              ...(data.amount ? [['Monto', rd(data.amount)]] : []),
+            ].map(([term, value]) => (
+              <div key={term} className="flex justify-between gap-4 px-4 py-2.5">
+                <dt className="text-muted">{term}</dt>
+                <dd className="text-right font-semibold tabular-nums">{value}</dd>
+              </div>
+            ))}
             {data.fingerprint ? (
-              <>
+              <div className="px-4 py-2.5">
                 <dt className="text-muted">Huella</dt>
-                <dd className="font-mono text-[12.5px]">{data.fingerprint}</dd>
-              </>
+                <dd className="mt-0.5 break-all font-mono text-[12px]">{data.fingerprint}</dd>
+              </div>
             ) : null}
           </dl>
-          <p className="text-[12.5px] text-muted">
+          <p className="text-center text-[12.5px] text-muted">
             Compara estos datos con el papel que tienes: si no coinciden, el documento fue alterado.
           </p>
         </Card>
