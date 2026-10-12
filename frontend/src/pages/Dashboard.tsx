@@ -96,9 +96,7 @@ function Tile({
       >
         <Figure value={value ?? '…'} />
       </div>
-      <div className="mt-1.5 hidden text-[12px] leading-snug text-muted sm:block">
-        {hint}
-      </div>
+      <div className="mt-1.5 hidden text-[12px] leading-snug text-muted sm:block">{hint}</div>
     </Link>
   )
 }
