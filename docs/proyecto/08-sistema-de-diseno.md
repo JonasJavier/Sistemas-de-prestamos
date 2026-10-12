@@ -64,7 +64,7 @@ Los valores cumplen contraste AA sobre su fondo de uso. Se definen una vez como 
 
 ### Reglas de uso
 
-1. **El bosque es para lo que importa ahora (decisión 115).** El menú es el bloque fijo; en el área de trabajo, arena y blanco. Un bloque bosque aparece solo para **lo que la persona tiene que mirar o decidir en ese momento**: «Así queda» al cotizar, la siguiente parada del cobrador, la ruta elegida, el efectivo por rendir, el plan recomendado y «Pago registrado». Nunca dos compitiendo en la misma vista. Dentro del bosque, el acento es `forest-accent`. La textura de marca no cuenta como bloque. El dorado es firma, no botón: nunca para acciones.
+1. **El bosque es para lo que importa ahora (decisión 115).** El menú es el bloque fijo; en el área de trabajo, arena y blanco. Un bloque bosque aparece solo para **lo que la persona tiene que mirar o decidir en ese momento**: «Así queda» al cotizar, la siguiente parada del cobrador, la ruta elegida, el efectivo por rendir, el plan recomendado, «Pago registrado» y, desde la decisión 116, aprobar un cierre de caja, la entrega de un desembolso, la selección en atrasos y el próximo pago en el portal. Nunca dos compitiendo en la misma vista. Dentro del bosque, el acento es `forest-accent`. La textura de marca no cuenta como bloque. El dorado es firma, no botón: nunca para acciones.
 2. **El dinero no se colorea por sí mismo.** Un importe es texto normal; el color lo da su **estado** (insignia), no el signo de pesos.
 3. **Estados de cuota y préstamo:** al día `brand-100`/`brand-800` · pagada `success` · parcial `info` · vencida 1–30 `warning` · vencida 31+ o legal `danger` · saldado gris. Siempre color **más texto**: nunca solo color (accesibilidad).
 4. **El ámbar ya no es identidad:** queda únicamente como color semántico de advertencia (`warning`).
@@ -91,6 +91,7 @@ Formato regional fijo (es-DO): `RD$ 1,250.00`, fechas `04/10/2026`, sin notacion
 | Elemento | Valor |
 | --- | --- |
 | Escala de espaciado | Múltiplos de 4 px; secciones separadas por 24 px |
+| Relleno de tarjetas | 16 px en el celular y 20 px desde 640 px (`p-4 sm:p-5`, decisión 116); las tablas dentro de una tarjeta llegan hasta su borde |
 | Radios | 8–10 px en controles (`rounded-control`, 10 px, en la barra superior); 12 px en tarjetas KPI y menús; 14 px en tarjetas grandes (`rounded-card`); 16 px en diálogos; 20 px en los bloques verdes (`rounded-block`); 24 px arriba en las hojas del celular; 999 px en insignias y avatares |
 | Sombras | Dos niveles teñidos de bosque: tarjeta (`0 1px 2px` y `0 1px 3px` al 4–5 %) y flotante (`0 12px 32px -8px` al 18 %), más un `xs` de 1 px para controles. Nada más |
 | Altura de controles | 36 px en escritorio; 44 px mínimo en móvil (objetivo táctil) |
@@ -107,7 +108,7 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Componente | Base | Precisiones |
 | --- | --- | --- |
 | Barra de comandos (Ctrl+K) | `CommandPalette` sobre `Modal` | Resultados agrupados (clientes, préstamos, acciones); acción directa «Cobrar» con Enter |
-| Tabla de datos | `RowList` + `Pagination` (TanStack Table cuando haga falta ordenar columnas) | Filtros como chips removibles sincronizados con la URL; totales fijos al pie que respetan los filtros; estado vacío con acción |
+| Tabla de datos | `Table` + `tableRowClass` + `Pagination` (decisión 116; TanStack Table cuando haga falta ordenar columnas) | Filtros segmentados y búsqueda en una sola fila sobre la tabla; totales al pie (`footer`) que respetan los filtros; estado vacío con acción. `RowList` queda para listas sin columnas |
 | Estado vacío | `EmptyState` | El dibujo de la casa (dos tarjetas y el punto dorado), una frase que dice qué pasa y, si cabe, la acción |
 | Tarjeta KPI | `Stat` | Valor, comparación y un «?» con la definición exacta del indicador (paso 9) |
 | Panel de cobro | `Modal` lateral (escritorio) / inferior (móvil) | Desglose antes de confirmar, recibido y cambio con teclado numérico |
@@ -123,7 +124,7 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Selector de sucursal | `BranchPicker` + `lib/scope.ts` | «Toda la empresa» o una sucursal (punto esmeralda o dorado). Solo para quien ve todas las sucursales, solo con más de una y solo en las pantallas que lo respetan (`SCOPED_PATHS`, hoy el inicio): un filtro que no filtra no se muestra. En el celular va en la hoja «Más». Dura lo que la pestaña del navegador |
 | Barra inferior del celular | `shell/MobileBar` | Pestañas con una píldora menta de 56×30 en la activa y, en el centro, **«Cobrar»: un círculo esmeralda de 52 px que sobresale 22 px** (solo para quien cobra). Oficina: Inicio · Clientes · Cobrar · Ruta · Más; cajero: Caja en lugar de Ruta; cobrador: Ruta · Clientes · Cobrar · Cobranza · Más; quien no cobra: Inicio · Clientes · Solicitudes · Préstamos · Más. «Más» abre el menú completo en una hoja verde |
 | Textura de marca | `Texture` | Dos capas absolutas detrás del contenido (luz suave y retícula de puntos), tono `forest` o `sand`; el contenedor va `relative` (y `overflow-hidden` si tiene esquinas redondeadas) |
-| Título de sección | `Section` | El punto dorado, el título en 15 px y una nota a la derecha (el alcance de las cifras) |
+| Título de sección | `Section` | El título en 17 px y una nota a la derecha (el alcance de las cifras) |
 | Tarjeta de bienvenida | `Welcome` (Inicio) | Textura en dorado sobre arena, la fecha como etiqueta superior, el saludo grande, la prueba gratis como chip dorado, las acciones y la cifra del día: lo cobrado hoy frente a lo que vencía, con su barra de avance (solo para quien lee los indicadores) |
 | Menú de usuario | `shell/UserMenu` | Al pie del menú lateral (en el celular, el avatar de la barra superior): avatar menta con iniciales, nombre y rol; dentro: Mi cuenta, Cerrar sesión y, en el celular, el tema. El panel va fijo a la página para que el menú no lo recorte |
 | Avatar | `Avatar` | Iniciales en un círculo con un tono suave fijo por nombre: clientes, usuario y empresa |
@@ -132,13 +133,16 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 | Lista de pagos | `PaymentList` | Recibos de un préstamo, un cliente o una caja, paginados de 25 en 25 |
 | Insignia de estado | `Badge` (`dot`) | Decisión 115: tinte suave del estado, sin borde, 11 px; con punto cuando es un estado («● Al día», «● 3 días de atraso») |
 | Selector segmentado | `Segmented` | Opciones lado a lado en una caja: filtros con su cuenta, frecuencia, mensual/anual; la elegida en menta |
-| Tablas | rejilla CSS | Encabezado en `surface-2` de 12.5 px, filas de 13–13.5 px con `minmax(0, Nfr)`, cifras a la derecha y cortas sin partir; en el celular, una tarjeta por fila |
+| Tablas | `Table` (rejilla CSS) · `.data-table` (HTML) | `Table` recibe las columnas (`minmax(0, Nfr)` y anchos fijos, nunca `auto`: cada fila es su propia rejilla), el encabezado y el pie; en el celular, una tarjeta por fila. Las tablas HTML de finanzas y reportes llevan `.data-table`: encabezado en `surface-2` de 12 px, filas de 13 px, `tfoot` en negrita, y dentro de una tarjeta con relleno sangran hasta su borde (`-mx-4 sm:-mx-5`). Cifras a la derecha y sin partir |
 | Calendario del préstamo | `LoanCalendar` | Cuotas pagadas con su barra, la próxima resaltada en `brand-50`, estados con color (pagada, con atraso, parcial, vencida, próxima, pendiente); se abre alrededor de la próxima y se despliega entera |
 | Pasos | `Steps` | Tareas largas (la solicitud): verticales con línea en escritorio, barras cortas en el celular |
 | Cotización | `QuoteBlock` | «Así queda»: la cuota en grande sobre bosque, total, interés, neto, última cuota y las primeras cuotas; la misma cotización del servidor en la solicitud y el simulador |
 | Acciones del préstamo | `useLoanMenu` | Las mismas acciones (y sus diálogos) en «Más» del préstamo y en la lista de la ficha del cliente; las destructivas al final, en rojo |
 | Contraseña | `PasswordInput` | Con su ojo para ver lo escrito |
 | Pantallas públicas | `PublicPage` | Mitad bosque con la promesa de la marca y mitad arena con el formulario de 420 px; en el celular, el bosque arriba y el formulario en una hoja que sube |
+| Resultado de una página pública | `Outcome` | Decisión 116: un sello (✓ en verde, ⚠ en rojo o ámbar), el título y una línea con el siguiente paso; debajo, el botón que lo da |
+| Formularios largos | `Group` (Productos) | Por partes con título, una línea que dice qué gobierna y una raya entre partes; el botón de guardar en una franja al pie de la tarjeta |
+| Detalle con columna lateral | rejilla `minmax(0,1fr) + 21–22rem` | Lo principal a la izquierda (el recibo, la tabla del equipo); al lado, lo que acompaña y la acción delicada en su propia tarjeta. La columna aparece desde `xl` cuando la pantalla tiene submenú |
 
 **Jerarquía de acciones por pantalla:** 1 primaria (verde, rellena) · secundarias (borde) · el resto en «Más» (menú). Las destructivas, en rojo y al final.
 
