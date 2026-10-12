@@ -2,7 +2,7 @@
 
 Manual de operación de producción en Railway (decisión 113). Proyecto `cobradia`, entorno `production`, región de Virginia.
 
-- App: <https://web-production-5025e0.up.railway.app> (hasta tener `app.cobradia.com`).
+- App: <https://app.cobradia.com> · sitio: <https://cobradia.com> (`www` redirige al sitio). El dominio se compró en Railway, que maneja su DNS: al agregar un dominio a un servicio crea solo los registros. La dirección `web-production-5025e0.up.railway.app` sigue sirviendo la app.
 - Correos de prueba (Mailpit): <https://mailpit-production-de9d.up.railway.app>, usuario y clave en la variable `MP_UI_AUTH` del servicio `mailpit`.
 
 **Cómo se despliega.** Mientras la app de Railway en GitHub no tenga acceso a este repositorio, se sube desde la raíz del repositorio con la CLI (cada servicio ya sabe su carpeta y su Dockerfile):
@@ -58,7 +58,6 @@ curl -fsS https://<dominio>/api/v1/salud/        # responde la versión (commit)
 
 ## Pendientes que dependen del dueño
 
-1. **Dominio.** Registrar `cobradia.com` y agregar en `web` los dominios `app.cobradia.com`, `cobradia.com` y `www.cobradia.com` (Railway da los registros DNS). Después, en `api`: `DJANGO_ALLOWED_HOSTS=app.cobradia.com,healthcheck.railway.app` y `FRONTEND_URL=https://app.cobradia.com`; en `web`: `PUBLIC_APP_URL=https://app.cobradia.com`.
-2. **Correo.** Contratar un proveedor SMTP (p. ej. Resend o Postmark), verificar el dominio y poner `EMAIL_HOST`, `EMAIL_PORT=587`, `EMAIL_USER`, `EMAIL_PASSWORD` y `EMAIL_USE_TLS=true` en `api`. Luego borrar el servicio `mailpit`.
-3. **Respaldos.** Activar los respaldos programados del volumen de Postgres en el panel (*Postgres* → *Backups*) y, para la copia externa cifrada, adaptar `infra/production/backup.sh` como servicio con *cron*.
-4. **Errores.** Poner `SENTRY_DSN` en `api`, `worker` y `beat`.
+1. **Correo.** Contratar un proveedor SMTP (p. ej. Resend o Postmark), verificar el dominio y poner `EMAIL_HOST`, `EMAIL_PORT=587`, `EMAIL_USER`, `EMAIL_PASSWORD` y `EMAIL_USE_TLS=true` en `api`. Luego borrar el servicio `mailpit`.
+2. **Respaldos.** Activar los respaldos programados del volumen de Postgres en el panel (*Postgres* → *Backups*) y, para la copia externa cifrada, adaptar `infra/production/backup.sh` como servicio con *cron*.
+3. **Errores.** Poner `SENTRY_DSN` en `api`, `worker` y `beat`.
