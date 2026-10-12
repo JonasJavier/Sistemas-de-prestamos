@@ -24,7 +24,9 @@ export function Kpi({
   const id = useId()
   const color = tone === 'bad' ? 'text-danger-600' : tone === 'good' ? 'text-success-600' : ''
   return (
-    <div className={`@container relative min-w-0 p-4 ${cardClass}`}>
+    <div
+      className={`@container relative min-w-0 p-4 transition-shadow duration-200 hover:shadow-md ${cardClass}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="text-[12.5px] font-medium text-muted">
           {to ? (

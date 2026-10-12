@@ -4,7 +4,8 @@ export type ButtonVariant = 'primary' | 'secondary' | 'soft' | 'danger' | 'ghost
 export type ButtonSize = 'md' | 'sm'
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-700 text-on-brand shadow-xs hover:bg-brand-800 disabled:hover:bg-brand-700',
+  primary:
+    'bg-brand-700 text-on-brand shadow-xs hover:bg-brand-800 hover:shadow-sm disabled:hover:bg-brand-700 disabled:hover:shadow-xs',
   secondary:
     'border border-edge bg-surface text-ink shadow-xs hover:border-brand-700/30 hover:bg-brand-50 disabled:hover:border-edge disabled:hover:bg-surface',
   // The main action of each row of a list: green, but quieter than the screen's one.
@@ -26,7 +27,8 @@ export function buttonClass(
   className = '',
   size: ButtonSize = 'md',
 ) {
-  return `inline-flex select-none items-center justify-center gap-1.5 text-center rounded-lg font-semibold transition-[background-color,border-color,color,box-shadow] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 disabled:active:translate-y-0 ${BUTTON_SIZES[size]} ${BUTTON_VARIANTS[variant]} ${className}`
+  // Motion (decision 112): a soft lift on hover and a short press on click.
+  return `inline-flex select-none items-center justify-center gap-1.5 text-center rounded-lg font-semibold press outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas active:translate-y-0 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:active:scale-100 ${BUTTON_SIZES[size]} ${BUTTON_VARIANTS[variant]} ${className}`
 }
 
 /** Text fields, selects and areas share one look (doc 08 - 5). */

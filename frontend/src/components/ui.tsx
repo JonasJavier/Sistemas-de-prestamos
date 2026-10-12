@@ -87,7 +87,10 @@ export function Alert({
   // Problems interrupt the screen reader; confirmations and hints wait their turn.
   const role = tone === 'danger' || tone === 'warning' ? 'alert' : 'status'
   return (
-    <div role={role} className={`flex gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm ${box}`}>
+    <div
+      role={role}
+      className={`flex animate-fade gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm ${box}`}
+    >
       <span className="mt-px">
         <Icon />
       </span>
@@ -418,6 +421,13 @@ export function Tabs<T extends string>({
   const list = useRef<HTMLDivElement>(null)
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
   const active = tabs.findIndex(([key]) => key === value)
+  // The indicator slides from the previous tab to the chosen one (decision 112).
+  const [bar, setBar] = useState<{ left: number; width: number } | null>(null)
+  useEffect(() => {
+    const tab = buttons.current[active]
+    if (!tab) return
+    setBar({ left: tab.offsetLeft, width: tab.offsetWidth })
+  }, [active, tabs])
   // On a phone the tabs scroll sideways: the chosen one is always in sight
   // (only the strip moves, never the page).
   useEffect(() => {
@@ -447,8 +457,15 @@ export function Tabs<T extends string>({
     <div
       ref={list}
       role="tablist"
-      className="flex gap-1 overflow-x-auto border-b border-edge [scrollbar-width:none]"
+      className="relative flex gap-1 overflow-x-auto border-b border-edge [scrollbar-width:none]"
     >
+      {bar ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-brand-700 transition-[left,width] duration-200 ease-out"
+          style={{ left: bar.left, width: bar.width }}
+        />
+      ) : null}
       {tabs.map(([key, label], index) => (
         <button
           key={key}
@@ -461,10 +478,10 @@ export function Tabs<T extends string>({
           tabIndex={value === key || (active === -1 && index === 0) ? 0 : -1}
           onClick={() => onChange(key)}
           onKeyDown={(event) => move(event, index)}
-          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-medium outline-none transition-colors focus-visible:rounded-t-md focus-visible:ring-2 focus-visible:ring-accent-500 ${
+          className={`press press-down -mb-px whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-[13.5px] font-medium outline-none focus-visible:rounded-t-md focus-visible:ring-2 focus-visible:ring-accent-500 ${
             value === key
-              ? 'border-brand-700 text-brand-700'
-              : 'border-transparent text-muted hover:border-edge hover:text-ink'
+              ? `text-brand-700 ${bar ? '' : 'border-brand-700'}`
+              : 'text-muted hover:border-edge hover:text-ink'
           }`}
         >
           {label}
@@ -539,7 +556,7 @@ function EmptyArt() {
 
 export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-dashed border-edge bg-surface-2/60 px-4 py-9 text-center text-sm text-muted">
+    <div className="flex animate-rise flex-col items-center rounded-xl border border-dashed border-edge bg-surface-2/60 px-4 py-9 text-center text-sm text-muted">
       <span className="mb-2 text-muted/80">
         <EmptyArt />
       </span>
@@ -721,4 +738,4 @@ export function RowList({ children }: { children: ReactNode }) {
 }
 
 export const rowLinkClass =
-  'flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50'
+  'press flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 outline-none hover:bg-brand-50/60 focus-visible:bg-brand-50 active:bg-brand-100/60'

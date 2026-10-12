@@ -46,7 +46,7 @@ function Tile({
     <Link
       to={to}
       search={search}
-      className="group @container flex min-w-0 flex-col rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-brand-700/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent-500"
+      className="group lift @container flex h-full min-w-0 flex-col rounded-xl border border-edge bg-surface p-4 shadow-sm outline-none hover:border-brand-700/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent-500"
     >
       {/* A narrow card (two per row on a phone) puts the icon above the label. */}
       <div className="flex flex-col items-start gap-2 @min-[12rem]:flex-row @min-[12rem]:items-center @min-[12rem]:gap-2.5">
@@ -96,7 +96,16 @@ function Grid({ label, children }: { label?: string; children: ReactNode }) {
         : 'sm:grid-cols-2'
   return (
     <section aria-label={label} className={`grid grid-cols-2 gap-3 ${columns}`}>
-      {children}
+      {/* The cards reveal one after another (decision 112). */}
+      {Children.toArray(children).map((child, index) => (
+        <div
+          key={index}
+          className="flex min-w-0 animate-reveal [&>*]:min-w-0 [&>*]:flex-1"
+          style={{ animationDelay: `${index * 45}ms` }}
+        >
+          {child}
+        </div>
+      ))}
     </section>
   )
 }

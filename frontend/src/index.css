@@ -43,6 +43,18 @@
   --animate-sheet: sheet 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-fade: fade 160ms ease-out;
   --animate-progress: progress 1.1s ease-in-out infinite;
+  /* Motion (decision 112): a screen rises into place, a list reveals its
+     cards one after another, a control answers the press. */
+  --animate-rise: rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-reveal: rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 @keyframes progress {
@@ -69,6 +81,35 @@
 @keyframes fade {
   from {
     opacity: 0;
+  }
+}
+
+/* The dim behind a dialog fades in with it. */
+dialog::backdrop {
+  animation: fade 180ms ease-out;
+}
+
+/* Every control answers the hand: a short press, a soft lift (decision 112). */
+@utility press {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@utility press-down {
+  &:active {
+    transform: scale(0.97);
+  }
+}
+@utility lift {
+  transition-property: background-color, border-color, color, box-shadow, transform;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  &:hover {
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(0);
+    transition-duration: 80ms;
   }
 }
 

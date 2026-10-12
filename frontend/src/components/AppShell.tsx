@@ -66,14 +66,17 @@ import { Brand, BrandMark, Texture } from './ui'
 import { SupportBanner } from './Support'
 
 const iconButton =
-  'relative grid size-10 place-items-center rounded-lg text-muted outline-none transition-colors hover:bg-brand-50 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500 sm:size-9'
+  'press press-down relative grid size-10 place-items-center rounded-lg text-muted outline-none hover:bg-brand-50 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent-500 sm:size-9'
 
 function ThemeToggle() {
   const [dark, toggle] = useDarkTheme()
   const label = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
   return (
     <button type="button" onClick={toggle} title={label} aria-label={label} className={iconButton}>
-      {dark ? <SunIcon /> : <MoonIcon />}
+      {/* The icon pops in when the theme changes. */}
+      <span key={String(dark)} className="grid animate-pop">
+        {dark ? <SunIcon /> : <MoonIcon />}
+      </span>
     </button>
   )
 }
@@ -188,11 +191,11 @@ function navFor(me: Me): NavGroup[] {
 }
 
 const linkClasses =
-  'group relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-[13.5px] font-medium text-brand-200 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
+  'group press press-down relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-[13.5px] font-medium text-brand-200 outline-none hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
 
 /** The folded menu (doc 08 - 4): one icon per option, named by a bubble. */
 const railClasses =
-  'group relative flex h-10 items-center justify-center rounded-lg text-brand-200 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
+  'group press press-down relative flex h-10 items-center justify-center rounded-lg text-brand-200 outline-none hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-gold-500 [&.active]:bg-white/[0.09] [&.active]:text-white'
 
 /** Groups folded by default: settings are visited now and then. */
 const FOLDED_BY_DEFAULT = ['Ajustes']
@@ -318,7 +321,11 @@ function NavLinks({
                           collapsed ? '-left-2' : '-left-3'
                         }`}
                       />
-                      <span className="relative text-brand-200/75 transition-colors group-hover:text-white group-[.active]:text-gold-500">
+                      <span
+                        className={`relative text-brand-200/75 transition-[color,transform] duration-150 group-hover:text-white group-[.active]:text-gold-500 ${
+                          collapsed ? '' : 'group-hover:translate-x-0.5'
+                        }`}
+                      >
                         {entry.icon}
                         {collapsed && entry.badge ? (
                           <span
@@ -536,7 +543,7 @@ function UserMenu({
 }
 
 const barBase =
-  'flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium outline-none focus-visible:bg-brand-50'
+  'press press-down flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium outline-none focus-visible:bg-brand-50'
 const barItem = `${barBase} text-muted [&.active]:text-brand-700 [&.active_.pill]:bg-brand-100`
 
 /** Phones get a bottom bar (decision 038, doc 07 - 2): office «Inicio · Buscar ·
@@ -726,6 +733,7 @@ export function AppShell({
   })
 
   const groups = navFor(me)
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const name = [me.first_name, me.last_name].filter(Boolean).join(' ') || user.email
   const roleText = platformView(me)
     ? 'Dueño de la plataforma'
@@ -830,9 +838,13 @@ export function AppShell({
         <main
           id="contenido"
           tabIndex={-1}
-          className="mx-auto w-full max-w-6xl flex-1 space-y-5 px-4 pb-24 pt-6 outline-none sm:px-6 sm:pb-10 sm:pt-7"
+          className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 outline-none sm:px-6 sm:pb-10 sm:pt-7"
         >
-          {children}
+          {/* Each screen rises into place (decision 112): the key restarts the
+              animation when the path changes. */}
+          <div key={pathname} className="animate-rise space-y-5">
+            {children}
+          </div>
         </main>
       </div>
       <MobileBar me={me} groups={groups} onSearch={(intent) => setSearching(intent ?? 'buscar')} />

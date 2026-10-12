@@ -131,6 +131,25 @@ Los diez componentes clave definidos en la [dirección de diseño](../referencia
 - **El tema claro es el predeterminado** (ajuste del 05/10/2026, a pedido del dueño). El oscuro se activa con el interruptor de la barra superior o desde el menú de usuario; los dos leen el mismo almacén (`lib/theme.ts`) y la elección se recuerda en el navegador.
 - Los documentos PDF son siempre claros.
 
+## 6 bis. Movimiento (decisión 112)
+
+La interfaz responde a la mano: nada se queda plano al tocarlo. Un solo *easing* (`cubic-bezier(0.2, 0.8, 0.2, 1)`), duraciones de 80 a 320 ms y todo se apaga con `prefers-reduced-motion`.
+
+| Pieza | Movimiento |
+| --- | --- |
+| Botones (`buttonClass`) | Se elevan 1 px al pasar (el primario gana sombra) y se encogen al 97 % al pulsar; desactivados, quietos |
+| Enlaces del menú, barra del celular, botones de ícono | La misma pulsación (`press` + `press-down`); en el menú desplegado el ícono se desliza 2 px a la derecha al pasar |
+| Filas de lista (`rowLinkClass`) | Fondo al pasar y un tono más fuerte mientras se pulsa |
+| Mosaicos del inicio (`Tile`) | `lift`: suben 2 px con sombra al pasar y vuelven al pulsar; los KPI solo ganan sombra |
+| Entrada de cada pantalla | El contenido de `main` sube 8 px y aparece (`animate-rise`, 260 ms); la clave es la ruta, así que cada navegación lo repite |
+| Mosaicos y KPI del inicio | Aparecen uno tras otro (`animate-reveal`, 45 ms de desfase por tarjeta) |
+| Pestañas (`Tabs`) | Un solo indicador verde se desliza de la pestaña anterior a la elegida (200 ms) |
+| Diálogos | El panel entra con `animate-pop` y el fondo oscurecido aparece en 180 ms |
+| Avisos y estados vacíos | `animate-fade` y `animate-rise` |
+| Interruptor de tema | El ícono nuevo entra con `animate-pop` al cambiar |
+
+Lo que no se anima, a propósito: las cifras (nunca «cuentan» hacia arriba, el dinero se lee de una vez), las tablas largas y los campos de formulario más allá del borde y el anillo de foco.
+
 ## 7. Accesibilidad (WCAG 2.2 AA)
 
 - Contraste ≥ 4.5:1 en texto y ≥ 3:1 en controles; verificado por tokens, no pantalla por pantalla.
