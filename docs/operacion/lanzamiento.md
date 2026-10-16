@@ -2,6 +2,8 @@
 
 Estado de los criterios del doc 10 §4 (que incluyen los del paso 02 §8) al cerrar la parte técnica de la fase 10, el 09/10/2026. **Hecho** = construido, probado y con evidencia; **Jonas** = depende de una decisión, una cuenta o una persona que solo Jonas puede conseguir.
 
+> Lo que falta para **vender** (correo real, respaldos, precios, cobro, legal, marketing y mejoras de producto) se sigue en la [checklist de comercialización](comercializacion.md), revisada el 16/10/2026.
+
 | # | Criterio | Estado | Evidencia o qué falta |
 | --- | --- | --- | --- |
 | 1 | Recorrido completo aprobado por el primer cliente y migración de su cartera cuadrada (ensayada dos veces) | **Jonas** | La herramienta de migración (F16, decisión 074) y `verificar_integridad` están listas. Falta: el cliente, su archivo de cartera y dos ensayos en staging (pasos abajo) |
