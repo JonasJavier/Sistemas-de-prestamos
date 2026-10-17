@@ -18,9 +18,9 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 
 ## Fase A · Bloqueos: sin esto no se puede vender
 
-- [ ] **A1. Correo real en producción** 👤🤖
-  - 👤 Crear la cuenta en un proveedor de correo transaccional. Recomendado: **Resend** (gratis hasta 3,000 correos al mes; luego unos US$20 por 50,000). Alternativas: Postmark o Amazon SES.
-  - 🤖 Verificar el dominio (SPF, DKIM y DMARC en el DNS de Railway), cambiar las variables `EMAIL_*` de `api` y `worker`, probar registro, recuperación de contraseña, avisos y portal, y apagar el servicio `mailpit`.
+- [x] **A1. Correo real en producción** 👤🤖 *Hecho el 17/10/2026.* Resend (plan gratis: 3,000 correos al mes y 100 al día) con `cobradia.com` verificado (DKIM, envío y DMARC en el DNS de Railway); `api`, `worker` y `beat` envían por SMTP desde `Cobradía <no-responder@cobradia.com>`; correos de prueba desde `api` y `worker` entregados; servicio `mailpit` borrado. Detalle en el [manual de Railway](../../infra/railway/README.md).
+  - [ ] 👤 Prueba final: registrar una empresa de prueba en `app.cobradia.com` con tu correo y confirmar que el correo de verificación llega a la bandeja de entrada (no a spam).
+  - [ ] 🤖 Subir al plan de pago de Resend cuando los recordatorios a clientes pasen de 100 correos al día.
 - [ ] **A2. Buzón `hola@cobradia.com`** 👤 Es el contacto del sitio, de los términos y de la privacidad. Zoho Mail (plan gratis) o Google Workspace.
 - [ ] **A3. Superusuario del dueño en producción** 👤 Con la sesión de Railway abierta en tu computadora: `railway ssh --service api -- python manage.py createsuperuser`. Sin él no hay panel de la plataforma: no se pueden cargar planes, activar empresas ni registrar pagos.
 - [ ] **A4. Respaldos** 👤🤖

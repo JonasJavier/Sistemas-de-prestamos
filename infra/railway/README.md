@@ -3,7 +3,7 @@
 Manual de operación de producción en Railway (decisión 113). Proyecto `cobradia`, entorno `production`, región de Virginia.
 
 - App: <https://app.cobradia.com> · sitio: <https://cobradia.com> (`www` redirige al sitio). El dominio se compró en Railway, que maneja su DNS: al agregar un dominio a un servicio crea solo los registros. La dirección `web-production-5025e0.up.railway.app` sigue sirviendo la app.
-- Correos de prueba (Mailpit): <https://mailpit-production-de9d.up.railway.app>, usuario y clave en la variable `MP_UI_AUTH` del servicio `mailpit`.
+- Correo: Resend (cuenta del dueño, dominio `cobradia.com` verificado, región us-east-1) por SMTP. Ver «Correo» más abajo.
 
 **Cómo se despliega.** Mientras la app de Railway en GitHub no tenga acceso a este repositorio, se sube desde la raíz del repositorio con la CLI (cada servicio ya sabe su carpeta y su Dockerfile):
 
@@ -23,7 +23,6 @@ Cuando el dueño le dé acceso (GitHub → *Settings* → *Applications* → *Ra
 | `worker` · `beat` | Tareas de Celery en segundo plano y programadas | `backend/Dockerfile` |
 | `Postgres` · `Redis` | Bases administradas por Railway | Plantillas de Railway |
 | `archivos` | *Bucket* S3 privado: documentos, expedientes, exportaciones, logos | Railway Buckets |
-| `mailpit` | Buzón temporal mientras no haya proveedor de correo | `axllent/mailpit` |
 
 ## Cómo está armado
 
@@ -34,9 +33,10 @@ Cuando el dueño le dé acceso (GitHub → *Settings* → *Applications* → *Ra
   ```
 
   La clave vive en la variable `APP_DB_PASSWORD` del servicio `Postgres`; `api` arma su `DATABASE_URL` con ella por referencia.
-- **Variables.** `api` tiene los valores; `worker` y `beat` los toman con `${{api.…}}`. Los secretos (`DJANGO_SECRET_KEY`, `APP_DB_PASSWORD`, `MP_UI_AUTH`) se generaron al azar y solo existen en Railway.
+- **Variables.** `api` tiene los valores; `worker` y `beat` los toman con `${{api.…}}`. Los secretos (`DJANGO_SECRET_KEY`, `APP_DB_PASSWORD`) se generaron al azar y solo existen en Railway; `EMAIL_PASSWORD` es la clave de Resend.
 - **Proxy.** El borde de Railway termina TLS y escribe la IP del visitante en `X-Real-IP`; Caddy la pasa a Django como el único salto de confianza (`TRUSTED_PROXY_COUNT=1`) y fija `X-Forwarded-Proto: https`.
 - **Archivos.** Con `AWS_STORAGE_BUCKET_NAME` definido, Django guarda en el bucket (privado; enlaces firmados de 5 minutos). Sin ella, en disco, como en desarrollo.
+- **Correo.** Sale por el SMTP de Resend: en `api`, `EMAIL_HOST=smtp.resend.com`, `EMAIL_PORT=587`, `EMAIL_USER=resend`, `EMAIL_USE_TLS=true` y `EMAIL_PASSWORD` = la clave `cobradia-produccion` de Resend (solo envío, solo `cobradia.com`); `worker` y `beat` las toman por referencia. El remitente es `DEFAULT_FROM_EMAIL` (por defecto `Cobradía <no-responder@cobradia.com>`). El DNS de Railway tiene los registros que pide Resend: `rsend` y `send` (CNAME a `*.forge.rmta.net`), `resend._domainkey` (DKIM) y `_dmarc` (`v=DMARC1; p=none;`). Para cambiar la clave: crear otra en Resend y guardarla con `railway variables --service api --set EMAIL_PASSWORD=…` sin pegarla en ningún chat, redesplegar `api`, `worker` y `beat`, y borrar la vieja. **Ojo:** Railway solo permite SMTP en el plan Pro; si se baja de plan, hay que pasar al envío por la API HTTP de Resend.
 
 ## Primer acceso: el dueño de la plataforma
 
@@ -58,6 +58,5 @@ curl -fsS https://<dominio>/api/v1/salud/        # responde la versión (commit)
 
 ## Pendientes que dependen del dueño
 
-1. **Correo.** Contratar un proveedor SMTP (p. ej. Resend o Postmark), verificar el dominio y poner `EMAIL_HOST`, `EMAIL_PORT=587`, `EMAIL_USER`, `EMAIL_PASSWORD` y `EMAIL_USE_TLS=true` en `api`. Luego borrar el servicio `mailpit`.
-2. **Respaldos.** Activar los respaldos programados del volumen de Postgres en el panel (*Postgres* → *Backups*) y, para la copia externa cifrada, adaptar `infra/production/backup.sh` como servicio con *cron*.
-3. **Errores.** Poner `SENTRY_DSN` en `api`, `worker` y `beat`.
+1. **Respaldos.** Activar los respaldos programados del volumen de Postgres en el panel (*Postgres* → *Backups*) y, para la copia externa cifrada, adaptar `infra/production/backup.sh` como servicio con *cron*.
+2. **Errores.** Poner `SENTRY_DSN` en `api`, `worker` y `beat`.
