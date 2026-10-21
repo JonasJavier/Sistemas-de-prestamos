@@ -14,9 +14,11 @@
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), payment=(), geolocation=(self)"
 		Cross-Origin-Opener-Policy "same-origin"
-		Cross-Origin-Resource-Policy "same-origin"
 		-Server
 	}
+	# The brand images under /marca/ are the exception: other sites (Gmail) show them.
+	@not_brand not path /marca/*
+	header @not_brand Cross-Origin-Resource-Policy "same-origin"
 }
 
 # The app: the SPA, its API and the static files of Django.
