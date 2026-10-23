@@ -34,6 +34,7 @@ for service in "${SERVICES[@]}"; do
     s=$(status "$service" "$id")
     case "$s" in
       SUCCESS) echo "$service: listo"; break ;;
+      SKIPPED) echo "$service: sin cambios, sigue la versión en línea"; break ;;
       FAILED | CRASHED | REMOVED) echo "$service: $s" >&2; exit 1 ;;
     esac
     sleep 20
