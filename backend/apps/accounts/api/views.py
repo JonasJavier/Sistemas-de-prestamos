@@ -95,6 +95,8 @@ class MeView(APIView):
                 "company_status": user.company.status if user.company_id else None,
                 "mfa_enabled": mfa_enabled,
                 "mfa_required": settings.REQUIRE_MFA,
+                # Decision 118: whoever joined with Google may have none yet.
+                "has_password": user.has_usable_password(),
                 "location_consent": user.location_consent_at is not None,
                 **(_badges(user) if user.company_id and access is None else {}),
                 # PT4 (decision 091): the platform owner reading a company.
@@ -124,6 +126,27 @@ class MeView(APIView):
                 data={"before": before, "after": after},
             )
         return self.get(request)
+
+
+class RememberChoiceView(APIView):
+    """Decision 118: «Mantenerme conectado», sent by the sign-in screen right
+    before it signs in (with the password or with Google); the sign-in turns
+    it into the rule of the new session (apps/accounts/signals.py)."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list[type] = []
+
+    def post(self, request: Request) -> Response:
+        from rest_framework.settings import api_settings
+
+        from apps.accounts.middleware import REMEMBER_REQUESTED
+
+        # Only the person at this browser chooses it, never another site: the
+        # project's session check (in development it also trusts Vite's origin).
+        session_auth = api_settings.DEFAULT_AUTHENTICATION_CLASSES[0]()
+        session_auth.enforce_csrf(request)
+        request.session[REMEMBER_REQUESTED] = request.data.get("remember") is True
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RoleListView(APIView):

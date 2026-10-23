@@ -1,8 +1,10 @@
 """Session rules (doc 06 - section 6) and mandatory 2FA (decision 034).
 
 ``SessionTimeoutMiddleware``: a session closes after
-``SESSION_COOKIE_AGE`` seconds without requests (30 minutes) and after
-``SESSION_ABSOLUTE_SECONDS`` in any case (12 hours).
+``SESSION_COOKIE_AGE`` seconds without requests (30 minutes), after
+``SESSION_ABSOLUTE_SECONDS`` in any case (12 hours) and when the browser
+closes. With «Mantenerme conectado» (decision 118) it lasts 7 days without
+use and 30 days in any case.
 
 ``MFARequiredMiddleware``: when ``REQUIRE_MFA`` is on, an authenticated
 user without an activated TOTP authenticator can only reach the endpoints
@@ -20,6 +22,9 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 
 SESSION_STARTED = "cobradia_started_at"
 SESSION_SEEN = "cobradia_seen_at"
+SESSION_REMEMBER = "cobradia_remember"
+# Chosen on the sign-in screen before signing in; the sign-in applies it.
+REMEMBER_REQUESTED = "cobradia_remember_requested"
 TOUCH_EVERY_SECONDS = 60
 
 
@@ -39,19 +44,28 @@ class SessionTimeoutMiddleware:
         if request.user.is_authenticated:
             now = int(time.time())
             session = request.session
+            remembered = bool(session.get(SESSION_REMEMBER))
             started = session.get(SESSION_STARTED)
             if started is None:
                 session[SESSION_STARTED] = now
-            elif now - started > settings.SESSION_ABSOLUTE_SECONDS:
+            elif now - started > (
+                settings.SESSION_REMEMBER_ABSOLUTE_SECONDS
+                if remembered
+                else settings.SESSION_ABSOLUTE_SECONDS
+            ):
                 logout(request)
                 return self.get_response(request)
             if now - session.get(SESSION_SEEN, 0) >= TOUCH_EVERY_SECONDS:
                 session[SESSION_SEEN] = now
+                # 0: the cookie ends with the browser; the store still keeps
+                # the session only SESSION_COOKIE_AGE after the last save.
+                session.set_expiry(settings.SESSION_REMEMBER_IDLE_SECONDS if remembered else 0)
         return self.get_response(request)
 
 
 EXEMPT_PREFIXES = (
     "/api/v1/auth/",  # allauth headless: session, login, 2FA activation
+    "/api/v1/oauth/",  # back from Google (decision 118)
     "/api/v1/csrf/",
     "/api/v1/yo/",  # the SPA needs it to know it must redirect
 )

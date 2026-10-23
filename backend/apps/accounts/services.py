@@ -66,8 +66,19 @@ def invite_user(
 
 
 @transaction.atomic
-def accept_invitation(*, token: str, first_name: str, last_name: str, password: str) -> User:
-    """Public acceptance: the token is the credential (table exempt from RLS)."""
+def accept_invitation(
+    *,
+    token: str,
+    first_name: str,
+    last_name: str,
+    password: str | None,
+    record_email: bool = True,
+) -> User:
+    """Public acceptance: the token is the credential (table exempt from RLS).
+
+    With Google (decision 118) there is no password and allauth records the
+    address Google verified, so ``record_email`` is off.
+    """
     try:
         invitation = Invitation.objects.get(token=token, accepted_at__isnull=True)
     except Invitation.DoesNotExist as exc:
@@ -84,8 +95,9 @@ def accept_invitation(*, token: str, first_name: str, last_name: str, password: 
         first_name=first_name,
         last_name=last_name,
     )
-    # Receiving the emailed link proves ownership of the address.
-    EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
+    if record_email:
+        # Receiving the emailed link proves ownership of the address.
+        EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
     with company_context(invitation.company_id):
         Membership.objects.create(
             company_id=invitation.company_id,

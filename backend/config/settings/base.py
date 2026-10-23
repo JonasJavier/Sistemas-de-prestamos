@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.mfa",
+    "allauth.socialaccount",  # decision 118: «Continuar con Google»
+    "allauth.socialaccount.providers.google",
     "allauth.headless",
     "allauth.usersessions",  # doc 06 - 6: see and close your open sessions
     "django_celery_beat",
@@ -116,6 +118,7 @@ AUTHENTICATION_BACKENDS = [
 
 # allauth: email-only login, 2FA via authenticator app (decision 034)
 ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # the email is the username
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
@@ -131,8 +134,42 @@ HEADLESS_FRONTEND_URLS = {
     "account_reset_password": f"{FRONTEND_URL}/recuperar",
     "account_reset_password_from_key": f"{FRONTEND_URL}/recuperar/{{key}}",
     "account_signup": f"{FRONTEND_URL}/registro",
+    "socialaccount_login_error": f"{FRONTEND_URL}/entrar/google",
 }
+
+# Decision 118: allauth's own signup stays closed (a person only joins with
+# their company, /registro, or an invitation); Google completes one of those.
+ACCOUNT_ADAPTER = "apps.accounts.adapters.AccountAdapter"
+SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"
+ACCOUNT_SIGNUP_FORM_CLASS = "apps.accounts.forms.JoinFields"
+# An existing person whose Google address matches (Google verifies it) just
+# signs in; a new one is asked which company they join.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_PROVIDERS: dict = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "OAUTH_PKCE_ENABLED": True,
+        # Off until the owner creates the OAuth client (infra/railway/README.md).
+        "APPS": [
+            {
+                "client_id": env("GOOGLE_CLIENT_ID", default=""),
+                "secret": env("GOOGLE_CLIENT_SECRET", default=""),
+            }
+        ]
+        if env("GOOGLE_CLIENT_ID", default="")
+        else [],
+    }
+}
+
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+# Decision 118: after the code, «confiar en este dispositivo» skips it there for
+# 30 days. Critical actions still ask for it (apps/accounts/reauth.py), and a
+# new password or authenticator voids every trusted browser.
+MFA_TRUST_ENABLED = True
+MFA_TRUST_COOKIE_AGE = 30 * 24 * 60 * 60
 # Decision 117: a code from the previous (or next) 30 seconds still counts, so
 # a phone a few seconds off or a code typed as it changes is not refused.
 # allauth still refuses a code that was already used to sign in.
@@ -187,6 +224,11 @@ ACCOUNT_RATE_LIMITS = {"login_failed": "10/m/ip,5/15m/key"}
 # (SessionTimeoutMiddleware renews the idle window while the user works).
 SESSION_COOKIE_AGE = 30 * 60
 SESSION_ABSOLUTE_SECONDS = 12 * 60 * 60
+# Decision 118: «Mantenerme conectado» at sign-in, for a personal device:
+# closes after 7 days without use and after 30 days in any case. Without it
+# the session also ends when the browser closes.
+SESSION_REMEMBER_IDLE_SECONDS = 7 * 24 * 60 * 60
+SESSION_REMEMBER_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 # Decision 117: two requests in flight never erase each other's session keys.
 SESSION_ENGINE = "apps.accounts.session_store"
 SESSION_COOKIE_HTTPONLY = True

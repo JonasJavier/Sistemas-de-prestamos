@@ -33,6 +33,9 @@ urlpatterns = [
         for client in headless_settings.CLIENTS
     ],
     path("api/v1/auth/", include("allauth.headless.urls")),
+    # Decision 118: where Google sends the person back (headless only: just
+    # the provider callbacks), under /api/ so Caddy hands it to Django.
+    path("api/v1/oauth/", include("allauth.urls")),
 ]
 
 # Decision 101: Django's admin (no 2FA) and the API schema stay out of

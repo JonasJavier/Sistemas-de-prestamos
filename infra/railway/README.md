@@ -39,6 +39,23 @@ Cuando el dueño le dé acceso (GitHub → *Settings* → *Applications* → *Ra
 - **Correo.** Sale por el SMTP de Resend: en `api`, `EMAIL_HOST=smtp.resend.com`, `EMAIL_PORT=587`, `EMAIL_USER=resend`, `EMAIL_USE_TLS=true` y `EMAIL_PASSWORD` = la clave `cobradia-produccion` de Resend (solo envío, solo `cobradia.com`); `worker` y `beat` las toman por referencia. El remitente es `DEFAULT_FROM_EMAIL` (por defecto `Cobradía <no-responder@cobradia.com>`). El DNS de Railway tiene los registros que pide Resend: `rsend` y `send` (CNAME a `*.forge.rmta.net`), `resend._domainkey` (DKIM) y `_dmarc` (`v=DMARC1; p=none;`). Para cambiar la clave: crear otra en Resend y guardarla con `railway variables --service api --set EMAIL_PASSWORD=…` sin pegarla en ningún chat, redesplegar `api`, `worker` y `beat`, y borrar la vieja. **Ojo:** Railway solo permite SMTP en el plan Pro; si se baja de plan, hay que pasar al envío por la API HTTP de Resend.
 - **Correo que llega.** El *Email Forwarding* del dominio reenvía `hola@cobradia.com` al Gmail del dueño (Railway agrega los MX `mx*.name.com` y el SPF `v=spf1 a mx ~all` del dominio raíz; no chocan con los de Resend, que viven en `send`). Desde ese Gmail se responde como `hola@` por el SMTP de Resend con otra clave, `gmail-hola`. Las imágenes de `/marca/` (logo de la firma y foto de perfil) son lo único del sitio que otros sitios pueden mostrar (`Cross-Origin-Resource-Policy: cross-origin` en el Caddyfile).
 
+## Entrar con Google (decisión 118)
+
+El botón «Continuar con Google» aparece solo cuando `api` tiene `GOOGLE_CLIENT_ID`. Se configura una sola vez, con la cuenta de Google del dueño:
+
+1. En <https://console.cloud.google.com> crear un proyecto `Cobradía`.
+2. *APIs y servicios* → *Pantalla de consentimiento de OAuth* (o *Google Auth Platform* → *Branding*): tipo **Externo**, nombre `Cobradía`, correo de asistencia `hola@cobradia.com`, logo de `/marca/`, dominio autorizado `cobradia.com`, enlaces a <https://cobradia.com/privacidad> y <https://cobradia.com/terminos>. Permisos: solo `email`, `profile` y `openid` (no piden revisión de Google). **Publicar la app** (pasar de «Prueba» a «En producción»); en «Prueba» solo entran los correos de la lista de usuarios de prueba.
+3. *Credenciales* → *Crear credenciales* → *ID de cliente de OAuth* → **Aplicación web**, nombre `Cobradía producción`:
+   - Orígenes autorizados de JavaScript: `https://app.cobradia.com`.
+   - URI de redireccionamiento autorizados: `https://app.cobradia.com/api/v1/oauth/google/login/callback/` (y, para probar en una computadora de desarrollo, `http://localhost:5173/api/v1/oauth/google/login/callback/`).
+4. Guardar el ID y el secreto en Railway desde la terminal, sin pegarlos en ningún chat, y redesplegar `api`:
+
+   ```bash
+   railway variables --service api --set GOOGLE_CLIENT_ID=… --set GOOGLE_CLIENT_SECRET=…
+   ```
+
+La CSP de la app ya permite que el formulario de «Continuar con Google» lleve a `accounts.google.com`. En desarrollo, el mismo `GOOGLE_CLIENT_ID` (y su secreto) van en `backend/.env`.
+
 ## Primer acceso: el dueño de la plataforma
 
 ```bash

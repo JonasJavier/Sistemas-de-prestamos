@@ -34,7 +34,7 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-async function ensureCsrf(): Promise<string> {
+export async function ensureCsrf(): Promise<string> {
   const existing = getCookie('csrftoken')
   if (existing) return existing
   const response = await fetch('/api/v1/csrf/', { credentials: 'same-origin' })

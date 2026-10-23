@@ -65,7 +65,7 @@ def register_company(
     *,
     legal_name: str,
     admin_email: str,
-    admin_password: str,
+    admin_password: str | None,
     admin_first_name: str,
     admin_last_name: str,
     trade_name: str = "",

@@ -8,6 +8,7 @@ from apps.accounts.api.views import (
     InvitationPublicView,
     MeView,
     PendingInvitationsView,
+    RememberChoiceView,
     RoleListView,
     WorkingHoursView,
 )
@@ -17,6 +18,7 @@ router.register("usuarios", CompanyUserViewSet, basename="company-user")
 
 urlpatterns = [
     path("yo/", MeView.as_view(), name="me"),
+    path("sesion/recordar/", RememberChoiceView.as_view(), name="session-remember"),
     path("roles/", RoleListView.as_view(), name="role-list"),
     path("horario/", WorkingHoursView.as_view(), name="working-hours"),
     path(

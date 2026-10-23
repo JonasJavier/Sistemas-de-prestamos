@@ -129,7 +129,9 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 
 ## 6. Acceso y sesiones
 
-- **Inicio de sesión:** correo y contraseña, más **código 2FA** para todos (034).
+- **Inicio de sesión:** correo y contraseña, o **«Continuar con Google»** (118), más **código 2FA** para todos (034).
+  - **Google (118):** entra quien ya tiene cuenta con esa dirección (Google la verifica). Una dirección nueva solo se une registrando su empresa (F19) o aceptando una invitación para esa misma dirección (F17); el registro suelto de allauth está cerrado. Quien se unió con Google puede crear una contraseña en Mi cuenta y, con ella, desconectar Google.
+  - **Dispositivo de confianza (118):** tras el código, la casilla «Confiar en este dispositivo» lo omite en ese navegador durante 30 días. Cambiar la contraseña o el autenticador anula todos los dispositivos de confianza; las acciones críticas siguen pidiendo el código.
   - **Códigos de respaldo:** 10, de un solo uso, para cuando se pierde el celular.
   - **Activación (117):** la clave del QR se mantiene mientras dure la sesión (recargar no la cambia); se acepta el código de los 30 segundos anteriores o siguientes (desfase del reloj del celular), nunca uno ya usado; activar o ver y regenerar códigos de respaldo pide la contraseña otra vez si se entró hace más de 5 minutos.
   - **Llaves de acceso (*passkeys*):** opción futura; allauth ya las admite.
@@ -140,7 +142,8 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 - **Intentos fallidos:** tras 5 intentos, la cuenta se bloquea 15 minutos. Además hay límite por dirección IP.
 - **Sesión:**
   - Va en una cookie segura.
-  - Se cierra tras 30 minutos de inactividad y a las 12 horas en cualquier caso.
+  - Se cierra tras 30 minutos de inactividad, a las 12 horas en cualquier caso y al cerrar el navegador.
+  - **«Mantenerme conectado» (118):** casilla opcional al entrar, para un dispositivo personal: la sesión dura hasta 30 días y se cierra si no se usa en 7. Cajeros y cobradores igual salen al terminar su horario (035).
   - Dos peticiones simultáneas no se borran lo que cada una guardó en la sesión: se guarda solo lo que cambió, sobre lo que hay en la base (117).
   - El usuario ve sus sesiones abiertas y puede cerrarlas; el administrador puede forzar el cierre.
 - **Reconfirmación con 2FA** para las acciones críticas:

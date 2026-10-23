@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState, type ReactNode } from 'react'
 
+import { getMe } from '../../api/accounts'
 import { changePassword } from '../../api/auth'
 import { ApiError } from '../../api/client'
 import { CheckIcon } from '../../components/icons'
@@ -20,47 +21,63 @@ function passwordError(data: unknown) {
     : errorMessage(data)
 }
 
-/** Mi cuenta › Contraseña (decisions 108 and 117). */
+/** Mi cuenta › Contraseña (decisions 108, 117 and 118). Whoever joined with
+ * Google has none yet: here they create one, without a current one. */
 export function PasswordSection() {
+  const queryClient = useQueryClient()
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe })
+  const creating = me.data?.has_password === false
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [repeat, setRepeat] = useState('')
   const change = useMutation({
     meta: { inlineError: true },
-    mutationFn: () => changePassword(current, next),
+    mutationFn: () => changePassword(creating ? null : current, next),
     onSuccess: () => {
       setCurrent('')
       setNext('')
       setRepeat('')
-      notify('Contraseña cambiada. Úsala la próxima vez que entres.', 'success')
+      notify(
+        creating
+          ? 'Contraseña creada. Ya puedes entrar también con tu correo.'
+          : 'Contraseña cambiada. Úsala la próxima vez que entres.',
+        'success',
+      )
+      void queryClient.invalidateQueries({ queryKey: ['me'] })
     },
   })
   const longEnough = next.length >= MIN_LENGTH
   const matches = next !== '' && repeat === next
-  const ready = current !== '' && longEnough && matches
+  const ready = (creating || current !== '') && longEnough && matches
 
   return (
     <>
       <Panel
-        title="Cambiar contraseña"
-        description="Escribe la que usas ahora y luego la nueva. Tu sesión sigue abierta."
+        title={creating ? 'Crear una contraseña' : 'Cambiar contraseña'}
+        description={
+          creating
+            ? 'Entras con Google. Crea una contraseña para poder entrar también con tu correo, sin Google.'
+            : 'Escribe la que usas ahora y luego la nueva. Tu sesión sigue abierta.'
+        }
         onSubmit={() => {
           if (ready) change.mutate()
         }}
         footer={
           <Button type="submit" disabled={!ready || change.isPending}>
-            {change.isPending ? 'Cambiando…' : 'Cambiar contraseña'}
+            {change.isPending ? 'Guardando…' : creating ? 'Crear contraseña' : 'Cambiar contraseña'}
           </Button>
         }
       >
         <div className="max-w-md space-y-4">
-          <Field label="Contraseña actual">
-            <PasswordInput
-              autoComplete="current-password"
-              value={current}
-              onChange={(event) => setCurrent(event.target.value)}
-            />
-          </Field>
+          {creating ? null : (
+            <Field label="Contraseña actual">
+              <PasswordInput
+                autoComplete="current-password"
+                value={current}
+                onChange={(event) => setCurrent(event.target.value)}
+              />
+            </Field>
+          )}
           <Field label="Nueva contraseña">
             <PasswordInput
               autoComplete="new-password"

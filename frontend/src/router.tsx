@@ -20,8 +20,11 @@ import { safeReturn } from './lib/navigation'
 import { ACCESS, hasRole, platformView } from './lib/roles'
 import type { NewApplicationSearch } from './pages/ApplicationNew'
 import { DashboardPage } from './pages/Dashboard'
+import type { GoogleReturnSearch } from './pages/GoogleReturn'
+import type { InvitationSearch } from './pages/InvitationAccept'
 import type { LoansSearch } from './pages/Loans'
 import { LoginPage, type LoginSearch } from './pages/Login'
+import type { RegisterGoogleSearch } from './pages/Register'
 
 // Every other screen is its own chunk, fetched on first visit and preloaded
 // when the pointer rests on a link to it (defaultPreload: 'intent').
@@ -148,6 +151,14 @@ const PasswordResetPage = lazyRouteComponent(
 const PlatformPage = lazyRouteComponent(() => import('./pages/Platform'), 'PlatformPage')
 const ProductsPage = lazyRouteComponent(() => import('./pages/Products'), 'ProductsPage')
 const RegisterPage = lazyRouteComponent(() => import('./pages/Register'), 'RegisterPage')
+const GoogleRegisterPage = lazyRouteComponent(
+  () => import('./pages/Register'),
+  'GoogleRegisterPage',
+)
+const GoogleReturnPage = lazyRouteComponent(
+  () => import('./pages/GoogleReturn'),
+  'GoogleReturnPage',
+)
 const SequencesPage = lazyRouteComponent(() => import('./pages/Sequences'), 'SequencesPage')
 const SimulatorPage = lazyRouteComponent(() => import('./pages/Simulator'), 'SimulatorPage')
 const SubscriptionPage = lazyRouteComponent(
@@ -642,6 +653,8 @@ const loginRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
     ...(search.motivo === 'sesion' || search.motivo === 'horario' ? { motivo: search.motivo } : {}),
     ...(safeReturn(search.desde) ? { desde: safeReturn(search.desde) } : {}),
+    ...(search.paso === 'codigo' ? { paso: 'codigo' as const } : {}),
+    ...(typeof search.google === 'string' ? { google: search.google.slice(0, 40) } : {}),
   }),
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(sessionQuery)
@@ -668,6 +681,23 @@ const registerRoute = createRoute({
   component: RegisterPage,
 })
 
+/** Decision 118: Google sends the person back here, signed in or to join. */
+const googleReturnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/entrar/google',
+  validateSearch: (search: Record<string, unknown>): GoogleReturnSearch =>
+    typeof search.error === 'string' ? { error: search.error.slice(0, 40) } : {},
+  component: GoogleReturnPage,
+})
+
+const registerGoogleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/registro/google',
+  validateSearch: (search: Record<string, unknown>): RegisterGoogleSearch =>
+    search.sin_cuenta === true || search.sin_cuenta === 'true' ? { sin_cuenta: true } : {},
+  component: GoogleRegisterPage,
+})
+
 const verifyEmailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/verificar-correo/$key',
@@ -677,6 +707,8 @@ const verifyEmailRoute = createRoute({
 const invitationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/invitacion/$token',
+  validateSearch: (search: Record<string, unknown>): InvitationSearch =>
+    typeof search.google === 'string' ? { google: search.google.slice(0, 40) } : {},
   component: InvitationAcceptPage,
 })
 
@@ -765,9 +797,11 @@ const routeTree = rootRoute.addChildren([
     platformRoute,
   ]),
   loginRoute,
+  googleReturnRoute,
   passwordForgotRoute,
   passwordResetRoute,
   registerRoute,
+  registerGoogleRoute,
   verifyEmailRoute,
   invitationRoute,
   publicReceiptRoute,

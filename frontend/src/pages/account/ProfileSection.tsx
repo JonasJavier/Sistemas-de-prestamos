@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { getMe, updateProfile, type Me } from '../../api/accounts'
+import {
+  authErrorMessage,
+  continueWithGoogle,
+  disconnectAccount,
+  listConnectedAccounts,
+} from '../../api/auth'
 import { ApiError } from '../../api/client'
+import { GoogleButton } from '../../components/GoogleButton'
 import { Alert, Avatar, Badge, Button, Field, Input, Segmented } from '../../components/ui'
 import { errorMessage } from '../../lib/format'
+import { useGoogleEnabled } from '../../lib/google'
 import { setDark, useDarkTheme } from '../../lib/theme'
 import { notify } from '../../lib/toast'
 import { Panel } from './Panel'
@@ -18,6 +27,7 @@ export function ProfileSection({ me: initial }: { me: Me }) {
     <>
       <IdentityCard me={me} />
       <NameForm me={me} />
+      <GooglePanel me={me} />
       <ThemePanel />
     </>
   )
@@ -117,6 +127,80 @@ function NameForm({ me }: { me: Me }) {
         <Alert tone="danger">
           {errorMessage(save.error instanceof ApiError ? save.error.data : null)}
         </Alert>
+      ) : null}
+    </Panel>
+  )
+}
+
+/** Decision 118: entering with one click through the person's Google account. */
+function GooglePanel({ me }: { me: Me }) {
+  const queryClient = useQueryClient()
+  const enabled = useGoogleEnabled()
+  const [leaving, setLeaving] = useState(false)
+  const accounts = useQuery({ queryKey: ['connected-accounts'], queryFn: listConnectedAccounts })
+  const google = accounts.data?.find((account) => account.provider.id === 'google')
+  const disconnect = useMutation({
+    meta: { inlineError: true },
+    mutationFn: () => disconnectAccount(google!),
+    onSuccess: () => {
+      notify('Tu cuenta de Google quedó desconectada.', 'success')
+      void queryClient.invalidateQueries({ queryKey: ['connected-accounts'] })
+    },
+  })
+  if (!enabled && !google) return null
+  const canDisconnect = me.has_password !== false
+
+  return (
+    <Panel
+      title="Entrar con Google"
+      description={
+        google
+          ? 'Entras con un clic usando tu cuenta de Google, sin escribir la contraseña.'
+          : 'Conecta tu cuenta de Google para entrar con un clic, sin escribir la contraseña.'
+      }
+      aside={
+        google ? (
+          <Badge tone="success" dot>
+            Conectada
+          </Badge>
+        ) : null
+      }
+      footer={
+        google ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!canDisconnect || disconnect.isPending}
+            onClick={() => disconnect.mutate()}
+          >
+            {disconnect.isPending ? 'Desconectando…' : 'Desconectar'}
+          </Button>
+        ) : (
+          <GoogleButton
+            className="w-full sm:w-auto"
+            busy={leaving}
+            onClick={() => {
+              setLeaving(true)
+              continueWithGoogle({ kind: 'connect' }).catch(() => setLeaving(false))
+            }}
+          >
+            Conectar con Google
+          </GoogleButton>
+        )
+      }
+    >
+      {google ? <div className="text-sm font-medium">{google.display}</div> : null}
+      {google && !canDisconnect ? (
+        <p className="text-[12.5px] text-muted">
+          Para desconectarla, primero{' '}
+          <Link to="/cuenta/contrasena" className="font-medium text-brand-700 hover:underline">
+            crea una contraseña
+          </Link>
+          : sin ella no podrías entrar.
+        </p>
+      ) : null}
+      {disconnect.error ? (
+        <Alert tone="danger">{authErrorMessage(disconnect.error, 'No se pudo desconectar.')}</Alert>
       ) : null}
     </Panel>
   )

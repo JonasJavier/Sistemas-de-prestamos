@@ -1,4 +1,4 @@
-import { api, ApiError } from './client'
+import { api, ApiError, ensureCsrf } from './client'
 
 /** allauth headless, browser client. */
 const BASE = '/api/v1/auth/browser/v1'
@@ -27,24 +27,148 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export interface LoginResult {
   user: SessionUser | null
+  /** The step still missing: «mfa_authenticate», «mfa_trust», «provider_signup»… */
   pendingFlow: string | null
 }
 
-export async function login(email: string, password: string): Promise<LoginResult> {
+/** A sign-in step: allauth answers 401 with the next pending step, if any. */
+async function step(
+  path: string,
+  options: { method?: string; body?: unknown } = {},
+): Promise<LoginResult> {
   try {
-    const response = await api<AllauthResponse>(`${BASE}/auth/login`, {
-      method: 'POST',
-      body: { email, password },
-    })
+    const response = await api<AllauthResponse>(`${BASE}${path}`, options)
     return { user: response.data?.user ?? null, pendingFlow: null }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       const data = error.data as AllauthResponse
       const pending = data.data?.flows?.find((flow) => flow.is_pending)
-      if (pending) return { user: null, pendingFlow: pending.id }
+      return { user: null, pendingFlow: pending?.id ?? null }
     }
     throw error
   }
+}
+
+export function login(email: string, password: string): Promise<LoginResult> {
+  return step('/auth/login', { method: 'POST', body: { email, password } })
+}
+
+/** Where a sign-in stands now: signed in, a step pending, or neither. */
+export async function getAuthStatus(): Promise<LoginResult> {
+  try {
+    return await step('/auth/session')
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 410) return { user: null, pendingFlow: null }
+    throw error
+  }
+}
+
+/** Decision 118: «Mantenerme conectado», sent right before signing in. */
+export async function rememberChoice(remember: boolean): Promise<void> {
+  await api('/api/v1/sesion/recordar/', { method: 'POST', body: { remember } })
+}
+
+interface ProviderInfo {
+  id: string
+  name: string
+}
+
+/** The sign-in providers this installation offers (Google once configured). */
+export async function getProviders(): Promise<ProviderInfo[]> {
+  const response = await api<{ data: { socialaccount?: { providers: ProviderInfo[] } } }>(
+    `${BASE}/config`,
+  )
+  return response.data.socialaccount?.providers ?? []
+}
+
+/** Why the person went to Google; the return page (/entrar/google) reads it. */
+export type GoogleIntent =
+  | { kind: 'login'; desde?: string }
+  | { kind: 'register' }
+  | { kind: 'invitation'; token: string }
+  | { kind: 'connect' }
+
+const INTENT_KEY = 'cobradia-google'
+
+export function readGoogleIntent(): GoogleIntent | null {
+  try {
+    const text = sessionStorage.getItem(INTENT_KEY)
+    return text ? (JSON.parse(text) as GoogleIntent) : null
+  } catch {
+    return null
+  }
+}
+
+/** Leaves for Google's page, which sends the person back to /entrar/google.
+ * A real form post, as allauth asks: the browser follows the redirects. */
+export async function continueWithGoogle(intent: GoogleIntent): Promise<void> {
+  try {
+    sessionStorage.setItem(INTENT_KEY, JSON.stringify(intent))
+  } catch {
+    // storage unavailable: the return page still signs in, without the detour
+  }
+  const fields = {
+    provider: 'google',
+    process: intent.kind === 'connect' ? 'connect' : 'login',
+    callback_url: '/entrar/google',
+    csrfmiddlewaretoken: await ensureCsrf(),
+  }
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = `${BASE}/auth/provider/redirect`
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    form.append(input)
+  }
+  document.body.append(form)
+  form.submit()
+}
+
+export interface GoogleSignup {
+  email: string
+  first_name: string
+  last_name: string
+}
+
+/** The Google account waiting to join (409: there is none). */
+export async function getGoogleSignup(): Promise<GoogleSignup> {
+  const response = await api<{
+    data: { user: { email?: string }; account: { display?: string } }
+  }>(`${BASE}/auth/provider/signup`)
+  const [first = '', ...rest] = (response.data.account.display ?? '').trim().split(/\s+/)
+  return { email: response.data.user.email ?? '', first_name: first, last_name: rest.join(' ') }
+}
+
+export type GoogleJoin = GoogleSignup &
+  (
+    | { company_legal_name: string; rnc?: string; phone?: string; accept_terms: boolean }
+    | { invitation: string }
+  )
+
+/** Joins with Google: the company it registers, or the invitation it accepts. */
+export function completeGoogleSignup(body: GoogleJoin): Promise<LoginResult> {
+  return step('/auth/provider/signup', { method: 'POST', body })
+}
+
+export interface ConnectedAccount {
+  uid: string
+  display: string
+  provider: ProviderInfo
+}
+
+export async function listConnectedAccounts(): Promise<ConnectedAccount[]> {
+  const response = await api<{ data: ConnectedAccount[] }>(`${BASE}/account/providers`)
+  return response.data
+}
+
+export async function disconnectAccount(account: ConnectedAccount): Promise<void> {
+  await api(`${BASE}/account/providers`, {
+    method: 'DELETE',
+    body: { provider: account.provider.id, account: account.uid },
+  })
 }
 
 export async function logout(): Promise<void> {
@@ -56,11 +180,13 @@ export async function logout(): Promise<void> {
   }
 }
 
-/** Mi cuenta: the current password proves it is you; the session stays open. */
-export async function changePassword(current: string, next: string): Promise<void> {
+/** Mi cuenta: the current password proves it is you; the session stays open.
+ * Whoever joined with Google creates their first one without it (null). */
+export async function changePassword(current: string | null, next: string): Promise<void> {
   await api(`${BASE}/account/password/change`, {
     method: 'POST',
-    body: { current_password: current, new_password: next },
+    body:
+      current === null ? { new_password: next } : { current_password: current, new_password: next },
   })
 }
 
@@ -116,6 +242,19 @@ export async function reauthenticate(password: string): Promise<void> {
   await api(`${BASE}/auth/reauthenticate`, { method: 'POST', body: { password } })
 }
 
+/** Whoever joined with Google has no password: the app's code confirms it. */
+export async function reauthenticateWithCode(code: string): Promise<void> {
+  await api(`${BASE}/auth/2fa/reauthenticate`, { method: 'POST', body: { code } })
+}
+
+/** The ways this person can confirm it is them (allauth's 401 lists them). */
+export function reauthMethods(error: unknown): { password: boolean; code: boolean } {
+  const flows =
+    error instanceof ApiError ? ((error.data as AllauthResponse | null)?.data?.flows ?? []) : []
+  const ids = new Set(flows.map((flow) => flow.id))
+  return { password: ids.has('reauthenticate'), code: ids.has('mfa_reauthenticate') }
+}
+
 interface RecoveryCodesData {
   unused_codes?: string[]
 }
@@ -140,12 +279,13 @@ export async function getRecoveryCodes(): Promise<string[] | null> {
   }
 }
 
-export async function mfaAuthenticate(code: string): Promise<SessionUser | null> {
-  const response = await api<AllauthResponse>(`${BASE}/auth/2fa/authenticate`, {
-    method: 'POST',
-    body: { code },
-  })
-  return response.data?.user ?? null
+export function mfaAuthenticate(code: string): Promise<LoginResult> {
+  return step('/auth/2fa/authenticate', { method: 'POST', body: { code } })
+}
+
+/** Decision 118: after the code, this browser skips it for 30 days (or not). */
+export function trustThisBrowser(trust: boolean): Promise<LoginResult> {
+  return step('/auth/2fa/trust', { method: 'POST', body: { trust } })
 }
 
 export async function verifyEmail(key: string): Promise<void> {

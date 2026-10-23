@@ -13,6 +13,8 @@ export interface Me {
   company_status: 'trial' | 'active' | 'suspended' | 'closed' | null
   mfa_enabled: boolean
   mfa_required: boolean
+  /** Decision 118: whoever joined with Google may have none yet. */
+  has_password?: boolean
   location_consent?: boolean
   /** Badges of the top bar (phase 4). */
   unread_notifications?: number

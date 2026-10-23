@@ -53,11 +53,11 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 
 | # | Pantalla | Ruta | Contenido y acciones | Roles | Fase |
 | --- | --- | --- | --- | --- | --- |
-| P01 | Iniciar sesión | `/entrar` | Correo y contraseña, luego el código 2FA; «Olvidé mi contraseña» | Todos | 1 |
-| P02 | Aceptar invitación | `/invitacion/:codigo` | Crear contraseña, activar 2FA con QR, códigos de respaldo; el cobrador acepta el seguimiento de ubicación (031) | Invitados | 1 |
+| P01 | Iniciar sesión | `/entrar` | «Continuar con Google» o correo y contraseña (el correo se recuerda en el dispositivo), «Mantenerme conectado», luego el código 2FA con «Confiar en este dispositivo por 30 días»; «Olvidé mi contraseña». Google vuelve a `/entrar/google`, que lleva a la app, al código o a unirse (118) | Todos | 1 |
+| P02 | Aceptar invitación | `/invitacion/:codigo` | «Aceptar con Google» (la cuenta de Google de la dirección invitada, 118) o crear contraseña; activar 2FA con QR, códigos de respaldo; el cobrador acepta el seguimiento de ubicación (031) | Invitados | 1 |
 | P03 | Recuperar contraseña | `/recuperar` | Enlace por correo | Todos | 1 |
-| P04 | Mi cuenta | `/cuenta` | Una página por tema, con submenú (117): **Perfil** (`/cuenta`: nombre y apellidos editables, correo de solo lectura, roles, tema), **Contraseña** (`/cuenta/contrasena`), **Verificación en dos pasos** (`/cuenta/dos-pasos`: activar con QR y clave, estado, códigos de respaldo) y **Sesiones abiertas** (`/cuenta/sesiones`) | Todos | 1 |
-| P05 | Registro de empresa | `/registro` (pública) | Datos de la financiera y de quien se registra, verificación del correo con código, y creación de la empresa en prueba con su sucursal, su administrador y sus catálogos sembrados (F19) | Visitantes | 1 |
+| P04 | Mi cuenta | `/cuenta` | Una página por tema, con submenú (117): **Perfil** (`/cuenta`: nombre y apellidos editables, correo de solo lectura, roles, conectar o desconectar Google, tema), **Contraseña** (`/cuenta/contrasena`; quien entró con Google la crea aquí), **Verificación en dos pasos** (`/cuenta/dos-pasos`: activar con QR y clave, estado, códigos de respaldo) y **Sesiones abiertas** (`/cuenta/sesiones`) | Todos | 1 |
+| P05 | Registro de empresa | `/registro` (pública) | Datos de la financiera y de quien se registra, verificación del correo con código, y creación de la empresa en prueba con su sucursal, su administrador y sus catálogos sembrados (F19). «Registrarme con Google» (`/registro/google`, 118): sin contraseña ni código, porque Google ya verificó el correo | Visitantes | 1 |
 
 ### Inicio
 
