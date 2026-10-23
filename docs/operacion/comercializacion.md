@@ -24,7 +24,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 - [x] **A2. Buzón `hola@cobradia.com`** 👤🤖 *Hecho el 20/10/2026.* Railway reenvía `hola@` a jonasjavier.dev@gmail.com (probado). En ese Gmail, «Enviar como» `Cobradía <hola@cobradia.com>` por el SMTP de Resend (clave `gmail-hola`), firma «Cobradía» con logo solo para esa dirección, y las respuestas salen desde la dirección que recibió el correo. Imágenes de marca en `cobradia.com/marca/`.
   - [ ] 👤 Foto de perfil del remitente: crear una cuenta de Google con `hola@cobradia.com` («Usar mi dirección de correo actual») y subir `site/public/marca/cobradia-perfil.png`. Así Gmail muestra el logo junto a los correos de `hola@`.
   - [ ] 🤖 Más adelante: BIMI (logo de marca en Gmail y Yahoo) cuando DMARC pase a `quarantine` y haya marca registrada; buzones reales con Google Workspace cuando haya personal de soporte.
-- [ ] **A3. Superusuario del dueño en producción** 👤 Con la sesión de Railway abierta en tu computadora: `railway ssh --service api -- python manage.py createsuperuser`. Sin él no hay panel de la plataforma: no se pueden cargar planes, activar empresas ni registrar pagos.
+- [x] **A3. Superusuario del dueño en producción** 👤 *Hecho:* jonasjavier.dev@gmail.com entra a `/plataforma` como dueño (23/10/2026).
 - [ ] **A4. Respaldos** 👤🤖
   - 👤 Activar los respaldos programados de Postgres en el panel de Railway (*Postgres → Backups*; requiere el plan Pro).
   - 👤 Generar la llave gpg de respaldos y guardar la privada fuera de línea (manual del servidor, «Respaldos»).
@@ -34,7 +34,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
   - 🤖 Poner `SENTRY_DSN` en `api`, `worker` y `beat`; vigilar `/api/v1/salud/` cada minuto con aviso a tu correo y WhatsApp; llenar `APP_VERSION` (hoy la salud responde la versión vacía).
 - [ ] **A6. Planes y precios (PT3)** 👤 decide, 🤖 implementa
   - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 🤖 puede prepararte una propuesta con tres planes comparada con los precios de los competidores, para que solo elijas.
-  - 🤖 Cargarlos en el panel, publicarlos en `cobradia.com/#precios` (hoy dice «estamos por anunciar») y en la pantalla Suscripción (hoy elegir un plan solo abre un correo).
+  - 🤖 La pantalla Planes del panel ya los crea y edita (decisión 122, 23/10/2026): tú los cargas ahí. Falta publicarlos en `cobradia.com/#precios` (hoy dice «estamos por anunciar») y en la pantalla Suscripción (hoy elegir un plan solo abre un correo).
 - [ ] **A7. Cómo te pagan** 👤🤖
   - 👤 Abrir una cuenta bancaria a nombre del negocio. Para empezar basta la **transferencia**: el sistema ya registra el pago manual y activa la empresa (decisión 045).
   - 🤖 Mostrar en Suscripción los datos bancarios, el monto y la referencia que debe poner la empresa.
