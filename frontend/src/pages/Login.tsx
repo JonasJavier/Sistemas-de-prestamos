@@ -16,8 +16,7 @@ import {
 } from '../api/auth'
 import { ApiError } from '../api/client'
 import { GoogleButton, OrDivider } from '../components/GoogleButton'
-import { ArrowRightIcon } from '../components/icons'
-import { Alert, Button, Card, Field, Input, PasswordInput, PublicPage } from '../components/ui'
+import { Alert, Button, CheckRow, Field, Input, PasswordInput, PublicPage } from '../components/ui'
 import { useGoogleEnabled } from '../lib/google'
 import { safeReturn } from '../lib/navigation'
 import { keepsSession, lastEmail, saveKeepsSession, saveLastEmail } from '../lib/signInPrefs'
@@ -49,6 +48,8 @@ function googleProblem(code: string) {
   return 'No se pudo entrar con Google. Intenta de nuevo o usa tu correo y contraseña.'
 }
 
+/** Decision 119: one short screen. Google first when it is on, then the two
+ * fields, one checkbox and the button; everything else is a quiet line. */
 export function LoginPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -136,48 +137,46 @@ export function LoginPage() {
 
   if (totpStep) {
     return (
-      <PublicPage subtitle="Verificación en dos pasos">
-        <Card>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault()
-              totpMutation.mutate()
-            }}
-          >
-            {message ? <Alert tone="danger">{message}</Alert> : null}
-            <Field label="Código de tu app autenticadora">
-              <Input
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                autoFocus
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="text-center font-mono text-lg tracking-[0.3em] sm:h-11"
-              />
-            </Field>
-            <p className="text-[12.5px] text-muted">
-              ¿Perdiste el celular? Escribe uno de tus códigos de respaldo; cada uno sirve una vez.
-            </p>
-            <CheckRow
-              checked={trust}
-              onChange={setTrust}
-              label="Confiar en este dispositivo por 30 días"
-              hint="No volveremos a pedirte el código aquí. No lo marques en una computadora compartida."
+      <PublicPage
+        subtitle="Código de verificación"
+        lead="Escribe el código de tu app autenticadora o uno de tus códigos de respaldo."
+      >
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault()
+            totpMutation.mutate()
+          }}
+        >
+          {message ? <Alert tone="danger">{message}</Alert> : null}
+          <Field label="Código">
+            <Input
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="text-center font-mono text-xl tracking-[0.35em] sm:h-12"
             />
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={totpMutation.isPending || !code.trim()}
-            >
-              {totpMutation.isPending ? 'Verificando…' : 'Verificar'}
-            </Button>
-          </form>
-        </Card>
-        <p className="text-center text-sm text-muted">
+          </Field>
+          <CheckRow
+            checked={trust}
+            onChange={(event) => setTrust(event.target.checked)}
+            label="Confiar en este dispositivo por 30 días"
+            hint="No volveremos a pedirte el código aquí."
+          />
+          <Button
+            type="submit"
+            className="w-full sm:h-11"
+            disabled={totpMutation.isPending || !code.trim()}
+          >
+            {totpMutation.isPending ? 'Verificando…' : 'Verificar'}
+          </Button>
+        </form>
+        <p className="text-center text-[13.5px] text-muted">
           <button
             type="button"
-            className="font-medium text-brand-700 hover:underline"
+            className="font-semibold text-brand-700 hover:underline"
             onClick={() => {
               setTotpStep(false)
               setCode('')
@@ -192,7 +191,7 @@ export function LoginPage() {
   }
 
   return (
-    <PublicPage tab="entrar" subtitle="Hola de nuevo" lead="Inicia sesión para trabajar.">
+    <PublicPage subtitle="Hola de nuevo">
       {message ? (
         <Alert tone="warning">{message}</Alert>
       ) : motivo === 'sesion' ? (
@@ -204,15 +203,15 @@ export function LoginPage() {
         </Alert>
       ) : null}
       {googleEnabled ? (
-        <>
+        <div className="space-y-5">
           <GoogleButton onClick={withGoogle} busy={leaving}>
             Continuar con Google
           </GoogleButton>
-          <OrDivider>o con tu correo</OrDivider>
-        </>
+          <OrDivider>o</OrDivider>
+        </div>
       ) : null}
       <form
-        className="space-y-4"
+        className="space-y-5"
         onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
         noValidate
       >
@@ -243,48 +242,19 @@ export function LoginPage() {
         </Field>
         <CheckRow
           checked={keep}
-          onChange={setKeep}
-          label="Mantenerme conectado"
-          hint="Hasta 30 días en este dispositivo. No lo marques en una computadora compartida."
+          onChange={(event) => setKeep(event.target.checked)}
+          label="Mantenerme conectado en este dispositivo"
         />
         <Button type="submit" className="w-full sm:h-11" disabled={mutation.isPending}>
           {mutation.isPending ? 'Entrando…' : 'Entrar'}
-          {mutation.isPending ? null : <ArrowRightIcon />}
         </Button>
       </form>
       <p className="text-center text-[13.5px] text-muted">
-        ¿Tu financiera aún no usa Cobradía?{' '}
+        ¿Nuevo en Cobradía?{' '}
         <Link to="/registro" className="font-semibold text-brand-700 hover:underline">
-          Pruébala gratis
+          Crea tu cuenta gratis
         </Link>
       </p>
     </PublicPage>
-  )
-}
-
-function CheckRow({
-  checked,
-  onChange,
-  label,
-  hint,
-}: {
-  checked: boolean
-  onChange: (value: boolean) => void
-  label: string
-  hint: string
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-2.5">
-      <input
-        type="checkbox"
-        className="mt-0.5 size-4 shrink-0"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-      <span className="space-y-0.5">
-        <span className="block text-sm font-medium">{label}</span>
-        <span className="block text-[12.5px] leading-snug text-muted">{hint}</span>
-      </span>
-    </label>
   )
 }

@@ -8,8 +8,6 @@ import {
   type ReactNode,
 } from 'react'
 
-import { Link } from '@tanstack/react-router'
-
 import { ApiError } from '../api/client'
 import {
   errorMessage,
@@ -709,30 +707,6 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   )
 }
 
-/** The «Entrar · Crear cuenta» switch of the sign-in and sign-up screens. */
-function AccessTabs({ tab }: { tab: 'entrar' | 'registro' }) {
-  const item = (to: '/entrar' | '/registro', label: string, on: boolean) => (
-    <Link
-      to={to}
-      aria-current={on ? 'page' : undefined}
-      className={`press flex h-10 flex-1 items-center justify-center rounded-lg text-[13.5px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
-        on ? 'bg-brand-950 text-on-forest shadow-sm' : 'text-muted hover:text-ink'
-      }`}
-    >
-      {label}
-    </Link>
-  )
-  return (
-    <nav
-      aria-label="Acceso"
-      className="flex gap-1 rounded-xl bg-surface p-1 shadow-xs ring-1 ring-inset ring-edge"
-    >
-      {item('/entrar', 'Entrar', tab === 'entrar')}
-      {item('/registro', 'Crear cuenta', tab === 'registro')}
-    </nav>
-  )
-}
-
 function PublicThemeToggle() {
   const [dark, toggle] = useDarkTheme()
   const label = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
@@ -765,15 +739,12 @@ const WORDMARK = (
 export function PublicPage({
   subtitle,
   lead,
-  tab,
   children,
 }: {
   /** The title over the form. */
   subtitle?: string
   /** A second, quieter line under it. */
   lead?: ReactNode
-  /** Sign in or sign up: shows the switch between both. */
-  tab?: 'entrar' | 'registro'
   children: ReactNode
 }) {
   return (
@@ -809,17 +780,43 @@ export function PublicPage({
           aria-hidden
           className="absolute left-1/2 top-2.5 h-1 w-10 -translate-x-1/2 rounded-full bg-edge lg:hidden"
         />
-        <div className="w-full max-w-[420px] space-y-5 animate-fade">
-          {tab ? <AccessTabs tab={tab} /> : null}
+        <div className="w-full max-w-[400px] space-y-6 animate-fade">
           {subtitle ? (
-            <div className="space-y-1">
-              <h1 className="text-[24px] leading-tight lg:text-[28px]">{subtitle}</h1>
-              {lead ? <div className="text-[13.5px] text-muted">{lead}</div> : null}
+            <div className="space-y-1.5">
+              <h1 className="text-[26px] leading-tight tracking-[-0.03em] lg:text-[30px]">
+                {subtitle}
+              </h1>
+              {lead ? <div className="text-[14px] leading-relaxed text-muted">{lead}</div> : null}
             </div>
           ) : null}
           {children}
         </div>
       </main>
+    </div>
+  )
+}
+
+/** A checkbox with its text beside it and, when it helps, a quiet note under
+ * it. Works controlled (checked + onChange) or registered with react-hook-form. */
+export function CheckRow({
+  label,
+  hint,
+  error,
+  className = '',
+  ...props
+}: ComponentProps<'input'> & { label: ReactNode; hint?: string; error?: string }) {
+  return (
+    <div className={`space-y-1 ${className}`}>
+      <label className="flex cursor-pointer items-start gap-2.5 text-[13.5px] leading-snug">
+        <input type="checkbox" className="mt-[3px] size-4 shrink-0" {...props} />
+        <span className="space-y-0.5">
+          <span className="block">{label}</span>
+          {hint ? <span className="block text-[12.5px] text-muted">{hint}</span> : null}
+        </span>
+      </label>
+      {error ? (
+        <span className="block pl-[26px] text-[12.5px] font-medium text-danger-600">{error}</span>
+      ) : null}
     </div>
   )
 }

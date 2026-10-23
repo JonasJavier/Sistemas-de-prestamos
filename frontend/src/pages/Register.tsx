@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useState } from 'react'
-import { useForm, type UseFormRegisterReturn } from 'react-hook-form'
+import { useState, type ReactNode } from 'react'
+import { useForm, type FieldErrors, type UseFormRegister } from 'react-hook-form'
 import { z } from 'zod'
-import { errorMessage } from '../lib/format'
 
 import {
   authErrorMessage,
@@ -19,7 +18,7 @@ import { GoogleButton, OrDivider } from '../components/GoogleButton'
 import {
   Alert,
   Button,
-  Card,
+  CheckRow,
   Field,
   Input,
   Outcome,
@@ -27,25 +26,34 @@ import {
   PublicPage,
   Spinner,
 } from '../components/ui'
+import { errorMessage } from '../lib/format'
 import { useGoogleEnabled } from '../lib/google'
 
-const schema = z.object({
-  company_legal_name: z.string().min(3, 'Escribe el nombre de tu financiera.'),
-  rnc: z.string().optional(),
-  first_name: z.string().min(1, 'Escribe tu nombre.'),
-  last_name: z.string().min(1, 'Escribe tu apellido.'),
-  phone: z.string().optional(),
-  email: z.email('Escribe un correo válido.'),
-  password: z.string().min(12, 'Mínimo 12 caracteres.'),
+/** The promotion site, where the terms and the privacy notice live. */
+const SITE_URL = 'https://cobradia.com'
+
+/** Decision 119: five fields and the terms. The RNC and the phone wait for
+ * «Mi empresa», where the manager fills them with the rest of the data. */
+const personFields = {
+  first_name: z.string().trim().min(1, 'Escribe tu nombre.'),
+  last_name: z.string().trim().min(1, 'Escribe tu apellido.'),
+  company_legal_name: z.string().trim().min(3, 'Escribe el nombre de tu financiera.'),
   accept_terms: z.literal(true, {
     error: 'Acepta los términos de servicio y el aviso de privacidad.',
   }),
+}
+
+const schema = z.object({
+  ...personFields,
+  email: z.email('Escribe un correo válido.'),
+  password: z.string().min(12, 'Mínimo 12 caracteres.'),
 })
 
 type FormData = z.infer<typeof schema>
 
-/** The promotion site, where the terms and the privacy notice live. */
-const SITE_URL = 'https://cobradia.com'
+const googleSchema = z.object(personFields)
+
+type GoogleFormData = z.infer<typeof googleSchema>
 
 function serverError(error: unknown): string {
   if (error instanceof ApiError && error.status === 429) {
@@ -56,6 +64,12 @@ function serverError(error: unknown): string {
   }
   return 'No se pudo completar el registro. Intenta de nuevo.'
 }
+
+const TRIAL = (
+  <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-[12.5px] font-semibold text-gold-800 ring-1 ring-inset ring-gold-500/30">
+    ★ 30 días gratis · sin tarjeta
+  </span>
+)
 
 export interface RegisterGoogleSearch {
   /** Came from «Continuar con Google» at /entrar with an address that has no account. */
@@ -78,30 +92,24 @@ export function RegisterPage() {
   if (done) {
     return (
       <PublicPage>
-        <Card className="space-y-4 text-center">
-          <Outcome tone="success" title="¡Tu prueba de 30 días empezó!">
-            Te enviamos un correo para confirmar tu cuenta. Confírmalo y luego inicia sesión.
+        <div className="space-y-6">
+          <Outcome tone="success" title="Revisa tu correo">
+            Te enviamos un enlace a <strong>{form.getValues('email')}</strong> para confirmar tu
+            cuenta. Ábrelo y entra: tu prueba de 30 días ya está activa.
           </Outcome>
-          <Link to="/entrar" className={buttonClass('primary', 'w-full')}>
+          <Link to="/entrar" className={buttonClass('primary', 'w-full sm:h-11')}>
             Ir a iniciar sesión
           </Link>
-        </Card>
+        </div>
       </PublicPage>
     )
   }
 
   return (
-    <PublicPage
-      tab="registro"
-      subtitle="Crea la cuenta de tu financiera"
-      lead={
-        <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-[12.5px] font-semibold text-gold-800 ring-1 ring-inset ring-gold-500/30">
-          ★ 30 días gratis · sin tarjeta
-        </span>
-      }
-    >
+    <PublicPage subtitle="Crea tu cuenta" lead={TRIAL}>
+      {message ? <Alert tone="danger">{message}</Alert> : null}
       {googleEnabled ? (
-        <>
+        <div className="space-y-5">
           <GoogleButton
             busy={leaving}
             onClick={() => {
@@ -112,117 +120,125 @@ export function RegisterPage() {
               })
             }}
           >
-            Registrarme con Google
+            Continuar con Google
           </GoogleButton>
-          <p className="-mt-2 text-center text-[12.5px] text-muted">
-            Sin contraseña nueva ni código por correo: Google ya confirmó tu dirección.
-          </p>
-          <OrDivider>o con tu correo</OrDivider>
-        </>
+          <OrDivider>o</OrDivider>
+        </div>
       ) : null}
-      <Card>
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-          noValidate
-        >
-          {message ? <Alert tone="danger">{message}</Alert> : null}
-          <Field
-            label="Nombre de la financiera"
-            error={form.formState.errors.company_legal_name?.message}
-          >
-            <Input autoFocus {...form.register('company_legal_name')} />
-          </Field>
-          <Field label="RNC (opcional)" error={form.formState.errors.rnc?.message}>
-            <Input inputMode="numeric" {...form.register('rnc')} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Tu nombre" error={form.formState.errors.first_name?.message}>
-              <Input autoComplete="given-name" {...form.register('first_name')} />
-            </Field>
-            <Field label="Tu apellido" error={form.formState.errors.last_name?.message}>
-              <Input autoComplete="family-name" {...form.register('last_name')} />
-            </Field>
-          </div>
-          <Field label="Teléfono (opcional)" error={form.formState.errors.phone?.message}>
-            <Input type="tel" autoComplete="tel" {...form.register('phone')} />
-          </Field>
-          <Field label="Correo" error={form.formState.errors.email?.message}>
-            <Input type="email" autoComplete="email" {...form.register('email')} />
-          </Field>
-          <Field
-            label="Contraseña"
-            error={form.formState.errors.password?.message}
-            hint="Al menos 12 caracteres."
-          >
-            <PasswordInput autoComplete="new-password" {...form.register('password')} />
-          </Field>
-          <TermsCheck
-            field={form.register('accept_terms')}
-            error={form.formState.errors.accept_terms?.message}
+      <form
+        className="space-y-5"
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        noValidate
+      >
+        <NameFields register={form.register} errors={form.formState.errors} autoFocus />
+        <Field label="Correo" error={form.formState.errors.email?.message}>
+          <Input
+            type="email"
+            autoComplete="email"
+            className="sm:h-11"
+            {...form.register('email')}
           />
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creando tu cuenta…' : 'Empezar mi prueba gratis'}
-          </Button>
-        </form>
-      </Card>
-      <p className="text-center text-sm text-muted">
-        ¿Ya tienes cuenta?{' '}
-        <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
-          Inicia sesión
-        </Link>
-      </p>
+        </Field>
+        <Field
+          label="Contraseña"
+          error={form.formState.errors.password?.message}
+          hint="Al menos 12 caracteres."
+        >
+          <PasswordInput
+            autoComplete="new-password"
+            className="sm:h-11"
+            {...form.register('password')}
+          />
+        </Field>
+        <CompanyField register={form.register} errors={form.formState.errors} />
+        <TermsCheck register={form.register} errors={form.formState.errors} />
+        <Button type="submit" className="w-full sm:h-11" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Creando tu cuenta…' : 'Crear mi cuenta'}
+        </Button>
+      </form>
+      <SignInLine />
     </PublicPage>
   )
 }
 
-/** Decision 103: the accepted version is recorded with the company. */
-function TermsCheck({ field, error }: { field: UseFormRegisterReturn; error?: string }) {
+/** The pieces both forms share: the person, the company and the terms. */
+type Shared = {
+  register: UseFormRegister<FormData> | UseFormRegister<GoogleFormData>
+  errors: FieldErrors<GoogleFormData>
+}
+
+function NameFields({ register, errors, autoFocus }: Shared & { autoFocus?: boolean }) {
+  const field = register as UseFormRegister<GoogleFormData>
   return (
-    <div className="space-y-1">
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1 size-4 accent-brand-700" {...field} />
-        <span>
-          Acepto los{' '}
-          <a
-            href={`${SITE_URL}/terminos`}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-brand-700 hover:underline"
-          >
-            términos de servicio
-          </a>{' '}
-          y el{' '}
-          <a
-            href={`${SITE_URL}/privacidad`}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-brand-700 hover:underline"
-          >
-            aviso de privacidad
-          </a>
-          .
-        </span>
-      </label>
-      {error ? <span className="block text-[12.5px] text-danger-600">{error}</span> : null}
+    <div className="grid grid-cols-2 gap-3">
+      <Field label="Nombre" error={errors.first_name?.message}>
+        <Input
+          autoComplete="given-name"
+          autoFocus={autoFocus}
+          className="sm:h-11"
+          {...field('first_name')}
+        />
+      </Field>
+      <Field label="Apellido" error={errors.last_name?.message}>
+        <Input autoComplete="family-name" className="sm:h-11" {...field('last_name')} />
+      </Field>
     </div>
   )
 }
 
-const googleSchema = z.object({
-  company_legal_name: z.string().min(3, 'Escribe el nombre de tu financiera.'),
-  rnc: z.string().optional(),
-  first_name: z.string().min(1, 'Escribe tu nombre.'),
-  last_name: z.string().min(1, 'Escribe tu apellido.'),
-  phone: z.string().optional(),
-  accept_terms: z.literal(true, {
-    error: 'Acepta los términos de servicio y el aviso de privacidad.',
-  }),
-})
+function CompanyField({ register, errors, autoFocus }: Shared & { autoFocus?: boolean }) {
+  const field = register as UseFormRegister<GoogleFormData>
+  return (
+    <Field label="Nombre de tu financiera" error={errors.company_legal_name?.message}>
+      <Input
+        autoComplete="organization"
+        autoFocus={autoFocus}
+        className="sm:h-11"
+        {...field('company_legal_name')}
+      />
+    </Field>
+  )
+}
 
-type GoogleFormData = z.infer<typeof googleSchema>
+/** Decision 103: the accepted version is recorded with the company. */
+function TermsCheck({ register, errors }: Shared) {
+  const field = register as UseFormRegister<GoogleFormData>
+  const link = (href: string, text: ReactNode) => (
+    <a
+      href={`${SITE_URL}${href}`}
+      target="_blank"
+      rel="noreferrer"
+      className="font-semibold text-brand-700 hover:underline"
+    >
+      {text}
+    </a>
+  )
+  return (
+    <CheckRow
+      label={
+        <>
+          Acepto los {link('/terminos', 'términos de servicio')} y el{' '}
+          {link('/privacidad', 'aviso de privacidad')}.
+        </>
+      }
+      error={errors.accept_terms?.message}
+      {...field('accept_terms')}
+    />
+  )
+}
 
-/** Decision 118: the company signup after «Registrarme con Google». The
+function SignInLine() {
+  return (
+    <p className="text-center text-[13.5px] text-muted">
+      ¿Ya tienes cuenta?{' '}
+      <Link to="/entrar" className="font-semibold text-brand-700 hover:underline">
+        Entrar
+      </Link>
+    </p>
+  )
+}
+
+/** Decision 118: the company signup after «Continuar con Google». The
  * address is the one Google verified, so there is no password and no code. */
 export function GoogleRegisterPage() {
   const { sin_cuenta } = useSearch({ from: '/registro/google' })
@@ -230,7 +246,7 @@ export function GoogleRegisterPage() {
 
   if (signup.isPending) {
     return (
-      <PublicPage subtitle="Crea la cuenta de tu financiera">
+      <PublicPage subtitle="Crea tu cuenta">
         <Spinner />
       </PublicPage>
     )
@@ -238,14 +254,14 @@ export function GoogleRegisterPage() {
   if (signup.isError) {
     return (
       <PublicPage>
-        <Card className="space-y-4 text-center">
+        <div className="space-y-6">
           <Outcome tone="warning" title="Vuelve a empezar">
             Pasó demasiado tiempo desde que elegiste tu cuenta de Google. Inténtalo otra vez.
           </Outcome>
-          <Link to="/registro" className={buttonClass('primary', 'w-full')}>
+          <Link to="/registro" className={buttonClass('primary', 'w-full sm:h-11')}>
             Volver al registro
           </Link>
-        </Card>
+        </div>
       </PublicPage>
     )
   }
@@ -279,67 +295,40 @@ function GoogleRegisterForm({
     onError: (error) =>
       setMessage(authErrorMessage(error, 'No se pudo completar el registro. Intenta de nuevo.')),
   })
+  const named = google.first_name !== '' && google.last_name !== ''
 
   return (
-    <PublicPage
-      subtitle="Crea la cuenta de tu financiera"
-      lead={
-        <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-[12.5px] font-semibold text-gold-800 ring-1 ring-inset ring-gold-500/30">
-          ★ 30 días gratis · sin tarjeta
-        </span>
-      }
-    >
+    <PublicPage subtitle="Casi listo" lead={TRIAL}>
       {withoutAccount ? (
         <Alert tone="info">
           Aún no hay una cuenta con {google.email}. Si tu financiera ya usa Cobradía, pide una
           invitación a su administrador; si no, regístrala aquí.
         </Alert>
       ) : null}
-      <Card>
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-          noValidate
-        >
-          {message ? <Alert tone="danger">{message}</Alert> : null}
-          <Field label="Tu cuenta de Google" hint="Con ella entrarás a Cobradía.">
-            <Input value={google.email} disabled readOnly />
-          </Field>
-          <Field
-            label="Nombre de la financiera"
-            error={form.formState.errors.company_legal_name?.message}
+      <form
+        className="space-y-5"
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        noValidate
+      >
+        {message ? <Alert tone="danger">{message}</Alert> : null}
+        <p className="flex items-center gap-2.5 rounded-control border border-edge bg-surface px-3 py-2.5 text-[13.5px]">
+          <span
+            aria-hidden
+            className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-100 text-[12px] font-bold text-brand-800"
           >
-            <Input autoFocus {...form.register('company_legal_name')} />
-          </Field>
-          <Field label="RNC (opcional)" error={form.formState.errors.rnc?.message}>
-            <Input inputMode="numeric" {...form.register('rnc')} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Tu nombre" error={form.formState.errors.first_name?.message}>
-              <Input autoComplete="given-name" {...form.register('first_name')} />
-            </Field>
-            <Field label="Tu apellido" error={form.formState.errors.last_name?.message}>
-              <Input autoComplete="family-name" {...form.register('last_name')} />
-            </Field>
-          </div>
-          <Field label="Teléfono (opcional)" error={form.formState.errors.phone?.message}>
-            <Input type="tel" autoComplete="tel" {...form.register('phone')} />
-          </Field>
-          <TermsCheck
-            field={form.register('accept_terms')}
-            error={form.formState.errors.accept_terms?.message}
-          />
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creando tu cuenta…' : 'Empezar mi prueba gratis'}
-          </Button>
-        </form>
-      </Card>
-      <p className="text-center text-sm text-muted">
-        ¿Ya tienes cuenta?{' '}
-        <Link to="/entrar" className="font-medium text-brand-700 hover:underline">
-          Inicia sesión
-        </Link>
-      </p>
+            {(google.first_name || google.email).charAt(0).toUpperCase()}
+          </span>
+          <span className="min-w-0 flex-1 truncate">{google.email}</span>
+          <span className="shrink-0 text-[12px] text-muted">Google</span>
+        </p>
+        <NameFields register={form.register} errors={form.formState.errors} autoFocus={!named} />
+        <CompanyField register={form.register} errors={form.formState.errors} autoFocus={named} />
+        <TermsCheck register={form.register} errors={form.formState.errors} />
+        <Button type="submit" className="w-full sm:h-11" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Creando tu cuenta…' : 'Crear mi cuenta'}
+        </Button>
+      </form>
+      <SignInLine />
     </PublicPage>
   )
 }

@@ -423,7 +423,7 @@ Los pagos migrados no mueven la caja (paso 3, §11).
 El único flujo que ocurre **fuera** de una empresa: es cómo una financiera entra a Cobradía y cómo el dueño administra la plataforma (decisiones 045 y 046).
 
 1. **Registro** (`/registro`, público).
-   - El visitante da el nombre de su financiera, su RNC (opcional durante la prueba), su nombre, correo y teléfono.
+   - El visitante da su nombre y apellido, su correo, una contraseña y el nombre de su financiera (decisión 119: cinco campos y los términos). El RNC, el teléfono y el resto de los datos de la empresa se completan después en «Mi empresa».
    - Verifica el correo con un código.
    - En una sola operación se crean: la **empresa** en estado **en prueba** (30 días por defecto), su **sucursal principal**, el usuario **administrador** (quien se registró, con el rol de gerente y administrador) y los catálogos sembrados: productos de ejemplo, política de mora por defecto, motivos, categorías y los feriados de RD.
    - Protecciones del registro: límite por IP, verificación del correo y aviso al dueño de cada registro nuevo. Sin CAPTCHA de terceros al inicio; se añade si llega abuso.
