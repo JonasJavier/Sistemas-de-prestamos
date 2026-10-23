@@ -53,5 +53,6 @@ Ante la duda, se trata como el nivel más alto.
 
 ## 6. Ensayos
 
-- **Restauración:** cada mes, con `restore.sh` (manual del servidor), anotando el tiempo y el resultado.
+- **Restauración:** cada mes, con `manage.py restaurar` en el servicio `respaldo` de Railway (manual de Railway, «Respaldos»), anotando el tiempo y el resultado.
+  - 23/10/2026: primer simulacro en Railway. Copia de las 22:17 UTC restaurada en `cobradia_restore`, `verificar_integridad` en orden, base borrada; unos 40 segundos en total (decisión 123).
 - **Este plan:** una vez al año, un ejercicio de mesa con un caso inventado (por ejemplo, «un cobrador ve clientes de otra empresa»), para ver si los pasos y los contactos siguen sirviendo.
