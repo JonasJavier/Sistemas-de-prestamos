@@ -7,7 +7,7 @@ closes. With «Mantenerme conectado» (decision 118) it lasts 7 days without
 use and 30 days in any case.
 
 ``MFARequiredMiddleware``: when ``REQUIRE_MFA`` is on, an authenticated
-user without an activated TOTP authenticator can only reach the endpoints
+user without an authenticator app or a passkey can only reach the endpoints
 needed to set one up (the allauth auth/MFA endpoints, CSRF and /yo).
 Everything else answers 403 with code ``mfa_required`` and the SPA routes
 them to Mi cuenta.
@@ -98,8 +98,10 @@ class MFARequiredMiddleware:
 
         cached = getattr(request, "_has_totp", None)
         if cached is None:
+            # Decision 121: a passkey is a second step as good as the app.
             cached = Authenticator.objects.filter(
-                user=request.user, type=Authenticator.Type.TOTP
+                user=request.user,
+                type__in=[Authenticator.Type.TOTP, Authenticator.Type.WEBAUTHN],
             ).exists()
             request._has_totp = cached  # noqa: SLF001 - request-local cache
         return cached

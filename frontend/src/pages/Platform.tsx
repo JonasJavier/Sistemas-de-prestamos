@@ -1,31 +1,30 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { usePrompt } from '../components/Dialog'
 
 import {
   getPlatformDashboard,
   listCompanies,
-  reactivateCompany,
-  recordPayment,
-  suspendCompany,
-  type PaymentPayload,
+  type CompanyStatus,
   type PlatformCompany,
 } from '../api/platform'
 import { Kpi } from '../components/Kpi'
-import { SupportDialog } from '../components/Support'
+import { SearchIcon } from '../components/icons'
+import { tableRowClass } from '../components/classes'
 import {
-  Alert,
-  Button,
+  Badge,
   Card,
-  Field,
+  EmptyState,
   Input,
   LoadError,
   PageHeader,
   Pagination,
+  Segmented,
   Spinner,
+  Table,
 } from '../components/ui'
-import { day, pct, STATUS_BADGES, todayISO } from '../lib/format'
-import { DateInput } from '../components/DateInput'
+import { day, pct, STATUS_BADGES } from '../lib/format'
+import { useDebounced } from '../lib/hooks'
 
 /** PT2 (decision 091): companies, conversion, payments due and usage
  * counts; never a customer, a loan or an amount of a company. */
@@ -48,6 +47,7 @@ function PlatformDashboard() {
           label="En prueba"
           value={String(c.trial)}
           hint={`${data.trials_ending.length} terminan en 7 días`}
+          tone={data.trials_ending.length ? 'warn' : undefined}
         />
         <Kpi
           label={`Conversión de la prueba (${data.conversion.days} días)`}
@@ -62,18 +62,45 @@ function PlatformDashboard() {
           help={data.definitions.usage}
         />
       </div>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Card className="space-y-2">
+          <h2 className="text-base font-semibold">Pruebas que terminan pronto</h2>
+          {data.trials_ending.length ? (
+            <ul className="divide-y divide-edge text-sm">
+              {data.trials_ending.map((row) => (
+                <li key={row.id} className="flex justify-between gap-2 py-1.5">
+                  <Link
+                    to="/plataforma/empresas/$id"
+                    params={{ id: row.id }}
+                    className="truncate font-medium hover:underline"
+                  >
+                    {row.name}
+                  </Link>
+                  <span className="shrink-0 text-muted tabular-nums">{day(row.trial_ends_on)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Ninguna termina en los próximos 7 días.</p>
+          )}
+        </Card>
         <Card className="space-y-2">
           <h2 className="text-base font-semibold">Pagos por vencer o vencidos</h2>
           {data.payments_due.length ? (
             <ul className="divide-y divide-edge text-sm">
               {data.payments_due.map((row) => (
                 <li key={row.id} className="flex justify-between gap-2 py-1.5">
-                  <span>
-                    {row.name} <span className="text-muted">· {row.plan}</span>
-                  </span>
-                  <span className={row.overdue ? 'text-danger-600' : 'text-muted'}>
-                    {row.paid_until ? `pagada hasta ${day(row.paid_until)}` : 'sin pago'}
+                  <Link
+                    to="/plataforma/empresas/$id"
+                    params={{ id: row.id }}
+                    className="truncate font-medium hover:underline"
+                  >
+                    {row.name} <span className="font-normal text-muted">· {row.plan}</span>
+                  </Link>
+                  <span
+                    className={`shrink-0 tabular-nums ${row.overdue ? 'text-danger-600' : 'text-muted'}`}
+                  >
+                    {row.paid_until ? `hasta ${day(row.paid_until)}` : 'sin pago'}
                   </span>
                 </li>
               ))}
@@ -84,239 +111,169 @@ function PlatformDashboard() {
         </Card>
         <Card className="space-y-2">
           <h2 className="text-base font-semibold">Registros recientes</h2>
-          <ul className="divide-y divide-edge text-sm">
-            {data.recent.map((row) => (
-              <li key={row.id} className="flex justify-between gap-2 py-1.5">
-                <span>{row.name}</span>
-                <span className="text-muted">
-                  {STATUS_BADGES[row.status].text} · {day(row.created_at)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {data.recent.length ? (
+            <ul className="divide-y divide-edge text-sm">
+              {data.recent.map((row) => (
+                <li key={row.id} className="flex justify-between gap-2 py-1.5">
+                  <Link
+                    to="/plataforma/empresas/$id"
+                    params={{ id: row.id }}
+                    className="truncate font-medium hover:underline"
+                  >
+                    {row.name}
+                  </Link>
+                  <span className="shrink-0 text-muted tabular-nums">
+                    {STATUS_BADGES[row.status].text} · {day(row.created_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Todavía no se registra ninguna financiera.</p>
+          )}
         </Card>
       </div>
     </div>
   )
 }
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todas' },
+  { value: 'trial', label: 'En prueba' },
+  { value: 'active', label: 'Activas' },
+  { value: 'suspended', label: 'Suspendidas' },
+  { value: 'closed', label: 'Cerradas' },
+] as const
+
+type StatusFilter = CompanyStatus | ''
+
+/** PT1 (decision 122): the list, searchable and filtered; each row opens
+ * the company's file, where every action lives. */
 export function PlatformPage() {
-  const [dialog, ask] = usePrompt()
-  const queryClient = useQueryClient()
-  const [paying, setPaying] = useState<PlatformCompany | null>(null)
-  const [helping, setHelping] = useState<PlatformCompany | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState<StatusFilter>('')
   const [page, setPage] = useState(1)
+  const query = useDebounced(search.trim(), 250)
   const companies = useQuery({
-    queryKey: ['platform-companies', page],
-    queryFn: () => listCompanies(page),
-  })
-
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['platform-companies'] })
-
-  const suspend = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) => suspendCompany(id, reason),
-    onSuccess: refresh,
-  })
-  const reactivate = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) => reactivateCompany(id, reason),
-    onSuccess: refresh,
-  })
-  const pay = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: PaymentPayload }) => recordPayment(id, data),
-    onSuccess: () => {
-      setPaying(null)
-      setMessage('Pago registrado: la empresa quedó activa.')
-      refresh()
-    },
-    onError: () => setMessage('No se pudo registrar el pago. Revisa las fechas y el monto.'),
+    queryKey: ['platform-companies', { page, query, status }],
+    queryFn: () => listCompanies({ page, search: query || undefined, status: status || undefined }),
   })
 
   return (
     <>
-      {dialog}
       <PageHeader
         title="Tablero de la plataforma"
         subtitle="Empresas, prueba, suscripciones y uso agregado. Nunca datos de clientes ni montos de una empresa."
       />
-      {message ? <Alert tone="info">{message}</Alert> : null}
       <PlatformDashboard />
 
-      <Card className="overflow-hidden !p-0">
-        <div className="flex items-baseline justify-between gap-3 px-4 pb-3 pt-4 sm:px-5">
-          <h2 className="text-[17px] font-semibold">Empresas</h2>
-          {companies.data ? (
-            <span className="text-[12.5px] text-muted tabular-nums">
-              {companies.data.count} en total
-            </span>
-          ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-[17px] font-semibold">Empresas</h2>
+        <div className="relative min-w-[16rem] flex-1 sm:max-w-sm">
+          <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-muted">
+            <SearchIcon className="size-4" />
+          </span>
+          <Input
+            type="search"
+            placeholder="Buscar por nombre, RNC o correo"
+            aria-label="Buscar empresa"
+            className="pl-9"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(1)
+            }}
+          />
         </div>
-        {companies.isPending ? <Spinner /> : null}
-        {companies.data ? (
-          <div className="overflow-x-auto">
-            <table className="data-table w-full">
-              <thead>
-                <tr className="text-[12.5px] text-muted">
-                  <th className="pr-3">Empresa</th>
-                  <th className="pr-3">Estado</th>
-                  <th className="pr-3">Prueba hasta</th>
-                  <th className="pr-3">Pagada hasta</th>
-                  <th className="py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {companies.data.results.map((company) => {
-                  const badge = STATUS_BADGES[company.status]
-                  return (
-                    <tr key={company.id} className="last:border-0">
-                      <td className="pr-3">
-                        <div className="font-semibold">
-                          {company.trade_name || company.legal_name}
-                        </div>
-                        <div className="text-[12px] text-muted tabular-nums">
-                          {company.rnc || 'Sin RNC'}
-                        </div>
-                      </td>
-                      <td className="pr-3">
-                        <span
-                          className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[12px] font-semibold ${badge.classes}`}
-                        >
-                          {badge.text}
-                        </span>
-                      </td>
-                      <td className="tabular-nums">{day(company.trial_ends_on)}</td>
-                      <td className="tabular-nums">{day(company.subscription?.paid_until)}</td>
-                      <td className="text-right">
-                        <div className="flex justify-end gap-1.5">
-                          <Button variant="secondary" size="sm" onClick={() => setHelping(company)}>
-                            Soporte
-                          </Button>
-                          <Button variant="secondary" size="sm" onClick={() => setPaying(company)}>
-                            Registrar pago
-                          </Button>
-                          {company.status === 'suspended' ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() =>
-                                reactivate.mutate({
-                                  id: company.id,
-                                  reason: 'Reactivada por el dueño',
-                                })
-                              }
-                            >
-                              Reactivar
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={async () => {
-                                const reason = await ask({
-                                  title: `Suspender ${company.trade_name || company.legal_name}`,
-                                  description:
-                                    'La empresa queda en solo lectura hasta reactivarla.',
-                                  label: 'Motivo de la suspensión',
-                                  type: 'textarea',
-                                  required: true,
-                                  confirmText: 'Suspender',
-                                  danger: true,
-                                })
-                                if (reason) suspend.mutate({ id: company.id, reason })
-                              }}
-                            >
-                              Suspender
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-        <div className="px-4 pb-3 sm:px-5">
-          <Pagination page={page} count={companies.data?.count ?? 0} onChange={setPage} />
-        </div>
-      </Card>
-
-      {helping ? <SupportDialog company={helping} onClose={() => setHelping(null)} /> : null}
-      {paying ? (
-        <PaymentForm
-          company={paying}
-          onCancel={() => setPaying(null)}
-          onSubmit={(data) => pay.mutate({ id: paying.id, data })}
-          pending={pay.isPending}
+        <Segmented
+          label="Estado"
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={(value) => {
+            setStatus(value)
+            setPage(1)
+          }}
         />
+      </div>
+
+      {companies.isPending ? <Spinner /> : null}
+      {companies.isError ? <LoadError error={companies.error} /> : null}
+      {companies.data ? (
+        companies.data.results.length ? (
+          <>
+            <Table
+              label="Empresas"
+              columns="minmax(0,1.6fr) 7rem minmax(0,1fr) 8rem 6rem 7rem"
+              head={[
+                { label: 'Empresa' },
+                { label: 'Estado' },
+                { label: 'Plan' },
+                { label: 'Prueba · pagada hasta' },
+                { label: 'Usuarios', align: 'right' },
+                { label: 'Registro', align: 'right' },
+              ]}
+              footer={
+                <>
+                  <span className="text-muted">{companies.data.count} en total</span>
+                  <Pagination page={page} count={companies.data.count} onChange={setPage} />
+                </>
+              }
+            >
+              {companies.data.results.map((company) => (
+                <CompanyRow key={company.id} company={company} />
+              ))}
+            </Table>
+          </>
+        ) : (
+          <EmptyState>
+            {query || status
+              ? 'Ninguna empresa coincide con la búsqueda.'
+              : 'Cuando una financiera se registre aparecerá aquí.'}
+          </EmptyState>
+        )
       ) : null}
     </>
   )
 }
 
-function PaymentForm({
-  company,
-  onCancel,
-  onSubmit,
-  pending,
-}: {
-  company: PlatformCompany
-  onCancel: () => void
-  onSubmit: (data: PaymentPayload) => void
-  pending: boolean
-}) {
-  const [data, setData] = useState<PaymentPayload>(() => ({
-    period_start: todayISO(),
-    period_end: '',
-    amount: '',
-    method: 'transfer',
-    reference: '',
-  }))
-
+function CompanyRow({ company }: { company: PlatformCompany }) {
+  const badge = STATUS_BADGES[company.status]
+  const until =
+    company.status === 'trial'
+      ? `prueba hasta ${day(company.trial_ends_on)}`
+      : company.subscription?.paid_until
+        ? `pagada hasta ${day(company.subscription.paid_until)}`
+        : 'sin pago'
   return (
-    <Card>
-      <h2 className="mb-3 text-base font-semibold">
-        Registrar pago · {company.trade_name || company.legal_name}
-      </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Inicio del período">
-          <DateInput
-            value={data.period_start}
-            onChange={(date) => setData({ ...data, period_start: date })}
-          />
-        </Field>
-        <Field label="Fin del período">
-          <DateInput
-            value={data.period_end}
-            onChange={(date) => setData({ ...data, period_end: date })}
-          />
-        </Field>
-        <Field label="Monto (RD$)">
-          <Input
-            inputMode="decimal"
-            value={data.amount}
-            onChange={(e) => setData({ ...data, amount: e.target.value })}
-          />
-        </Field>
-        <Field label="Referencia (opcional)">
-          <Input
-            value={data.reference}
-            onChange={(e) => setData({ ...data, reference: e.target.value })}
-          />
-        </Field>
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button
-          onClick={() => onSubmit(data)}
-          disabled={pending || !data.period_end || !data.amount}
-        >
-          {pending ? 'Registrando…' : 'Registrar y activar'}
-        </Button>
-        <Button variant="secondary" onClick={onCancel}>
-          Cancelar
-        </Button>
-      </div>
-    </Card>
+    <li>
+      <Link
+        to="/plataforma/empresas/$id"
+        params={{ id: company.id }}
+        className={`${tableRowClass} w-full`}
+      >
+        <div className="min-w-0 basis-full md:basis-auto">
+          <div className="truncate font-semibold">{company.trade_name || company.legal_name}</div>
+          <div className="truncate text-[12px] text-muted">
+            {company.legal_name}
+            {company.rnc ? ` · RNC ${company.rnc}` : ''}
+          </div>
+        </div>
+        <span>
+          <Badge tone={company.status}>{badge.text}</Badge>
+        </span>
+        <span className="truncate text-muted md:text-ink">
+          {company.subscription?.plan.name ?? '—'}
+        </span>
+        <span className="text-[12.5px] text-muted tabular-nums md:text-[13px]">{until}</span>
+        <span className="tabular-nums md:text-right">
+          {company.users_count}
+          <span className="md:hidden"> {company.users_count === 1 ? 'usuario' : 'usuarios'}</span>
+        </span>
+        <span className="text-muted tabular-nums md:text-right">
+          <span className="md:hidden">desde el </span>
+          {day(company.created_at)}
+        </span>
+      </Link>
+    </li>
   )
 }

@@ -52,35 +52,161 @@ export function getMyCompany(): Promise<MyCompany> {
 }
 
 /** Owner panel (PT1): lifecycle data only, never business data. */
+export type CompanyStatus = 'trial' | 'active' | 'suspended' | 'closed'
+
+export interface PlatformPlan {
+  id: string
+  name: string
+  monthly_price: string
+  currency: string
+  max_users: number | null
+  max_branches: number | null
+  max_active_loans: number | null
+  is_trial: boolean
+  is_active: boolean
+  /** Companies on it (closed ones aside). */
+  companies: number
+}
+
 export interface PlatformCompany {
   id: string
   legal_name: string
   trade_name: string
   rnc: string
   phone: string
-  status: 'trial' | 'active' | 'suspended' | 'closed'
+  email: string
+  status: CompanyStatus
   status_reason: string
   trial_ends_on: string | null
+  trial_days_left: number | null
   created_at: string
+  users_count: number
   subscription: {
-    status: string
+    id: string
+    status: 'trial' | 'active' | 'past_due' | 'canceled'
+    started_on: string
     paid_until: string | null
-    plan: { name: string }
+    plan: Omit<PlatformPlan, 'is_active' | 'companies'>
   } | null
 }
 
-export function listCompanies(page = 1): Promise<{ count: number; results: PlatformCompany[] }> {
-  return api(`/api/v1/plataforma/empresas/${toQuery({ page })}`)
+export interface SubscriptionPayment {
+  id: string
+  period_start: string
+  period_end: string
+  amount: string
+  currency: string
+  method: 'transfer' | 'deposit' | 'other'
+  reference: string
+  recorded_by: string
+  created_at: string
 }
 
-export function suspendCompany(id: string, reason: string): Promise<PlatformCompany> {
+export interface CompanyManager {
+  id: string
+  name: string
+  email: string
+  is_active: boolean
+  last_login: string | null
+  mfa_enabled: boolean
+  email_verified: boolean
+}
+
+/** The company's file (decision 122). */
+export interface PlatformCompanyDetail extends PlatformCompany {
+  address: string
+  terms_version: string
+  terms_accepted_at: string | null
+  usage: Record<'users' | 'branches' | 'active_loans', { used: number; limit: number | null }>
+  managers: CompanyManager[]
+  payments: SubscriptionPayment[]
+  support: { id: string; ends_at: string; reason: string } | null
+}
+
+export interface CompanyFilters {
+  page?: number
+  search?: string
+  status?: CompanyStatus | ''
+}
+
+export function listCompanies(
+  filters: CompanyFilters = {},
+): Promise<{ count: number; results: PlatformCompany[] }> {
+  return api(`/api/v1/plataforma/empresas/${toQuery({ ...filters })}`)
+}
+
+export function getCompany(id: string): Promise<PlatformCompanyDetail> {
+  return api(`/api/v1/plataforma/empresas/${id}/`)
+}
+
+export function extendTrial(
+  id: string,
+  data: { days: number; reason: string },
+): Promise<PlatformCompanyDetail> {
+  return api(`/api/v1/plataforma/empresas/${id}/extender-prueba/`, { method: 'POST', body: data })
+}
+
+export function changePlan(id: string, plan: string): Promise<PlatformCompanyDetail> {
+  return api(`/api/v1/plataforma/empresas/${id}/cambiar-plan/`, {
+    method: 'POST',
+    body: { plan },
+  })
+}
+
+export function closeCompany(id: string, reason: string): Promise<PlatformCompanyDetail> {
+  return api(`/api/v1/plataforma/empresas/${id}/cerrar/`, { method: 'POST', body: { reason } })
+}
+
+export function listPayments(id: string): Promise<SubscriptionPayment[]> {
+  return api(`/api/v1/plataforma/empresas/${id}/pagos/`)
+}
+
+/** Decision 120: the lone administrator who lost the phone and the codes. */
+export function resetManagerMfa(
+  companyId: string,
+  userId: string,
+  note: string,
+): Promise<PlatformCompanyDetail> {
+  return api(`/api/v1/plataforma/empresas/${companyId}/usuarios/${userId}/restablecer-2fa/`, {
+    method: 'POST',
+    body: { note },
+  })
+}
+
+export function resendVerification(companyId: string, userId: string): Promise<void> {
+  return api(`/api/v1/plataforma/empresas/${companyId}/usuarios/${userId}/reenviar-confirmacion/`, {
+    method: 'POST',
+  })
+}
+
+// --- PT3: plans (decision 122) -----------------------------------------------
+
+export type PlanPayload = Omit<PlatformPlan, 'id' | 'companies'>
+
+export function listPlans(): Promise<PlatformPlan[]> {
+  return api('/api/v1/plataforma/planes/')
+}
+
+export function createPlan(data: PlanPayload): Promise<PlatformPlan> {
+  return api('/api/v1/plataforma/planes/', { method: 'POST', body: data })
+}
+
+export function updatePlan(id: string, data: Partial<PlanPayload>): Promise<PlatformPlan> {
+  return api(`/api/v1/plataforma/planes/${id}/`, { method: 'PATCH', body: data })
+}
+
+export function deletePlan(id: string): Promise<void> {
+  return api(`/api/v1/plataforma/planes/${id}/`, { method: 'DELETE' })
+}
+
+export function suspendCompany(id: string, reason: string): Promise<PlatformCompanyDetail> {
   return api(`/api/v1/plataforma/empresas/${id}/suspend/`, {
     method: 'POST',
     body: { reason },
   })
 }
 
-export function reactivateCompany(id: string, reason: string): Promise<PlatformCompany> {
+export function reactivateCompany(id: string, reason: string): Promise<PlatformCompanyDetail> {
   return api(`/api/v1/plataforma/empresas/${id}/reactivate/`, {
     method: 'POST',
     body: { reason },
@@ -95,7 +221,7 @@ export interface PaymentPayload {
   reference?: string
 }
 
-export function recordPayment(id: string, data: PaymentPayload): Promise<PlatformCompany> {
+export function recordPayment(id: string, data: PaymentPayload): Promise<PlatformCompanyDetail> {
   return api(`/api/v1/plataforma/empresas/${id}/registrar-pago/`, {
     method: 'POST',
     body: data,

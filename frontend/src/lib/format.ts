@@ -314,6 +314,14 @@ export const STATUS_BADGES: Record<
   closed: { text: 'Cerrada', classes: 'bg-danger-600/15 text-danger-600' },
 }
 
+/** The same states as a <Badge> tone. */
+export const STATUS_TONE: Record<keyof typeof STATUS_BADGES, string> = {
+  trial: 'gold',
+  active: 'success',
+  suspended: 'warning',
+  closed: 'danger',
+}
+
 /** «Edge en Windows», «Chrome en Android»: enough to recognise a device. */
 export function deviceText(userAgent: string) {
   const browser = /Edg\//.test(userAgent)

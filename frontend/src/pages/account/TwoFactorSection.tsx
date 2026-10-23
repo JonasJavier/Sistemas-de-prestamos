@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { QRCodeSVG } from 'qrcode.react'
 import { useState, type ReactNode } from 'react'
 
@@ -155,6 +156,13 @@ function Setup({
           </Step>
         </ol>
         {message ? <Alert tone="danger">{message}</Alert> : null}
+        <p className="text-[13px] text-muted">
+          ¿Prefieres la huella o la cara de tu dispositivo? Crea una{' '}
+          <Link to="/cuenta/llaves" className="font-semibold text-brand-700 hover:underline">
+            llave de acceso
+          </Link>{' '}
+          y entra sin contraseña ni código.
+        </p>
       </Panel>
       {dialog}
     </>

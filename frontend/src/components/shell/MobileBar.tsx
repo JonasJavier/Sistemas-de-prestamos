@@ -7,6 +7,7 @@ import {
   AgendaIcon,
   ApplicationIcon,
   BuildingIcon,
+  TagIcon,
   CollectIcon,
   HomeIcon,
   LoanIcon,
@@ -35,7 +36,10 @@ const big = 'size-[22px] shrink-0'
 function tabsFor(me: Me): { tabs: Tab[]; collects: boolean } {
   if (platformView(me))
     return {
-      tabs: [{ to: '/plataforma', label: 'Empresas', icon: <BuildingIcon className={big} /> }],
+      tabs: [
+        { to: '/plataforma', label: 'Empresas', icon: <BuildingIcon className={big} /> },
+        { to: '/plataforma/planes', label: 'Planes', icon: <TagIcon className={big} /> },
+      ],
       collects: false,
     }
   const collects = hasRole(me, ACCESS.collect)

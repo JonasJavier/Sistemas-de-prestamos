@@ -54,7 +54,8 @@ def test_owner_can_suspend_and_reactivate(platform_owner: User, tenant_admin: Us
         {"reason": "Pago recibido"},
         format="json",
     )
-    assert response.json()["status"] == "active"
+    # Decision 122: back to where it belongs: the trial still has days left.
+    assert response.json()["status"] == "trial"
 
 
 def test_owner_records_payment_and_company_activates(

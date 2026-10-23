@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
 
-import { isReauthRequired, reauthMethods } from '../../api/auth'
+import { isReauthRequired, reauthMethods, type ReauthMethods } from '../../api/auth'
 import { ConfirmIdentityDialog } from './ConfirmIdentityDialog'
 
 /** The person closed the password prompt: the step simply does not happen. */
 export class IdentityNotConfirmed extends Error {}
 
 interface Asking {
-  methods: { password: boolean; code: boolean }
+  methods: ReauthMethods
   resolve: (confirmed: boolean) => void
 }
 

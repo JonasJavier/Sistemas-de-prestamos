@@ -1,3 +1,10 @@
+import type {
+  CredentialCreationOptionsJSON,
+  CredentialRequestOptionsJSON,
+  PublicKeyCredentialWithAssertionJSON,
+  PublicKeyCredentialWithAttestationJSON,
+} from '@github/webauthn-json'
+
 import { api, ApiError, ensureCsrf } from './client'
 
 /** allauth headless, browser client. */
@@ -11,7 +18,7 @@ export interface SessionUser {
 
 interface AllauthResponse {
   status: number
-  data?: { user?: SessionUser; flows?: { id: string; is_pending?: boolean }[] }
+  data?: { user?: SessionUser; flows?: { id: string; is_pending?: boolean; types?: string[] }[] }
   meta?: { is_authenticated?: boolean }
 }
 
@@ -29,6 +36,8 @@ export interface LoginResult {
   user: SessionUser | null
   /** The step still missing: «mfa_authenticate», «mfa_trust», «provider_signup»… */
   pendingFlow: string | null
+  /** For «mfa_authenticate»: what the person can answer with («totp», «webauthn»…). */
+  pendingTypes: string[]
 }
 
 /** A sign-in step: allauth answers 401 with the next pending step, if any. */
@@ -38,12 +47,12 @@ async function step(
 ): Promise<LoginResult> {
   try {
     const response = await api<AllauthResponse>(`${BASE}${path}`, options)
-    return { user: response.data?.user ?? null, pendingFlow: null }
+    return { user: response.data?.user ?? null, pendingFlow: null, pendingTypes: [] }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       const data = error.data as AllauthResponse
       const pending = data.data?.flows?.find((flow) => flow.is_pending)
-      return { user: null, pendingFlow: pending?.id ?? null }
+      return { user: null, pendingFlow: pending?.id ?? null, pendingTypes: pending?.types ?? [] }
     }
     throw error
   }
@@ -58,7 +67,8 @@ export async function getAuthStatus(): Promise<LoginResult> {
   try {
     return await step('/auth/session')
   } catch (error) {
-    if (error instanceof ApiError && error.status === 410) return { user: null, pendingFlow: null }
+    if (error instanceof ApiError && error.status === 410)
+      return { user: null, pendingFlow: null, pendingTypes: [] }
     throw error
   }
 }
@@ -228,6 +238,71 @@ export async function listAuthenticators(): Promise<AuthenticatorInfo[]> {
   return response.data
 }
 
+// --- Passkeys (decision 121) --------------------------------------------------
+
+export interface PasskeyInfo extends AuthenticatorInfo {
+  type: 'webauthn'
+  id: number
+  name: string
+  is_passwordless?: boolean
+}
+
+/** The challenge to make a passkey that signs in on its own (no password). */
+export async function getPasskeyCreationOptions(): Promise<CredentialCreationOptionsJSON> {
+  const response = await api<{ data: { creation_options: CredentialCreationOptionsJSON } }>(
+    `${BASE}/account/authenticators/webauthn?passwordless`,
+  )
+  return response.data.creation_options
+}
+
+export async function addPasskey(
+  name: string,
+  credential: PublicKeyCredentialWithAttestationJSON,
+): Promise<PasskeyInfo> {
+  const response = await api<{ data: PasskeyInfo }>(`${BASE}/account/authenticators/webauthn`, {
+    method: 'POST',
+    body: { name, credential },
+  })
+  return response.data
+}
+
+export async function renamePasskey(id: number, name: string): Promise<void> {
+  await api(`${BASE}/account/authenticators/webauthn`, { method: 'PUT', body: { id, name } })
+}
+
+export async function removePasskey(id: number): Promise<void> {
+  await api(`${BASE}/account/authenticators/webauthn`, {
+    method: 'DELETE',
+    body: { authenticators: [id] },
+  })
+}
+
+/** allauth's challenge, signed by the device, in one go. */
+async function signChallenge(path: string): Promise<PublicKeyCredentialWithAssertionJSON> {
+  const { signWithPasskey } = await import('../lib/webauthn')
+  const response = await api<{ data: { request_options: CredentialRequestOptionsJSON } }>(
+    `${BASE}${path}`,
+  )
+  return signWithPasskey(response.data.request_options)
+}
+
+/** Signs in with a passkey alone: the person, the password and the code in one touch. */
+export async function loginWithPasskey(): Promise<LoginResult> {
+  const credential = await signChallenge('/auth/webauthn/login')
+  return step('/auth/webauthn/login', { method: 'POST', body: { credential } })
+}
+
+/** The second step after the password, answered with the passkey instead of a code. */
+export async function mfaAuthenticateWithPasskey(): Promise<LoginResult> {
+  const credential = await signChallenge('/auth/webauthn/authenticate')
+  return step('/auth/webauthn/authenticate', { method: 'POST', body: { credential } })
+}
+
+export async function reauthenticateWithPasskey(): Promise<void> {
+  const credential = await signChallenge('/auth/webauthn/reauthenticate')
+  await api(`${BASE}/auth/webauthn/reauthenticate`, { method: 'POST', body: { credential } })
+}
+
 /**
  * allauth answers 401 while the user is still signed in when a sensitive step
  * (2FA, recovery codes) needs a sign-in from the last 5 minutes: the screen
@@ -247,12 +322,23 @@ export async function reauthenticateWithCode(code: string): Promise<void> {
   await api(`${BASE}/auth/2fa/reauthenticate`, { method: 'POST', body: { code } })
 }
 
+export interface ReauthMethods {
+  password: boolean
+  code: boolean
+  passkey: boolean
+}
+
 /** The ways this person can confirm it is them (allauth's 401 lists them). */
-export function reauthMethods(error: unknown): { password: boolean; code: boolean } {
+export function reauthMethods(error: unknown): ReauthMethods {
   const flows =
     error instanceof ApiError ? ((error.data as AllauthResponse | null)?.data?.flows ?? []) : []
-  const ids = new Set(flows.map((flow) => flow.id))
-  return { password: ids.has('reauthenticate'), code: ids.has('mfa_reauthenticate') }
+  const mfa = flows.find((flow) => flow.id === 'mfa_reauthenticate')
+  const types = mfa?.types ?? []
+  return {
+    password: flows.some((flow) => flow.id === 'reauthenticate'),
+    code: Boolean(mfa) && (types.length === 0 || types.includes('totp')),
+    passkey: types.includes('webauthn'),
+  }
 }
 
 interface RecoveryCodesData {

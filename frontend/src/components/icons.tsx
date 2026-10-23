@@ -451,6 +451,18 @@ export const PencilIcon = (p: IconProps) => (
   </Svg>
 )
 
+/** A passkey: the fingerprint that opens the account (decision 121). */
+export const PasskeyIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5.5 9.5A7 7 0 0 1 12 6a7 7 0 0 1 6.5 4.5" />
+    <path d="M4.5 13c0-1 .1-2 .4-2.9" />
+    <path d="M18.5 13c0 1.5-.1 3-.4 4.5" />
+    <path d="M8 13a4 4 0 0 1 8 0c0 1.5-.1 3-.3 4" />
+    <path d="M12 11a2 2 0 0 0-2 2c0 2.5-.5 4.5-1.5 6" />
+    <path d="M12 15c0 2-.5 4-1 5.5" />
+  </Svg>
+)
+
 export const KeyIcon = (p: IconProps) => (
   <Svg {...p}>
     <circle cx="8" cy="15" r="4" />

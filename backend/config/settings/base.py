@@ -164,7 +164,13 @@ SOCIALACCOUNT_PROVIDERS: dict = {
     }
 }
 
-MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+# Decision 121: passkeys (WebAuthn) beside the authenticator app. A passkey
+# alone signs the person in (no password, no code) and also serves as the
+# second step after the password. The browser only talks WebAuthn over
+# HTTPS or localhost; the insecure flag is for development behind Vite.
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes", "webauthn"]
+MFA_PASSKEY_LOGIN_ENABLED = True
+MFA_WEBAUTHN_ALLOW_INSECURE_ORIGIN = env.bool("MFA_WEBAUTHN_ALLOW_INSECURE_ORIGIN", default=False)
 # Decision 118: after the code, «confiar en este dispositivo» skips it there for
 # 30 days. Critical actions still ask for it (apps/accounts/reauth.py), and a
 # new password or authenticator voids every trusted browser.

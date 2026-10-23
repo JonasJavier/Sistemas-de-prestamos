@@ -41,6 +41,10 @@ const TwoFactorSection = lazyRouteComponent(
   () => import('./pages/account/TwoFactorSection'),
   'TwoFactorSection',
 )
+const PasskeysSection = lazyRouteComponent(
+  () => import('./pages/account/PasskeysSection'),
+  'PasskeysSection',
+)
 const SessionsSection = lazyRouteComponent(
   () => import('./pages/account/SessionsSection'),
   'SessionsSection',
@@ -149,6 +153,11 @@ const PasswordResetPage = lazyRouteComponent(
   'PasswordResetPage',
 )
 const PlatformPage = lazyRouteComponent(() => import('./pages/Platform'), 'PlatformPage')
+const CompanyFilePage = lazyRouteComponent(
+  () => import('./pages/platform/CompanyFile'),
+  'CompanyFilePage',
+)
+const PlansPage = lazyRouteComponent(() => import('./pages/platform/Plans'), 'PlansPage')
 const ProductsPage = lazyRouteComponent(() => import('./pages/Products'), 'ProductsPage')
 const RegisterPage = lazyRouteComponent(() => import('./pages/Register'), 'RegisterPage')
 const GoogleRegisterPage = lazyRouteComponent(
@@ -631,20 +640,42 @@ const accountTwoFactorRoute = createRoute({
   component: TwoFactorSection,
 })
 
+const accountPasskeysRoute = createRoute({
+  getParentRoute: () => accountRoute,
+  path: '/llaves',
+  component: PasskeysSection,
+})
+
 const accountSessionsRoute = createRoute({
   getParentRoute: () => accountRoute,
   path: '/sesiones',
   component: SessionsSection,
 })
 
+const ownerOnly = ({ context }: { context: { queryClient: QueryClient } }) => {
+  const me = context.queryClient.getQueryData<Me>(['me'])
+  if (!me?.is_platform_admin) throw redirect({ to: '/' })
+}
+
 const platformRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/plataforma',
-  beforeLoad: ({ context }) => {
-    const me = context.queryClient.getQueryData<Me>(['me'])
-    if (!me?.is_platform_admin) throw redirect({ to: '/' })
-  },
+  beforeLoad: ownerOnly,
   component: PlatformPage,
+})
+
+const platformCompanyRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/plataforma/empresas/$id',
+  beforeLoad: ownerOnly,
+  component: CompanyFilePage,
+})
+
+const platformPlansRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/plataforma/planes',
+  beforeLoad: ownerOnly,
+  component: PlansPage,
 })
 
 const loginRoute = createRoute({
@@ -792,9 +823,12 @@ const routeTree = rootRoute.addChildren([
       accountProfileRoute,
       accountPasswordRoute,
       accountTwoFactorRoute,
+      accountPasskeysRoute,
       accountSessionsRoute,
     ]),
     platformRoute,
+    platformCompanyRoute,
+    platformPlansRoute,
   ]),
   loginRoute,
   googleReturnRoute,

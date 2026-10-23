@@ -33,6 +33,9 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 class CompanyUserSerializer(serializers.ModelSerializer):
     memberships = MembershipSerializer(many=True, read_only=True)
+    # Decision 120: whether the person has a second step set up (the view
+    # annotates it), so the team screen can offer to reset it.
+    mfa_enabled = serializers.BooleanField(read_only=True, default=False)
 
     class Meta:
         model = User
@@ -44,6 +47,8 @@ class CompanyUserSerializer(serializers.ModelSerializer):
             "phone",
             "is_active",
             "date_joined",
+            "last_login",
+            "mfa_enabled",
             "memberships",
         ]
 

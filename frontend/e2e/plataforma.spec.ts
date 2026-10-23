@@ -11,13 +11,18 @@ test('el dueño da soporte de solo lectura y la empresa lo ve y lo revoca', asyn
   await expect(owner).toHaveURL(/\/plataforma/)
   await expect(owner.getByText('Empresas activas')).toBeVisible()
 
-  const row = owner.getByRole('row').filter({ hasText: 'Financiera Modelo SRL' })
-  await row.getByRole('button', { name: 'Soporte' }).click()
+  await owner
+    .getByRole('link', { name: /Financiera Modelo SRL/ })
+    .first()
+    .click()
+  await expect(owner).toHaveURL(/\/plataforma\/empresas\//)
+  await owner.getByRole('button', { name: 'Más', exact: true }).click()
+  await owner.getByRole('button', { name: 'Modo soporte' }).click()
   const dialog = owner.getByRole('dialog')
   await dialog.getByLabel('Motivo').fill('Ayuda con el cierre del recorrido')
   await dialog.getByRole('button', { name: 'Dar acceso de soporte' }).click()
   await expect(owner.getByText(/Acceso de soporte creado/)).toBeVisible()
-  await dialog.getByRole('button', { name: 'Entrar' }).first().click()
+  await dialog.getByRole('button', { name: 'Entrar', exact: true }).first().click()
 
   // Inside: the company's screens with the banner, read-only.
   await expect(owner.getByText('Modo soporte · solo lectura')).toBeVisible()

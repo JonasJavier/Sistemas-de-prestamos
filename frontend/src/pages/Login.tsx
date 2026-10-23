@@ -9,17 +9,21 @@ import {
   authErrorCode,
   continueWithGoogle,
   login,
+  loginWithPasskey,
   mfaAuthenticate,
+  mfaAuthenticateWithPasskey,
   rememberChoice,
   trustThisBrowser,
   type LoginResult,
 } from '../api/auth'
 import { ApiError } from '../api/client'
 import { GoogleButton, OrDivider } from '../components/GoogleButton'
+import { PasskeyIcon } from '../components/icons'
 import { Alert, Button, CheckRow, Field, Input, PasswordInput, PublicPage } from '../components/ui'
 import { useGoogleEnabled } from '../lib/google'
 import { safeReturn } from '../lib/navigation'
 import { keepsSession, lastEmail, saveKeepsSession, saveLastEmail } from '../lib/signInPrefs'
+import { PasskeyCancelled, passkeysSupported } from '../lib/webauthn'
 
 const schema = z.object({
   email: z.email('Escribe un correo válido.'),
@@ -59,6 +63,9 @@ export function LoginPage() {
   const [message, setMessage] = useState<string | null>(google ? googleProblem(google) : null)
   const [totpStep, setTotpStep] = useState(paso === 'codigo')
   const [code, setCode] = useState('')
+  // Decision 121: what the second step accepts («webauthn» offers the passkey).
+  const [stepTypes, setStepTypes] = useState<string[]>([])
+  const passkeys = passkeysSupported()
   const [keep, setKeep] = useState(keepsSession)
   const [trust, setTrust] = useState(keepsSession)
   const [leaving, setLeaving] = useState(false)
@@ -86,6 +93,7 @@ export function LoginPage() {
       setMessage(null)
       // A device kept signed in is a personal one: trusting it is the default.
       setTrust(keep)
+      setStepTypes(result.pendingTypes)
       setTotpStep(true)
     } else if (result.pendingFlow === 'mfa_trust') {
       return next(await trustThisBrowser(trust))
@@ -123,6 +131,32 @@ export function LoginPage() {
       setMessage('Código incorrecto. Usa el código vigente de tu app o uno de respaldo.'),
   })
 
+  const passkeyProblem = (error: unknown, fallback: string) => {
+    if (error instanceof PasskeyCancelled) return
+    setMessage(
+      authErrorCode(error) === 'incorrect_code'
+        ? 'Esa llave no está registrada en Cobradía. Entra con tu correo y contraseña.'
+        : fallback,
+    )
+  }
+
+  const passkeyLogin = useMutation({
+    mutationFn: async () => {
+      saveKeepsSession(keep)
+      await rememberChoice(keep)
+      return loginWithPasskey()
+    },
+    onSuccess: next,
+    onError: (error) => passkeyProblem(error, 'No se pudo entrar con la llave. Intenta de nuevo.'),
+  })
+
+  const passkeyStep = useMutation({
+    mutationFn: mfaAuthenticateWithPasskey,
+    onSuccess: next,
+    onError: (error) =>
+      passkeyProblem(error, 'No se pudo verificar con la llave. Escribe el código de tu app.'),
+  })
+
   const withGoogle = async () => {
     setLeaving(true)
     try {
@@ -149,6 +183,21 @@ export function LoginPage() {
           }}
         >
           {message ? <Alert tone="danger">{message}</Alert> : null}
+          {passkeys && stepTypes.includes('webauthn') ? (
+            <div className="space-y-5">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:h-11"
+                disabled={passkeyStep.isPending}
+                onClick={() => passkeyStep.mutate()}
+              >
+                <PasskeyIcon className="size-[18px]" />
+                {passkeyStep.isPending ? 'Esperando al dispositivo…' : 'Usar mi llave de acceso'}
+              </Button>
+              <OrDivider>o con el código</OrDivider>
+            </div>
+          ) : null}
           <Field label="Código">
             <Input
               autoComplete="one-time-code"
@@ -202,11 +251,29 @@ export function LoginPage() {
           extensión a tu supervisor.
         </Alert>
       ) : null}
-      {googleEnabled ? (
+      {googleEnabled || passkeys ? (
         <div className="space-y-5">
-          <GoogleButton onClick={withGoogle} busy={leaving}>
-            Continuar con Google
-          </GoogleButton>
+          <div className="space-y-2.5">
+            {googleEnabled ? (
+              <GoogleButton onClick={withGoogle} busy={leaving}>
+                Continuar con Google
+              </GoogleButton>
+            ) : null}
+            {passkeys ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:h-11"
+                disabled={passkeyLogin.isPending}
+                onClick={() => passkeyLogin.mutate()}
+              >
+                <PasskeyIcon className="size-[18px]" />
+                {passkeyLogin.isPending
+                  ? 'Esperando al dispositivo…'
+                  : 'Entrar con llave de acceso'}
+              </Button>
+            ) : null}
+          </div>
           <OrDivider>o</OrDivider>
         </div>
       ) : null}

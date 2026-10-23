@@ -157,7 +157,8 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
   - Un supervisor puede dar una extensión temporal, que queda auditada.
   - Hecho en la fase 4 (decisión 071): apertura, cierre y días por sucursal; extensión de 15 minutos a 6 horas con motivo, desde Rutas.
 - **Aviso de acceso nuevo:** el usuario recibe un correo cuando se inicia sesión desde un dispositivo nuevo.
-- **Restablecer el 2FA de un usuario:** lo hace el administrador tras verificar la identidad; queda auditado y se avisa al gerente.
+- **Restablecer el 2FA de un usuario (120):** quien pierde el celular y los códigos de respaldo entra de nuevo por su empresa: el gerente o administrador que lo conoce lo restablece desde Ajustes · Usuarios con un motivo; se borran su app, sus llaves y sus códigos, se cierran sus sesiones, queda auditado, la persona recibe un correo y los demás gerentes un aviso. Para el administrador único lo hace el dueño de la plataforma desde la ficha de la empresa, tras verificar la identidad por otra vía. Nunca por correo: el correo ya restablece la contraseña y no debe saltar también el segundo paso.
+- **Llaves de acceso (121):** además de la app autenticadora, una llave de acceso (huella, cara o PIN del dispositivo) entra sola o sirve como segundo paso; se crean y quitan en Mi cuenta · Llaves de acceso y cuentan para la obligatoriedad del 2FA.
 - **Portal del cliente (fase 9, decisión 099):** entra con su enlace personal de invitación y un código de un solo uso enviado a su correo o teléfono registrados (10 minutos, 5 intentos, uno por minuto y 10 al día). Su sesión está separada de la del personal, ve solo sus préstamos y se cierra a los 30 minutos sin uso.
 
 ## 7. Protección de los datos personales

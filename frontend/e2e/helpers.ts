@@ -16,7 +16,7 @@ export async function signIn(page: Page, email: string) {
   await page.goto('/entrar')
   await page.getByLabel('Correo').fill(email)
   await page.getByLabel('Contraseña').fill(PASSWORD)
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).not.toHaveURL(/\/entrar/)
 }
 

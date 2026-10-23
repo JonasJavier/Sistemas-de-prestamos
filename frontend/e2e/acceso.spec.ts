@@ -13,7 +13,7 @@ test.describe('acceso (doc 06 - 6)', () => {
     // An address outside the seed: real accounts would add to their lock counter.
     await page.getByLabel('Correo').fill('nadie@modelo.test')
     await page.getByLabel('Contraseña').fill('no-es-la-clave')
-    await page.getByRole('button', { name: 'Entrar' }).click()
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click()
     await expect(page.getByText('Correo o contraseña incorrectos.')).toBeVisible()
   })
 

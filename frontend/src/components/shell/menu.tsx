@@ -86,7 +86,13 @@ const present = (entries: (NavEntry | null)[]) =>
 export function navFor(me: Me): NavGroup[] {
   if (platformView(me)) {
     return [
-      { title: null, items: [leaf('/plataforma', 'Empresas', <BuildingIcon className={ic} />)] },
+      {
+        title: null,
+        items: [
+          leaf('/plataforma', 'Empresas', <BuildingIcon className={ic} />),
+          leaf('/plataforma/planes', 'Planes', <TagIcon className={ic} />),
+        ],
+      },
     ]
   }
   const onlyCollector = me.roles.length > 0 && me.roles.every((role) => role === 'Cobrador')

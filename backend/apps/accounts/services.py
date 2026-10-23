@@ -108,3 +108,70 @@ def accept_invitation(
     invitation.accepted_at = timezone.now()
     invitation.save(update_fields=["accepted_at", "updated_at"])
     return user
+
+
+# --- Decision 120: the company resets a person's two-step verification -----
+
+SECOND_FACTORS = ("totp", "webauthn", "recovery_codes")
+
+
+@transaction.atomic
+def reset_two_factor(*, user: User, by: User, note: str = "") -> int:
+    """Doc 06 §6: whoever lost the phone and the backup codes is let back in
+    by their company (a manager or administrator who knows them) or, for a
+    lone administrator, by Cobradía's owner. Drops the authenticator app, the
+    passkeys and the codes, closes every session of the person, writes the
+    audit trail, tells the person by e-mail and the managers in the app. At
+    the next sign-in the person sets it up again."""
+    from allauth.mfa.models import Authenticator
+    from allauth.usersessions.models import UserSession
+    from django.conf import settings
+    from django.contrib.sessions.models import Session
+
+    from apps.audit.models import record_event
+    from apps.notifications.models import Notification
+    from apps.notifications.services import managers, notify
+
+    removed = Authenticator.objects.filter(user=user, type__in=SECOND_FACTORS).delete()[0]
+    keys = list(UserSession.objects.filter(user=user).values_list("session_key", flat=True))
+    Session.objects.filter(session_key__in=keys).delete()
+    UserSession.objects.filter(user=user).delete()
+
+    who = by.get_full_name() or by.email
+    owner = by.is_platform_admin and by.company_id != user.company_id
+    origin = "el soporte de Cobradía" if owner else who
+    name = user.get_full_name() or user.email
+    with company_context(user.company_id):
+        record_event(
+            company_id=user.company_id,
+            type="account.mfa_reset",
+            target=user,
+            actor=by,
+            summary=f"{origin} restableció la verificación en dos pasos de {name}",
+            data={"note": note[:300], "authenticators_removed": removed, "by_owner": owner},
+        )
+        notify(
+            company_id=user.company_id,
+            users=managers(exclude=by),
+            kind=Notification.Kind.SECURITY,
+            text=f"{origin} restableció la verificación en dos pasos de {name}. "
+            "Al entrar, la configurará de nuevo.",
+            link="/ajustes/usuarios",
+        )
+    transaction.on_commit(
+        lambda: send_mail(
+            subject="Tu verificación en dos pasos fue restablecida",
+            message=(
+                f"Hola, {user.first_name or user.email}.\n\n"
+                f"{origin[0].upper()}{origin[1:]} restableció la verificación en dos pasos de "
+                "tu cuenta de Cobradía: tu app autenticadora, tus llaves de acceso y tus códigos "
+                "de respaldo ya no sirven, y tus sesiones abiertas se cerraron.\n\n"
+                "Entra con tu contraseña y configúrala de nuevo desde Mi cuenta:\n"
+                f"{settings.FRONTEND_URL}/entrar\n\n"
+                "Si no pediste este cambio, avisa de inmediato a tu gerente.\n"
+            ),
+            from_email=None,
+            recipient_list=[user.email],
+        )
+    )
+    return removed

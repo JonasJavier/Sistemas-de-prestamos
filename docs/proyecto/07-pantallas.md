@@ -56,7 +56,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P01 | Iniciar sesión | `/entrar` | «Continuar con Google» o correo y contraseña (el correo se recuerda en el dispositivo), «Mantenerme conectado», luego el código 2FA con «Confiar en este dispositivo por 30 días»; «Olvidé mi contraseña». Google vuelve a `/entrar/google`, que lleva a la app, al código o a unirse (118) | Todos | 1 |
 | P02 | Aceptar invitación | `/invitacion/:codigo` | «Aceptar con Google» (la cuenta de Google de la dirección invitada, 118) o crear contraseña; activar 2FA con QR, códigos de respaldo; el cobrador acepta el seguimiento de ubicación (031) | Invitados | 1 |
 | P03 | Recuperar contraseña | `/recuperar` | Enlace por correo | Todos | 1 |
-| P04 | Mi cuenta | `/cuenta` | Una página por tema, con submenú (117): **Perfil** (`/cuenta`: nombre y apellidos editables, correo de solo lectura, roles, conectar o desconectar Google, tema), **Contraseña** (`/cuenta/contrasena`; quien entró con Google la crea aquí), **Verificación en dos pasos** (`/cuenta/dos-pasos`: activar con QR y clave, estado, códigos de respaldo) y **Sesiones abiertas** (`/cuenta/sesiones`) | Todos | 1 |
+| P04 | Mi cuenta | `/cuenta` | Una página por tema, con submenú (117): **Perfil** (`/cuenta`: nombre y apellidos editables, correo de solo lectura, roles, conectar o desconectar Google, tema), **Contraseña** (`/cuenta/contrasena`; quien entró con Google la crea aquí), **Verificación en dos pasos** (`/cuenta/dos-pasos`: activar con QR y clave, estado, códigos de respaldo), **Llaves de acceso** (`/cuenta/llaves`, 121: crear, renombrar y quitar las llaves del dispositivo) y **Sesiones abiertas** (`/cuenta/sesiones`) | Todos | 1 |
 | P05 | Registro de empresa | `/registro` (pública) | Cinco campos (nombre, apellido, correo, contraseña y nombre de la financiera) y los términos (119), verificación del correo con código, y creación de la empresa en prueba con su sucursal, su administrador y sus catálogos sembrados (F19). «Registrarme con Google» (`/registro/google`, 118): sin contraseña ni código, porque Google ya verificó el correo | Visitantes | 1 |
 
 ### Inicio
@@ -182,9 +182,9 @@ Rutas bajo `/plataforma`, visibles únicamente para la cuenta de plataforma (`is
 
 | # | Pantalla | Ruta | Contenido y acciones | Fase |
 | --- | --- | --- | --- | --- |
-| PT1 | Empresas | `/plataforma/empresas` | Tabla por estado (en prueba, activa, suspendida, cerrada) con días de prueba y último pago · Ficha: datos, sucursales y usuarios (conteos), *Registrar pago*, *Suspender* o *Reactivar* con motivo, *Modo soporte* | 1 |
+| PT1 | Empresas | `/plataforma` y `/plataforma/empresas/<id>` | Lista con búsqueda (nombre, RNC, correo), filtro por estado, plan, prueba o pago hasta y usuarios (122) · Ficha: estado y motivo, plan y uso contra límites, datos y términos, pagos, soporte vigente, gerentes y administradores (último acceso, correo confirmado, dos pasos) · Acciones: *Registrar pago*, *Extender la prueba*, *Cambiar de plan*, *Suspender*, *Reactivar*, *Cerrar empresa*, *Modo soporte*, *Reenviar confirmación*, *Restablecer verificación en dos pasos* (120); todo queda en la auditoría de la empresa | 1 |
 | PT2 | Tablero de la plataforma | `/plataforma` | Empresas activas y en prueba, conversión de la prueba, registros recientes, pagos por vencer y métricas agregadas de uso | 7 |
-| PT3 | Planes | `/plataforma/planes` | Planes con precio y límites (usuarios, sucursales, préstamos activos); asignación por empresa | 10 |
+| PT3 | Planes | `/plataforma/planes` | Planes con precio mensual y límites (usuarios, sucursales, préstamos activos): crear, editar, desactivar y borrar (122); un solo plan de prueba activo. La asignación se hace desde la ficha de cada empresa | 1 |
 | PT4 | Modo soporte | Desde la ficha de la empresa | Motivo y duración; acceso de solo lectura, visible para la empresa y auditado (046) | 7 |
 
 ## 4. Pantallas fuera del sistema interno

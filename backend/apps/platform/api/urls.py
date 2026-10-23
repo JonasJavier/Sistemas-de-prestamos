@@ -1,7 +1,12 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from apps.platform.api.views import CompanyViewSet, MyCompanyView, RegistrationView
+from apps.platform.api.views import (
+    CompanyViewSet,
+    MyCompanyView,
+    PlanViewSet,
+    RegistrationView,
+)
 from apps.platform.api.views_support import (
     CompanyGrantsView,
     CompanyRevokeView,
@@ -14,6 +19,7 @@ from apps.platform.api.views_support import (
 
 router = DefaultRouter()
 router.register("plataforma/empresas", CompanyViewSet, basename="platform-company")
+router.register("plataforma/planes", PlanViewSet, basename="platform-plan")
 
 urlpatterns = [
     path("registro/", RegistrationView.as_view(), name="company-registration"),

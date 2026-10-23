@@ -81,6 +81,9 @@ export interface CompanyUser {
   last_name: string
   phone: string
   is_active: boolean
+  last_login: string | null
+  /** Decision 120: an authenticator app or a passkey is set up. */
+  mfa_enabled: boolean
   memberships: Membership[]
 }
 
@@ -92,6 +95,12 @@ export function listUsers(): Promise<Paginated<CompanyUser>> {
 export function setUserActive(id: string, active: boolean): Promise<CompanyUser> {
   const action = active ? 'activate' : 'deactivate'
   return api(`/api/v1/usuarios/${id}/${action}/`, { method: 'POST' })
+}
+
+/** Decision 120: the person lost the phone and the codes; they set the
+ * second step up again at their next sign-in. */
+export function resetUserMfa(id: string, note: string): Promise<CompanyUser> {
+  return api(`/api/v1/usuarios/${id}/restablecer-2fa/`, { method: 'POST', body: { note } })
 }
 
 export interface Role {

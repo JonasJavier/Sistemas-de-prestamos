@@ -77,7 +77,9 @@ class MeView(APIView):
         from django.conf import settings
 
         user = request.user
-        mfa_enabled = Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).exists()
+        mfa_enabled = Authenticator.objects.filter(
+            user=user, type__in=[Authenticator.Type.TOTP, Authenticator.Type.WEBAUTHN]
+        ).exists()
         roles: list[str] = sorted(authz.role_names(user)) if user.company_id else []
         access = getattr(request, "support_grant", None)
         return Response(
@@ -164,11 +166,30 @@ class CompanyUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = CompanyUserSerializer
 
     def get_queryset(self):
+        from allauth.mfa.models import Authenticator
+        from django.db.models import Exists, OuterRef
+
+        second_step = Authenticator.objects.filter(
+            user=OuterRef("pk"), type__in=[Authenticator.Type.TOTP, Authenticator.Type.WEBAUTHN]
+        )
         return (
             User.objects.filter(company_id=self.request.user.company_id)
             .prefetch_related("memberships__branch", "memberships__role")
+            .annotate(mfa_enabled=Exists(second_step))
             .order_by("email")
         )
+
+    @action(detail=True, methods=["post"], url_path="restablecer-2fa")
+    def reset_mfa(self, request: Request, pk: str) -> Response:
+        """Decision 120: the person lost the phone and the backup codes; the
+        manager who knows them lets them set the second step up again."""
+        user = self.get_object()  # 404 outside the caller's company
+        if user == request.user:
+            raise ValidationError({"detail": "Tu propia verificación se maneja desde Mi cuenta."})
+        services.reset_two_factor(
+            user=user, by=request.user, note=str(request.data.get("note", ""))
+        )
+        return Response(CompanyUserSerializer(self.get_queryset().get(pk=pk)).data)
 
     def _set_active(self, request: Request, pk: str, active: bool) -> Response:
         user = self.get_queryset().get(pk=pk)

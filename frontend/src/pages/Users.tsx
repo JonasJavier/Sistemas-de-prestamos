@@ -11,6 +11,7 @@ import {
   listPendingInvitations,
   listRoles,
   listUsers,
+  resetUserMfa,
   revokeInvitation,
   setUserActive,
   type Me,
@@ -19,6 +20,7 @@ import { ApiError } from '../api/client'
 import { usePrompt } from '../components/Dialog'
 import { controlClass } from '../components/classes'
 import { Modal } from '../components/Modal'
+import { MoreMenu } from '../components/MoreMenu'
 import {
   Alert,
   Avatar,
@@ -69,6 +71,29 @@ export function UsersPage({ me }: { me: Me }) {
     onError: () => notify('No se pudo cambiar el estado del usuario.', 'danger'),
   })
 
+  const resetMfa = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const note = await ask({
+        title: `Restablecer la verificación de ${name}`,
+        description:
+          'Solo si perdió el celular y sus códigos de respaldo, y estás seguro de que es esa persona. Su app, sus llaves de acceso y sus códigos dejan de servir, sus sesiones se cierran y le avisamos por correo; al entrar, la configura de nuevo. Queda en la auditoría.',
+        label: 'Motivo',
+        type: 'textarea',
+        required: true,
+        confirmText: 'Restablecer',
+        danger: true,
+      })
+      if (note === null) return null
+      return resetUserMfa(id, note)
+    },
+    onSuccess: (user) => {
+      if (!user) return
+      notify('Verificación restablecida: la persona la configurará al entrar.', 'success')
+      void queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+    onError: () => notify('No se pudo restablecer la verificación.', 'danger'),
+  })
+
   const revoke = useMutation({
     mutationFn: revokeInvitation,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invitations'] }),
@@ -87,7 +112,7 @@ export function UsersPage({ me }: { me: Me }) {
       {users.data ? (
         <Table
           label="Equipo"
-          columns="minmax(0,1.3fr) minmax(0,1.2fr) 7.5rem 7.5rem"
+          columns="minmax(0,1.3fr) minmax(0,1.2fr) 11rem 3rem"
           head={[{ label: 'Persona' }, { label: 'Roles' }, { label: 'Estado' }, { label: '' }]}
         >
           {users.data.results.map((user) => {
@@ -113,23 +138,35 @@ export function UsersPage({ me }: { me: Me }) {
                   {user.memberships.map((m) => `${m.role_name} (${m.branch_code})`).join(' · ') ||
                     'Sin roles'}
                 </div>
-                <span>
+                <span className="flex flex-wrap items-center gap-1.5">
                   <Badge tone={user.is_active ? 'brand' : 'warning'} dot>
                     {user.is_active ? 'Activo' : 'Desactivado'}
                   </Badge>
+                  <Badge tone={user.mfa_enabled ? 'success' : 'neutral'}>
+                    {user.mfa_enabled ? 'Dos pasos' : 'Sin dos pasos'}
+                  </Badge>
                 </span>
-                <span className="md:text-right">
+                <span className="flex justify-end">
                   {user.id !== me.id ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() =>
-                        toggleUser.mutate({ id: user.id, active: !user.is_active, name })
-                      }
-                      disabled={toggleUser.isPending}
-                    >
-                      {user.is_active ? 'Desactivar' : 'Activar'}
-                    </Button>
+                    <MoreMenu
+                      compact
+                      items={[
+                        {
+                          label: user.is_active ? 'Desactivar' : 'Activar',
+                          onSelect: () =>
+                            toggleUser.mutate({ id: user.id, active: !user.is_active, name }),
+                        },
+                        ...(user.mfa_enabled
+                          ? [
+                              {
+                                label: 'Restablecer verificación en dos pasos',
+                                danger: true,
+                                onSelect: () => resetMfa.mutate({ id: user.id, name }),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
                   ) : null}
                 </span>
               </li>

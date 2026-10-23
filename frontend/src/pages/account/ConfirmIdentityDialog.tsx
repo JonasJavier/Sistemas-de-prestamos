@@ -1,7 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 
-import { authErrorCode, reauthenticate, reauthenticateWithCode } from '../../api/auth'
+import {
+  authErrorCode,
+  reauthenticate,
+  reauthenticateWithCode,
+  reauthenticateWithPasskey,
+  type ReauthMethods,
+} from '../../api/auth'
+import { PasskeyCancelled, passkeysSupported } from '../../lib/webauthn'
 import { Modal } from '../../components/Modal'
 import { ShieldIcon } from '../../components/icons'
 import { Alert, Button, Field, Input, PasswordInput } from '../../components/ui'
@@ -12,15 +19,23 @@ export function ConfirmIdentityDialog({
   methods,
   onDone,
 }: {
-  methods: { password: boolean; code: boolean }
+  methods: ReauthMethods
   onDone: (confirmed: boolean) => void
 }) {
-  const [withCode, setWithCode] = useState(!methods.password)
+  const [withCode, setWithCode] = useState(!methods.password && methods.code)
   const [secret, setSecret] = useState('')
   const titleId = useId()
+  const passkey = methods.passkey && passkeysSupported()
+  // Only a passkey: the dialog goes straight to the device.
+  const onlyPasskey = passkey && !methods.password && !methods.code
   const confirm = useMutation({
     meta: { inlineError: true },
     mutationFn: () => (withCode ? reauthenticateWithCode(secret.trim()) : reauthenticate(secret)),
+    onSuccess: () => onDone(true),
+  })
+  const withPasskey = useMutation({
+    meta: { inlineError: true },
+    mutationFn: reauthenticateWithPasskey,
     onSuccess: () => onDone(true),
   })
   const code = authErrorCode(confirm.error)
@@ -46,7 +61,22 @@ export function ConfirmIdentityDialog({
             </p>
           </div>
         </div>
-        {withCode ? (
+        {passkey ? (
+          <Button
+            type="button"
+            variant={onlyPasskey ? 'primary' : 'secondary'}
+            className="w-full"
+            autoFocus={onlyPasskey}
+            disabled={withPasskey.isPending}
+            onClick={() => withPasskey.mutate()}
+          >
+            {withPasskey.isPending ? 'Esperando al dispositivo…' : 'Usar mi llave de acceso'}
+          </Button>
+        ) : null}
+        {withPasskey.error && !(withPasskey.error instanceof PasskeyCancelled) ? (
+          <Alert tone="danger">No se pudo confirmar con la llave. Intenta de nuevo.</Alert>
+        ) : null}
+        {onlyPasskey ? null : withCode ? (
           <Field label="Código de tu app autenticadora">
             <Input
               autoFocus
@@ -95,9 +125,11 @@ export function ConfirmIdentityDialog({
           <Button type="button" variant="secondary" onClick={() => onDone(false)}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!secret || confirm.isPending}>
-            {confirm.isPending ? 'Confirmando…' : 'Confirmar'}
-          </Button>
+          {onlyPasskey ? null : (
+            <Button type="submit" disabled={!secret || confirm.isPending}>
+              {confirm.isPending ? 'Confirmando…' : 'Confirmar'}
+            </Button>
+          )}
         </div>
       </form>
     </Modal>

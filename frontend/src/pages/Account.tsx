@@ -3,7 +3,7 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
 import { getMe, type Me } from '../api/accounts'
-import { DevicesIcon, KeyIcon, ShieldCheckIcon, UserIcon } from '../components/icons'
+import { DevicesIcon, KeyIcon, PasskeyIcon, ShieldCheckIcon, UserIcon } from '../components/icons'
 import { Alert, PageHeader } from '../components/ui'
 
 /** Mi cuenta (P04, decision 117): one page per concern, side by side as the
@@ -17,6 +17,7 @@ const SECTIONS = [
     short: 'Dos pasos',
     icon: <ShieldCheckIcon />,
   },
+  { to: '/cuenta/llaves', label: 'Llaves de acceso', short: 'Llaves', icon: <PasskeyIcon /> },
   { to: '/cuenta/sesiones', label: 'Sesiones abiertas', short: 'Sesiones', icon: <DevicesIcon /> },
 ] as const
 
