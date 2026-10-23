@@ -77,5 +77,10 @@ describe('where the person is', () => {
       { label: 'Cobrar 01-000010' },
     ])
     expect(crumbsFor('/avisos', groups)).toEqual([{ label: 'Avisos' }])
+    expect(crumbsFor('/cuenta', groups)).toEqual([{ label: 'Mi cuenta' }])
+    expect(crumbsFor('/cuenta/dos-pasos', groups)).toEqual([
+      { label: 'Mi cuenta', to: '/cuenta' },
+      { label: 'Verificación en dos pasos' },
+    ])
   })
 })

@@ -131,6 +131,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 
 - **Inicio de sesión:** correo y contraseña, más **código 2FA** para todos (034).
   - **Códigos de respaldo:** 10, de un solo uso, para cuando se pierde el celular.
+  - **Activación (117):** la clave del QR se mantiene mientras dure la sesión (recargar no la cambia); se acepta el código de los 30 segundos anteriores o siguientes (desfase del reloj del celular), nunca uno ya usado; activar o ver y regenerar códigos de respaldo pide la contraseña otra vez si se entró hace más de 5 minutos.
   - **Llaves de acceso (*passkeys*):** opción futura; allauth ya las admite.
 - **Contraseñas:**
   - Mínimo 12 caracteres, sin contraseñas comunes ni datos personales.
@@ -140,6 +141,7 @@ Por encima de su límite, el usuario **pide autorización desde la misma pantall
 - **Sesión:**
   - Va en una cookie segura.
   - Se cierra tras 30 minutos de inactividad y a las 12 horas en cualquier caso.
+  - Dos peticiones simultáneas no se borran lo que cada una guardó en la sesión: se guarda solo lo que cambió, sobre lo que hay en la base (117).
   - El usuario ve sus sesiones abiertas y puede cerrarlas; el administrador puede forzar el cierre.
 - **Reconfirmación con 2FA** para las acciones críticas:
   - autorizar reversos (hecho en la fase 4, decisión 069);

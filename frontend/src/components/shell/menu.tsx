@@ -243,6 +243,13 @@ const DETAILS: [RegExp, (match: RegExpMatchArray) => string][] = [
 /** Screens of the bar that have no entry in the menu. */
 const OUTSIDE: Record<string, string> = { '/avisos': 'Avisos', '/cuenta': 'Mi cuenta' }
 
+/** The pages of Mi cuenta (decision 117): «Mi cuenta › Contraseña». */
+const ACCOUNT_PAGES: Record<string, string> = {
+  '/cuenta/contrasena': 'Contraseña',
+  '/cuenta/dos-pasos': 'Verificación en dos pasos',
+  '/cuenta/sesiones': 'Sesiones abiertas',
+}
+
 function decode(text: string) {
   try {
     return decodeURIComponent(text)
@@ -255,6 +262,9 @@ function decode(text: string) {
  * but the last one links back. */
 export function crumbsFor(pathname: string, groups: NavGroup[]): Crumb[] {
   if (OUTSIDE[pathname]) return [{ label: OUTSIDE[pathname] }]
+  if (ACCOUNT_PAGES[pathname]) {
+    return [{ label: OUTSIDE['/cuenta'], to: '/cuenta' }, { label: ACCOUNT_PAGES[pathname] }]
+  }
   const top = `/${pathname.split('/')[1] ?? ''}`
   const here = locate(pathname, groups) ?? (PARENT[top] ? locate(PARENT[top], groups) : null)
   const crumbs: Crumb[] = []

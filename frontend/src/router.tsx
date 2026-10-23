@@ -26,6 +26,22 @@ import { LoginPage, type LoginSearch } from './pages/Login'
 // Every other screen is its own chunk, fetched on first visit and preloaded
 // when the pointer rests on a link to it (defaultPreload: 'intent').
 const AccountPage = lazyRouteComponent(() => import('./pages/Account'), 'AccountPage')
+const ProfileSection = lazyRouteComponent(
+  () => import('./pages/account/ProfileSection'),
+  'ProfileSection',
+)
+const PasswordSection = lazyRouteComponent(
+  () => import('./pages/account/PasswordSection'),
+  'PasswordSection',
+)
+const TwoFactorSection = lazyRouteComponent(
+  () => import('./pages/account/TwoFactorSection'),
+  'TwoFactorSection',
+)
+const SessionsSection = lazyRouteComponent(
+  () => import('./pages/account/SessionsSection'),
+  'SessionsSection',
+)
 const AccountsPage = lazyRouteComponent(() => import('./pages/Accounts'), 'AccountsPage')
 const AccountingPage = lazyRouteComponent(() => import('./pages/Accounting'), 'AccountingPage')
 const ExpensesPage = lazyRouteComponent(() => import('./pages/Expenses'), 'ExpensesPage')
@@ -203,9 +219,11 @@ const appRoute = createRoute({
     const user = await context.queryClient.ensureQueryData(sessionQuery)
     if (!user) throw redirect({ to: '/entrar', search: { desde: safeReturn(location.href) } })
     const me = await context.queryClient.ensureQueryData(meQuery)
-    // Decision 034: with mandatory 2FA pending, the only destination is Mi cuenta.
-    if (me.mfa_required && !me.mfa_enabled && location.pathname !== '/cuenta') {
-      throw redirect({ to: '/cuenta' })
+    // Decision 034: with mandatory 2FA pending, only Mi cuenta opens, and the
+    // rest of the app leads to its 2FA page (decision 117).
+    const inAccount = location.pathname === '/cuenta' || location.pathname.startsWith('/cuenta/')
+    if (me.mfa_required && !me.mfa_enabled && !inAccount) {
+      throw redirect({ to: '/cuenta/dos-pasos' })
     }
     return { user, me }
   },
@@ -584,6 +602,30 @@ const accountRoute = createRoute({
   component: withMe(AccountPage),
 })
 
+const accountProfileRoute = createRoute({
+  getParentRoute: () => accountRoute,
+  path: '/',
+  component: withMe(ProfileSection),
+})
+
+const accountPasswordRoute = createRoute({
+  getParentRoute: () => accountRoute,
+  path: '/contrasena',
+  component: PasswordSection,
+})
+
+const accountTwoFactorRoute = createRoute({
+  getParentRoute: () => accountRoute,
+  path: '/dos-pasos',
+  component: TwoFactorSection,
+})
+
+const accountSessionsRoute = createRoute({
+  getParentRoute: () => accountRoute,
+  path: '/sesiones',
+  component: SessionsSection,
+})
+
 const platformRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/plataforma',
@@ -714,7 +756,12 @@ const routeTree = rootRoute.addChildren([
     branchesRoute,
     usersRoute,
     subscriptionRoute,
-    accountRoute,
+    accountRoute.addChildren([
+      accountProfileRoute,
+      accountPasswordRoute,
+      accountTwoFactorRoute,
+      accountSessionsRoute,
+    ]),
     platformRoute,
   ]),
   loginRoute,

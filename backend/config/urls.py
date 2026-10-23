@@ -1,8 +1,10 @@
+from allauth.headless import app_settings as headless_settings
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.accounts.totp import ManageTOTPView
 from apps.core.api.views import csrf, health
 
 urlpatterns = [
@@ -22,6 +24,14 @@ urlpatterns = [
     path("api/v1/", include("apps.reports.api.urls")),
     path("api/v1/", include("apps.audit.api.urls")),
     path("api/v1/", include("apps.documents.api.urls")),
+    # Decision 117: the authenticator setup keeps the secret already scanned.
+    *[
+        path(
+            f"api/v1/auth/{client}/v1/account/authenticators/totp",
+            ManageTOTPView.as_api_view(client=client),
+        )
+        for client in headless_settings.CLIENTS
+    ],
     path("api/v1/auth/", include("allauth.headless.urls")),
 ]
 

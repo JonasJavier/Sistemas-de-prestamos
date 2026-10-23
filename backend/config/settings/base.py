@@ -133,6 +133,10 @@ HEADLESS_FRONTEND_URLS = {
     "account_signup": f"{FRONTEND_URL}/registro",
 }
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+# Decision 117: a code from the previous (or next) 30 seconds still counts, so
+# a phone a few seconds off or a code typed as it changes is not refused.
+# allauth still refuses a code that was already used to sign in.
+MFA_TOTP_TOLERANCE = 1
 
 # Decision 034: 2FA is mandatory for every user. Enforced by
 # MFARequiredMiddleware; off by default in development so seeded test
@@ -183,6 +187,8 @@ ACCOUNT_RATE_LIMITS = {"login_failed": "10/m/ip,5/15m/key"}
 # (SessionTimeoutMiddleware renews the idle window while the user works).
 SESSION_COOKIE_AGE = 30 * 60
 SESSION_ABSOLUTE_SECONDS = 12 * 60 * 60
+# Decision 117: two requests in flight never erase each other's session keys.
+SESSION_ENGINE = "apps.accounts.session_store"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"

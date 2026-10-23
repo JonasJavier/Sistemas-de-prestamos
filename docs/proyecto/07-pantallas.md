@@ -56,7 +56,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P01 | Iniciar sesión | `/entrar` | Correo y contraseña, luego el código 2FA; «Olvidé mi contraseña» | Todos | 1 |
 | P02 | Aceptar invitación | `/invitacion/:codigo` | Crear contraseña, activar 2FA con QR, códigos de respaldo; el cobrador acepta el seguimiento de ubicación (031) | Invitados | 1 |
 | P03 | Recuperar contraseña | `/recuperar` | Enlace por correo | Todos | 1 |
-| P04 | Mi cuenta | `/cuenta` | Perfil, 2FA, códigos de respaldo, sesiones abiertas, tema | Todos | 1 |
+| P04 | Mi cuenta | `/cuenta` | Una página por tema, con submenú (117): **Perfil** (`/cuenta`: nombre y apellidos editables, correo de solo lectura, roles, tema), **Contraseña** (`/cuenta/contrasena`), **Verificación en dos pasos** (`/cuenta/dos-pasos`: activar con QR y clave, estado, códigos de respaldo) y **Sesiones abiertas** (`/cuenta/sesiones`) | Todos | 1 |
 | P05 | Registro de empresa | `/registro` (pública) | Datos de la financiera y de quien se registra, verificación del correo con código, y creación de la empresa en prueba con su sucursal, su administrador y sus catálogos sembrados (F19) | Visitantes | 1 |
 
 ### Inicio

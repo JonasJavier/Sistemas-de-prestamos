@@ -327,6 +327,12 @@ h1 {
     accent-color: var(--color-brand-700);
   }
 
+  /* PasswordInput has its own «show» eye: Edge's would make two. */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+
   /* The forest sidebar scrolls with a quiet bar, not the system's grey one. */
   .scroll-quiet {
     scrollbar-width: thin;

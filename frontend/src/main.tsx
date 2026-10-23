@@ -4,6 +4,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import { isReauthRequired } from './api/auth'
 import { ApiError } from './api/client'
 import { Toaster } from './components/Toaster'
 import { notify } from './lib/toast'
@@ -35,6 +36,8 @@ const PUBLIC_PATHS = [
 /** 401 inside the app = the session closed (30 min idle or 12 h, doc 06 - 6). */
 function onApiError(error: unknown) {
   if (!(error instanceof ApiError) || error.status !== 401) return
+  // Still signed in, only asked to confirm the password: the screen does it.
+  if (isReauthRequired(error)) return
   const path = window.location.pathname
   if (PUBLIC_PATHS.some((prefix) => path.startsWith(prefix))) return
   queryClient.clear()

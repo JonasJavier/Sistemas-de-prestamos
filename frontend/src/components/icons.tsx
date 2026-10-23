@@ -450,3 +450,25 @@ export const PencilIcon = (p: IconProps) => (
     <path d="m13.5 6.5 4 4" />
   </Svg>
 )
+
+export const KeyIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="m10.8 12.2 8.7-8.7M16 7l2.5 2.5M13.5 9.5 15 11" />
+  </Svg>
+)
+
+export const ShieldCheckIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </Svg>
+)
+
+export const DevicesIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="4" width="13" height="10" rx="1.5" />
+    <path d="M6.5 18h6M9.5 14v4" />
+    <rect x="16" y="9" width="5" height="11" rx="1.2" />
+  </Svg>
+)

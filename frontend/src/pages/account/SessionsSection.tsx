@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { endSessions, listSessions, type UserSessionInfo } from '../../api/auth'
-import { Badge, Button, Card, Spinner } from '../../components/ui'
+import { DevicesIcon } from '../../components/icons'
+import { Badge, Button, LoadError, Spinner } from '../../components/ui'
 import { deviceText } from '../../lib/format'
+import { Panel } from './Panel'
 
 const since = (seconds: number) =>
   new Date(seconds * 1000).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' })
 
-/** Doc 06 - 6: the user sees where the account is open and closes the rest. */
-export function SessionsCard() {
+/** Mi cuenta › Sesiones abiertas (doc 06 - 6): where the account is open,
+ * and closing the rest. */
+export function SessionsSection() {
   const queryClient = useQueryClient()
   const sessions = useQuery({ queryKey: ['user-sessions'], queryFn: listSessions })
   const end = useMutation({
@@ -22,15 +25,11 @@ export function SessionsCard() {
   ]
 
   return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold">Sesiones abiertas</h2>
-          <p className="text-sm text-muted">
-            Si no reconoces un dispositivo, ciérralo y cambia tu contraseña.
-          </p>
-        </div>
-        {others.length > 0 ? (
+    <Panel
+      title="Sesiones abiertas"
+      description="Los dispositivos donde tu cuenta está abierta ahora. Si no reconoces uno, ciérralo y cambia tu contraseña."
+      footer={
+        others.length > 0 ? (
           <Button
             variant="secondary"
             disabled={end.isPending}
@@ -38,14 +37,19 @@ export function SessionsCard() {
           >
             Cerrar las demás
           </Button>
-        ) : null}
-      </div>
+        ) : null
+      }
+    >
       {sessions.isPending ? <Spinner /> : null}
-      <ul className="divide-y divide-edge">
+      {sessions.isError ? <LoadError error={sessions.error} /> : null}
+      <ul className="divide-y divide-edge rounded-xl border border-edge">
         {ordered.map((session) => (
-          <li key={session.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm font-medium">
+          <li key={session.id} className="flex flex-wrap items-center gap-3 px-3.5 py-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted">
+              <DevicesIcon />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
                 {deviceText(session.user_agent)}
                 {session.is_current ? <Badge tone="brand">Esta sesión</Badge> : null}
               </div>
@@ -56,6 +60,7 @@ export function SessionsCard() {
             {!session.is_current ? (
               <Button
                 variant="secondary"
+                size="sm"
                 disabled={end.isPending}
                 onClick={() => end.mutate([session.id])}
               >
@@ -65,6 +70,6 @@ export function SessionsCard() {
           </li>
         ))}
       </ul>
-    </Card>
+    </Panel>
   )
 }

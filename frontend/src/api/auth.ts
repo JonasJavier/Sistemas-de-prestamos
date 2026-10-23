@@ -87,6 +87,35 @@ export async function activateTotp(code: string): Promise<void> {
   await api(`${BASE}/account/authenticators/totp`, { method: 'POST', body: { code } })
 }
 
+/** What protects the account; reading it never asks for the password again. */
+export interface AuthenticatorInfo {
+  type: 'totp' | 'recovery_codes' | 'webauthn'
+  /** Unix seconds. */
+  created_at: number
+  last_used_at: number | null
+  total_code_count?: number
+  unused_code_count?: number
+}
+
+export async function listAuthenticators(): Promise<AuthenticatorInfo[]> {
+  const response = await api<{ data: AuthenticatorInfo[] }>(`${BASE}/account/authenticators`)
+  return response.data
+}
+
+/**
+ * allauth answers 401 while the user is still signed in when a sensitive step
+ * (2FA, recovery codes) needs a sign-in from the last 5 minutes: the screen
+ * asks for the password again instead of treating it as a closed session.
+ */
+export function isReauthRequired(error: unknown): boolean {
+  if (!(error instanceof ApiError) || error.status !== 401) return false
+  return (error.data as AllauthResponse | null)?.meta?.is_authenticated === true
+}
+
+export async function reauthenticate(password: string): Promise<void> {
+  await api(`${BASE}/auth/reauthenticate`, { method: 'POST', body: { password } })
+}
+
 interface RecoveryCodesData {
   unused_codes?: string[]
 }

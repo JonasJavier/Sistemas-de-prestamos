@@ -16,6 +16,7 @@ from apps.accounts.api.serializers import (
     InvitationCreateSerializer,
     InvitationDetailSerializer,
     PendingInvitationSerializer,
+    ProfileSerializer,
     RoleSerializer,
 )
 from apps.accounts.models import Invitation, Membership, Role, User
@@ -102,6 +103,27 @@ class MeView(APIView):
                 else {"grant": str(access.id), "ends_at": access.ends_at, "reason": access.reason},
             }
         )
+
+    def patch(self, request: Request) -> Response:
+        """Mi cuenta: the person corrects their own name (decision 117)."""
+        from apps.audit.models import record_event
+
+        user = request.user
+        before = user.get_full_name()
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        after = user.get_full_name()
+        if user.company_id and after != before:
+            record_event(
+                company_id=user.company_id,
+                type="account.profile",
+                target=user,
+                actor=user,
+                summary=f"Cambió su nombre a «{after}» desde Mi cuenta",
+                data={"before": before, "after": after},
+            )
+        return self.get(request)
 
 
 class RoleListView(APIView):

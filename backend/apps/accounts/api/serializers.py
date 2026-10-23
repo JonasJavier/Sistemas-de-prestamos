@@ -11,6 +11,16 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "is_system"]
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    """Mi cuenta: the person edits their own name; the email stays, since it
+    is how they sign in (decision 117)."""
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]
+        extra_kwargs = {"first_name": {"allow_blank": False}}
+
+
 class MembershipSerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source="branch.name", read_only=True)
     branch_code = serializers.CharField(source="branch.code", read_only=True)

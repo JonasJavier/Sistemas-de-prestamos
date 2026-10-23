@@ -44,7 +44,7 @@ test.describe('acceso (doc 06 - 6)', () => {
     const laptop = await sessionFor(browser, MODELO.contabilidad)
     const phone = await sessionFor(browser, MODELO.contabilidad)
 
-    await laptop.goto('/cuenta')
+    await laptop.goto('/cuenta/sesiones')
     await expect(laptop.getByText('Esta sesión')).toBeVisible()
     await laptop.getByRole('button', { name: 'Cerrar las demás' }).click()
     await expect(laptop.getByRole('button', { name: 'Cerrar las demás' })).toHaveCount(0)

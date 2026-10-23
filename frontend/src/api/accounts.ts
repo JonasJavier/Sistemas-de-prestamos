@@ -30,6 +30,11 @@ export function getMe(): Promise<Me> {
   return api('/api/v1/yo/')
 }
 
+/** Mi cuenta: the person corrects their own name; the email does not change. */
+export function updateProfile(body: { first_name: string; last_name: string }): Promise<Me> {
+  return api('/api/v1/yo/', { method: 'PATCH', body })
+}
+
 interface Paginated<T> {
   count: number
   results: T[]
