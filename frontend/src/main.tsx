@@ -11,6 +11,9 @@ import { notify } from './lib/toast'
 import { errorMessage } from './lib/format'
 import './index.css'
 import { buildRouter } from './router'
+import { startErrorReporting } from './lib/errors'
+
+startErrorReporting()
 
 // Light by default; dark only if the user chose it (owner feedback 05/10/2026).
 try {

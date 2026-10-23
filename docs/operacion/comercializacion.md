@@ -25,13 +25,12 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
   - [ ] 👤 Foto de perfil del remitente: crear una cuenta de Google con `hola@cobradia.com` («Usar mi dirección de correo actual») y subir `site/public/marca/cobradia-perfil.png`. Así Gmail muestra el logo junto a los correos de `hola@`.
   - [ ] 🤖 Más adelante: BIMI (logo de marca en Gmail y Yahoo) cuando DMARC pase a `quarantine` y haya marca registrada; buzones reales con Google Workspace cuando haya personal de soporte.
 - [x] **A3. Superusuario del dueño en producción** 👤 *Hecho:* jonasjavier.dev@gmail.com entra a `/plataforma` como dueño (23/10/2026).
-- [ ] **A4. Respaldos** 👤🤖
-  - 👤 Activar los respaldos programados de Postgres en el panel de Railway (*Postgres → Backups*; requiere el plan Pro).
-  - 👤 Generar la llave gpg de respaldos y guardar la privada fuera de línea (manual del servidor, «Respaldos»).
-  - 🤖 Montar la copia externa cifrada diaria (base y bucket) como servicio con *cron* y ensayar una restauración completa con `verificar_integridad`.
-- [ ] **A5. Monitoreo** 👤🤖
-  - 👤 Crear la cuenta de Sentry (plan gratis) y la de un monitor de disponibilidad (UptimeRobot o Better Stack, gratis).
-  - 🤖 Poner `SENTRY_DSN` en `api`, `worker` y `beat`; vigilar `/api/v1/salud/` cada minuto con aviso a tu correo y WhatsApp; llenar `APP_VERSION` (hoy la salud responde la versión vacía).
+- [x] **A4. Respaldos** 👤🤖 *Hecho el 23/10/2026 (decisión 123):* el servicio `respaldo` copia cada noche la base y los archivos, cifrados, al bucket `respaldos` (otra región), guarda 30 días y la restauración se ensayó en Railway con `verificar_integridad` (`infra/railway/README.md`, «Respaldos»).
+  - [ ] 👤 Guardar `Documents/cobradia-respaldos/llave-privada-respaldos.asc` en dos lugares fuera de línea (USB y gestor de contraseñas). Sin ella los respaldos no se pueden leer.
+  - [ ] 👤 Opcional: activar además los *snapshots* de *Postgres → Backups* en el panel de Railway (plan Pro).
+- [ ] **A5. Monitoreo** 👤🤖 *El código está listo (decisión 123): Sentry en servidor y navegador, `APP_VERSION` en cada despliegue.*
+  - [ ] 👤 Crear la cuenta de Sentry (plan gratis) con un proyecto *Django* y uno *React*, y poner los DSN: `railway variables --service api --set SENTRY_DSN=…` y `railway variables --service web --set VITE_SENTRY_DSN=…`; luego `infra/railway/deploy.sh api web`.
+  - [ ] 👤 Crear la cuenta de UptimeRobot (gratis) con un monitor HTTPS a `https://app.cobradia.com/api/v1/salud/` cada minuto (palabra clave `ok`) y aviso por correo y WhatsApp.
 - [ ] **A6. Planes y precios (PT3)** 👤 decide, 🤖 implementa
   - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 🤖 puede prepararte una propuesta con tres planes comparada con los precios de los competidores, para que solo elijas.
   - 🤖 La pantalla Planes del panel ya los crea y edita (decisión 122, 23/10/2026): tú los cargas ahí. Falta publicarlos en `cobradia.com/#precios` (hoy dice «estamos por anunciar») y en la pantalla Suscripción (hoy elegir un plan solo abre un correo).

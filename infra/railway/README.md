@@ -23,6 +23,8 @@ Cuando el dueño le dé acceso (GitHub → *Settings* → *Applications* → *Ra
 | `worker` · `beat` | Tareas de Celery en segundo plano y programadas | `backend/Dockerfile` |
 | `Postgres` · `Redis` | Bases administradas por Railway | Plantillas de Railway |
 | `archivos` | *Bucket* S3 privado: documentos, expedientes, exportaciones, logos | Railway Buckets |
+| `respaldo` | Cada noche: base y archivos cifrados al bucket `respaldos` (decisión 123) | `backend/Dockerfile.respaldo` |
+| `respaldos` | *Bucket* de respaldos, en otra región (`sjc`) | Railway Buckets |
 
 ## Cómo está armado
 
@@ -74,7 +76,46 @@ curl -fsS https://<dominio>/api/v1/salud/        # responde la versión (commit)
 
 **Volver atrás:** en el panel de Railway, *Deployments* → la versión anterior → *Redeploy*. Las migraciones son compatibles hacia adelante (doc 10 §3); si la versión nueva dañó datos, además se restaura un respaldo.
 
+## Respaldos (decisión 123)
+
+El servicio `respaldo` (imagen `backend/Dockerfile.respaldo`: el mismo código más `pg_dump` 18 y gpg) queda corriendo y **cada día a las 3:00 (Santo Domingo)** saca la base completa (`pg_dump` como superusuario: incluye a todas las empresas) y un `tar.gz` con todos los archivos privados del bucket `archivos`, **cifra ambos con la llave pública** del dueño y los sube al bucket `respaldos` (región `sjc`, distinta de `archivos` en `iad`). Guarda 30 días. El servicio no puede leer lo que escribe: solo la llave privada, que vive fuera de línea en poder del dueño, abre un respaldo. Un respaldo fallido sale en los registros del servicio y en Sentry.
+
+Variables del servicio: `BACKUP_DATABASE_URL` (`${{Postgres.DATABASE_URL}}`), `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_S3_REGION` (las credenciales del bucket: `railway bucket credentials --bucket respaldos`), `BACKUP_PUBLIC_KEY_B64` (la llave pública en base64), `BACKUP_KEEP_DAYS` (30), `BACKUP_HOUR` (3) y, por referencia a `api`, las de la app. Para llevar las copias a otro proveedor (Cloudflare R2, Backblaze B2) basta cambiar las cuatro `BACKUP_S3_*`.
+
+```bash
+railway ssh --service respaldo -- python manage.py respaldar            # un respaldo ahora mismo
+railway ssh --service respaldo -- python manage.py restaurar --listar   # qué copias hay
+railway logs --service respaldo                                         # «Respaldo listo: …» cada noche
+```
+
+**Las llaves** se generaron el 23/10/2026 en la computadora del dueño (`Documents/cobradia-respaldos/`): `llave-publica-respaldos.asc` está en Railway; `llave-privada-respaldos.asc` debe guardarse en dos lugares fuera de línea (USB y gestor de contraseñas) y nunca en el repositorio ni en un chat. Sin ella los respaldos no se pueden leer.
+
+**Simulacro de restauración** (mensual, doc 10 §3). La llave privada se presta al servicio solo mientras dura:
+
+```bash
+railway variables --service respaldo --skip-deploys --set "BACKUP_PRIVATE_KEY_B64=$(base64 -w0 ~/Documents/cobradia-respaldos/llave-privada-respaldos.asc)"
+railway ssh --service respaldo -- python manage.py restaurar          # última copia → cobradia_restore, verificar_integridad, y la borra
+railway variables --service respaldo --skip-deploys --unset BACKUP_PRIVATE_KEY_B64
+```
+
+Restaura en una base aparte (`cobradia_restore`, propiedad del rol `cobradia`, como producción), corre `verificar_integridad` sobre ella (RLS forzado en todas las tablas de empresa y el libro cuadrado) y la borra. Anotar la fecha del simulacro en `docs/operacion/incidentes.md`.
+
+**Recuperación real:** detener `api`, `worker` y `beat` en el panel, y luego `railway ssh --service respaldo -- python manage.py restaurar --produccion --clave base/cobradia-db-<fecha>.dump.gpg --archivos archivos/cobradia-archivos-<fecha>.tar.gz.gpg`; volver a encender los servicios y comprobar `/api/v1/salud/`.
+
+Además, en el panel de Railway, *Postgres → Backups* ofrece instantáneas del volumen (plan Pro): son la copia rápida del proveedor; la externa cifrada es la que vale si Railway falla.
+
+## Errores y disponibilidad (decisión 123)
+
+- **Errores:** con `SENTRY_DSN` en `api` (worker, beat y respaldo lo toman por referencia) cada excepción del servidor llega a Sentry con la versión (`APP_VERSION`), sin datos personales. El navegador reporta los suyos cuando `web` se construye con `VITE_SENTRY_DSN` (un proyecto *React* aparte en Sentry). Se ponen con `railway variables --service api --set SENTRY_DSN=…` y `railway variables --service web --set VITE_SENTRY_DSN=…`, y se redespliegan `api` y `web`.
+- **Disponibilidad:** un monitor externo (UptimeRobot o Better Stack, gratis) pide `https://app.cobradia.com/api/v1/salud/` cada minuto; responde 503 si la base o Redis no contestan. El aviso va al correo y al WhatsApp del dueño.
+
+## Desplegar una versión
+
+Hasta conectar GitHub, `infra/railway/deploy.sh` (desde la raíz, con todo en commit) pone `APP_VERSION` = el commit en cada servicio y los sube en orden: `api` (migra) → `worker` → `beat` → `respaldo` → `web`. Con un servicio como argumento, solo ese.
+
 ## Pendientes que dependen del dueño
 
-1. **Respaldos.** Activar los respaldos programados del volumen de Postgres en el panel (*Postgres* → *Backups*) y, para la copia externa cifrada, adaptar `infra/production/backup.sh` como servicio con *cron*.
-2. **Errores.** Poner `SENTRY_DSN` en `api`, `worker` y `beat`.
+1. **Sentry.** Crear la cuenta (plan gratis), un proyecto *Django* y uno *React*, y poner los DSN como dice arriba.
+2. **Monitor de disponibilidad.** Crear la cuenta de UptimeRobot (o Better Stack) con el monitor de `/api/v1/salud/` y el aviso por correo y WhatsApp.
+3. **La llave privada de los respaldos** en dos lugares fuera de línea, y el primer simulacro de restauración anotado.
+4. **Acceso a GitHub** para que cada *push* despliegue solo (arriba).

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
-import type { ComponentType } from 'react'
+import { useEffect, type ComponentType } from 'react'
 import {
   createRootRouteWithContext,
   createRoute,
@@ -15,6 +15,7 @@ import { getSession, type SessionUser } from './api/auth'
 import { AppShell } from './components/AppShell'
 import { PublicPage } from './components/ui'
 import { buttonClass } from './components/classes'
+import { reportError } from './lib/errors'
 import { APPLICATION_TABS, type ApplicationsSearch, type ApplicationTab } from './lib/applications'
 import { safeReturn } from './lib/navigation'
 import { ACCESS, hasRole, platformView } from './lib/roles'
@@ -212,7 +213,10 @@ function NotFound() {
 }
 
 /** Works inside the shell and outside it: a compact card, no second logo. */
-function RouteError({ reset }: { reset: () => void }) {
+function RouteError({ error, reset }: { error: unknown; reset: () => void }) {
+  useEffect(() => {
+    reportError(error)
+  }, [error])
   return (
     <div className="mx-auto my-16 max-w-md space-y-4 rounded-xl border border-edge bg-surface p-6 text-center shadow-sm">
       <h1 className="text-lg font-semibold">Algo salió mal</h1>
