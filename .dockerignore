@@ -1,10 +1,19 @@
-# Context of infra/production/web.Dockerfile (the repository root).
+# Context of infra/production/web.Dockerfile and backend/Dockerfile.respaldo
+# (the repository root, as Railway uploads it).
 **/node_modules
 **/dist
 **/.astro
 frontend/test-results
 frontend/playwright-report
-backend
+backend/.venv
+backend/media
+backend/staticfiles
+backend/.env
+backend/**/__pycache__
+backend/.pytest_cache
+backend/.pytest-media
+backend/.ruff_cache
+backend/.mypy_cache
 docs
 infra/production/.env
 infra/production/backups

@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # The «respaldo» service (decision 123): the same code as the API plus the
 # PostgreSQL 18 client (pg_dump, pg_restore, psql) and gpg. Railway builds it with
-# RAILWAY_DOCKERFILE_PATH=backend/Dockerfile.respaldo and backend/ as the context.
+# RAILWAY_DOCKERFILE_PATH=backend/Dockerfile.respaldo and the repository root as
+# the context (the root .dockerignore keeps backend/ in), so paths start at backend/.
 
 ARG REGISTRY=docker.io/library
 FROM ${REGISTRY}/python:3.14-slim AS base
@@ -28,9 +29,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
+COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
-COPY . .
+COPY backend/ .
 
 FROM base AS runtime
 ARG APP_VERSION=dev
