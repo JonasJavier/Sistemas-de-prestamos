@@ -103,11 +103,24 @@ def source_files() -> tuple[Any, str] | None:
     return client, options["bucket_name"]
 
 
-def superuser_url() -> str:
+def app_database() -> str:
+    """The database the app uses (from its own DATABASE_URL): «cobradia»."""
+    url = os.environ.get("DATABASE_URL", "")
+    name = urlsplit(url).path.lstrip("/") if url else ""
+    if not name:
+        raise BackupError(
+            "Falta DATABASE_URL (la conexión de la app) para saber qué base respaldar."
+        )
+    return name
+
+
+def superuser_url(database: str | None = None) -> str:
+    """The superuser connection, pointed at the app's database (Railway's own
+    URL names its default «railway» database, which holds nothing)."""
     url = os.environ.get("BACKUP_DATABASE_URL", "")
     if not url:
         raise BackupError("Falta BACKUP_DATABASE_URL (la conexión de superusuario a Postgres).")
-    return url
+    return with_database(url, database or app_database())
 
 
 def with_database(url: str, name: str) -> str:
@@ -303,10 +316,12 @@ def restore_database(
     table owned by it (so RLS is forced on the app as in production)."""
     if not into.replace("_", "").isalnum() or not into.islower():
         raise BackupError(f"Nombre de base inválido: {into}")
-    admin = superuser_url()
+    admin = superuser_url("postgres")
     with tempfile.TemporaryDirectory() as folder:
         encrypted = Path(folder) / "db.dump.gpg"
         _download(destination, key, encrypted)
+        if into == app_database() and os.environ.get("BACKUP_ALLOW_PRODUCTION") != "1":
+            raise BackupError("Restaurar sobre la base de producción exige --produccion.")
         _psql(with_database(admin, "postgres"), f"DROP DATABASE IF EXISTS {into} WITH (FORCE)")
         _psql(with_database(admin, "postgres"), f"CREATE DATABASE {into} OWNER {role}")
         with (Path(folder) / "db.dump").open("wb") as plain:

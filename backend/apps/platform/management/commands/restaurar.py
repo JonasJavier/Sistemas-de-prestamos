@@ -10,6 +10,8 @@ sets it just before and removes it right after. A real recovery stops
 api, worker and beat first and targets the «cobradia» database.
 """
 
+import os
+
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.platform import backups
@@ -51,6 +53,8 @@ class Command(BaseCommand):
             if into == PRODUCTION_DATABASE and not options["produccion"]:
                 raise CommandError("Para tocar «cobradia» usa --produccion.")
             self.stdout.write(f"Restaurando {key} en «{into}»…")
+            if options["produccion"]:
+                os.environ["BACKUP_ALLOW_PRODUCTION"] = "1"
             backups.restore_database(destination, key, into)
             self.stdout.write("Base restaurada. Comprobando que sigue siendo el mismo sistema…")
             backups.check_restored(into)
@@ -59,7 +63,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Archivos devueltos al bucket: {count}")
             if not options["produccion"] and not options["conservar"]:
                 backups._psql(  # noqa: SLF001 - the drill cleans after itself
-                    backups.with_database(backups.superuser_url(), "postgres"),
+                    backups.superuser_url("postgres"),
                     f"DROP DATABASE IF EXISTS {into} WITH (FORCE)",
                 )
                 self.stdout.write(f"Simulacro terminado: «{into}» borrada.")

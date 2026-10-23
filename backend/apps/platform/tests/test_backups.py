@@ -52,3 +52,10 @@ def test_a_drill_refuses_a_bad_database_name() -> None:
     destination = backups.Destination("https://s3", "respaldos", "k", "s", None)
     with pytest.raises(backups.BackupError, match="inválido"):
         backups.restore_database(destination, "base/x.dump.gpg", "Cobradia; DROP")
+
+
+def test_the_superuser_url_points_at_the_apps_database(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgres://cobradia:x@host:5432/cobradia")
+    monkeypatch.setenv("BACKUP_DATABASE_URL", "postgres://postgres:y@host:5432/railway")
+    assert backups.superuser_url() == "postgres://postgres:y@host:5432/cobradia"
+    assert backups.superuser_url("postgres") == "postgres://postgres:y@host:5432/postgres"
