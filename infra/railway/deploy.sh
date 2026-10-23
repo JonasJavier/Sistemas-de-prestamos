@@ -25,7 +25,7 @@ status() {
 for service in "${SERVICES[@]}"; do
   railway variables --service "$service" --skip-deploys --set "APP_VERSION=$VERSION" >/dev/null
   case "$service" in
-    api | worker | beat | respaldo) out=$(cd backend && railway up --service "$service" --detach) ;;
+    api | worker | beat | respaldo) out=$(railway up --service "$service" --detach) ;;
     *) out=$(railway up --service "$service" --detach) ;;
   esac
   id=$(echo "$out" | grep -o 'id=[0-9a-f-]*' | cut -d= -f2)
