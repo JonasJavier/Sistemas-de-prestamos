@@ -53,6 +53,7 @@ class PlanSerializer(serializers.ModelSerializer):
             "max_branches",
             "max_active_loans",
             "is_trial",
+            "tier",
         ]
 
 
@@ -82,6 +83,7 @@ class PlanWriteSerializer(serializers.ModelSerializer):
             "max_active_loans",
             "is_trial",
             "is_active",
+            "tier",
             "companies",
         ]
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import type { Me } from '../../api/accounts'
+import { missingFeature } from '../../lib/plan'
 import { ACCESS, hasRole, platformView } from '../../lib/roles'
 import {
   AgendaIcon,
@@ -191,7 +192,26 @@ export function navFor(me: Me): NavGroup[] {
   ]
   // The collector lives on the street: his route comes first.
   if (onlyCollector) groups.unshift(groups.splice(1, 1)[0])
-  return groups.filter((group) => group.items.length)
+  return groups
+    .map((group) => ({ ...group, items: inPlan(me, group.items) }))
+    .filter((group) => group.items.length)
+}
+
+/** Decision 124: the screens the company's plan does not include leave the
+ * menu; a section left with one screen becomes that screen. */
+function inPlan(me: Me, entries: NavEntry[]): NavEntry[] {
+  const kept: NavEntry[] = []
+  for (const entry of entries) {
+    if (!entry.children) {
+      if (!missingFeature(me, entry.to)) kept.push(entry)
+      continue
+    }
+    const children = entry.children.filter((child) => !missingFeature(me, child.to))
+    if (!children.length) continue
+    if (children.length === 1) kept.push({ ...children[0], icon: entry.icon })
+    else kept.push({ ...entry, to: children[0].to, children })
+  }
+  return kept
 }
 
 /** «/prestamos» owns «/prestamos/01-000010», never «/prestamosX»; «/» is only home. */

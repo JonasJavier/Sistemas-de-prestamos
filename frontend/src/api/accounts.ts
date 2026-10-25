@@ -26,6 +26,9 @@ export interface Me {
   agenda_today?: number
   /** PT4 (decision 091): the platform owner reading a company, read-only. */
   support?: { grant: string; ends_at: string; reason: string } | null
+  /** Decision 124: the company's plan and the features it includes. */
+  plan_tier?: 'esencial' | 'profesional' | 'empresa' | null
+  features?: string[]
 }
 
 export function getMe(): Promise<Me> {

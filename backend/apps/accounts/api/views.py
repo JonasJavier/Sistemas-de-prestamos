@@ -22,6 +22,7 @@ from apps.accounts.api.serializers import (
 from apps.accounts.models import Invitation, Membership, Role, User
 from apps.core.api.permissions import CompanyNotSuspendedOrReadOnly
 from apps.core.tenancy import company_context
+from apps.platform import features
 
 
 def _badges(user: User) -> dict:
@@ -97,6 +98,11 @@ class MeView(APIView):
                 "company_status": user.company.status if user.company_id else None,
                 "mfa_enabled": mfa_enabled,
                 "mfa_required": settings.REQUIRE_MFA,
+                # Decision 124: what the company's plan includes; the SPA hides the rest.
+                "plan_tier": features.tier_of(user.company_id) if user.company_id else None,
+                "features": sorted(features.features_of(user.company_id))
+                if user.company_id
+                else [],
                 # Decision 118: whoever joined with Google may have none yet.
                 "has_password": user.has_usable_password(),
                 "location_consent": user.location_consent_at is not None,

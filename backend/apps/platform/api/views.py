@@ -381,6 +381,34 @@ class PlanViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
+class PublicPlansView(APIView):
+    """Decision 124: the plans on offer, for the subscription screen and the
+    site. Public: prices are public."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list[type] = []
+
+    def get(self, request: Request) -> Response:
+        from apps.platform import features
+
+        rows = Plan.objects.filter(is_active=True, is_trial=False).order_by("monthly_price")
+        return Response(
+            [
+                {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "tier": plan.tier,
+                    "monthly_price": str(plan.monthly_price),
+                    "max_users": plan.max_users,
+                    "max_branches": plan.max_branches,
+                    "max_active_loans": plan.max_active_loans,
+                    "features": sorted(features.features_of_tier(plan.tier)),
+                }
+                for plan in rows
+            ]
+        )
+
+
 class MyCompanyView(APIView):
     """A tenant reads its own company and subscription (P83)."""
 

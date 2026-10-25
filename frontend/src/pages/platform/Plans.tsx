@@ -8,6 +8,7 @@ import {
   listPlans,
   updatePlan,
   type PlanPayload,
+  type PlanTier,
   type PlatformPlan,
 } from '../../api/platform'
 import { usePrompt } from '../../components/Dialog'
@@ -23,10 +24,12 @@ import {
   Input,
   LoadError,
   PageHeader,
+  Select,
   Spinner,
   Table,
 } from '../../components/ui'
 import { errorMessage, rd } from '../../lib/format'
+import { TIER_LABELS } from '../../lib/plan'
 import { notify } from '../../lib/toast'
 
 const cap = (value: number | null) => (value === null ? 'Sin límite' : String(value))
@@ -115,6 +118,7 @@ export function PlansPage() {
               >
                 <div className="flex min-w-0 basis-full items-center gap-2 md:basis-auto">
                   <span className="truncate font-semibold">{plan.name}</span>
+                  <span className="text-[12px] text-muted">{TIER_LABELS[plan.tier]}</span>
                   {plan.is_trial ? <Badge tone="gold">Prueba</Badge> : null}
                   {plan.is_active ? null : <Badge tone="warning">Desactivado</Badge>}
                 </div>
@@ -171,6 +175,7 @@ interface Draft {
   max_active_loans: string
   is_trial: boolean
   is_active: boolean
+  tier: PlanTier
 }
 
 const text = (value: number | null) => (value === null ? '' : String(value))
@@ -193,6 +198,7 @@ function PlanDialog({
     max_active_loans: text(plan?.max_active_loans ?? null),
     is_trial: plan?.is_trial ?? false,
     is_active: plan?.is_active ?? true,
+    tier: plan?.tier ?? 'empresa',
   }))
   const [error, setError] = useState<string | null>(null)
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
@@ -206,6 +212,7 @@ function PlanDialog({
     max_active_loans: limit(draft.max_active_loans),
     is_trial: draft.is_trial,
     is_active: draft.is_active,
+    tier: draft.tier,
   })
   const save = useMutation({
     mutationFn: () => (plan ? updatePlan(plan.id, payload()) : createPlan(payload())),
@@ -278,6 +285,13 @@ function PlanDialog({
             />
           </Field>
         </div>
+        <Field label="Funciones que incluye">
+          <Select value={draft.tier} onChange={(e) => set('tier', e.target.value as PlanTier)}>
+            <option value="esencial">Esencial: la oficina</option>
+            <option value="profesional">Profesional: la calle (rutas, cobranza, mensajes…)</option>
+            <option value="empresa">Empresa: todo (contabilidad, fiscal, legal…)</option>
+          </Select>
+        </Field>
         <CheckRow
           label="Es el plan de prueba"
           hint="El que recibe cada empresa al registrarse; solo puede haber uno activo."

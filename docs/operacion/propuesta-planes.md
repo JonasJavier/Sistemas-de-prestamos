@@ -20,7 +20,7 @@ Tres planes en pesos, **clientes y préstamos sin límite en los tres**, cada un
 
 **Empresa (RD$3,690) — la financiera completa.** Todo lo de Profesional más: Contabilidad NIIF con plan de cuentas, diario, mayor y balances · Formatos 606 y 607 · Comprobantes fiscales (NCF) · Cuentas y bancos con conciliación bancaria · Cuentas por pagar · Cierre de mes · Comisiones de cobradores y oficiales · Vía legal: casos, profesionales legales, intimación y contratos con garantía · QR de verificación en todos los documentos · Sucursales y usuarios sin límite · Soporte prioritario y acompañamiento en la migración de la cartera.
 
-El sistema hoy limita por usuarios, sucursales y préstamos activos (decisión 104); el corte de funciones por plan se construye a continuación (decisión pendiente de numerar al implementarlo).
+Construido el 25/10/2026 como decisión 124: el sistema corta las funciones por plan, los planes están cargados y publicados.
 
 ---
 

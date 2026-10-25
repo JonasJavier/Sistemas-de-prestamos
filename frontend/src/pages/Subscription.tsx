@@ -1,55 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { getMyCompany } from '../api/platform'
+import { getMyCompany, listPublicPlans } from '../api/platform'
 import { buttonClass } from '../components/classes'
 import { BankIcon, CheckIcon } from '../components/icons'
 import { Alert, PageHeader, Segmented, Spinner, Texture } from '../components/ui'
 import { day, STATUS_BADGES, whole } from '../lib/format'
+import { PLAN_PITCH } from '../lib/plan'
 import { useDocumentTitle } from '../lib/hooks'
 
 /** The length of the free trial (the sign-up promises 30 days). */
 const TRIAL_DAYS = 30
-
-/** Reference plans of the redesign (decision 115). Prices and limits are a
- * commercial decision still open: the screen says so, and choosing one only
- * writes to Cobradía to activate it by transfer, as today. */
-const PLANS = [
-  {
-    name: 'Esencial',
-    price: 2900,
-    pitch: 'Para empezar a ordenar la cartera',
-    features: [
-      '1 sucursal · 3 usuarios',
-      'Hasta 300 préstamos activos',
-      'Caja y recibos de 80 mm',
-      'Reportes de cartera y mora',
-    ],
-  },
-  {
-    name: 'Profesional',
-    price: 6900,
-    pitch: 'Rutas, cobradores y varias sucursales',
-    features: [
-      '3 sucursales · 10 usuarios',
-      'Hasta 2,000 préstamos activos',
-      'Rutas y app del cobrador',
-      'Promesas, agenda y antifraude',
-    ],
-    recommended: true,
-  },
-  {
-    name: 'Empresa',
-    price: 14900,
-    pitch: 'Para financieras con contabilidad propia',
-    features: [
-      'Sucursales y usuarios sin límite',
-      'Préstamos sin límite',
-      'Contabilidad y conciliaciones',
-      'Vía legal y auditoría',
-    ],
-  },
-]
 
 const mailto = (plan: string, yearly: boolean) =>
   `mailto:hola@cobradia.com?subject=${encodeURIComponent(
@@ -97,6 +58,7 @@ function TrialDays({ left, endsOn }: { left: number; endsOn: string | null }) {
 export function SubscriptionPage() {
   useDocumentTitle('Suscripción')
   const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
+  const plans = useQuery({ queryKey: ['public-plans'], queryFn: listPublicPlans })
   const [yearly, setYearly] = useState(false)
   const data = company.data
   const badge = data ? STATUS_BADGES[data.status] : null
@@ -224,7 +186,7 @@ export function SubscriptionPage() {
           <div className="flex flex-wrap items-baseline gap-x-3">
             <h2 className="text-[19px] font-semibold">Planes</h2>
             <span className="text-[12.5px] text-muted">
-              Precios de referencia; los definitivos se publican antes del lanzamiento.
+              Precio de lanzamiento, en pesos y sin ITBIS. Clientes y préstamos sin límite en todos.
             </span>
           </div>
           <Segmented
@@ -238,7 +200,23 @@ export function SubscriptionPage() {
           />
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
-          {PLANS.map((p) => {
+          {(plans.data ?? []).map((item) => {
+            const p = {
+              name: item.name,
+              price: Number(item.monthly_price),
+              pitch: PLAN_PITCH[item.tier].pitch,
+              features: [
+                [
+                  item.max_branches === null
+                    ? 'Sucursales sin límite'
+                    : `${item.max_branches} ${item.max_branches === 1 ? 'sucursal' : 'sucursales'}`,
+                  item.max_users === null ? 'usuarios sin límite' : `${item.max_users} usuarios`,
+                ].join(' · '),
+                ...PLAN_PITCH[item.tier].bullets,
+              ],
+              recommended: item.tier === 'profesional',
+              current: plan?.name === item.name,
+            }
             const price = yearly ? Math.round((p.price * 10) / 12) : p.price
             const dark = Boolean(p.recommended)
             return (
@@ -258,7 +236,13 @@ export function SubscriptionPage() {
                 ) : null}
                 <div className="relative flex items-center justify-between gap-2">
                   <h3 className="text-[18px] font-semibold">{p.name}</h3>
-                  {dark ? (
+                  {p.current ? (
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${dark ? 'bg-white/15 text-on-forest' : 'bg-brand-100 text-brand-800'}`}
+                    >
+                      Tu plan
+                    </span>
+                  ) : dark ? (
                     <span className="rounded-full bg-gold-500 px-2.5 py-0.5 text-[11px] font-bold text-brand-950">
                       Recomendado
                     </span>

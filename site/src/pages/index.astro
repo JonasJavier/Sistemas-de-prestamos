@@ -68,6 +68,53 @@ const FEATURES = [
   },
 ]
 
+/** Decision 124: the three plans Jonas decided on 25/10/2026. */
+const PLANS = [
+  {
+    name: 'Esencial',
+    price: 990,
+    pitch: 'Para ordenar la cartera y la caja de la oficina.',
+    size: '1 sucursal · 3 usuarios · préstamos sin límite',
+    bullets: [
+      'Clientes, solicitudes y préstamos',
+      'Pagos con recibo impreso o por WhatsApp',
+      'Atrasos con mora automática',
+      'Caja: apertura, cierre y cuadre',
+      'Reportes de cartera y cobros del día',
+      'Portal del cliente y seguridad en dos pasos',
+    ],
+  },
+  {
+    name: 'Profesional',
+    price: 2290,
+    featured: true,
+    pitch: 'Para financieras con cobradores en la calle.',
+    size: '3 sucursales · 10 usuarios · préstamos sin límite',
+    bullets: [
+      'Todo lo de Esencial',
+      'Rutas con GPS y app del cobrador',
+      'Promesas, agenda y escalamiento',
+      'Recordatorios por WhatsApp, SMS y correo',
+      'Clasificación de clientes y antifraude',
+      'Gastos, reportes completos y exportaciones',
+    ],
+  },
+  {
+    name: 'Empresa',
+    price: 3690,
+    pitch: 'Para financieras con contabilidad propia.',
+    size: 'Sucursales y usuarios sin límite',
+    bullets: [
+      'Todo lo de Profesional',
+      'Contabilidad NIIF, 606 y 607',
+      'Comprobantes fiscales y cuentas por pagar',
+      'Bancos y conciliación bancaria',
+      'Comisiones y vía legal',
+      'Soporte prioritario y migración acompañada',
+    ],
+  },
+]
+
 const FAQ = [
   {
     q: '¿Necesito instalar algo?',
@@ -237,36 +284,39 @@ const jsonLd = {
   <section class="section section-alt" id="precios">
     <div class="wrap">
       <div class="section-head">
-        <h2>Precios</h2>
-        <p>Pruébalo completo antes de decidir. Pagas solo si te sirve.</p>
+        <h2>Precios de lanzamiento</h2>
+        <p>
+          En pesos y sin ITBIS. Clientes y préstamos sin límite en todos los planes. Primero pruebas
+          todo {TRIAL_DAYS} días gratis, sin tarjeta.
+        </p>
       </div>
-      <div class="price">
-        <div class="card price-main">
-          <h3>Prueba completa</h3>
-          <div class="price-figure">{TRIAL_DAYS} días <small>gratis</small></div>
-          <p>Con todas las funciones y todos los usuarios que necesites.</p>
-          <ul class="checks">
-            <li>Sin tarjeta de crédito.</li>
-            <li>Tus datos se quedan contigo al terminar la prueba.</li>
-            <li>Puedes cargar tus préstamos actuales desde el primer día.</li>
-          </ul>
-          <div class="hero-cta">
-            <a class="btn btn-gold" href={SIGN_UP}>Crear mi cuenta</a>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Planes</h3>
-          <p>
-            Estamos por anunciar los planes mensuales. Escríbenos y te contamos cuál le conviene a tu
-            financiera.
-          </p>
-          <div class="hero-cta">
-            <a class="btn btn-primary" href={`mailto:${CONTACT_EMAIL}?subject=Planes%20de%20Cobrad%C3%ADa`}
-              >Consultar planes</a
-            >
-          </div>
-        </div>
+      <div class="plans">
+        {
+          PLANS.map((plan) => (
+            <div class={`card plan${plan.featured ? ' price-main' : ''}`}>
+              {plan.featured && <span class="plan-tag">Recomendado</span>}
+              <h3>{plan.name}</h3>
+              <p class="plan-pitch">{plan.pitch}</p>
+              <div class="price-figure">
+                RD$ {plan.price.toLocaleString('es-DO')} <small>/ mes</small>
+              </div>
+              <p class="plan-size">{plan.size}</p>
+              <ul class="checks">
+                {plan.bullets.map((item) => <li>{item}</li>)}
+              </ul>
+              <div class="hero-cta">
+                <a class={`btn ${plan.featured ? 'btn-gold' : 'btn-primary'}`} href={SIGN_UP}>
+                  Empezar gratis
+                </a>
+              </div>
+            </div>
+          ))
+        }
       </div>
+      <p class="plans-note">
+        Pago anual: pagas 10 meses y usas 12. Se paga por transferencia o depósito; escríbenos a{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> y activamos tu cuenta el mismo día.
+      </p>
     </div>
   </section>
 

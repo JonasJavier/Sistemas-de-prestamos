@@ -54,9 +54,12 @@ export function getMyCompany(): Promise<MyCompany> {
 /** Owner panel (PT1): lifecycle data only, never business data. */
 export type CompanyStatus = 'trial' | 'active' | 'suspended' | 'closed'
 
+export type PlanTier = 'esencial' | 'profesional' | 'empresa'
+
 export interface PlatformPlan {
   id: string
   name: string
+  tier: PlanTier
   monthly_price: string
   currency: string
   max_users: number | null
@@ -182,6 +185,22 @@ export function resendVerification(companyId: string, userId: string): Promise<v
 // --- PT3: plans (decision 122) -----------------------------------------------
 
 export type PlanPayload = Omit<PlatformPlan, 'id' | 'companies'>
+
+/** Decision 124: the plans on offer, public (the subscription screen). */
+export interface PublicPlan {
+  id: string
+  name: string
+  tier: PlanTier
+  monthly_price: string
+  max_users: number | null
+  max_branches: number | null
+  max_active_loans: number | null
+  features: string[]
+}
+
+export function listPublicPlans(): Promise<PublicPlan[]> {
+  return api('/api/v1/planes/')
+}
 
 export function listPlans(): Promise<PlatformPlan[]> {
   return api('/api/v1/plataforma/planes/')

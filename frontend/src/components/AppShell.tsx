@@ -10,7 +10,9 @@ import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode 
 
 import { getMe, type Me } from '../api/accounts'
 import { logout, type SessionUser } from '../api/auth'
+import { missingFeature } from '../lib/plan'
 import { platformView } from '../lib/roles'
+import { PlanUpsell } from './PlanUpsell'
 import { SCOPED_PATHS } from '../lib/scope'
 import { CommandPalette, type PaletteIntent } from './CommandPalette'
 import { crumbsFor, locate, navFor } from './shell/menu'
@@ -159,9 +161,11 @@ export function AppShell({
 
   // Each screen rises into place (decision 112): the key restarts the
   // animation when the path changes; a section's menu stays still.
+  // Decision 124: a screen outside the company's plan shows the plan instead.
+  const locked = company ? missingFeature(me, pathname) : null
   const content = (
     <div key={pathname} className="min-w-0 animate-rise space-y-5">
-      {children}
+      {locked ? <PlanUpsell me={me} feature={locked} /> : children}
     </div>
   )
 

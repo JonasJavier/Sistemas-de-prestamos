@@ -2,6 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { useState, type ReactNode } from 'react'
 
 import type { Me } from '../../api/accounts'
+import { missingFeature } from '../../lib/plan'
 import { ACCESS, hasRole, platformView } from '../../lib/roles'
 import {
   AgendaIcon,
@@ -109,7 +110,8 @@ export function MobileBar({
 }) {
   const [open, setOpen] = useState(false)
   const pathname = useRouterState({ select: (state) => state.location.pathname })
-  const { tabs, collects } = tabsFor(me)
+  const { tabs: all, collects } = tabsFor(me)
+  const tabs = all.filter((tab) => !missingFeature(me, tab.to))
   const cells: ReactNode[] = tabs.map((tab) => (
     <Link
       key={tab.to}

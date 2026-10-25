@@ -3,6 +3,7 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import type { Me } from '../api/accounts'
+import { hasFeature } from '../lib/plan'
 import { ApiError } from '../api/client'
 import {
   getLoan,
@@ -239,7 +240,11 @@ export function LoanDetailPage({ me }: { me: Me }) {
         />
       </div>
 
-      <Tabs tabs={TABS} value={tab} onChange={setTab} />
+      <Tabs
+        tabs={TABS.filter((item) => item[0] !== 'gestiones' || hasFeature(me, 'collections'))}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === 'resumen' && terms ? (
         <div className="grid gap-4 sm:grid-cols-2">

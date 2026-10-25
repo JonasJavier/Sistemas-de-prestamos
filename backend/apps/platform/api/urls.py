@@ -5,6 +5,7 @@ from apps.platform.api.views import (
     CompanyViewSet,
     MyCompanyView,
     PlanViewSet,
+    PublicPlansView,
     RegistrationView,
 )
 from apps.platform.api.views_support import (
@@ -24,6 +25,7 @@ router.register("plataforma/planes", PlanViewSet, basename="platform-plan")
 urlpatterns = [
     path("registro/", RegistrationView.as_view(), name="company-registration"),
     path("mi-empresa/", MyCompanyView.as_view(), name="my-company"),
+    path("planes/", PublicPlansView.as_view(), name="public-plans"),
     path("plataforma/tablero/", PlatformDashboardView.as_view(), name="platform-dashboard"),
     path(
         "plataforma/empresas/<uuid:pk>/soporte/",

@@ -104,6 +104,10 @@ Restaura en una base aparte (`cobradia_restore`, propiedad del rol `cobradia`, c
 
 Además, en el panel de Railway, *Postgres → Backups* ofrece instantáneas del volumen (plan Pro): son la copia rápida del proveedor; la externa cifrada es la que vale si Railway falla.
 
+## Planes (decisión 124)
+
+`railway ssh --service api -- python manage.py seed_plans` carga o restaura los tres planes (Esencial, Profesional, Empresa) y deja el plan de prueba con todas las funciones. Después, cada plan se ajusta desde el panel (Planes).
+
 ## Errores y disponibilidad (decisión 123)
 
 - **Errores:** con `SENTRY_DSN` en `api` (worker, beat y respaldo lo toman por referencia) cada excepción del servidor llega a Sentry con la versión (`APP_VERSION`), sin datos personales. El navegador reporta los suyos cuando `web` se construye con `VITE_SENTRY_DSN` (un proyecto *React* aparte en Sentry). Se ponen con `railway variables --service api --set SENTRY_DSN=…` y `railway variables --service web --set VITE_SENTRY_DSN=…`, y se redespliegan `api` y `web`.

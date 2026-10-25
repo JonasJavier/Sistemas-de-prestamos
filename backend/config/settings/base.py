@@ -72,6 +72,7 @@ MIDDLEWARE = [
     "apps.platform.middleware.SupportReadOnlyMiddleware",
     "apps.accounts.middleware.WorkingHoursMiddleware",
     "apps.accounts.middleware.MFARequiredMiddleware",
+    "apps.platform.features.PlanFeatureMiddleware",  # decision 124
     "pghistory.middleware.HistoryMiddleware",
 ]
 

@@ -33,6 +33,13 @@ class Plan(TimeStamped):
     max_active_loans = models.PositiveIntegerField(null=True, blank=True)
     is_trial = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    # Decision 124: which features the plan includes (apps/platform/features.py).
+    # The trial and the demo get everything, so the person sees the whole system.
+    tier = models.CharField(
+        max_length=12,
+        choices=[("esencial", "Esencial"), ("profesional", "Profesional"), ("empresa", "Empresa")],
+        default="empresa",
+    )
 
     def __str__(self) -> str:
         return self.name
