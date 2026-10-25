@@ -29,7 +29,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
   - [ ] 👤 Guardar `Documents/cobradia-respaldos/llave-privada-respaldos.asc` en dos lugares fuera de línea (USB y gestor de contraseñas). Sin ella los respaldos no se pueden leer.
   - [ ] 👤 Opcional: activar además los *snapshots* de *Postgres → Backups* en el panel de Railway (plan Pro).
 - [ ] **A5. Monitoreo** 👤🤖 *El código está listo (decisión 123): Sentry en servidor y navegador, `APP_VERSION` en cada despliegue.*
-  - [ ] 👤 Crear la cuenta de Sentry (plan gratis) con un proyecto *Django* y uno *React*, y poner los DSN: `railway variables --service api --set SENTRY_DSN=…` y `railway variables --service web --set VITE_SENTRY_DSN=…`; luego `infra/railway/deploy.sh api web`.
+  - [x] Sentry 👤🤖 *Hecho el 25/10/2026:* organización `jonnas-javier`, proyectos `cobradia-api` (Django) y `cobradia-web` (React); los DSN están en `api` (`SENTRY_DSN`) y `web` (`VITE_SENTRY_DSN`). Los errores se ven en <https://jonnas-javier.sentry.io>.
   - [ ] 👤 Crear la cuenta de UptimeRobot (gratis) con un monitor HTTPS a `https://app.cobradia.com/api/v1/salud/` cada minuto (palabra clave `ok`) y aviso por correo y WhatsApp.
 - [ ] **A6. Planes y precios (PT3)** 👤 decide, 🤖 implementa
   - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 🤖 puede prepararte una propuesta con tres planes comparada con los precios de los competidores, para que solo elijas.
