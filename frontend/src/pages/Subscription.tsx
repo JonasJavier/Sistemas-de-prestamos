@@ -1,21 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { getMyCompany, listPublicPlans } from '../api/platform'
+import {
+  companyProofFileUrl,
+  getCompanyPayment,
+  getMyCompany,
+  listPublicPlans,
+  type PublicPlan,
+} from '../api/platform'
+import { BankAccounts, PayDialog } from '../components/PayDialog'
 import { buttonClass } from '../components/classes'
 import { BankIcon, CheckIcon } from '../components/icons'
-import { Alert, PageHeader, Segmented, Spinner, Texture } from '../components/ui'
-import { day, STATUS_BADGES, whole } from '../lib/format'
+import { Alert, Badge, PageHeader, Segmented, Spinner, Texture } from '../components/ui'
+import { day, moment, rd, STATUS_BADGES, whole } from '../lib/format'
 import { PLAN_PITCH } from '../lib/plan'
 import { useDocumentTitle } from '../lib/hooks'
 
 /** The length of the free trial (the sign-up promises 30 days). */
 const TRIAL_DAYS = 30
-
-const mailto = (plan: string, yearly: boolean) =>
-  `mailto:hola@cobradia.com?subject=${encodeURIComponent(
-    `Activar el plan ${plan} (${yearly ? 'anual' : 'mensual'})`,
-  )}`
 
 /** The trial as days: the past in gold, today ringed, what is left soft. */
 function TrialDays({ left, endsOn }: { left: number; endsOn: string | null }) {
@@ -59,6 +61,9 @@ export function SubscriptionPage() {
   useDocumentTitle('Suscripción')
   const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
   const plans = useQuery({ queryKey: ['public-plans'], queryFn: listPublicPlans })
+  const payment = useQuery({ queryKey: ['company-payment'], queryFn: getCompanyPayment })
+  const [paying, setPaying] = useState<PublicPlan | null>(null)
+  const pendingProof = payment.data?.proofs.find((proof) => proof.status === 'pending')
   const [yearly, setYearly] = useState(false)
   const data = company.data
   const badge = data ? STATUS_BADGES[data.status] : null
@@ -276,44 +281,110 @@ export function SubscriptionPage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={mailto(p.name, yearly)}
+                <button
+                  type="button"
+                  onClick={() => setPaying(item)}
+                  disabled={Boolean(pendingProof)}
                   className={`relative mt-6 ${
                     dark
-                      ? 'press press-down flex h-11 items-center justify-center rounded-control bg-forest-accent text-[14px] font-semibold text-on-forest-accent hover:brightness-105'
+                      ? 'press press-down flex h-11 items-center justify-center rounded-control bg-forest-accent text-[14px] font-semibold text-on-forest-accent hover:brightness-105 disabled:opacity-60'
                       : buttonClass('secondary', 'w-full !h-11')
                   }`}
                 >
-                  {dark ? `Activar ${p.name}` : `Elegir ${p.name}`}
-                </a>
+                  {p.current
+                    ? `Renovar ${p.name}`
+                    : dark
+                      ? `Activar ${p.name}`
+                      : `Elegir ${p.name}`}
+                </button>
               </article>
             )
           })}
         </div>
       </section>
 
-      <section className="flex items-start gap-4 rounded-card border border-edge bg-surface px-5 py-4 shadow-sm">
-        <span
-          aria-hidden
-          className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-brand-50 text-brand-700"
-        >
-          <BankIcon />
-        </span>
-        <div>
-          <h2 className="text-[15px] font-semibold">¿Cómo activo o renuevo mi suscripción?</h2>
-          <p className="mt-1 text-[13.5px] text-muted">
-            Por ahora el pago es por transferencia o depósito. Escríbenos a{' '}
-            <a
-              href="mailto:hola@cobradia.com?subject=Suscripci%C3%B3n%20de%20Cobrad%C3%ADa"
-              className="font-semibold text-brand-700 hover:underline"
-            >
-              hola@cobradia.com
-            </a>{' '}
-            y te enviamos los datos bancarios; al confirmar tu pago, activamos la cuenta el mismo
-            día.
-          </p>
+      <section className="space-y-3 rounded-card border border-edge bg-surface px-5 py-4 shadow-sm">
+        <div className="flex items-start gap-4">
+          <span
+            aria-hidden
+            className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-brand-50 text-brand-700"
+          >
+            <BankIcon />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-semibold">¿Cómo activo o renuevo mi suscripción?</h2>
+            <p className="mt-1 text-[13.5px] text-muted">
+              Transfiere el monto del plan a una de estas cuentas, pulsa «Activar» o «Renovar» en el
+              plan y súbenos el comprobante. Lo confirmamos en el día y tu plan queda activo.
+            </p>
+          </div>
         </div>
+        {pendingProof ? (
+          <Alert tone="info">
+            Tu comprobante del plan {pendingProof.plan_name} (RD$ {whole(pendingProof.amount)}) está
+            por confirmar. Te avisamos en cuanto lo revisemos.
+          </Alert>
+        ) : null}
+        <BankAccounts accounts={payment.data?.accounts ?? []} />
+        {payment.data?.proofs.length ? (
+          <ul className="divide-y divide-edge rounded-xl border border-edge text-[13px]">
+            {payment.data.proofs.map((proof) => (
+              <li
+                key={proof.id}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5"
+              >
+                <span>
+                  <span className="font-medium">{proof.plan_name}</span>
+                  <span className="text-muted">
+                    {' '}
+                    · {proof.period === 'annual' ? 'anual' : 'mensual'} · {rd(proof.amount)}
+                  </span>
+                  <span className="block text-[12px] text-muted">
+                    Enviado el {moment(proof.created_at)}
+                    {proof.status === 'rejected' && proof.rejection_reason
+                      ? ` · ${proof.rejection_reason}`
+                      : ''}
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <Badge
+                    tone={
+                      proof.status === 'confirmed'
+                        ? 'success'
+                        : proof.status === 'rejected'
+                          ? 'danger'
+                          : 'warning'
+                    }
+                    dot
+                  >
+                    {proof.status === 'confirmed'
+                      ? 'Confirmado'
+                      : proof.status === 'rejected'
+                        ? 'Rechazado'
+                        : 'Por confirmar'}
+                  </Badge>
+                  <a
+                    href={companyProofFileUrl(proof.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[12.5px] font-semibold text-brand-700 hover:underline"
+                  >
+                    Ver
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </section>
+      {paying ? (
+        <PayDialog
+          plan={paying}
+          accounts={payment.data?.accounts ?? []}
+          yearly={yearly}
+          onClose={() => setPaying(null)}
+        />
+      ) : null}
     </>
   )
 }

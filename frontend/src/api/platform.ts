@@ -1,4 +1,4 @@
-import { api, toQuery } from './client'
+import { api, apiUpload, toQuery } from './client'
 
 export interface RegistrationPayload {
   company_legal_name: string
@@ -123,6 +123,7 @@ export interface PlatformCompanyDetail extends PlatformCompany {
   usage: Record<'users' | 'branches' | 'active_loans', { used: number; limit: number | null }>
   managers: CompanyManager[]
   payments: SubscriptionPayment[]
+  proofs: PaymentProof[]
   support: { id: string; ends_at: string; reason: string } | null
 }
 
@@ -260,6 +261,15 @@ export interface PlatformDashboard {
   }
   conversion: { days: number; ended: number; converted: number; rate: string | null }
   recent: { id: string; name: string; status: PlatformCompany['status']; created_at: string }[]
+  pending_proofs: {
+    id: string
+    company: string
+    name: string
+    plan: string
+    period: 'monthly' | 'annual'
+    amount: string
+    created_at: string
+  }[]
   trials_ending: { id: string; name: string; trial_ends_on: string }[]
   payments_due: {
     id: string
@@ -333,4 +343,102 @@ export function getCompanySupport(): Promise<CompanySupport> {
 
 export function revokeSupport(id: string): Promise<SupportGrant> {
   return api(`/api/v1/ajustes/soporte/${id}/revocar/`, { method: 'POST' })
+}
+
+// --- Decision 125: paying by transfer ------------------------------------------
+
+export interface BankAccount {
+  id: string
+  bank: string
+  type: 'savings' | 'checking'
+  number: string
+  iban: string
+  holder: string
+  currency: string
+  is_active: boolean
+  position: number
+}
+
+export interface PaymentProof {
+  id: string
+  company: string
+  company_name: string
+  plan: string
+  plan_name: string
+  period: 'monthly' | 'annual'
+  amount: string
+  reference: string
+  note: string
+  content_type: string
+  size: number
+  status: 'pending' | 'confirmed' | 'rejected'
+  submitted_by: string
+  reviewed_at: string | null
+  rejection_reason: string
+  created_at: string
+}
+
+/** The company's side: where to transfer and what it has sent. */
+export function getCompanyPayment(): Promise<{ accounts: BankAccount[]; proofs: PaymentProof[] }> {
+  return api('/api/v1/mi-empresa/pago/')
+}
+
+export function submitPaymentProof(data: {
+  plan: string
+  period: 'monthly' | 'annual'
+  amount: number
+  reference: string
+  file: File
+}): Promise<PaymentProof> {
+  const form = new FormData()
+  form.set('plan', data.plan)
+  form.set('period', data.period)
+  form.set('amount', data.amount.toFixed(2))
+  form.set('reference', data.reference)
+  form.set('file', data.file)
+  return apiUpload('/api/v1/mi-empresa/pago/comprobantes/', form)
+}
+
+export const companyProofFileUrl = (id: string) =>
+  `/api/v1/mi-empresa/pago/comprobantes/${id}/archivo/`
+
+/** The owner's side. */
+export function listProofs(
+  status: PaymentProof['status'] | '' = 'pending',
+): Promise<{ count: number; results: PaymentProof[] }> {
+  return api(`/api/v1/plataforma/comprobantes/${toQuery({ status: status || undefined })}`)
+}
+
+export const ownerProofFileUrl = (id: string) => `/api/v1/plataforma/comprobantes/${id}/archivo/`
+
+export function confirmProof(id: string): Promise<PaymentProof> {
+  return api(`/api/v1/plataforma/comprobantes/${id}/confirmar/`, { method: 'POST' })
+}
+
+export function rejectProof(id: string, reason: string): Promise<PaymentProof> {
+  return api(`/api/v1/plataforma/comprobantes/${id}/rechazar/`, {
+    method: 'POST',
+    body: { reason },
+  })
+}
+
+export type BankAccountPayload = Omit<BankAccount, 'id'>
+
+export function listBankAccounts(): Promise<BankAccount[]> {
+  return api('/api/v1/plataforma/cuentas-bancarias/')
+}
+
+export function createBankAccount(data: BankAccountPayload): Promise<BankAccount> {
+  return api('/api/v1/plataforma/cuentas-bancarias/', { method: 'POST', body: data })
+}
+
+export function updateBankAccount(
+  id: string,
+  data: Partial<BankAccountPayload>,
+): Promise<BankAccount> {
+  return api(`/api/v1/plataforma/cuentas-bancarias/${id}/`, { method: 'PATCH', body: data })
+}
+
+export function deleteBankAccount(id: string): Promise<void> {
+  return api(`/api/v1/plataforma/cuentas-bancarias/${id}/`, { method: 'DELETE' })
 }

@@ -8,6 +8,13 @@ from apps.platform.api.views import (
     PublicPlansView,
     RegistrationView,
 )
+from apps.platform.api.views_billing import (
+    BankAccountViewSet,
+    CompanyPaymentView,
+    CompanyProofFileView,
+    CompanyProofView,
+    ProofViewSet,
+)
 from apps.platform.api.views_support import (
     CompanyGrantsView,
     CompanyRevokeView,
@@ -21,11 +28,20 @@ from apps.platform.api.views_support import (
 router = DefaultRouter()
 router.register("plataforma/empresas", CompanyViewSet, basename="platform-company")
 router.register("plataforma/planes", PlanViewSet, basename="platform-plan")
+router.register("plataforma/comprobantes", ProofViewSet, basename="platform-proof")
+router.register("plataforma/cuentas-bancarias", BankAccountViewSet, basename="platform-bank")
 
 urlpatterns = [
     path("registro/", RegistrationView.as_view(), name="company-registration"),
     path("mi-empresa/", MyCompanyView.as_view(), name="my-company"),
     path("planes/", PublicPlansView.as_view(), name="public-plans"),
+    path("mi-empresa/pago/", CompanyPaymentView.as_view(), name="company-payment"),
+    path("mi-empresa/pago/comprobantes/", CompanyProofView.as_view(), name="company-proof"),
+    path(
+        "mi-empresa/pago/comprobantes/<uuid:pk>/archivo/",
+        CompanyProofFileView.as_view(),
+        name="company-proof-file",
+    ),
     path("plataforma/tablero/", PlatformDashboardView.as_view(), name="platform-dashboard"),
     path(
         "plataforma/empresas/<uuid:pk>/soporte/",

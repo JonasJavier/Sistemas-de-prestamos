@@ -6,6 +6,9 @@ import { ApiError } from '../../api/client'
 import {
   changePlan,
   closeCompany,
+  confirmProof,
+  ownerProofFileUrl,
+  rejectProof,
   extendTrial,
   getCompany,
   listPlans,
@@ -16,8 +19,10 @@ import {
   suspendCompany,
   type CompanyManager,
   type PaymentPayload,
+  type PaymentProof,
   type PlatformCompanyDetail,
 } from '../../api/platform'
+import { buttonClass } from '../../components/classes'
 import { DateInput } from '../../components/DateInput'
 import { usePrompt } from '../../components/Dialog'
 import { Modal } from '../../components/Modal'
@@ -46,6 +51,7 @@ import {
   STATUS_BADGES,
   STATUS_TONE,
   todayISO,
+  whole,
 } from '../../lib/format'
 import { notify } from '../../lib/toast'
 
@@ -169,6 +175,45 @@ export function CompanyFilePage() {
       fresh && settle(fresh, 'Verificación restablecida: la persona la configurará al entrar.'),
     onError: (error) => failed(error, 'No se pudo restablecer la verificación.'),
   })
+  const confirm = useMutation({
+    mutationFn: async (proof: PaymentProof) => {
+      const ok = await ask({
+        title: `Confirmar el pago de ${name}`,
+        description: `RD$ ${whole(proof.amount)} por el plan ${proof.plan_name} (${proof.period === 'annual' ? 'anual' : 'mensual'}). Se registra el pago, se aplica el plan y la empresa queda activa.`,
+        confirmText: 'Confirmar pago',
+      })
+      return ok === null ? null : confirmProof(proof.id)
+    },
+    onSuccess: async (done) => {
+      if (!done) return
+      await queryClient.invalidateQueries({ queryKey: ['platform-company', id] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-dashboard'] })
+      notify('Pago confirmado: la empresa quedó activa y lo sabe.', 'success')
+    },
+    onError: (error) => failed(error, 'No se pudo confirmar el pago.'),
+  })
+  const reject = useMutation({
+    mutationFn: async (proof: PaymentProof) => {
+      const reason = await ask({
+        title: 'Rechazar el comprobante',
+        description: 'La empresa verá este motivo y podrá enviar otro comprobante.',
+        label: 'Motivo',
+        type: 'textarea',
+        required: true,
+        confirmText: 'Rechazar',
+        danger: true,
+      })
+      return reason === null ? null : rejectProof(proof.id, reason)
+    },
+    onSuccess: async (done) => {
+      if (!done) return
+      await queryClient.invalidateQueries({ queryKey: ['platform-company', id] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-dashboard'] })
+      notify('Comprobante rechazado; la empresa fue avisada.', 'success')
+    },
+    onError: (error) => failed(error, 'No se pudo rechazar.'),
+  })
+
   const resend = useMutation({
     mutationFn: (manager: CompanyManager) => resendVerification(id, manager.id),
     onSuccess: (_, manager) => notify(`Confirmación reenviada a ${manager.email}.`, 'success'),
@@ -308,6 +353,72 @@ export function CompanyFilePage() {
               </ul>
             </Card>
           </Section>
+
+          {data.proofs.length ? (
+            <Section
+              title="Comprobantes enviados"
+              aside="Confirma o rechaza los que están por revisar."
+            >
+              <Card className="!p-0">
+                <ul className="divide-y divide-edge text-[13px]">
+                  {data.proofs.map((proof) => (
+                    <li
+                      key={proof.id}
+                      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">
+                          {proof.plan_name} · {proof.period === 'annual' ? 'anual' : 'mensual'} ·{' '}
+                          <span className="tabular-nums">{rd(proof.amount)}</span>
+                        </div>
+                        <div className="text-[12px] text-muted">
+                          {moment(proof.created_at)} · {proof.submitted_by}
+                          {proof.reference ? ` · ref. ${proof.reference}` : ''}
+                          {proof.status === 'rejected' ? ` · ${proof.rejection_reason}` : ''}
+                        </div>
+                      </div>
+                      <Badge
+                        tone={
+                          proof.status === 'confirmed'
+                            ? 'success'
+                            : proof.status === 'rejected'
+                              ? 'danger'
+                              : 'warning'
+                        }
+                        dot
+                      >
+                        {proof.status === 'confirmed'
+                          ? 'Confirmado'
+                          : proof.status === 'rejected'
+                            ? 'Rechazado'
+                            : 'Por confirmar'}
+                      </Badge>
+                      <div className="flex gap-1.5">
+                        <a
+                          href={ownerProofFileUrl(proof.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={buttonClass('secondary', '', 'sm')}
+                        >
+                          Ver comprobante
+                        </a>
+                        {proof.status === 'pending' ? (
+                          <>
+                            <Button size="sm" onClick={() => confirm.mutate(proof)}>
+                              Confirmar pago
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => reject.mutate(proof)}>
+                              Rechazar
+                            </Button>
+                          </>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </Section>
+          ) : null}
 
           <Section title="Pagos de la suscripción" aside="Los que registraste al recibirlos.">
             <Card className="!p-0">

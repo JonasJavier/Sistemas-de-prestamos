@@ -43,4 +43,6 @@ RLS_EXEMPT = {
     "platform_subscriptionevent",
     "platform_supportaccessgrant",
     "platform_supportaccessgrantevent",
+    "platform_paymentproof",  # the owner reviews it (decision 125); served by company id
+    "platform_paymentproofevent",
 }

@@ -30,6 +30,7 @@ import {
 } from '../../components/ui'
 import { errorMessage, rd } from '../../lib/format'
 import { TIER_LABELS } from '../../lib/plan'
+import { BankAccountsPanel } from './BankAccountsPanel'
 import { notify } from '../../lib/toast'
 
 const cap = (value: number | null) => (value === null ? 'Sin límite' : String(value))
@@ -90,8 +91,8 @@ export function PlansPage() {
     <>
       {dialog}
       <PageHeader
-        title="Planes"
-        subtitle="Precio mensual y límites de cada plan. Una empresa nueva entra con el plan de prueba."
+        title="Planes y cobros"
+        subtitle="Precio, funciones y límites de cada plan, y las cuentas donde te pagan."
         actions={<Button onClick={() => setEditing('new')}>Nuevo plan</Button>}
       />
       {plans.isPending ? <Spinner /> : null}
@@ -153,6 +154,7 @@ export function PlansPage() {
           </EmptyState>
         )
       ) : null}
+      <BankAccountsPanel />
       {editing ? (
         <PlanDialog
           plan={editing === 'new' ? null : editing}

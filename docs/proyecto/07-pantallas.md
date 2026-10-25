@@ -174,7 +174,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P80 | Mensajería | `/ajustes/mensajes` | Proveedor, plantillas y registro de envíos | G A | 9 |
 | P81 | Auditoría | `/ajustes/auditoria` | Visor con filtros por usuario, fecha, módulo y acción | G A Au | 1 |
 | P82 | Migración | `/ajustes/migracion` | Subir las plantillas de Excel, ver el reporte de errores, cuadre y confirmación | G A | 3 y 10 |
-| P83 | Suscripción | `/ajustes/suscripcion` | Estado de la prueba o del plan, días restantes, uso contra los límites, los tres planes con sus funciones y precios (124: de `/api/v1/planes/`, mensual o anual), datos para pagar (transferencia o depósito) y avisos de modo soporte activo (F19, 045 y 046). Una pantalla fuera del plan muestra qué plan la trae (`PlanUpsell`) | G A | 1 |
+| P83 | Suscripción | `/ajustes/suscripcion` | Estado de la prueba o del plan, días restantes, uso contra los límites, los tres planes con sus funciones y precios (124: de `/api/v1/planes/`, mensual o anual), las cuentas para transferir con el número para copiar, «Activar» o «Renovar» que abre el envío del comprobante (plan, período, referencia y foto o PDF) y la lista de comprobantes enviados con su estado (125), y avisos de modo soporte activo (F19, 045 y 046). Una pantalla fuera del plan muestra qué plan la trae (`PlanUpsell`) | G A | 1 |
 
 ### Plataforma (solo el dueño de Cobradía)
 
@@ -182,9 +182,9 @@ Rutas bajo `/plataforma`, visibles únicamente para la cuenta de plataforma (`is
 
 | # | Pantalla | Ruta | Contenido y acciones | Fase |
 | --- | --- | --- | --- | --- |
-| PT1 | Empresas | `/plataforma` y `/plataforma/empresas/<id>` | Lista con búsqueda (nombre, RNC, correo), filtro por estado, plan, prueba o pago hasta y usuarios (122) · Ficha: estado y motivo, plan y uso contra límites, datos y términos, pagos, soporte vigente, gerentes y administradores (último acceso, correo confirmado, dos pasos) · Acciones: *Registrar pago*, *Extender la prueba*, *Cambiar de plan*, *Suspender*, *Reactivar*, *Cerrar empresa*, *Modo soporte*, *Reenviar confirmación*, *Restablecer verificación en dos pasos* (120); todo queda en la auditoría de la empresa | 1 |
+| PT1 | Empresas | `/plataforma` y `/plataforma/empresas/<id>` | Lista con búsqueda (nombre, RNC, correo), filtro por estado, plan, prueba o pago hasta y usuarios (122) · Ficha: estado y motivo, plan y uso contra límites, datos y términos, pagos, soporte vigente, gerentes y administradores (último acceso, correo confirmado, dos pasos) · Acciones: *Registrar pago*, *Extender la prueba*, *Cambiar de plan*, *Suspender*, *Reactivar*, *Cerrar empresa*, *Modo soporte*, *Reenviar confirmación*, *Restablecer verificación en dos pasos* (120); comprobantes enviados con *Confirmar pago* o *Rechazar* (125); todo queda en la auditoría de la empresa | 1 |
 | PT2 | Tablero de la plataforma | `/plataforma` | Empresas activas y en prueba, conversión de la prueba, registros recientes, pagos por vencer y métricas agregadas de uso | 7 |
-| PT3 | Planes | `/plataforma/planes` | Planes con precio mensual y límites (usuarios, sucursales, préstamos activos): crear, editar, desactivar y borrar (122); un solo plan de prueba activo. La asignación se hace desde la ficha de cada empresa | 1 |
+| PT3 | Planes y cobros | `/plataforma/planes` | Planes con precio mensual, funciones (124) y límites: crear, editar, desactivar y borrar (122); un solo plan de prueba activo. Cuentas bancarias para las transferencias (125). La asignación se hace desde la ficha de cada empresa | 1 |
 | PT4 | Modo soporte | Desde la ficha de la empresa | Motivo y duración; acceso de solo lectura, visible para la empresa y auditado (046) | 7 |
 
 ## 4. Pantallas fuera del sistema interno

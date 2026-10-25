@@ -91,7 +91,7 @@ export function navFor(me: Me): NavGroup[] {
         title: null,
         items: [
           leaf('/plataforma', 'Empresas', <BuildingIcon className={ic} />),
-          leaf('/plataforma/planes', 'Planes', <TagIcon className={ic} />),
+          leaf('/plataforma/planes', 'Planes y cobros', <TagIcon className={ic} />),
         ],
       },
     ]

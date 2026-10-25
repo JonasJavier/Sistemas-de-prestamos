@@ -27,6 +27,7 @@ class Notification(CompanyScopedModel):
         FRAUD_ALERT = "fraud_alert", "Alerta antifraude"
         SUPPORT_ACCESS = "support_access", "Acceso de soporte"
         SECURITY = "security", "Seguridad de la cuenta"
+        SUBSCRIPTION = "subscription", "Suscripción"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

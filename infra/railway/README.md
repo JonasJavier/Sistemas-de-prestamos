@@ -106,7 +106,7 @@ Además, en el panel de Railway, *Postgres → Backups* ofrece instantáneas del
 
 ## Planes (decisión 124)
 
-`railway ssh --service api -- python manage.py seed_plans` carga o restaura los tres planes (Esencial, Profesional, Empresa) y deja el plan de prueba con todas las funciones. Después, cada plan se ajusta desde el panel (Planes).
+`railway ssh --service api -- python manage.py seed_plans` carga o restaura los tres planes (Esencial, Profesional, Empresa) y deja el plan de prueba con todas las funciones. Después, cada plan y las cuentas bancarias para las transferencias se ajustan desde el panel (Planes y cobros). Los comprobantes que suben las empresas viven en el bucket `archivos` bajo `comprobantes/` y entran en el respaldo nocturno.
 
 ## Errores y disponibilidad (decisión 123)
 

@@ -110,3 +110,73 @@ class SupportAccessGrant(TimeStamped):
 
     def __str__(self) -> str:
         return f"Soporte en {self.company} hasta {self.ends_at:%d/%m/%Y %H:%M}"
+
+
+@pghistory.track()
+class BankAccount(TimeStamped):
+    """Decision 125: where the companies transfer the subscription. Public
+    to every company; the owner keeps them from the panel."""
+
+    class Type(models.TextChoices):
+        SAVINGS = "savings", "Cuenta de ahorro"
+        CHECKING = "checking", "Cuenta corriente"
+
+    bank = models.CharField(max_length=80)
+    type = models.CharField(max_length=10, choices=Type, default=Type.SAVINGS)
+    number = models.CharField(max_length=40)
+    iban = models.CharField(max_length=40, blank=True)
+    holder = models.CharField(max_length=150)
+    currency = models.CharField(max_length=3, default="DOP")
+    is_active = models.BooleanField(default=True)
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "bank"]
+
+    def __str__(self) -> str:
+        return f"{self.bank} {self.number}"
+
+
+@pghistory.track()
+class PaymentProof(TimeStamped):
+    """Decision 125: a transfer receipt a company uploads; the owner confirms
+    it (recording the payment and activating the plan) or rejects it."""
+
+    class Period(models.TextChoices):
+        MONTHLY = "monthly", "Mensual"
+        ANNUAL = "annual", "Anual"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Por confirmar"
+        CONFIRMED = "confirmed", "Confirmado"
+        REJECTED = "rejected", "Rechazado"
+
+    company = models.ForeignKey(
+        "core.Company", on_delete=models.CASCADE, related_name="payment_proofs"
+    )
+    plan = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name="+")
+    period = models.CharField(max_length=10, choices=Period, default=Period.MONTHLY)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    reference = models.CharField(max_length=100, blank=True)
+    note = models.CharField(max_length=300, blank=True)
+    file = models.FileField(upload_to="comprobantes/%Y/%m/")
+    content_type = models.CharField(max_length=100)
+    size = models.PositiveBigIntegerField()
+    status = models.CharField(max_length=10, choices=Status, default=Status.PENDING)
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.CharField(max_length=300, blank=True)
+    payment = models.ForeignKey(
+        SubscriptionPayment, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.company} · {self.plan} · {self.get_status_display()}"

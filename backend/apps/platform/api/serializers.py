@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from apps.core.models import Company
-from apps.platform.models import Plan, Subscription, SubscriptionPayment
+from apps.platform.models import BankAccount, PaymentProof, Plan, Subscription, SubscriptionPayment
 
 
 class RegistrationSerializer(serializers.Serializer):
@@ -164,6 +164,7 @@ class CompanyDetailSerializer(CompanySerializer):
     usage = serializers.SerializerMethodField()
     managers = serializers.SerializerMethodField()
     payments = serializers.SerializerMethodField()
+    proofs = serializers.SerializerMethodField()
     support = serializers.SerializerMethodField()
 
     class Meta(CompanySerializer.Meta):
@@ -175,6 +176,7 @@ class CompanyDetailSerializer(CompanySerializer):
             "usage",
             "managers",
             "payments",
+            "proofs",
             "support",
         ]
 
@@ -226,6 +228,12 @@ class CompanyDetailSerializer(CompanySerializer):
             "-period_end", "-created_at"
         )[:12]
         return SubscriptionPaymentSerializer(rows, many=True).data
+
+    def get_proofs(self, company: Company) -> list[dict]:
+        rows = PaymentProof.objects.filter(company=company).select_related("plan", "submitted_by")[
+            :12
+        ]
+        return PaymentProofSerializer(rows, many=True).data
 
     def get_support(self, company: Company) -> dict | None:
         from apps.platform import support
@@ -296,3 +304,78 @@ class MyCompanySerializer(serializers.ModelSerializer):
             "trial_ends_on",
             "subscription",
         ]
+
+
+# --- Decision 125: paying by transfer -----------------------------------------------
+
+
+class BankAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankAccount
+        fields = [
+            "id",
+            "bank",
+            "type",
+            "number",
+            "iban",
+            "holder",
+            "currency",
+            "is_active",
+            "position",
+        ]
+
+
+class PaymentProofSerializer(serializers.ModelSerializer):
+    plan_name = serializers.CharField(source="plan.name", read_only=True)
+    company_name = serializers.SerializerMethodField()
+    submitted_by = serializers.CharField(source="submitted_by.email", read_only=True, default="")
+
+    class Meta:
+        model = PaymentProof
+        fields = [
+            "id",
+            "company",
+            "company_name",
+            "plan",
+            "plan_name",
+            "period",
+            "amount",
+            "reference",
+            "note",
+            "content_type",
+            "size",
+            "status",
+            "submitted_by",
+            "reviewed_at",
+            "rejection_reason",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_company_name(self, proof: PaymentProof) -> str:
+        return str(proof.company)
+
+
+class PaymentProofUploadSerializer(serializers.Serializer):
+    """What the company sends with the receipt (multipart)."""
+
+    plan = serializers.PrimaryKeyRelatedField(
+        queryset=Plan.objects.filter(is_active=True, is_trial=False)
+    )
+    period = serializers.ChoiceField(choices=PaymentProof.Period.choices)
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=0)
+    reference = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
+    note = serializers.CharField(max_length=300, required=False, allow_blank=True, default="")
+    file = serializers.FileField()
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        from apps.customers.files import inspect_private_file
+
+        try:
+            content_type, size, _sha = inspect_private_file(attrs["file"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"file": exc.messages[0]}) from exc
+        attrs.update(content_type=content_type, size=size)
+        return attrs

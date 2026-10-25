@@ -434,8 +434,8 @@ El único flujo que ocurre **fuera** de una empresa: es cómo una financiera ent
    - La empresa pasa a **suspendida**: sus usuarios pueden entrar, ver y exportar sus datos, pero no registrar operaciones.
    - Avisos automáticos 7, 3 y 1 día antes (correo; WhatsApp en la fase 9).
 4. **Activación.**
-   - La empresa paga por transferencia o depósito (los datos de pago aparecen en «Suscripción»).
-   - El dueño registra el pago en su panel y la empresa pasa a **activa**, con su plan y sus límites. La pasarela de pago se integra después del lanzamiento (045).
+   - La empresa paga por transferencia o depósito a las cuentas que muestra «Suscripción», elige el plan y sube el comprobante desde ahí (decisión 125).
+   - El dueño lo confirma con un clic desde la ficha de la empresa (o lo rechaza con motivo): se registra el pago, se aplica el plan y la empresa pasa a **activa** hasta el fin del período pagado; también puede registrar un pago a mano. La pasarela de pago con tarjeta se revisará al llegar a 25–30 clientes (045, 125).
 5. **Suspensión y reactivación manuales.** El dueño puede suspender (falta de pago, abuso) o reactivar, siempre con motivo; la empresa ve el motivo al entrar.
 6. **Baja.**
    - La empresa la solicita; se le entrega la exportación completa de sus datos.

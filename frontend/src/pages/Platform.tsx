@@ -23,7 +23,7 @@ import {
   Spinner,
   Table,
 } from '../components/ui'
-import { day, pct, STATUS_BADGES } from '../lib/format'
+import { day, pct, STATUS_BADGES, whole } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 
 /** PT2 (decision 091): companies, conversion, payments due and usage
@@ -62,6 +62,33 @@ function PlatformDashboard() {
           help={data.definitions.usage}
         />
       </div>
+      {data.pending_proofs.length ? (
+        <Card className="space-y-2 ring-2 ring-inset ring-gold-500/50">
+          <h2 className="text-base font-semibold">
+            Comprobantes por confirmar
+            <span className="ml-2 rounded-full bg-gold-100 px-2 py-0.5 text-[11px] font-bold text-gold-800">
+              {data.pending_proofs.length}
+            </span>
+          </h2>
+          <ul className="divide-y divide-edge text-sm">
+            {data.pending_proofs.map((row) => (
+              <li key={row.id} className="flex flex-wrap justify-between gap-2 py-1.5">
+                <Link
+                  to="/plataforma/empresas/$id"
+                  params={{ id: row.company }}
+                  className="font-medium hover:underline"
+                >
+                  {row.name}
+                </Link>
+                <span className="text-muted tabular-nums">
+                  {row.plan} · {row.period === 'annual' ? 'anual' : 'mensual'} · RD${' '}
+                  {whole(row.amount)} · {day(row.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="space-y-2">
           <h2 className="text-base font-semibold">Pruebas que terminan pronto</h2>

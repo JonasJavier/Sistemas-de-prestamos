@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from apps.core.models import Company
 from apps.core.tenancy import company_context
-from apps.platform.models import Subscription
+from apps.platform.models import PaymentProof, Subscription
 
 CONVERSION_DAYS = 90
 USAGE_DAYS = 30
@@ -62,6 +62,12 @@ def dashboard(today: dt.date | None = None) -> dict:
         .order_by("paid_until")
     )
     companies = list(Company.objects.exclude(status=Company.Status.CLOSED).order_by("-created_at"))
+
+    pending_proofs = list(
+        PaymentProof.objects.filter(status=PaymentProof.Status.PENDING)
+        .select_related("company", "plan")
+        .order_by("created_at")
+    )
     usage = [{"id": str(c.id), "name": str(c), **_usage(c, since)} for c in companies]
     return {
         "date": today,
@@ -81,6 +87,18 @@ def dashboard(today: dt.date | None = None) -> dict:
             "converted": converted,
             "rate": None if not ended_count else str(round(converted / ended_count, 4)),
         },
+        "pending_proofs": [
+            {
+                "id": str(p.id),
+                "company": str(p.company_id),
+                "name": str(p.company),
+                "plan": p.plan.name,
+                "period": p.period,
+                "amount": str(p.amount),
+                "created_at": p.created_at,
+            }
+            for p in pending_proofs
+        ],
         "recent": [
             {"id": str(c.id), "name": str(c), "status": c.status, "created_at": c.created_at}
             for c in companies[:8]
