@@ -32,7 +32,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
   - [x] Sentry 👤🤖 *Hecho el 25/10/2026:* organización `jonnas-javier`, proyectos `cobradia-api` (Django) y `cobradia-web` (React); los DSN están en `api` (`SENTRY_DSN`) y `web` (`VITE_SENTRY_DSN`). Los errores se ven en <https://jonnas-javier.sentry.io>.
   - [ ] 👤 Crear la cuenta de UptimeRobot (gratis) con un monitor HTTPS a `https://app.cobradia.com/api/v1/salud/` cada minuto (palabra clave `ok`) y aviso por correo y WhatsApp.
 - [ ] **A6. Planes y precios (PT3)** 👤 decide, 🤖 implementa
-  - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 🤖 *Propuesta lista el 25/10/2026:* [propuesta-planes.md](propuesta-planes.md) (Esencial RD$1,500 · Profesional RD$3,000 · Empresa RD$5,000, a la par de Púrpura Datos y comparados con Prestan2, Easypres, PrestamosCloud, PrestamistAPP, Credidata y ANZA). Falta tu decisión.
+  - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 👤 *Decidido el 25/10/2026:* Esencial RD$990 · Profesional RD$2,290 · Empresa RD$3,690, préstamos sin límite y funciones por plan ([propuesta-planes.md](propuesta-planes.md)). 🤖 Falta construir el corte de funciones por plan, cargarlos y publicarlos.
   - 🤖 La pantalla Planes del panel ya los crea y edita (decisión 122, 23/10/2026): tú los cargas ahí. Falta publicarlos en `cobradia.com/#precios` (hoy dice «estamos por anunciar») y en la pantalla Suscripción (hoy elegir un plan solo abre un correo).
 - [ ] **A7. Cómo te pagan** 👤🤖
   - 👤 Abrir una cuenta bancaria a nombre del negocio. Para empezar basta la **transferencia**: el sistema ya registra el pago manual y activa la empresa (decisión 045).

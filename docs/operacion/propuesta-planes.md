@@ -1,6 +1,28 @@
-# Propuesta de planes y precios (A6)
+# Planes y precios (A6)
 
-**Fecha:** 25/10/2026 (segunda versión, tras ver los planes de Púrpura Datos) · **Para:** Jonas (decisión comercial) · **Estado:** propuesta; nada de esto está cargado en el panel todavía.
+**Fecha:** 25/10/2026 · **Decidido por Jonas** tras comparar con Púrpura Datos (competidor directo). Lo que sigue a «Decisión final» es la propuesta que llevó a ella.
+
+## Decisión final
+
+Tres planes en pesos, **clientes y préstamos sin límite en los tres**, cada uno más barato que su equivalente en Púrpura, con las funciones cortadas por plan. Prueba de 30 días completa; anual paga 10 y recibe 12.
+
+| | **Esencial** | **Profesional** | **Empresa** |
+| --- | --- | --- | --- |
+| **Mensual** | **RD$990** | **RD$2,290** | **RD$3,690** |
+| Anual | RD$9,900 | RD$22,900 | RD$36,900 |
+| Sucursales · usuarios activos | 1 · 3 | 3 · 10 | Sin límite |
+| Préstamos y clientes | Sin límite | Sin límite | Sin límite |
+| Equivale en Púrpura a | Superior (RD$1,800) | Premium (RD$2,700) | Empresarial (RD$4,500) |
+
+**Esencial (RD$990) — la oficina.** Clientes con su expediente y documentos · Solicitudes con evaluación y aprobación · Simulador · Préstamos con tabla de amortización, pagaré y contrato · Desembolsos · Pagos en oficina con recibo (impresora de 80 mm o PDF) y recibo por WhatsApp con enlace · Atrasos con mora automática · Caja: apertura, cierre y cuadre · Reportes de cartera y cobros del día · Usuarios con roles y permisos · Verificación en dos pasos y llaves de acceso · Portal del cliente (ve sus préstamos y paga) · Respaldos cifrados cada noche.
+
+**Profesional (RD$2,290) — la calle.** Todo lo de Esencial más: Rutas de cobro con GPS y «Mi ruta» en el celular del cobrador · Cajas de cobrador y rendición · Cobranza: promesas de pago, agenda y escalamiento · Mensajería: recordatorios por WhatsApp, SMS y correo con plantillas · Clasificación de clientes (puntaje explicable) · Alertas antifraude · Gastos e ingresos · Centro de reportes completo (cartera, cobros, clasificación, resultados) y exportación a Excel y PDF · Renovación y reestructuración de préstamos · Castigo y recuperación.
+
+**Empresa (RD$3,690) — la financiera completa.** Todo lo de Profesional más: Contabilidad NIIF con plan de cuentas, diario, mayor y balances · Formatos 606 y 607 · Comprobantes fiscales (NCF) · Cuentas y bancos con conciliación bancaria · Cuentas por pagar · Cierre de mes · Comisiones de cobradores y oficiales · Vía legal: casos, profesionales legales, intimación y contratos con garantía · QR de verificación en todos los documentos · Sucursales y usuarios sin límite · Soporte prioritario y acompañamiento en la migración de la cartera.
+
+El sistema hoy limita por usuarios, sucursales y préstamos activos (decisión 104); el corte de funciones por plan se construye a continuación (decisión pendiente de numerar al implementarlo).
+
+---
 
 ## En una frase
 
