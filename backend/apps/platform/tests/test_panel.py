@@ -60,7 +60,7 @@ def test_the_list_searches_and_counts_users(owner, tenant) -> None:
     rows = owner.get(COMPANIES, {"search": "131234567"}).json()["results"]
     assert rows[0]["trade_name"] == "Uno"
     assert rows[0]["users_count"] == 1
-    assert rows[0]["trial_days_left"] == 30
+    assert rows[0]["trial_days_left"] == 15
 
 
 def test_the_file_shows_use_managers_and_payments(owner, tenant) -> None:

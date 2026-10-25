@@ -220,7 +220,7 @@ TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
 # Decision 103: the terms of service and privacy notice in force (cobradia.com);
 # bump it whenever either text changes.
-LEGAL_TERMS_VERSION = "2026-10-09"
+LEGAL_TERMS_VERSION = "2026-10-25"
 ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
 
 # Doc 06 - section 6: 5 failed logins lock the address for 15 minutes,

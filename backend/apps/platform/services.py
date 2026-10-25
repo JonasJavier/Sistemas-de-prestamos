@@ -25,7 +25,7 @@ from apps.ledger.services import seed_chart
 from apps.lending.models import LateFeePolicy, LoanProduct, ProductCharge
 from apps.platform.models import Plan, Subscription
 
-TRIAL_DAYS = 30  # F19 default; configurable per plan later.
+TRIAL_DAYS = 15  # decision 126 (Jonas, 25/10/2026): two weeks, enough to load a book and collect it
 
 SYSTEM_ROLES = [
     "Gerente",

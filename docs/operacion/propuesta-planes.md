@@ -92,7 +92,7 @@ La infraestructura (Railway, correo, dominio) cuesta hoy unos US$30–60 al mes:
 
 1. Me dices los tres precios (estos u otros), si va el anual con regalos y si va el precio de lanzamiento.
 2. Yo los cargo en el panel (Planes), los publico en `cobradia.com/#precios` y en la pantalla Suscripción, y ajusto los términos si cambia algo del cobro.
-3. El plan de prueba sigue igual (30 días, 1 sucursal, 5 usuarios, 100 préstamos); al terminar, la empresa elige uno de los tres.
+3. El plan de prueba dura 15 días (decisión 126) con todas las funciones, 1 sucursal, 5 usuarios y 100 préstamos; al terminar, la empresa elige uno de los tres.
 
 ## Fuentes
 

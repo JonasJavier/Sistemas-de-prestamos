@@ -33,6 +33,7 @@ export interface MyCompany {
   trial_days_left?: number
   subscription: {
     status: string
+    started_on: string
     paid_until: string | null
     plan: {
       name: string

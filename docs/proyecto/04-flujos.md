@@ -425,7 +425,7 @@ El único flujo que ocurre **fuera** de una empresa: es cómo una financiera ent
 1. **Registro** (`/registro`, público).
    - El visitante da su nombre y apellido, su correo, una contraseña y el nombre de su financiera (decisión 119: cinco campos y los términos). El RNC, el teléfono y el resto de los datos de la empresa se completan después en «Mi empresa».
    - Verifica el correo con un código.
-   - En una sola operación se crean: la **empresa** en estado **en prueba** (30 días por defecto), su **sucursal principal**, el usuario **administrador** (quien se registró, con el rol de gerente y administrador) y los catálogos sembrados: productos de ejemplo, política de mora por defecto, motivos, categorías y los feriados de RD.
+   - En una sola operación se crean: la **empresa** en estado **en prueba** (15 días desde la decisión 126; antes 30), su **sucursal principal**, el usuario **administrador** (quien se registró, con el rol de gerente y administrador) y los catálogos sembrados: productos de ejemplo, política de mora por defecto, motivos, categorías y los feriados de RD.
    - Protecciones del registro: límite por IP, verificación del correo y aviso al dueño de cada registro nuevo. Sin CAPTCHA de terceros al inicio; se añade si llega abuso.
 2. **Durante la prueba.**
    - La empresa opera completa, con límites de prueba configurables (por defecto: 1 sucursal, 5 usuarios y 100 préstamos activos).

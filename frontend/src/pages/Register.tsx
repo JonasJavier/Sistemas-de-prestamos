@@ -67,7 +67,7 @@ function serverError(error: unknown): string {
 
 const TRIAL = (
   <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-[12.5px] font-semibold text-gold-800 ring-1 ring-inset ring-gold-500/30">
-    ★ 30 días gratis · sin tarjeta
+    ★ 15 días gratis · sin tarjeta
   </span>
 )
 
@@ -95,7 +95,7 @@ export function RegisterPage() {
         <div className="space-y-6">
           <Outcome tone="success" title="Revisa tu correo">
             Te enviamos un enlace a <strong>{form.getValues('email')}</strong> para confirmar tu
-            cuenta. Ábrelo y entra: tu prueba de 30 días ya está activa.
+            cuenta. Ábrelo y entra: tu prueba de 15 días ya está activa.
           </Outcome>
           <Link to="/entrar" className={buttonClass('primary', 'w-full sm:h-11')}>
             Ir a iniciar sesión

@@ -60,7 +60,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 ## Fase C · Para vender: marketing, ventas y soporte
 
 - [ ] **C1. Sitio que vende** 🤖 (👤 aprueba) Precios publicados, capturas reales de la app, un video corto de demostración, botón de WhatsApp, página de ayuda con los manuales por rol y analítica que respete la privacidad (Plausible o Umami, sin banner de cookies).
-- [ ] **C2. Demo pública** 🤖 Un botón «Ver demo» que entra a una financiera de ejemplo con datos realistas y se reinicia cada noche. Es lo que más convence a un prestamista: ver su día a día antes de registrarse.
+- [x] **C2. Demo pública** 🤖 *Descartada por Jonas el 25/10/2026 (decisión 126): la prueba real de 15 días con todas las funciones es la demo.* Un botón «Ver demo» que entra a una financiera de ejemplo con datos realistas y se reinicia cada noche. Es lo que más convence a un prestamista: ver su día a día antes de registrarse.
 - [ ] **C3. Material de ventas** 🤖 redacta, 👤 valida Presentación para reuniones, folleto PDF de una página, comparativa con los competidores y guion de demostración de 15 minutos.
 - [ ] **C4. Canal de soporte** 👤 Un número de WhatsApp Business para Cobradía, un horario de atención y cuánto tardas en responder (va en los términos).
 - [ ] **C5. Presencia** 👤 Perfil de Google Business, Google Search Console (🤖 lo conecta) e Instagram o Facebook con contenido para prestamistas.

@@ -16,14 +16,27 @@ import { day, moment, rd, STATUS_BADGES, whole } from '../lib/format'
 import { PLAN_PITCH } from '../lib/plan'
 import { useDocumentTitle } from '../lib/hooks'
 
-/** The length of the free trial (the sign-up promises 30 days). */
-const TRIAL_DAYS = 30
+/** The length of the free trial (decision 126: 15 days; companies from before keep 30). */
+const TRIAL_DAYS = 15
 
 /** The trial as days: the past in gold, today ringed, what is left soft. */
-function TrialDays({ left, endsOn }: { left: number; endsOn: string | null }) {
-  const used = Math.max(TRIAL_DAYS - left, 0)
+function TrialDays({
+  left,
+  endsOn,
+  startedOn,
+}: {
+  left: number
+  endsOn: string | null
+  startedOn: string | null
+}) {
   const end = endsOn ? new Date(`${endsOn}T00:00:00`) : null
-  const start = end ? new Date(end.getTime() - TRIAL_DAYS * 86_400_000) : null
+  const begun = startedOn ? new Date(`${startedOn}T00:00:00`) : null
+  const total =
+    end && begun
+      ? Math.max(Math.round((end.getTime() - begun.getTime()) / 86_400_000), 1)
+      : TRIAL_DAYS
+  const used = Math.max(total - left, 0)
+  const start = begun ?? (end ? new Date(end.getTime() - total * 86_400_000) : null)
   const short = (d: Date | null) =>
     d ? d.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }).replace('.', '') : ''
   return (
@@ -31,9 +44,9 @@ function TrialDays({ left, endsOn }: { left: number; endsOn: string | null }) {
       <div
         aria-hidden
         className="grid gap-[3px]"
-        style={{ gridTemplateColumns: `repeat(${TRIAL_DAYS}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}
       >
-        {Array.from({ length: TRIAL_DAYS }, (_, index) => (
+        {Array.from({ length: total }, (_, index) => (
           <span
             key={index}
             className={`h-3.5 rounded-[3px] ${
@@ -48,7 +61,7 @@ function TrialDays({ left, endsOn }: { left: number; endsOn: string | null }) {
       </div>
       <div className="mt-1.5 flex justify-between text-[11.5px] text-gold-800/80">
         <span>{short(start)} · inicio</span>
-        <span>Hoy, día {Math.min(used + 1, TRIAL_DAYS)}</span>
+        <span>Hoy, día {Math.min(used + 1, total)}</span>
         <span>{short(end)}</span>
       </div>
     </div>
@@ -114,7 +127,11 @@ export function SubscriptionPage() {
                 . Tus datos se quedan contigo.
               </p>
             </div>
-            <TrialDays left={data!.trial_days_left!} endsOn={data!.trial_ends_on} />
+            <TrialDays
+              left={data!.trial_days_left!}
+              endsOn={data!.trial_ends_on}
+              startedOn={data!.subscription?.started_on ?? null}
+            />
             <a href="#planes" className={buttonClass('primary', 'shrink-0')}>
               Activar el plan
             </a>

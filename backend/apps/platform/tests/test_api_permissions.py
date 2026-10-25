@@ -94,5 +94,5 @@ def test_tenant_reads_its_own_company(tenant_admin: User) -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["legal_name"] == "Financiera Uno SRL"
-    assert data["trial_days_left"] == 30
+    assert data["trial_days_left"] == 15
     assert data["subscription"]["plan"]["is_trial"] is True
