@@ -1,11 +1,21 @@
 """F9 step 2 and doc 09 «Legales» (decision 095): legal documents with the
 real data of the file — never fixed fake text (reference defects #3, #16,
 #33). Each one is built once as plain paragraphs and rendered as the
-issued PDF (kept with its sha256, under the «pendiente de validación
-legal» band until the company's lawyer validates the templates, 015) and
-as an editable DOCX for the lawyer or the notary.
+issued PDF (kept with its sha256) and as an editable DOCX for the lawyer
+or the notary.
 
-The texts are factory drafts: **the company's lawyer validates them**.
+The texts are models reviewed against Dominican law (decision 127,
+25/10/2026): Ley 45-20 on garantías mobiliarias (the pledge is a
+«garantía mobiliaria sin desposesión» registered in the SEGM, with the
+extrajudicial execution of its arts. 87 and 94-104), Ley 108-05 and the
+SCJ criterion for the mortgage (acto bajo firma privada with legalized
+signatures, registered at the Registro de Títulos), Ley 140-15 for the
+notarial note (amounts and dates in words and figures, identification of
+the parties, reading before signing; art. 545 CPC for its executory
+force), art. 583 CPC for the payment order, Ley 358-05 art. 53 for the
+credit disclosure, and Ley 172-13 art. 5 for the written consent to the
+credit bureaus. Each company may still adjust them with its lawyer (the
+DOCX is editable).
 """
 
 import io
@@ -99,6 +109,53 @@ def _money(amount: Decimal) -> str:
     return f"{amount_in_words(amount)} (RD$ {amount:,.2f})"
 
 
+def _pct(value: Decimal) -> str:
+    text = f"{value:.4f}".rstrip("0").rstrip(".")
+    return f"{text} %"
+
+
+def _terms_line(loan: Loan) -> str:
+    """The credit conditions a Dominican consumer must see (Ley 358-05,
+    art. 53): rate, late fee and the costs, as the pagaré and the schedule
+    state them."""
+    from apps.documents.services import FREQUENCY_LABELS
+    from apps.payments import portfolio
+    from engine.rates import RateUnit, monthly_equivalent
+
+    terms = portfolio.current_terms(loan)
+    singular, _plural = FREQUENCY_LABELS[terms.frequency]
+    monthly = monthly_equivalent(terms.rate, RateUnit(terms.rate_unit), terms.frequency) * 100
+    grace = plural(terms.late_fee_grace_days, "día")
+    if terms.late_fee_method == "fixed":
+        fee = f"un cargo fijo de RD$ {terms.late_fee_fixed_amount or ZERO:,.2f} por cuota"
+    elif terms.late_fee_method == "full_period":
+        fee = (
+            f"una mora del {_pct(terms.late_fee_monthly_rate * 100)} por cada período completo "
+            "de atraso sobre lo vencido de la cuota"
+        )
+    else:
+        fee = (
+            f"una mora del {_pct(terms.late_fee_monthly_rate * 100)} mensual, prorrateada por "
+            "día, sobre lo vencido de la cuota"
+        )
+    return (
+        f"con un interés del {_pct(terms.periodic_rate * 100)} por período {singular} "
+        f"(equivalente al {_pct(monthly)} mensual) y, pasados {grace} de gracia desde el "
+        f"vencimiento de una cuota, {fee}, sin que la mora de una cuota supere el "
+        f"{_pct(terms.late_fee_cap_pct * 100)} de su saldo vencido. El costo total del crédito, "
+        "los cargos y el costo anual efectivo constan en el pagaré y en la tabla de pagos, que "
+        "el deudor declara haber recibido"
+    )
+
+
+CONSENT = (
+    "EL DEUDOR autoriza a EL ACREEDOR a tratar sus datos personales para la gestión de este "
+    "crédito y, de manera libre, expresa y por escrito, a consultar y reportar su historial a "
+    "las sociedades de información crediticia, conforme a la Ley 172-13 sobre protección de "
+    "datos de carácter personal."
+)
+
+
 # --- The texts -------------------------------------------------------------------------------
 
 
@@ -121,9 +178,11 @@ def demand_notice(case: LegalCase) -> LegalText:
             f"{_money(loan.principal)}.",
             f"Para que en el plazo de cinco (5) días francos pague la suma de {_money(owed)}, "
             f"correspondiente a las cuotas vencidas y su mora al {date_in_words(today)}, con "
-            f"{plural(loan.days_past_due, 'día')} de atraso.",
+            f"{plural(loan.days_past_due, 'día')} de atraso, en las oficinas del requeriente o "
+            "por los medios de pago que este le indique, más lo que venza hasta el pago.",
             "Advertido de que, a falta de pago en el plazo indicado, el requeriente procederá a "
-            "ejercer las vías de derecho que le acuerda la ley para el cobro de su crédito.",
+            "ejercer las vías de derecho que le acuerda la ley para el cobro de su crédito, "
+            "incluida la ejecución de las garantías, con los gastos a cargo del deudor.",
         ],
         signatures=[(case.lawyer.name, "Abogado apoderado")],
     )
@@ -146,11 +205,14 @@ def payment_order(case: LegalCase) -> LegalText:
             f"{_professional_line(case.lawyer, 'abogado')}.",
             f"Yo, {_professional_line(case.bailiff, 'alguacil')}, notifico a "
             f"{_customer_line(loan)} el presente MANDAMIENTO DE PAGO.",
-            f"Por el cual se le requiere pagar en el plazo de ley la suma de {_money(owed)}, "
-            f"adeudada en virtud del préstamo núm. {loan.number}, más los intereses y gastos que "
-            "se generen hasta el pago total.",
-            "Advertido de que, a falta de pago, se procederá al embargo de sus bienes conforme "
-            "a la ley.",
+            f"Por el cual se le requiere pagar dentro de un (1) día franco la suma de "
+            f"{_money(owed)}, adeudada en virtud del préstamo núm. {loan.number}, más los "
+            "intereses y gastos que se generen hasta el pago total, en virtud del título "
+            "ejecutorio del que se le notifica copia en cabeza del presente acto (artículo 583 "
+            "del Código de Procedimiento Civil).",
+            "Advertido de que, vencido ese plazo sin haber pagado, se procederá al embargo "
+            "ejecutivo de sus bienes muebles conforme a los artículos 583 y siguientes del Código "
+            "de Procedimiento Civil, con los gastos a su cargo.",
         ],
         signatures=[(case.bailiff.name, "Alguacil")],
     )
@@ -178,8 +240,14 @@ def voluntary_surrender(case: LegalCase) -> LegalText:
             "DECLARA que entrega de manera libre y voluntaria, en garantía del pago de lo "
             "adeudado, el (los) bien(es) siguiente(s):",
             *[f"— {text}" for text in descriptions],
-            "El bien se recibe en el estado en que se encuentra, para su valoración y venta "
-            "conforme a la ley; lo obtenido se aplicará al saldo del préstamo.",
+            "El bien se recibe en el estado en que se encuentra, conforme al procedimiento de "
+            "ejecución convenido en el contrato de garantía (Ley 45-20 sobre garantías "
+            "mobiliarias, artículos 87 y 88). Su venta se hará según los artículos 94 al 104 de "
+            "esa ley: el producto se aplicará a los gastos, los intereses y el saldo del "
+            "préstamo, y el excedente, si lo hubiere, se devolverá al deudor en el plazo de ley; "
+            "si el producto no alcanza, el deudor sigue obligado por el saldo insoluto.",
+            "El deudor conserva el derecho de pagar la totalidad de lo adeudado y los gastos "
+            "antes de la venta, con lo cual recuperará el bien (artículos 97 y 121).",
             *(
                 [
                     "En presencia de los testigos "
@@ -245,11 +313,17 @@ def notarial_note(case: LegalCase) -> LegalText:
             f"recibida en virtud del préstamo núm. {loan.number} del "
             f"{date_in_words(loan.disbursed_on)}, pagadera en "
             f"{plural(terms.installments, 'cuota')} según la tabla de pagos que forma parte "
-            "de este acto.",
+            f"de este acto, {_terms_line(loan)}.",
             "En caso de falta de pago de una o más cuotas a su vencimiento, EL ACREEDOR podrá "
-            "exigir el pago total de lo adeudado, con su mora, y el presente acto vale título "
-            "ejecutorio conforme a la ley.",
-            "Leído el presente acto, los comparecientes lo firman junto a mí, notario, que doy fe.",
+            "exigir el pago total de lo adeudado, con su mora. EL DEUDOR puede pagar por "
+            "anticipado, en todo o en parte, con la reducción proporcional de los intereses no "
+            "devengados (Ley 358-05, artículo 55).",
+            "La primera copia de este acto vale título ejecutorio conforme al artículo 545 del "
+            "Código de Procedimiento Civil, y EL DEUDOR elige domicilio en la dirección indicada "
+            "para toda notificación.",
+            CONSENT,
+            "Leído el presente acto en alta voz a los comparecientes, quienes declaran haberlo "
+            "entendido, lo firman junto a mí, notario, que doy fe.",
         ],
         signatures=[
             (loan.customer.display_name, "El deudor"),
@@ -270,7 +344,23 @@ def _guarantors_line(loan: Loan) -> str:
     return ", ".join(names)
 
 
-def _contract(loan: Loan, *, title: str, kind_text: str, assets: list) -> LegalText:
+def _secured_amount(loan: Loan) -> Decimal:
+    """The maximum secured sum (Ley 45-20 art. 16; the Registro de Títulos asks
+    for it too): the capital plus every scheduled interest, rounded up to the
+    next thousand so late fees and costs fit."""
+    from apps.payments import portfolio
+
+    scheduled = sum(
+        (row.principal_due + row.interest_due for row in portfolio.current_installments(loan)),
+        ZERO,
+    )
+    base = max(scheduled, loan.principal)
+    return (base / 1000).to_integral_value(rounding="ROUND_CEILING") * 1000
+
+
+def _contract(
+    loan: Loan, *, title: str, kind_text: str, assets: list, clauses: list[str]
+) -> LegalText:
     from apps.payments import portfolio
 
     terms = portfolio.current_terms(loan)
@@ -281,26 +371,32 @@ def _contract(loan: Loan, *, title: str, kind_text: str, assets: list) -> LegalT
         f"PRIMERO: EL ACREEDOR otorga a EL DEUDOR un préstamo por {_money(loan.principal)}, "
         f"núm. {loan.number}, desembolsado el {date_in_words(loan.disbursed_on)}, pagadero en "
         f"{plural(terms.installments, 'cuota')} según la tabla de pagos anexa, que forma parte "
-        "de este contrato.",
-        f"SEGUNDO: En garantía del pago, EL DEUDOR otorga {kind_text} sobre el (los) bien(es) "
-        "siguiente(s), de su propiedad:",
+        f"de este contrato, {_terms_line(loan)}.",
+        f"SEGUNDO: En garantía del pago de ese préstamo, de sus intereses, mora y gastos de "
+        f"cobro, hasta la suma máxima de {_money(_secured_amount(loan))}, EL DEUDOR otorga "
+        f"{kind_text} sobre el (los) bien(es) siguiente(s), de su propiedad, libre(s) de otros "
+        "gravámenes salvo los que declara aquí:",
         *[f"— {_asset(asset)}" for asset in assets],
         "TERCERO: EL DEUDOR se obliga a conservar el bien en buen estado, a no venderlo, gravarlo "
-        "ni trasladarlo sin la autorización escrita de EL ACREEDOR, y a mantenerlo asegurado si "
-        "así se le requiere.",
-        "CUARTO: La falta de pago de una o más cuotas a su vencimiento hace exigible la totalidad "
-        "de lo adeudado, con su mora, y faculta a EL ACREEDOR a ejecutar la garantía conforme a "
-        "la ley.",
+        "ni trasladarlo sin la autorización escrita de EL ACREEDOR, a mantenerlo asegurado si "
+        "así se le requiere y a permitir su inspección.",
+        "CUARTO: La falta de pago de una o más cuotas a su vencimiento, pasados los días de "
+        "gracia, hace exigible la totalidad de lo adeudado, con su mora, y faculta a EL ACREEDOR "
+        "a ejecutar la garantía. EL DEUDOR puede pagar por anticipado, en todo o en parte, con "
+        "la reducción proporcional de los intereses no devengados (Ley 358-05, artículo 55).",
+        *clauses,
     ]
     if guarantors:
         paragraphs.append(
-            f"QUINTO: Intervienen como fiadores solidarios {guarantors}, quienes responden con "
-            "EL DEUDOR por todas las obligaciones de este contrato."
+            f"Intervienen como fiadores solidarios {guarantors}, quienes responden con EL DEUDOR "
+            "por todas las obligaciones de este contrato y renuncian a los beneficios de "
+            "excusión y de división (artículos 2021 y 2026 del Código Civil)."
         )
+    paragraphs.append(CONSENT)
     paragraphs.append(
         "Para todo lo no previsto, las partes se remiten al derecho común y eligen domicilio en "
-        "las direcciones indicadas. Hecho y firmado en dos originales, a los "
-        f"{date_in_words(loan.disbursed_on)}."
+        "las direcciones indicadas, donde valen todas las notificaciones. Hecho y firmado en "
+        f"dos originales, uno para cada parte, a los {date_in_words(loan.disbursed_on)}."
     )
     return LegalText(
         title=title,
@@ -325,26 +421,60 @@ def _assets(loan: Loan, kind: str) -> list:
 
 
 def pledge_contract(loan: Loan) -> LegalText:
+    """Vehicle: a garantía mobiliaria sin desposesión (Ley 45-20). Its art. 16
+    asks for the parties, the maximum secured sum, a domicile, the asset, the
+    obligation, the express authorization to register it in the SEGM and the
+    agreement on the extrajudicial execution; art. 46 publicizes it in the SEGM."""
     assets = _assets(loan, "vehicle")
     if not assets:
         raise LegalDocumentError("El préstamo no tiene un vehículo en garantía.", "collateral")
     return _contract(
         loan,
-        title="CONTRATO DE PRÉSTAMO CON GARANTÍA PRENDARIA",
-        kind_text="prenda sin desapoderamiento",
+        title="CONTRATO DE PRÉSTAMO CON GARANTÍA MOBILIARIA SOBRE VEHÍCULO",
+        kind_text="garantía mobiliaria sin desposesión (Ley 45-20)",
         assets=assets,
+        clauses=[
+            "QUINTO: EL DEUDOR autoriza expresamente a EL ACREEDOR a inscribir esta garantía en "
+            "el Sistema Electrónico de Garantías Mobiliarias (SEGM), con lo que queda oponible "
+            "a terceros (artículos 16 y 46 de la Ley 45-20); los gastos de inscripción, de "
+            "renovación y de cancelación son por cuenta de EL DEUDOR. Pagado el préstamo, EL "
+            "ACREEDOR cancelará la inscripción en el plazo de ley.",
+            "SEXTO: Las partes convienen la ejecución extrajudicial de la garantía (artículos "
+            "87 y 94 al 104 de la Ley 45-20): ante el incumplimiento, EL ACREEDOR inscribirá el "
+            "formulario de ejecución, EL DEUDOR entregará el bien en el plazo de tres (3) días "
+            "francos desde el requerimiento o lo hará el alguacil, y la venta se hará por el "
+            "ejecutor que designe EL ACREEDOR, con aviso previo. EL DEUDOR puede detener la "
+            "ejecución pagando la totalidad de lo adeudado y los gastos antes de la venta; el "
+            "excedente de la venta se le devuelve y el saldo insoluto, si lo hay, sigue a su "
+            "cargo.",
+        ],
     )
 
 
 def mortgage_contract(loan: Loan) -> LegalText:
+    """Real estate: hipoteca convencional under Ley 108-05, by acto bajo firma
+    privada with the signatures legalized by a notary (criterion of the SCJ,
+    Primera Sala) and registered at the Registro de Títulos of the property."""
     assets = _assets(loan, "property")
     if not assets:
         raise LegalDocumentError("El préstamo no tiene un inmueble en garantía.", "collateral")
     return _contract(
         loan,
         title="CONTRATO DE PRÉSTAMO CON GARANTÍA HIPOTECARIA",
-        kind_text="hipoteca en primer rango",
+        kind_text="hipoteca convencional en primer rango",
         assets=assets,
+        clauses=[
+            "QUINTO: Esta hipoteca se otorga conforme a la Ley 108-05 de Registro Inmobiliario. "
+            "Las firmas de este acto serán legalizadas por notario público y EL ACREEDOR lo "
+            "inscribirá en el Registro de Títulos de la jurisdicción del inmueble, lo que EL "
+            "DEUDOR autoriza expresamente; los impuestos y gastos de inscripción, de "
+            "radiación y de ejecución son por cuenta de EL DEUDOR. Saldado el préstamo, EL "
+            "ACREEDOR entregará el acto de radiación.",
+            "SEXTO: Ante el incumplimiento, EL ACREEDOR podrá perseguir la venta del inmueble "
+            "por el procedimiento de embargo inmobiliario que establece la ley, sin perjuicio de "
+            "las demás vías de derecho. EL DEUDOR declara que el inmueble no está afectado por "
+            "otra hipoteca, embargo ni oposición, salvo lo que declara en este acto.",
+        ],
     )
 
 
@@ -430,7 +560,8 @@ def render_docx(text: LegalText, company_id) -> bytes:
     header = document.add_paragraph(company.legal_name)
     header.runs[0].bold = True
     document.add_paragraph(
-        "Plantilla de fábrica pendiente de validación legal por el abogado de la empresa."
+        "Modelo de Cobradía revisado conforme a la ley dominicana; la empresa puede ajustarlo "
+        "con su abogado."
     ).runs[0].italic = True
     heading = document.add_paragraph(text.title)
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER

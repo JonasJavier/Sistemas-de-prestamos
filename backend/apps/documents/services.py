@@ -119,7 +119,7 @@ def issue(
     template: str,
     context: dict,
     issued_by,
-    legal_status: str = "pending",
+    legal_status: str = "reviewed",
 ) -> GeneratedDocument:
     from apps.core.qr import data_uri, public_url
 
@@ -141,6 +141,8 @@ def issue(
             # Goes inside a CSS string (page footer): no quotes nor backslashes.
             "issuer_label": issuer.replace('"', "'").replace("\\", "/"),
             "issued_at": now,
+            # Decision 127: the models are reviewed by Cobradía; the company's
+            # lawyer may still mark them validated, which drops the note.
             "legal_pending": legal_status != "validated",
         },
     )

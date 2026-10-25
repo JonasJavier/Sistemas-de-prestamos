@@ -405,8 +405,9 @@ export function LoanDetailPage({ me }: { me: Me }) {
               ))}
           </div>
           <p className="text-[12.5px] text-muted">
-            Plantillas de fábrica pendientes de validación legal por el abogado de la empresa. La
-            reimpresión es idéntica al original.
+            Modelos revisados conforme a la ley dominicana (Ley 45-20 para el vehículo, Ley 108-05
+            para el inmueble); tu abogado puede ajustarlos en el DOCX. La reimpresión es idéntica al
+            original.
           </p>
           <div className="border-t border-edge pt-3">
             <h3 className="mb-2 text-sm font-semibold">Pagaré firmado</h3>

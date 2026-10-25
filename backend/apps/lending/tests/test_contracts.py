@@ -79,7 +79,7 @@ def test_each_asset_brings_its_contract_with_the_real_description(tenant) -> Non
     kinds = [doc["kind"] for doc in documents]
     assert {"pledge_contract", "mortgage_contract"} <= set(kinds)
     contract = next(doc for doc in documents if doc["kind"] == "pledge_contract")
-    assert contract["legal_status"] == "pending"
+    assert contract["legal_status"] == "reviewed"  # decision 127
     pdf = manager.get(f"/api/v1/prestamos/{number}/documentos/{contract['id']}/")
     assert b"".join(pdf.streaming_content).startswith(b"%PDF")
     editable = manager.get(f"/api/v1/prestamos/{number}/contratos/pledge_contract/docx/")
@@ -87,10 +87,14 @@ def test_each_asset_brings_its_contract_with_the_real_description(tenant) -> Non
     with zipfile.ZipFile(io.BytesIO(editable.content)) as archive:
         body = archive.read("word/document.xml").decode()
     assert "placa A123456" in body and "chasis 2HGFC2F59LH000001" in body
+    # Decision 127: Ley 45-20 (SEGM, extrajudicial execution) and the credit conditions.
+    assert "GARANTÍA MOBILIARIA SOBRE VEHÍCULO" in body and "(SEGM)" in body
+    assert "Ley 358-05, artículo 55" in body and "Ley 172-13" in body
     mortgage = manager.get(f"/api/v1/prestamos/{number}/contratos/mortgage_contract/docx/")
     with zipfile.ZipFile(io.BytesIO(mortgage.content)) as archive:
         body = archive.read("word/document.xml").decode()
     assert "designación catastral Parcela 123, DC 4" in body
+    assert "Ley 108-05" in body and "Registro de Títulos" in body
     # Issued once: listing again does not issue them twice.
     again = manager.get(f"/api/v1/prestamos/{number}/documentos/").json()["documents"]
     assert len(again) == len(documents)

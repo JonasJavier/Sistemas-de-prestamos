@@ -35,8 +35,8 @@ Qué documentos emite Cobradía, cómo se ven, y la **definición exacta de cada
 | Documento | Formato | Notas |
 | --- | --- | --- |
 | Pagaré notarial | DOCX | Datos reales del expediente (estado civil, nacionalidad, ocupación); nada de texto fijo falso |
-| Contrato de préstamo con garantía prendaria (vehículo) | PDF/DOCX | Descripción del bien desde Garantías |
-| Contrato con garantía hipotecaria | PDF/DOCX | Título y designación catastral desde Garantías |
+| Contrato de préstamo con garantía mobiliaria sobre vehículo (Ley 45-20) | PDF/DOCX | Descripción del bien desde Garantías; monto máximo garantizado, autorización de inscripción en el SEGM y pacto de ejecución extrajudicial (127) |
+| Contrato con garantía hipotecaria (Ley 108-05) | PDF/DOCX | Título y designación catastral desde Garantías; firmas legalizadas e inscripción en el Registro de Títulos (127) |
 | Acto de intimación de pago | PDF | Solo con atraso real y por el monto exigible correcto |
 | Mandamiento de pago | PDF | Con alguacil del catálogo |
 | Acto de entrega voluntaria | PDF | Bien descrito automáticamente |

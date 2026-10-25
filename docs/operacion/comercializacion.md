@@ -37,13 +37,10 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 - [x] **A7. Cómo te pagan** 👤🤖 · *Hecho el 25/10/2026 (decisión 125): transferencia a Banreservas o Banco Popular con comprobante desde la app y confirmación con un clic en el panel.* Azul y CardNET investigados en [pasarelas-de-pago.md](pasarelas-de-pago.md); con pocos clientes su costo fijo (RD$2,400–4,900 al mes) no se justifica: empezar por transferencia con comprobante (D3) y cotizar al llegar a 25–30 clientes.*
   - 👤 Abrir una cuenta bancaria a nombre del negocio. Para empezar basta la **transferencia**: el sistema ya registra el pago manual y activa la empresa (decisión 045).
   - 🤖 Mostrar en Suscripción los datos bancarios, el monto y la referencia que debe poner la empresa.
-- [ ] **A8. La empresa que vende** 👤
-  - RNC (persona física o SRL) y alta en la DGII para emitir comprobantes fiscales: las financieras van a pedir factura con crédito fiscal por la suscripción.
-  - Registrar la marca **Cobradía** en ONAPI antes de invertir en publicidad.
-- [ ] **A9. Validación legal** 👤 (abogado), 🤖 (ajustes)
-  - Términos de servicio y aviso de privacidad (Ley 172-13), con las propuestas de la decisión 103: aviso de 30 días por cambios, 90 días de copia tras cancelar, responsabilidad limitada y tribunales.
-  - Plantillas que el sistema entrega a **todas** las financieras: contratos con garantía prendaria e hipotecaria, pagaré notarial, intimación, mandamiento y entrega voluntaria. Conviene que tu abogado valide una versión base una sola vez, en lugar de esperar al abogado de cada cliente.
-  - 🤖 Aplicar las correcciones y quitar la banda «pendiente de validación legal».
+- [ ] **A8. La empresa que vende** 👤 · *Revisado el 25/10/2026 ([revisión legal](revision-legal.md), §1).*
+  - RNC como **persona física** (RC-01 por la Oficina Virtual, gratis; no hace falta SRL para empezar). Al tenerlo: certificado de firma digital y alta como emisor electrónico, porque la factura es **e-CF** (120 días desde la inscripción, Decreto 587-24). El Facturador Gratuito de la DGII basta al inicio. Las financieras reciben un E31 a su RNC por cada pago; el ITBIS (18 %) se agrega a los precios, que ya se publican sin impuestos.
+  - Registrar la marca **Cobradía** en ONAPI (clase 42) antes de invertir en publicidad.
+- [x] **A9. Validación legal** 🤖 · *Hecha el 25/10/2026 por el responsable técnico como abogado, a pedido de Jonas (decisión 127; [revisión legal](revision-legal.md)).* Términos y aviso de privacidad reescritos (quién presta el servicio, Ley 126-02, precios sin ITBIS y e-CF, captación del público, obligaciones del encargado con aviso de incidentes en 72 h, transferencia a EE. UU.); plantillas corregidas a la Ley 45-20 (garantía mobiliaria y SEGM), la Ley 108-05 (hipoteca), la Ley 140-15 y el art. 545 CPC (pagaré notarial), el art. 583 CPC (mandamiento) y la Ley 358-05 (condiciones del crédito). La banda «pendiente de validación legal» se quitó. ⚖️ Queda, sin urgencia, una lectura de un abogado colegiado cuando haya 5–10 clientes.
 
 ## Fase B · Antes del primer cliente piloto
 
@@ -74,7 +71,7 @@ En orden recomendado (más impacto con menos esfuerzo primero). Todas 🤖, salv
 - [ ] **D1. Importar la cartera desde la app** Hoy la migración es un comando de consola que corre el equipo de Cobradía, pero el sitio promete «cargar tus préstamos actuales desde el primer día». Una pantalla para subir las plantillas de Excel, ver el ensayo con los errores por fila y aplicarlo deja que cada financiera arranque sola.
 - [ ] **D2. Asistente de primeros pasos** Una lista en el inicio de la empresa nueva: datos de la empresa y logo, sucursal, productos, usuarios, caja y primer préstamo, con el avance marcado. Sube la conversión de prueba a pago.
 - [x] **D3. Pago de la suscripción desde la app** *(hecho el 25/10/2026, decisión 125; queda la pasarela con tarjeta para más adelante)* Datos bancarios y «subir comprobante de transferencia» que te avisa para confirmarlo; más adelante, cobro con tarjeta recurrente por una pasarela local (Azul o CardNet; 👤 contrato con el banco).
-- [ ] **D4. Recibo de la suscripción** PDF con tu RNC y el NCF de cada pago, desde el panel de la plataforma (depende de A8).
+- [ ] **D4. Recibo de la suscripción** PDF con tu RNC, el e-NCF (E31/E32) y el ITBIS desglosado de cada pago, desde Suscripción (depende de A8).
 - [ ] **D5. Métricas del negocio en tu panel** Ingreso mensual recurrente (MRR), cancelaciones, ingreso por plan y empresas por vencer. Hoy el panel muestra conteos y la conversión de la prueba.
 - [ ] **D6. App instalable para el cobrador (PWA)** Ícono en la pantalla del celular y pantalla completa, sin pasar por una tienda de aplicaciones. Paso siguiente, más delicado por la caja: cobrar sin señal y sincronizar al volver la conexión.
 - [ ] **D7. WhatsApp y SMS reales** 👤 contrato (Twilio o la API de WhatsApp de Meta, que suele salir más barata). La mensajería ya está construida y espera las credenciales (decisión 097).

@@ -432,7 +432,7 @@ Jonas no tiene contador: el 08/10/2026 pidió que el responsable técnico valida
   - Muestran también el **costo total** (intereses + cargos).
   - Hay un **tope de costo anual efectivo** en dos niveles: el legal, que la plataforma fija para todas las empresas cuando exista la ley (`LEGAL_MAX_EFFECTIVE_ANNUAL_RATE`), y el propio de cada empresa (Ajustes → Empresa).
   - Por encima del tope no se cotiza, ni se aprueba, ni se desembolsa un préstamo nuevo; los migrados ya existen y no se bloquean.
-- **Validar con el abogado:** el valor del tope cuando salga la ley y el contenido de los contratos.
+- **Al 25/10/2026** (decisión 127) no hay ley aprobada: el proyecto sigue en el Senado. El Código Penal nuevo (Ley 74-25, vigente desde el 03/08/2026) castiga la intermediación financiera no regulada, no la usura. Queda vigilar el Congreso y cargar el tope el día que salga.
 
 ### 16.5 Límite de efectivo del cobrador
 
@@ -443,7 +443,9 @@ Jonas no tiene contador: el 08/10/2026 pidió que el responsable técnico valida
 ### 16.6 Otros puntos legales detectados (para el abogado)
 
 - **Captación del público:** la financiera presta con capital propio. Captar fondos del público para prestarlos es intermediación financiera y requiere autorización de la Junta Monetaria (Ley 183-02); el nuevo Código Penal la castiga. Lo dirán los términos de servicio (fase 10).
-- **Prevención de lavado (Ley 155-17):** las casas de empeño y las empresas de factoraje son sujetos obligados supervisados por la DGII. Los prestamistas con capital propio no aparecen expresamente. La fase 7 agrega un reporte de transacciones en efectivo desde un umbral configurable (US$ 15,000 por defecto) para quien lo necesite.
+- **Prevención de lavado (Ley 155-17):** verificado en el texto de la ley (decisión 127): los sujetos obligados financieros del art. 32 son las entidades de intermediación, los intermediarios de valores, los agentes de cambio y remesas, las fiduciarias, las cooperativas de ahorro y crédito, los seguros y los fondos; los no financieros del art. 33 son los casinos, el factoraje, los agentes inmobiliarios, los comerciantes de joyas, los abogados y contadores en ciertas operaciones y las casas de empeño. **Los prestamistas con capital propio no están**, aunque el Comité Nacional puede incluirlos por reglamento (art. 32, párrafo I). El reporte de transacciones en efectivo desde US$ 15,000 (arts. 52–54: registro, remisión a la UAF en los primeros 10 días del mes, 10 años de conservación) está construido para quien lo necesite.
+- **Garantías (Ley 45-20):** la prenda sin desapoderamiento ya no existe como tal: toda garantía sobre un bien mueble es una garantía mobiliaria, se constituye sin notario (art. 15), con el contenido mínimo del art. 16, y se inscribe en el SEGM (vehículos: art. 46, que sustituye la oposición en la DGII); con la certificación del SEGM el contrato es título ejecutorio (art. 545 CPC, modificado por el art. 133) y se ejecuta sin juez si así se pactó (arts. 87 y 94–104). La hipoteca sobre inmueble registrado puede ir bajo firma privada con firmas legalizadas (criterio de la SCJ) e inscrita en el Registro de Títulos (Ley 108-05). Los contratos modelo lo recogen (decisión 127; [revisión legal](../operacion/revision-legal.md)).
+- **Consumidor (Ley 358-05):** el contrato de préstamo de una financiera con una persona es un contrato de adhesión (art. 81) que debe registrarse en Pro Consumidor (RD$ 2,000); en toda operación a crédito hay que exponer tasa, mora, cargos, cuotas y derechos en caso de atraso (art. 53) y admitir el pago anticipado con reducción de intereses (art. 55). Los modelos lo cumplen desde la decisión 127.
 
 **Fuentes consultadas:**
 - Resolución del ICPARD que adopta la NIIF para las PYMES.

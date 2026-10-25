@@ -177,7 +177,7 @@ def test_legal_documents_use_the_real_data(tenant) -> None:
         "payment_order",
         "notarial_note",
     ]
-    assert all(d["legal_status"] == "pending" for d in detail["documents"])
+    assert all(d["legal_status"] == "reviewed" for d in detail["documents"])  # decision 127
     assert D(detail["exigible"]) > 0
 
 

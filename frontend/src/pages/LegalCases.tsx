@@ -356,6 +356,7 @@ export function LegalCasePage() {
                   <span className="text-muted">
                     {doc.folio}
                     {doc.legal_status === 'pending' ? ' · pendiente de validación legal' : ''}
+                    {doc.legal_status === 'validated' ? ' · validado por el abogado' : ''}
                   </span>
                 </li>
               ))}

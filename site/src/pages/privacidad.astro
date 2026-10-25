@@ -9,7 +9,10 @@ import { CONTACT_EMAIL } from '../config'
 >
   <p>
     Este aviso explica qué datos personales trata Cobradía, para qué y con qué derechos, conforme a
-    la Ley 172-13 sobre protección de datos de carácter personal de la República Dominicana.
+    la Ley 172-13 sobre protección de datos de carácter personal de la República Dominicana. El
+    responsable es Jonas Javier Encarnación (Cobradía), República Dominicana, contacto <a
+      href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a
+    >.
   </p>
 
   <h2>1. Dos papeles distintos</h2>
@@ -24,6 +27,23 @@ import { CONTACT_EMAIL } from '../config'
       servicio y siguiendo sus instrucciones. Si eres cliente de una financiera, tus derechos los
       ejerces ante ella.
     </li>
+  </ul>
+  <p>Como encargado, Cobradía se obliga ante cada financiera a:</p>
+  <ul>
+    <li>tratar los datos solo para prestar el servicio y según sus instrucciones;</li>
+    <li>guardar confidencialidad, también después de terminar el servicio;</li>
+    <li>aplicar las medidas de seguridad de la sección 5;</li>
+    <li>
+      usar solo los proveedores de la sección 4 y avisar con 30 días antes de cambiar uno que trate
+      datos personales;
+    </li>
+    <li>
+      avisarle sin demora, y a más tardar en 72 horas desde que lo sepa, de cualquier incidente de
+      seguridad que afecte sus datos, con lo que se sabe y lo que se hizo;
+    </li>
+    <li>ayudarla a atender las solicitudes de sus clientes (acceso, rectificación, supresión);</li>
+    <li>no consultar ni reportar datos a sociedades de información crediticia: eso lo hace la financiera, con el consentimiento escrito de su cliente;</li>
+    <li>devolverle o eliminar los datos al terminar el servicio (sección 6).</li>
   </ul>
 
   <h2>2. Qué datos tratamos</h2>
@@ -45,17 +65,19 @@ import { CONTACT_EMAIL } from '../config'
     <li>Prestar el servicio: cálculos, cobros, caja, contabilidad, documentos y reportes.</li>
     <li>Proteger las cuentas: verificación en dos pasos y alertas por accesos desde dispositivos nuevos o movimientos fuera de lo normal.</li>
     <li>Enviar los mensajes que la financiera activa (recordatorios, avisos y recibos).</li>
-    <li>Cobrar la suscripción y dar soporte cuando la financiera lo pide.</li>
+    <li>Cobrar la suscripción, emitir sus comprobantes fiscales y dar soporte cuando la financiera lo pide.</li>
   </ul>
   <p>No vendemos datos ni los usamos para publicidad.</p>
 
   <h2>4. Con quién se comparten</h2>
   <p>
     Solo con los proveedores que hacen posible el servicio, obligados a la confidencialidad: el
-    servidor donde se aloja Cobradía, el proveedor de correo, el de WhatsApp y SMS (cuando la
-    financiera los usa) y el de monitoreo de errores, al que no se envían datos personales. Algunos
-    pueden estar fuera de la República Dominicana. También se entregan datos a una autoridad cuando
-    la ley lo exige.
+    servidor y la base de datos donde se aloja Cobradía y sus respaldos (Railway, en Estados
+    Unidos), el proveedor de correo, el de WhatsApp y SMS (cuando la financiera los usa) y el de
+    monitoreo de errores, al que no se envían datos personales. El tratamiento fuera de la
+    República Dominicana se hace con proveedores que ofrecen un nivel de protección adecuado y bajo
+    contrato, como permite la Ley 172-13. También se entregan datos a una autoridad cuando la ley lo
+    exige.
   </p>
 
   <h2>5. Cómo se protegen</h2>
@@ -70,16 +92,17 @@ import { CONTACT_EMAIL } from '../config'
   <h2>6. Cuánto tiempo</h2>
   <p>
     Mientras la financiera tenga su cuenta. Si cancela, sus datos se eliminan a los 90 días, salvo lo
-    que la ley obligue a conservar; los respaldos cifrados se borran en el ciclo de retención
-    siguiente.
+    que la ley obligue a conservar (por ejemplo, los comprobantes fiscales de la suscripción, 10
+    años); los respaldos cifrados se borran en el ciclo de retención siguiente.
   </p>
 
   <h2>7. Tus derechos</h2>
   <p>
     Puedes pedir acceso a tus datos, que se corrijan, que se supriman o que no se usen para algún
-    fin, escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Respondemos en el plazo
-    que fija la ley. Si eres cliente de una financiera, dirígete a ella; si nos escribes, le
-    pasaremos tu pedido.
+    fin, escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Respondemos en un
+    plazo máximo de diez (10) días hábiles. Si eres cliente de una financiera, dirígete a ella; si
+    nos escribes, le pasaremos tu pedido. Si no quedas conforme, puedes acudir a los tribunales, como
+    prevé la Ley 172-13.
   </p>
 
   <h2>8. Cookies</h2>
@@ -90,7 +113,7 @@ import { CONTACT_EMAIL } from '../config'
 
   <h2>9. Cambios</h2>
   <p>
-    Si este aviso cambia de forma importante, lo avisaremos por correo y dentro de la app antes de
-    que la nueva versión aplique.
+    Si este aviso cambia de forma importante, lo avisaremos por correo y dentro de la app con al
+    menos 30 días antes de que la nueva versión aplique.
   </p>
 </Legal>
