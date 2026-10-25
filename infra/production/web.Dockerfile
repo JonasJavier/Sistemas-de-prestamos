@@ -12,9 +12,11 @@ RUN pnpm -C frontend install --frozen-lockfile
 COPY site/package.json site/pnpm-lock.yaml site/
 RUN pnpm -C site install --frozen-lockfile
 COPY frontend frontend
-# Decision 123: the browser reports its errors to Sentry when the DSN is set.
+# Decision 123: the browser reports its errors to Sentry when the DSN is set,
+# tagged with the version (APP_VERSION = the commit, as the API).
 ARG VITE_SENTRY_DSN=
-RUN VITE_SENTRY_DSN=$VITE_SENTRY_DSN pnpm -C frontend build
+ARG APP_VERSION=dev
+RUN VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_APP_VERSION=$APP_VERSION pnpm -C frontend build
 COPY site site
 ARG PUBLIC_APP_URL=https://app.cobradia.com
 RUN PUBLIC_APP_URL=$PUBLIC_APP_URL pnpm -C site build
