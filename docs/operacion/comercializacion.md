@@ -30,11 +30,11 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
   - [ ] 👤 Opcional: activar además los *snapshots* de *Postgres → Backups* en el panel de Railway (plan Pro).
 - [ ] **A5. Monitoreo** 👤🤖 *El código está listo (decisión 123): Sentry en servidor y navegador, `APP_VERSION` en cada despliegue.*
   - [x] Sentry 👤🤖 *Hecho el 25/10/2026:* organización `jonnas-javier`, proyectos `cobradia-api` (Django) y `cobradia-web` (React); los DSN están en `api` (`SENTRY_DSN`) y `web` (`VITE_SENTRY_DSN`). Los errores se ven en <https://jonnas-javier.sentry.io>.
-  - [ ] 👤 Crear la cuenta de UptimeRobot (gratis) con un monitor HTTPS a `https://app.cobradia.com/api/v1/salud/` cada minuto (palabra clave `ok`) y aviso por correo y WhatsApp.
+  - [ ] 👤 Crear la cuenta de UptimeRobot (gratis) con un monitor HTTPS a `https://app.cobradia.com/api/v1/salud/` cada minuto (palabra clave `ok`) y aviso por correo y WhatsApp. *Jonas lo pospone (25/10/2026).*
 - [x] **A6. Planes y precios (PT3)** 👤 decide, 🤖 implementa · *Hecho el 25/10/2026 (decisión 124): Esencial RD$990, Profesional RD$2,290 y Empresa RD$3,690 cargados en el panel, con funciones por plan en el sistema, publicados en el sitio y en Suscripción.*
   - 👤 Cuántos planes, precio mensual y límites de cada uno (usuarios, sucursales y préstamos activos). 👤 *Decidido el 25/10/2026:* Esencial RD$990 · Profesional RD$2,290 · Empresa RD$3,690, préstamos sin límite y funciones por plan ([propuesta-planes.md](propuesta-planes.md)). 🤖 Falta construir el corte de funciones por plan, cargarlos y publicarlos.
   - 🤖 Cargados con `manage.py seed_plans`, publicados en `cobradia.com/#precios` y en la pantalla Suscripción (elegir un plan sigue abriendo un correo: el pago es manual, D3).
-- [ ] **A7. Cómo te pagan** 👤🤖
+- [ ] **A7. Cómo te pagan** 👤🤖 · *25/10/2026: Azul y CardNET investigados en [pasarelas-de-pago.md](pasarelas-de-pago.md); con pocos clientes su costo fijo (RD$2,400–4,900 al mes) no se justifica: empezar por transferencia con comprobante (D3) y cotizar al llegar a 25–30 clientes.*
   - 👤 Abrir una cuenta bancaria a nombre del negocio. Para empezar basta la **transferencia**: el sistema ya registra el pago manual y activa la empresa (decisión 045).
   - 🤖 Mostrar en Suscripción los datos bancarios, el monto y la referencia que debe poner la empresa.
 - [ ] **A8. La empresa que vende** 👤
