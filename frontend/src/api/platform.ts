@@ -295,6 +295,17 @@ export interface PlatformDashboard {
     }[]
     totals: { users: number; active_users: number; active_loans: number; payments: number }
   }
+  /** D5 (decision 134): the owner's business numbers. */
+  business: {
+    mrr: string
+    arpu: string | null
+    paying: number
+    by_plan: { plan: string; companies: number; mrr: string }[]
+    collected_this_month: string
+    collected_last_month: string
+    churn: { days: number; companies: number }
+    due: { days: number; companies: number; amount: string }
+  }
   definitions: Record<string, string>
 }
 

@@ -110,7 +110,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 
 | # | Pantalla | Ruta | Contenido y acciones | Roles | Fase |
 | --- | --- | --- | --- | --- | --- |
-| P40 | Mi ruta (celular) | `/ruta` | **Avance:** cobrado, visitas hechas y pendientes<br>**Vista:** lista o mapa<br>**Tarjeta de cada cliente:** cuota, atraso, dirección, *Llamar*, *WhatsApp*, *Cómo llegar*, *Cobrar*, *Gestión*<br>*Cerrar ruta* muestra el resumen para la rendición | Co | 4 |
+| P40 | Mi ruta (celular) | `/ruta` | Tarjeta «Instalar» de la PWA la primera vez (135). **Avance:** cobrado, visitas hechas y pendientes<br>**Vista:** lista o mapa<br>**Tarjeta de cada cliente:** cuota, atraso, dirección, *Llamar*, *WhatsApp*, *Cómo llegar*, *Cobrar*, *Gestión*<br>*Cerrar ruta* muestra el resumen para la rendición | Co | 4 |
 | P41 | Cobro en ruta | `/ruta/cobrar/:numero` | El P33 simplificado para el celular: montos grandes y confirmación · luego *Enviar recibo por WhatsApp* | Co | 4 |
 | P42 | Registrar gestión | Hoja inferior en el celular, o diálogo | Tipo, resultado, nota; promesa con fecha y monto | Co O Su G | 5 |
 | P43 | Atrasos | `/atrasos` | Pestañas por tramo con totales; asignar gestor; acciones rápidas (llamar, gestión, promesa); exportar | G Su O Ct Au | 4 y 5 |
@@ -183,7 +183,7 @@ Rutas bajo `/plataforma`, visibles únicamente para la cuenta de plataforma (`is
 | # | Pantalla | Ruta | Contenido y acciones | Fase |
 | --- | --- | --- | --- | --- |
 | PT1 | Empresas | `/plataforma` y `/plataforma/empresas/<id>` | Lista con búsqueda (nombre, RNC, correo), filtro por estado, plan, prueba o pago hasta y usuarios (122) · Ficha: estado y motivo, plan y uso contra límites, datos y términos, pagos, soporte vigente, gerentes y administradores (último acceso, correo confirmado, dos pasos) · Acciones: *Registrar pago*, *Extender la prueba*, *Cambiar de plan*, *Suspender*, *Reactivar*, *Cerrar empresa*, *Modo soporte*, *Reenviar confirmación*, *Restablecer verificación en dos pasos* (120); comprobantes enviados con *Confirmar pago* o *Rechazar* (125); todo queda en la auditoría de la empresa | 1 |
-| PT2 | Tablero de la plataforma | `/plataforma` | Empresas activas y en prueba, conversión de la prueba, registros recientes, pagos por vencer y métricas agregadas de uso | 7 |
+| PT2 | Tablero de la plataforma | `/plataforma` | Negocio (134): MRR y ARPU, cobrado este mes, por vencer en 30 días, cancelaciones e ingreso por plan. Empresas activas y en prueba, conversión de la prueba, registros recientes, pagos por vencer y métricas agregadas de uso | 7 |
 | PT3 | Planes y cobros | `/plataforma/planes` | Planes con precio mensual, funciones (124) y límites: crear, editar, desactivar y borrar (122); un solo plan de prueba activo. Cuentas bancarias para las transferencias (125). La asignación se hace desde la ficha de cada empresa | 1 |
 | PT4 | Modo soporte | Desde la ficha de la empresa | Motivo y duración; acceso de solo lectura, visible para la empresa y auditado (046) | 7 |
 

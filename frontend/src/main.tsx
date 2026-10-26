@@ -15,6 +15,16 @@ import { startErrorReporting } from './lib/errors'
 
 startErrorReporting()
 
+// D6 (decision 135): installable, with the shell served without signal. Only
+// the built app registers it: in development Vite serves nothing to cache.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* an old browser or a private window: the app works the same */
+    })
+  })
+}
+
 // Light by default; dark only if the user chose it (owner feedback 05/10/2026).
 try {
   if (localStorage.getItem('theme') === 'dark') {

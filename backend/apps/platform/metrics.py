@@ -7,16 +7,20 @@ leave it as plain numbers.
 """
 
 import datetime as dt
+from decimal import Decimal
 
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.utils import timezone
 
 from apps.core.models import Company
 from apps.core.tenancy import company_context
-from apps.platform.models import PaymentProof, Subscription
+from apps.platform.models import PaymentProof, Subscription, SubscriptionPayment
 
 CONVERSION_DAYS = 90
 USAGE_DAYS = 30
+CHURN_DAYS = 30
+DUE_DAYS = 30
+ZERO = Decimal("0.00")
 
 
 def _usage(company: Company, since: dt.datetime) -> dict:
@@ -35,6 +39,62 @@ def _usage(company: Company, since: dt.datetime) -> dict:
             "active_loans": Loan.objects.filter(status=Loan.Status.ACTIVE).count(),
             "payments": Payment.objects.filter(created_at__gte=since).count(),
         }
+
+
+def business(today: dt.date | None = None) -> dict:
+    """D5 (decision 134): the owner's numbers. MRR counts every company
+    whose subscription is in force today at its plan's monthly price (an
+    annual payer counts the same per month); «cobrado» is what came in by
+    calendar month; churn, the companies that cancelled in the last 30 days;
+    «por vencer», what is paid only until the next 30 days."""
+    today = today or timezone.localdate()
+    in_force = Subscription.objects.filter(
+        company__status=Company.Status.ACTIVE, paid_until__gte=today
+    ).select_related("plan", "company")
+    by_plan: dict[str, dict] = {}
+    for sub in in_force:
+        empty = {"plan": sub.plan.name, "companies": 0, "mrr": ZERO}
+        row = by_plan.setdefault(sub.plan.name, empty)
+        row["companies"] += 1
+        row["mrr"] += sub.plan.monthly_price
+    mrr = sum((row["mrr"] for row in by_plan.values()), ZERO)
+    paying = sum(row["companies"] for row in by_plan.values())
+
+    month_start = today.replace(day=1)
+    last_month_end = month_start - dt.timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+
+    def collected(start: dt.date, end: dt.date) -> Decimal:
+        total = SubscriptionPayment.objects.filter(
+            created_at__date__gte=start, created_at__date__lte=end
+        ).aggregate(total=Sum("amount"))["total"]
+        return total or ZERO
+
+    churn_since = timezone.now() - dt.timedelta(days=CHURN_DAYS)
+    churned = Company.objects.filter(status=Company.Status.CLOSED, closed_at__gte=churn_since)
+    due = Subscription.objects.filter(
+        company__status=Company.Status.ACTIVE,
+        paid_until__gte=today,
+        paid_until__lte=today + dt.timedelta(days=DUE_DAYS),
+    ).select_related("plan")
+    return {
+        "mrr": str(mrr),
+        "arpu": str((mrr / paying).quantize(Decimal("0.01"))) if paying else None,
+        "paying": paying,
+        "by_plan": sorted(
+            ({**row, "mrr": str(row["mrr"])} for row in by_plan.values()),
+            key=lambda row: Decimal(row["mrr"]),
+            reverse=True,
+        ),
+        "collected_this_month": str(collected(month_start, today)),
+        "collected_last_month": str(collected(last_month_start, last_month_end)),
+        "churn": {"days": CHURN_DAYS, "companies": churned.count()},
+        "due": {
+            "days": DUE_DAYS,
+            "companies": due.count(),
+            "amount": str(sum((sub.plan.monthly_price for sub in due), ZERO)),
+        },
+    }
 
 
 def dashboard(today: dt.date | None = None) -> dict:
@@ -125,7 +185,16 @@ def dashboard(today: dt.date | None = None) -> dict:
                 for key in ("users", "active_users", "active_loans", "payments")
             },
         },
+        "business": business(today),
         "definitions": {
+            "mrr": "Ingreso mensual recurrente: la suma del precio mensual del plan de cada "
+            "empresa activa con suscripción vigente hoy (quien paga el año cuenta igual por mes). "
+            "ARPU: ese ingreso dividido entre las empresas que pagan.",
+            "collected": "Pagos de suscripción registrados en el mes calendario, incluidos los "
+            "anuales completos.",
+            "due": f"Empresas activas cuyo período pagado termina en los próximos {DUE_DAYS} días, "
+            "y lo que vale un mes de cada una.",
+            "churn": f"Empresas que cancelaron en los últimos {CHURN_DAYS} días.",
             "conversion": "Empresas que pasaron a activa entre empresas cuya prueba terminó en los "
             f"últimos {CONVERSION_DAYS} días.",
             "active": "Empresas activas con suscripción vigente.",

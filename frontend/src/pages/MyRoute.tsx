@@ -16,6 +16,7 @@ import {
   type RouteStop,
 } from '../api/routes'
 import { ActionDialog } from '../components/ActionDialog'
+import { InstallBanner } from '../components/InstallBanner'
 import { buttonClass } from '../components/classes'
 import { ChevronDownIcon, CollectIcon, RouteIcon } from '../components/icons'
 import { Modal } from '../components/Modal'
@@ -417,6 +418,7 @@ export function MyRoutePage() {
           ) : null}
         </div>
       </div>
+      <InstallBanner />
 
       {!data.consent ? (
         <Consent data={data} />

@@ -1,5 +1,7 @@
 # Cobrador
 
+**En tu celular, como una app:** la primera vez que abras Mi ruta verás «Lleva Cobradía en tu pantalla de inicio». En Android toca **Instalar**; en iPhone, en Safari, toca **Compartir** y luego **Agregar a inicio**. Abre a pantalla completa y con su ícono. Sigue necesitando internet para cobrar.
+
 Trabaja desde el celular, en la calle, con su ruta del día.
 
 ## Mi ruta

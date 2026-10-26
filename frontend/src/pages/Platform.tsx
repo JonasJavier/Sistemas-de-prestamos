@@ -23,7 +23,7 @@ import {
   Spinner,
   Table,
 } from '../components/ui'
-import { day, pct, STATUS_BADGES, whole } from '../lib/format'
+import { day, pct, rd, STATUS_BADGES, whole } from '../lib/format'
 import { useDebounced } from '../lib/hooks'
 
 /** PT2 (decision 091): companies, conversion, payments due and usage
@@ -62,6 +62,57 @@ function PlatformDashboard() {
           help={data.definitions.usage}
         />
       </div>
+      {/* D5 (decision 134): the business in four numbers, and the income by plan. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi
+          label="Ingreso mensual recurrente"
+          value={rd(data.business.mrr)}
+          hint={
+            data.business.arpu
+              ? `${data.business.paying} pagando · ${rd(data.business.arpu)} por empresa`
+              : 'Ninguna empresa pagando todavía'
+          }
+          help={data.definitions.mrr}
+        />
+        <Kpi
+          label="Cobrado este mes"
+          value={rd(data.business.collected_this_month)}
+          hint={`Mes pasado: ${rd(data.business.collected_last_month)}`}
+          help={data.definitions.collected}
+        />
+        <Kpi
+          label={`Por vencer (${data.business.due.days} días)`}
+          value={String(data.business.due.companies)}
+          hint={`${rd(data.business.due.amount)} al mes en juego`}
+          help={data.definitions.due}
+          tone={data.business.due.companies ? 'warn' : undefined}
+        />
+        <Kpi
+          label={`Cancelaciones (${data.business.churn.days} días)`}
+          value={String(data.business.churn.companies)}
+          hint={data.business.churn.companies ? 'Mira el motivo en su ficha' : 'Ninguna'}
+          help={data.definitions.churn}
+          tone={data.business.churn.companies ? 'bad' : 'good'}
+        />
+      </div>
+      {data.business.by_plan.length ? (
+        <Card className="space-y-2">
+          <h2 className="text-base font-semibold">Ingreso por plan</h2>
+          <ul className="divide-y divide-edge text-sm">
+            {data.business.by_plan.map((row) => (
+              <li key={row.plan} className="flex items-center justify-between gap-3 py-1.5">
+                <span>
+                  {row.plan}
+                  <span className="ml-2 text-muted">
+                    {row.companies} {row.companies === 1 ? 'empresa' : 'empresas'}
+                  </span>
+                </span>
+                <span className="font-semibold tabular-nums">{rd(row.mrr)} / mes</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
       {data.pending_proofs.length ? (
         <Card className="space-y-2 ring-2 ring-inset ring-gold-500/50">
           <h2 className="text-base font-semibold">

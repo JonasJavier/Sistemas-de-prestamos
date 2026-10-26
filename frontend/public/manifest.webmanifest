@@ -1,0 +1,34 @@
+{
+  "name": "Cobradía",
+  "short_name": "Cobradía",
+  "description": "Préstamos, cobros y caja para financieras dominicanas.",
+  "lang": "es-DO",
+  "start_url": "/?fuente=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3eee3",
+  "theme_color": "#15402F",
+  "icons": [
+    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png" },
+    {
+      "src": "/icono-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mi ruta",
+      "url": "/ruta",
+      "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Cobrar",
+      "url": "/cobranza",
+      "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
