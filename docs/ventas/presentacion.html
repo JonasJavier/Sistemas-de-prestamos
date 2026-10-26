@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cobradía · Presentación</title>
+<style>
+  @font-face { font-family: 'Sora'; src: url('../../frontend/node_modules/@fontsource-variable/sora/files/sora-latin-wght-normal.woff2') format('woff2'); font-weight: 100 800; }
+  @font-face { font-family: 'Inter'; src: url('../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; }
+  @page { size: 297mm 167mm; margin: 0; }
+  :root { --forest: #15402f; --brand: #0e6b4f; --brand-100: #dcefe4; --sand: #f3eee3; --ink: #26302b; --muted: #716b5e; --edge: #e6dfd0; --gold: #c9a227; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', Arial, sans-serif; color: var(--ink); font-size: 12pt; line-height: 1.38; }
+  h1, h2, h3 { font-family: 'Sora', 'Inter', Arial, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  .slide { width: 297mm; height: 167mm; padding: 13mm 18mm 12mm; page-break-after: always; background: #fff; position: relative; overflow: hidden; }
+  .slide:last-child { page-break-after: auto; }
+  .slide.dark { background: var(--forest); color: #fff; }
+  .slide.sand { background: var(--sand); }
+  .eyebrow { font-size: 10.5pt; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); margin-bottom: 3mm; }
+  .dark .eyebrow { color: var(--gold); }
+  h1 { font-size: 40pt; line-height: 1.05; font-weight: 700; }
+  h1 em { font-style: normal; color: var(--gold); }
+  h2 { font-size: 23pt; line-height: 1.15; font-weight: 700; margin-bottom: 5mm; }
+  .lead { font-size: 15pt; color: #d7e5dc; max-width: 170mm; margin-top: 5mm; }
+  .num { position: absolute; right: 20mm; bottom: 10mm; font-size: 9.5pt; color: var(--muted); }
+  .dark .num { color: #9fb8a9; }
+  .logo { height: 16mm; }
+  .logo-w { height: 14mm; background: #fff; padding: 2.5mm 4mm; border-radius: 3mm; box-sizing: content-box; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
+  .cols4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6mm; }
+  .card { border: 1px solid var(--edge); border-radius: 5mm; padding: 5mm 6mm; background: #fff; }
+  .card h3 { font-size: 13.5pt; color: var(--brand); margin-bottom: 2mm; }
+  .card p, .card li { font-size: 11pt; color: #3f4842; margin: 0; }
+  .card ul { margin: 0; padding-left: 5mm; }
+  .card li { margin: .8mm 0; }
+  .pain { background: #fff; border-left: 4px solid var(--gold); border-radius: 0 4mm 4mm 0; padding: 4mm 6mm; }
+  .pain h3 { font-size: 14pt; margin-bottom: 1.5mm; }
+  .pain p { margin: 0; font-size: 12pt; color: #3f4842; }
+  .big { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8mm; margin-top: 4mm; }
+  .big div { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 5mm; padding: 5mm 6mm; }
+  .big strong { display: block; font-family: 'Sora', sans-serif; font-size: 22pt; color: var(--gold); line-height: 1.1; margin-bottom: 2mm; }
+  .big span { font-size: 10.5pt; color: #e3ebe5; }
+  .plan { border: 1px solid var(--edge); border-radius: 5mm; padding: 5mm 6mm; background: #fff; }
+  .plan.main { border-color: var(--brand); background: var(--brand-100); }
+  .plan h3 { font-size: 16pt; }
+  .plan .price { font-family: 'Sora', sans-serif; font-size: 22pt; font-weight: 700; color: var(--forest); margin: 1.5mm 0; }
+  .plan .price small { font-size: 11pt; font-weight: 500; color: var(--muted); }
+  .plan .size { color: var(--muted); font-size: 11pt; margin-bottom: 3mm; }
+  .plan ul { margin: 0; padding-left: 5mm; font-size: 10.5pt; }
+  .plan li { margin: 1mm 0; }
+  .note { font-size: 10.5pt; color: var(--muted); margin-top: 5mm; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+  .steps div { background: #fff; border-radius: 5mm; padding: 5mm 6mm; border: 1px solid var(--edge); }
+  .steps b { display: block; width: 10mm; height: 10mm; line-height: 10mm; text-align: center; border-radius: 50%; background: var(--forest); color: var(--gold); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13pt; margin-bottom: 3mm; }
+  .steps h3 { font-size: 14pt; margin-bottom: 1.5mm; }
+  .steps p { margin: 0; font-size: 11pt; color: #3f4842; }
+  table { border-collapse: collapse; width: 100%; font-size: 10.5pt; }
+  th, td { text-align: left; padding: 2mm 3mm; border-bottom: 1px solid var(--edge); vertical-align: top; }
+  th { font-family: 'Sora', sans-serif; font-size: 11pt; color: var(--forest); }
+  td.ok { color: var(--brand); font-weight: 600; }
+  td.no { color: var(--muted); }
+  .contact { position: absolute; left: 18mm; right: 18mm; bottom: 16mm; display: flex; gap: 14mm; align-items: center; }
+  .contact .btn { background: var(--gold); color: #1f1a0a; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 16pt; padding: 6mm 10mm; border-radius: 4mm; }
+  .contact p { margin: 0; font-size: 14pt; color: #d7e5dc; }
+  .contact strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <img class="logo-w" src="../../site/public/marca/cobradia-firma.png" alt="Cobradía">
+  <div style="margin-top: 26mm">
+    <div class="eyebrow">Para financieras dominicanas</div>
+    <h1>Tu cartera al día,<br><em>cada día.</em></h1>
+    <p class="lead">Préstamos, cobros, caja y contabilidad en un solo lugar, hechos para cómo se presta en República Dominicana.</p>
+  </div>
+  <div class="num">cobradia.com · hola@cobradia.com</div>
+</section>
+
+<section class="slide sand">
+  <div class="eyebrow">El problema</div>
+  <h2>Prestar es fácil. Cobrar bien, cuadrar y saber cuánto ganaste, no.</h2>
+  <div class="cols2">
+    <div class="pain"><h3>La cartera vive en Excel o en cuadernos</h3><p>Nadie sabe hoy, con certeza, cuánto está en atraso ni qué cuotas vencen mañana.</p></div>
+    <div class="pain"><h3>La caja no cuadra</h3><p>Lo cobrado, lo entregado y lo que hay en la gaveta son tres números distintos, y la diferencia la paga alguien.</p></div>
+    <div class="pain"><h3>El cobrador en la calle, sin control</h3><p>Cobros en papel, recibos a mano, promesas que se olvidan y efectivo que llega tarde.</p></div>
+    <div class="pain"><h3>El contador llega al final</h3><p>Resultados que se arman a mano cada mes, 606 y 607 a última hora, sin saber si la mora que se cobró es real.</p></div>
+  </div>
+  <div class="num">2</div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">Qué es Cobradía</div>
+  <h2>Un solo sistema para la oficina, la calle y la contabilidad.</h2>
+  <div class="cols">
+    <div class="card"><h3>La oficina</h3><ul><li>Clientes con su expediente y documentos</li><li>Solicitudes, evaluación y aprobación por montos</li><li>Desembolso con pagaré y tabla de pagos</li><li>Cobros con recibo impreso o por WhatsApp</li><li>Caja por cajero: apertura, cierre y cuadre</li></ul></div>
+    <div class="card"><h3>La calle</h3><ul><li>«Mi ruta» en el celular del cobrador</li><li>Cobro con GPS y recibo al instante</li><li>Gestiones y promesas de pago</li><li>Límite de efectivo y rendición al volver</li><li>El supervisor ve el avance de cada ruta</li></ul></div>
+    <div class="card"><h3>El control</h3><ul><li>Atrasos por tramo y capital en riesgo</li><li>Tablero con los indicadores del mes</li><li>Contabilidad automática, cierre de mes, 606 y 607</li><li>Alertas antifraude y auditoría de todo</li><li>Renovación, reestructuración, castigo y vía legal</li></ul></div>
+  </div>
+  <p class="note">Sin instalar nada: funciona en el navegador de la computadora y del celular.</p>
+  <div class="num">3</div>
+</section>
+
+<section class="slide sand">
+  <div class="eyebrow">Un día normal</div>
+  <h2>De la solicitud al cuadre de caja, todo queda cuadrado.</h2>
+  <div class="steps">
+    <div><b>1</b><h3>El oficial cotiza y aprueba</h3><p>Simula la cuota, registra la solicitud con la evaluación, los garantes y las garantías. Aprueba quien tiene el monto en su límite; nadie aprueba lo suyo.</p></div>
+    <div><b>2</b><h3>La cajera desembolsa y cobra</h3><p>El desembolso genera el pagaré con las condiciones reales. Cada cobro aplica mora al centavo, imprime el recibo en 80 mm o lo manda por WhatsApp.</p></div>
+    <div><b>3</b><h3>Al final del día, el cuadre</h3><p>La cajera cuenta por denominación; el sistema dice cuánto debería haber. Un faltante queda a nombre de alguien; un pago mal digitado se corrige con autorización.</p></div>
+  </div>
+  <div class="num">4</div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">La calle</div>
+  <h2>El cobrador sale con su ruta en el celular y vuelve con el efectivo cuadrado.</h2>
+  <div class="cols2">
+    <div class="card"><h3>Lo que ve el cobrador</h3><ul><li>Su lista del día: cuota, atraso, dirección, «Llamar», «WhatsApp», «Cómo llegar»</li><li>Cobra en dos toques y el recibo sale al momento</li><li>Anota «no estaba» o una promesa para mañana</li><li>Si junta más efectivo del permitido, el supervisor lo sabe</li></ul></div>
+    <div class="card"><h3>Lo que ve la oficina</h3><ul><li>El avance de cada ruta y dónde se hizo cada cobro</li><li>La rendición: lo cobrado entra a la caja de la cajera, contado</li><li>Las promesas pasan a la agenda de cobranza</li><li>Los atrasos escalan solos: recordatorio, llamada, visita, legal</li></ul></div>
+  </div>
+  <div class="num">5</div>
+</section>
+
+<section class="slide dark">
+  <div class="eyebrow">Lo que otros no traen</div>
+  <h2 style="color:#fff">Hecho para la ley y los impuestos dominicanos.</h2>
+  <div class="big">
+    <div><strong>606 · 607</strong><span>Formatos de la DGII listos cada mes, y la cola de comprobantes fiscales de cada cobro con interés.</span></div>
+    <div><strong>NIIF</strong><span>Contabilidad incluida: cada cobro y gasto entra solo al libro; cierre de mes, resultados y balance.</span></div>
+    <div><strong>Vía legal</strong><span>Pagaré notarial, contratos con garantía (Ley 45-20), intimación y mandamiento con los datos reales.</span></div>
+    <div><strong>QR</strong><span>Recibos, contratos y cartas que cualquiera puede verificar; portal para que el cliente vea lo suyo.</span></div>
+  </div>
+  <p class="lead" style="margin-top:6mm;font-size:13pt">Y seguridad de verdad: verificación en dos pasos, cada rol ve solo lo suyo, respaldos cifrados cada noche y los datos de cada financiera aislados de las demás.</p>
+  <div class="num">6</div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">Planes</div>
+  <h2>Tres planes, en pesos, con clientes y préstamos sin límite.</h2>
+  <div class="cols">
+    <div class="plan"><h3>Esencial</h3><div class="price">RD$990 <small>/ mes</small></div><div class="size">1 sucursal · 3 usuarios</div><ul><li>Clientes, solicitudes y préstamos</li><li>Pagos con recibo</li><li>Atrasos con mora automática</li><li>Caja: apertura, cierre y cuadre</li><li>Portal del cliente</li></ul></div>
+    <div class="plan main"><h3>Profesional</h3><div class="price">RD$2,290 <small>/ mes</small></div><div class="size">3 sucursales · 10 usuarios</div><ul><li>Todo lo de Esencial</li><li>Rutas con GPS y app del cobrador</li><li>Promesas, agenda y escalamiento</li><li>Recordatorios por WhatsApp, SMS y correo</li><li>Antifraude, gastos y reportes completos</li></ul></div>
+    <div class="plan"><h3>Empresa</h3><div class="price">RD$3,690 <small>/ mes</small></div><div class="size">Sucursales y usuarios sin límite</div><ul><li>Todo lo de Profesional</li><li>Contabilidad NIIF, 606 y 607</li><li>Comprobantes fiscales y bancos</li><li>Comisiones y vía legal</li><li>Migración acompañada</li></ul></div>
+  </div>
+  <p class="note">Precios de lanzamiento, sin ITBIS. Pagando el año, pagas 10 meses. Prueba gratis de 15 días con todo incluido, sin tarjeta.</p>
+  <div class="num">7</div>
+</section>
+
+<section class="slide sand">
+  <div class="eyebrow">Frente a lo que usas hoy</div>
+  <h2>Lo que cuesta un sistema de préstamos en el país.</h2>
+  <table>
+    <tr><th></th><th>Cobradía</th><th>Púrpura Datos</th><th>Prestan2</th><th>Excel y cuadernos</th></tr>
+    <tr><td>Precio mensual</td><td class="ok">RD$990 a RD$3,690, en pesos</td><td>US$15 a US$75 (RD$900 a RD$4,500), en dólares</td><td>RD$2,000 a RD$11,000</td><td>Gratis… hasta el primer faltante</td></tr>
+    <tr><td>Clientes y préstamos</td><td class="ok">Sin límite en todos los planes</td><td>Sin límite</td><td>50 a ilimitados según plan</td><td>—</td></tr>
+    <tr><td>Caja y cartera</td><td class="ok">En todos los planes</td><td class="no">Desde el plan Superior</td><td>Sí</td><td class="no">A mano</td></tr>
+    <tr><td>Rutas con GPS</td><td class="ok">Desde Profesional</td><td class="no">Desde Premium</td><td>No publicado</td><td class="no">No</td></tr>
+    <tr><td>Contabilidad, 606 y 607</td><td class="ok">Incluidos</td><td class="no">No publicado</td><td>Sí</td><td class="no">El contador, al final</td></tr>
+    <tr><td>Vía legal y documentos con la ley dominicana</td><td class="ok">Incluidos</td><td class="no">No publicado</td><td class="no">No publicado</td><td class="no">El abogado, cada vez</td></tr>
+    <tr><td>Dos pasos, auditoría y respaldos cifrados</td><td class="ok">Incluidos</td><td class="no">No publicado</td><td class="no">No publicado</td><td class="no">No</td></tr>
+  </table>
+  <p class="note">Precios y funciones publicados en los sitios de cada uno el 25/10/2026; dólar a RD$60.</p>
+  <div class="num">8</div>
+</section>
+
+<section class="slide dark">
+  <div class="eyebrow">Cómo empezar</div>
+  <h2 style="color:#fff">Hoy mismo, sin tarjeta y sin instalar nada.</h2>
+  <div class="cols" style="margin-top:4mm">
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)"><h3 style="color:var(--gold)">1 · Regístrate</h3><p style="color:#e3ebe5">En cobradia.com, en dos minutos. Tu financiera queda lista con 15 días de prueba y todas las funciones.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)"><h3 style="color:var(--gold)">2 · Carga tu cartera</h3><p style="color:#e3ebe5">Sigue los «Primeros pasos» del inicio. Si vienes de otro sistema o de Excel, te acompañamos a pasar los préstamos en curso.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)"><h3 style="color:var(--gold)">3 · Cobra</h3><p style="color:#e3ebe5">Al terminar la prueba eliges tu plan y pagas por transferencia desde la misma app. No pierdes ningún dato.</p></div>
+  </div>
+  <div class="contact">
+    <div class="btn">cobradia.com</div>
+    <p><strong>hola@cobradia.com</strong><br>Jonas Javier Encarnación · República Dominicana</p>
+  </div>
+  <div class="num">9</div>
+</section>
+
+</body>
+</html>

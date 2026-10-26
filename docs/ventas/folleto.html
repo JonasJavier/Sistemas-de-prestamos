@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cobradía · Folleto</title>
+<style>
+  @font-face { font-family: 'Sora'; src: url('../../frontend/node_modules/@fontsource-variable/sora/files/sora-latin-wght-normal.woff2') format('woff2'); font-weight: 100 800; }
+  @font-face { font-family: 'Inter'; src: url('../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; }
+  @page { size: A4; margin: 0; }
+  :root { --forest: #15402f; --brand: #0e6b4f; --brand-100: #dcefe4; --sand: #f3eee3; --ink: #26302b; --muted: #716b5e; --edge: #e6dfd0; --gold: #c9a227; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', Arial, sans-serif; color: var(--ink); font-size: 9pt; line-height: 1.38; background: #fff; }
+  h1, h2, h3 { font-family: 'Sora', 'Inter', Arial, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  .page { width: 210mm; height: 297mm; padding: 12mm 14mm 10mm; overflow: hidden; }
+  .page > * { margin-bottom: 3.8mm; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .top img { height: 13mm; }
+  .top .tag { font-size: 8.5pt; color: var(--muted); text-align: right; line-height: 1.3; }
+  .hero { background: var(--forest); color: #fff; border-radius: 5mm; padding: 6mm 9mm; display: grid; grid-template-columns: 1.3fr 1fr; gap: 7mm; align-items: start; }
+  .hero h1 { font-size: 22pt; line-height: 1.1; font-weight: 700; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p { margin: 2.5mm 0 0; font-size: 9.8pt; color: #d7e5dc; }
+  .hero .box { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 3.5mm; padding: 4mm 5mm; font-size: 8.4pt; line-height: 1.32; }
+  .hero .box strong { display: block; font-family: 'Sora', sans-serif; font-size: 11pt; color: var(--gold); margin-bottom: 1.5mm; }
+  .hero .box ul { margin: 0; padding-left: 4mm; color: #e8efe9; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .card { border: 1px solid var(--edge); border-radius: 3.5mm; padding: 3.2mm 4mm; background: #fff; }
+  .card h3 { font-size: 10pt; color: var(--brand); margin-bottom: 1.5mm; }
+  .card p { margin: 0; color: #3f4842; }
+  .band { background: var(--sand); border-radius: 3.5mm; padding: 3.2mm 5mm; display: flex; gap: 6mm; align-items: center; }
+  .band h2 { font-size: 11pt; white-space: nowrap; }
+  .band p { margin: 0; color: #3f4842; }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .plan { border: 1px solid var(--edge); border-radius: 3.5mm; padding: 3.2mm 4mm; }
+  .plan.main { border-color: var(--brand); background: var(--brand-100); }
+  .plan h3 { font-size: 11pt; }
+  .plan .price { font-family: 'Sora', sans-serif; font-size: 15.5pt; font-weight: 700; color: var(--forest); margin: 1mm 0; }
+  .plan .price small { font-size: 8.5pt; font-weight: 500; color: var(--muted); }
+  .plan .size { color: var(--muted); font-size: 8.5pt; margin-bottom: 2mm; }
+  .plan ul { margin: 0; padding-left: 4mm; font-size: 8.4pt; }
+  .plan li { margin: .6mm 0; }
+  .note { font-size: 8.3pt; color: var(--muted); margin: 0 0 3.5mm; }
+  .cta { margin-top: 1mm; display: grid; grid-template-columns: 1fr auto; gap: 6mm; align-items: center; border-top: 1px solid var(--edge); padding-top: 3.5mm; }
+  .cta h2 { font-size: 12pt; color: var(--forest); }
+  .cta p { margin: 1mm 0 0; color: #3f4842; }
+  .cta .btn { background: var(--gold); color: #1f1a0a; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 11pt; padding: 4mm 7mm; border-radius: 3mm; text-align: center; white-space: nowrap; }
+  .cta .btn small { display: block; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 8pt; color: #4a3f10; }
+  .foot { font-size: 7.8pt; color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <img src="../../site/public/marca/cobradia-firma.png" alt="Cobradía">
+    <div class="tag">Sistema de préstamos, cobros y caja<br>para financieras dominicanas · cobradia.com</div>
+  </div>
+
+  <section class="hero">
+    <div>
+      <h1>Tu cartera al día, <em>cada día.</em></h1>
+      <p>Préstamos, cobros, caja y contabilidad en un solo lugar. Cuotas, intereses y mora calculados al centavo, y una caja que siempre cuadra con el libro.</p>
+    </div>
+    <div class="box">
+      <strong>Hecho para República Dominicana</strong>
+      <ul>
+        <li>Pesos, cédula y RNC validados</li>
+        <li>Feriados nacionales en los calendarios</li>
+        <li>Pagaré, contratos e intimación con la ley dominicana</li>
+        <li>Formatos 606 y 607 y comprobantes fiscales</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card"><h3>Solicitudes y desembolsos</h3><p>Simula, evalúa y aprueba por montos según el rol. Al desembolsar salen el pagaré y la tabla de pagos.</p></div>
+    <div class="card"><h3>Cobros y caja que cuadran</h3><p>Cobra varias cuotas a la vez, con mora al centavo. Cada cajero cuadra su caja; faltantes y sobrantes quedan registrados.</p></div>
+    <div class="card"><h3>Mi ruta, en el celular</h3><p>El cobrador ve su ruta del día, cobra en la calle con GPS, anota promesas y rinde el efectivo al volver.</p></div>
+    <div class="card"><h3>Mora y cobranza</h3><p>Atrasos por antigüedad, recordatorios por WhatsApp, renovaciones, reestructuraciones y vía legal.</p></div>
+    <div class="card"><h3>Contabilidad incluida</h3><p>Cada cobro y gasto entra solo al libro. Cierre de mes, resultados, balance y conciliación bancaria.</p></div>
+    <div class="card"><h3>Seguro de verdad</h3><p>Verificación en dos pasos, cada rol ve solo lo suyo, auditoría de todo, respaldos cifrados cada noche y documentos con QR.</p></div>
+  </section>
+
+  <section class="band">
+    <h2>Sin instalar nada</h2>
+    <p>Funciona en el navegador de la computadora y del celular. Tus cobradores solo necesitan un teléfono con internet. Si vienes de otro sistema o de Excel, te acompañamos a pasar la cartera.</p>
+  </section>
+
+  <section class="plans">
+    <div class="plan">
+      <h3>Esencial</h3>
+      <div class="price">RD$990 <small>/ mes</small></div>
+      <div class="size">1 sucursal · 3 usuarios · préstamos sin límite</div>
+      <ul><li>Clientes, solicitudes y préstamos</li><li>Pagos con recibo impreso o por WhatsApp</li><li>Atrasos con mora automática</li><li>Caja: apertura, cierre y cuadre</li><li>Portal del cliente</li></ul>
+    </div>
+    <div class="plan main">
+      <h3>Profesional</h3>
+      <div class="price">RD$2,290 <small>/ mes</small></div>
+      <div class="size">3 sucursales · 10 usuarios · préstamos sin límite</div>
+      <ul><li>Todo lo de Esencial</li><li>Rutas con GPS y app del cobrador</li><li>Promesas, agenda y escalamiento</li><li>Recordatorios por WhatsApp, SMS y correo</li><li>Antifraude, gastos y reportes completos</li></ul>
+    </div>
+    <div class="plan">
+      <h3>Empresa</h3>
+      <div class="price">RD$3,690 <small>/ mes</small></div>
+      <div class="size">Sucursales y usuarios sin límite</div>
+      <ul><li>Todo lo de Profesional</li><li>Contabilidad NIIF, 606 y 607</li><li>Comprobantes fiscales y bancos</li><li>Comisiones y vía legal</li><li>Migración acompañada</li></ul>
+    </div>
+  </section>
+  <p class="note">Precios de lanzamiento, en pesos y sin ITBIS. Clientes y préstamos sin límite en todos los planes. Pagando el año, pagas 10 meses.</p>
+
+  <section class="cta">
+    <div>
+      <h2>Pruébalo 15 días gratis, sin tarjeta.</h2>
+      <p>Regístrate en <strong>cobradia.com</strong> y en minutos tienes tu financiera lista. Si prefieres que te lo mostremos, escríbenos a <strong>hola@cobradia.com</strong>.</p>
+    </div>
+    <div class="btn">cobradia.com<small>Empieza hoy</small></div>
+  </section>
+
+  <div class="foot">
+    <span>Cobradía · un servicio de Jonas Javier Encarnación · República Dominicana</span>
+    <span>Octubre de 2026</span>
+  </div>
+</div>
+</body>
+</html>
