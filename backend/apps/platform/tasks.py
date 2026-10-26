@@ -1,5 +1,7 @@
 """Nightly platform jobs (flow F19)."""
 
+import datetime as dt
+
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
@@ -77,6 +79,99 @@ def warn_trials() -> int:
         company.trial_warned_on = today
         company.save(update_fields=["trial_warned_on", "updated_at"])
     return sent
+
+
+GRACE_DAYS = 3  # D11: days after paid_until before the account goes read-only
+
+
+def _manager_emails(company: Company) -> list[str]:
+    from apps.accounts import authz
+    from apps.accounts.models import Membership
+    from apps.core.tenancy import company_context
+
+    with company_context(company.id):
+        return sorted(
+            set(
+                Membership.objects.filter(
+                    role__name__in=[authz.GERENTE, authz.ADMINISTRADOR], user__is_active=True
+                ).values_list("user__email", flat=True)
+            )
+        )
+
+
+@shared_task
+def warn_renewals() -> int:
+    """D11 (decision 136): 7, 3 and 1 day before the paid period ends, the
+    managers hear it by e-mail, once each day; the annual option is offered."""
+    today = timezone.localdate()
+    sent = 0
+    due = Subscription.objects.filter(
+        company__status=Company.Status.ACTIVE, paid_until__isnull=False
+    ).select_related("company", "plan")
+    for subscription in due:
+        left = (subscription.paid_until - today).days
+        if left not in WARN_DAYS or subscription.renewal_warned_on == today:
+            continue
+        emails = _manager_emails(subscription.company)
+        if emails:
+            day = "mañana" if left == 1 else f"en {left} días"
+            price = subscription.plan.monthly_price
+            send_mail(
+                subject=f"Tu plan {subscription.plan.name} de Cobradía vence {day}",
+                message=(
+                    f"El período pagado de {subscription.company} termina {day}, el "
+                    f"{subscription.paid_until:%d/%m/%Y}. Pasados {GRACE_DAYS} días sin pago, la "
+                    "cuenta queda en solo lectura: podrás ver y exportar todo, pero no registrar "
+                    "operaciones.\n\n"
+                    f"Renueva por transferencia desde Suscripción: RD$ {price:,.2f} el mes, o "
+                    f"RD$ {price * 10:,.2f} el año completo (pagas 10 meses, dos gratis).\n"
+                    f"{settings.FRONTEND_URL}/ajustes/suscripcion\n"
+                ),
+                from_email=None,
+                recipient_list=emails,
+            )
+            sent += 1
+        subscription.renewal_warned_on = today
+        subscription.save(update_fields=["renewal_warned_on", "updated_at"])
+    return sent
+
+
+@shared_task
+def expire_subscriptions() -> int:
+    """D11 (decision 136): an active company whose paid period ended more
+    than GRACE_DAYS ago goes read-only until it pays (what the terms say)."""
+    today = timezone.localdate()
+    limit = today - dt.timedelta(days=GRACE_DAYS)
+    count = 0
+    lapsed = Subscription.objects.filter(
+        company__status=Company.Status.ACTIVE, paid_until__lt=limit
+    ).select_related("company")
+    for subscription in lapsed:
+        company = subscription.company
+        company.status = Company.Status.SUSPENDED
+        company.status_reason = (
+            f"El período pagado terminó el {subscription.paid_until:%d/%m/%Y}. Renueva tu "
+            "suscripción para seguir operando."
+        )
+        company.save(update_fields=["status", "status_reason", "updated_at"])
+        subscription.status = Subscription.Status.PAST_DUE
+        subscription.save(update_fields=["status", "updated_at"])
+        emails = _manager_emails(company)
+        if emails:
+            send_mail(
+                subject=f"Tu cuenta de Cobradía quedó en solo lectura ({company})",
+                message=(
+                    f"El período pagado de {company} terminó el "
+                    f"{subscription.paid_until:%d/%m/%Y} y no hemos recibido el pago. La cuenta "
+                    "queda en solo lectura: nada se pierde, y vuelve a la normalidad en cuanto "
+                    "confirmemos tu transferencia.\n\n"
+                    f"{settings.FRONTEND_URL}/ajustes/suscripcion\n"
+                ),
+                from_email=None,
+                recipient_list=emails,
+            )
+        count += 1
+    return count
 
 
 def notify_owner_of_signup(company: Company, admin_email: str) -> None:

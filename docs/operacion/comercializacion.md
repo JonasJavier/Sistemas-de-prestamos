@@ -78,7 +78,7 @@ En orden recomendado (más impacto con menos esfuerzo primero). Todas 🤖, salv
 - [x] **D8. Cancelación y copia de los datos** *(hecho el 26/10/2026, decisión 132)* Suscripción → «Descargar la copia completa» (un Excel con una hoja por tabla) y «Cancelar la suscripción» (motivo + segundo factor): solo lectura, correos, 90 días de copia y borrado nocturno después.
 - [ ] **D9. Facturación electrónica (e-CF) con proveedor certificado** 👤 proveedor y certificado digital. Hoy el sistema prepara cada comprobante y se registra el e-NCF a mano; con la Ley 32-23 cada vez más financieras están obligadas a emitir e-CF, así que emitirlo directo desde Cobradía será un argumento de venta fuerte.
 - [ ] **D10. Consulta al buró de crédito** 👤 contrato con TransUnion o DataCrédito. Consultar el historial desde la solicitud, sin salir del sistema.
-- [ ] **D11. Plan anual** Pago por 12 meses con descuento (por ejemplo, dos meses gratis): mejora tu flujo de caja y reduce cancelaciones.
+- [x] **D11. Plan anual** *(cerrado el 26/10/2026, decisión 136)* El pago anual a 10 meses ya existía (124, 125); se agregan el precio anual en el sitio, los avisos de renovación 7, 3 y 1 día antes (con la opción anual) y el paso a solo lectura 3 días después de vencer el período pagado, con correo.
 
 ---
 

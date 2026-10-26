@@ -62,6 +62,8 @@ class Subscription(TimeStamped):
     status = models.CharField(max_length=10, choices=Status, default=Status.TRIAL)
     started_on = models.DateField()
     paid_until = models.DateField(null=True, blank=True)
+    # D11 (decision 136): the last day a renewal notice went out.
+    renewal_warned_on = models.DateField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.company} - {self.plan} ({self.status})"

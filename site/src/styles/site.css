@@ -931,3 +931,10 @@ summary:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+.plan-year {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--brand-700);
+  font-weight: 600;
+}

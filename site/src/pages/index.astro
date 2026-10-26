@@ -316,6 +316,9 @@ const jsonLd = {
               <div class="price-figure">
                 RD$ {plan.price.toLocaleString('es-DO')} <small>/ mes</small>
               </div>
+              <p class="plan-year">
+                o RD$ {(plan.price * 10).toLocaleString('es-DO')} al año · 2 meses gratis
+              </p>
               <p class="plan-size">{plan.size}</p>
               <ul class="checks">
                 {plan.bullets.map((item) => <li>{item}</li>)}
