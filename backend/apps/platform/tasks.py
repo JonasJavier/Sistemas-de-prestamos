@@ -26,6 +26,14 @@ def expire_trials() -> int:
     return count
 
 
+@shared_task
+def purge_closed_companies() -> int:
+    """D8 (decision 132): a company cancelled 90 days ago leaves with everything."""
+    from apps.platform.cancellation import purge_closed_companies as purge
+
+    return purge()
+
+
 WARN_DAYS = (7, 3, 1)  # F19: notices before the trial ends
 
 

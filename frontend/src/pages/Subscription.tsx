@@ -8,6 +8,8 @@ import {
   listPublicPlans,
   type PublicPlan,
 } from '../api/platform'
+import type { Me } from '../api/accounts'
+import { CompanyDataSection } from '../components/CompanyData'
 import { BankAccounts, PayDialog } from '../components/PayDialog'
 import { buttonClass } from '../components/classes'
 import { BankIcon, CheckIcon } from '../components/icons'
@@ -70,7 +72,7 @@ function TrialDays({
 
 /** P-Suscripción (decision 115): the trial with its days, what the plan caps
  * and uses, the plans and how to pay. */
-export function SubscriptionPage() {
+export function SubscriptionPage({ me }: { me: Me }) {
   useDocumentTitle('Suscripción')
   const company = useQuery({ queryKey: ['my-company'], queryFn: getMyCompany })
   const plans = useQuery({ queryKey: ['public-plans'], queryFn: listPublicPlans })
@@ -101,6 +103,13 @@ export function SubscriptionPage() {
         <Alert tone="warning">
           {data.status_reason ||
             'La empresa está suspendida: puedes consultar y exportar, pero no operar.'}
+        </Alert>
+      ) : null}
+      {data?.status === 'closed' ? (
+        <Alert tone="warning">
+          {data.status_reason ||
+            'La suscripción está cancelada: puedes consultar y descargar tu copia.'}{' '}
+          Si quieres volver, escríbenos a hola@cobradia.com y la reactivamos tal cual estaba.
         </Alert>
       ) : null}
 
@@ -394,6 +403,7 @@ export function SubscriptionPage() {
           </ul>
         ) : null}
       </section>
+      {data ? <CompanyDataSection data={data} me={me} /> : null}
       {paying ? (
         <PayDialog
           plan={paying}

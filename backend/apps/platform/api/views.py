@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -25,9 +26,11 @@ from apps.accounts import authz
 from apps.accounts import services as account_services
 from apps.accounts.api.permissions import is_company_manager
 from apps.accounts.models import Membership, User
+from apps.accounts.reauth import confirm_identity
+from apps.audit.models import record_event
 from apps.core.models import Company
 from apps.core.tenancy import company_context
-from apps.platform import limits, onboarding, services, support, tasks
+from apps.platform import cancellation, data_export, limits, onboarding, services, support, tasks
 from apps.platform.api.permissions import IsPlatformAdmin
 from apps.platform.api.serializers import (
     CompanyDetailSerializer,
@@ -425,6 +428,58 @@ class MyCompanyView(APIView):
         data["usage"] = limits.usage(company.id)
         if company.trial_ends_on:
             data["trial_days_left"] = max((company.trial_ends_on - timezone.localdate()).days, 0)
+        return Response(data)
+
+
+class CompanyDataExportView(APIView):
+    """D8 (decision 132): the whole company in one Excel file, for its managers."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> HttpResponse:
+        company_id = getattr(request.user, "company_id", None)
+        if company_id is None or not is_company_manager(request):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        company = Company.objects.get(pk=company_id)
+        content = data_export.export_company(company)
+        record_event(
+            company_id=company.id,
+            type="export.full",
+            target=company,
+            actor=request.user,
+            summary="Descargó la copia completa de los datos de la empresa",
+            data={"bytes": len(content)},
+        )
+        stamp = timezone.localdate().isoformat()
+        response = HttpResponse(
+            content,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="cobradia-{stamp}.xlsx"'
+        return response
+
+
+class CompanyCancelView(APIView):
+    """D8 (decision 132): the manager cancels; identity re-confirmed."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        company_id = getattr(request.user, "company_id", None)
+        if company_id is None or not is_company_manager(request):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        reason = str(request.data.get("reason", "")).strip()
+        if not reason:
+            raise ValidationError({"reason": "Cuéntanos por qué te vas; nos ayuda a mejorar."})
+        if not confirm_identity(request.user, str(request.data.get("second_factor", ""))):
+            raise ValidationError({"second_factor": "El código de verificación no es válido."})
+        company = Company.objects.select_related("subscription__plan").get(pk=company_id)
+        try:
+            cancellation.cancel_company(company=company, by=request.user, reason=reason[:300])
+        except cancellation.CancellationError as exc:
+            raise ValidationError({"detail": exc.message}) from exc
+        data = MyCompanySerializer(company).data
+        data["usage"] = limits.usage(company.id)
         return Response(data)
 
 

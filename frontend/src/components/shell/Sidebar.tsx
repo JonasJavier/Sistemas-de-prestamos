@@ -43,6 +43,10 @@ const STATUS: Record<string, { label: string; className: string }> = {
     label: 'Solo lectura',
     className: 'bg-danger-600/20 text-on-forest ring-danger-600/40',
   },
+  closed: {
+    label: 'Cancelada',
+    className: 'bg-danger-600/20 text-on-forest ring-danger-600/40',
+  },
 }
 
 /** The company the person works in, always in sight (doc 07 - 2). */

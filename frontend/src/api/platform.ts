@@ -31,6 +31,9 @@ export interface MyCompany {
   status_reason: string
   trial_ends_on: string | null
   trial_days_left?: number
+  /** D8 (decision 132): when the company cancelled and when its data goes. */
+  closed_at?: string | null
+  purge_on?: string | null
   subscription: {
     status: string
     started_on: string
@@ -121,6 +124,7 @@ export interface PlatformCompanyDetail extends PlatformCompany {
   address: string
   terms_version: string
   terms_accepted_at: string | null
+  closed_at: string | null
   usage: Record<'users' | 'branches' | 'active_loans', { used: number; limit: number | null }>
   managers: CompanyManager[]
   payments: SubscriptionPayment[]
@@ -455,4 +459,16 @@ export interface FirstSteps {
 
 export function getFirstSteps(): Promise<FirstSteps> {
   return api('/api/v1/mi-empresa/primeros-pasos/')
+}
+
+/** D8 (decision 132): the whole company in one Excel file. */
+export function dataExportUrl(): string {
+  return '/api/v1/mi-empresa/datos/'
+}
+
+export function cancelCompany(reason: string, secondFactor: string): Promise<MyCompany> {
+  return api('/api/v1/mi-empresa/cancelar/', {
+    method: 'POST',
+    body: { reason, second_factor: secondFactor },
+  })
 }

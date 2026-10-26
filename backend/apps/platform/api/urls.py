@@ -2,6 +2,8 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from apps.platform.api.views import (
+    CompanyCancelView,
+    CompanyDataExportView,
     CompanyViewSet,
     FirstStepsView,
     MyCompanyView,
@@ -36,6 +38,8 @@ urlpatterns = [
     path("registro/", RegistrationView.as_view(), name="company-registration"),
     path("mi-empresa/", MyCompanyView.as_view(), name="my-company"),
     path("mi-empresa/primeros-pasos/", FirstStepsView.as_view(), name="first-steps"),
+    path("mi-empresa/datos/", CompanyDataExportView.as_view(), name="company-data-export"),
+    path("mi-empresa/cancelar/", CompanyCancelView.as_view(), name="company-cancel"),
     path("planes/", PublicPlansView.as_view(), name="public-plans"),
     path("mi-empresa/pago/", CompanyPaymentView.as_view(), name="company-payment"),
     path("mi-empresa/pago/comprobantes/", CompanyProofView.as_view(), name="company-proof"),

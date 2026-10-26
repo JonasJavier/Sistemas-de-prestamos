@@ -54,6 +54,8 @@ class Company(TimeStampedModel):
     # F19 (decision 104): the last day the end-of-trial notice went out.
     trial_warned_on = models.DateField(null=True, blank=True)
     status_reason = models.CharField(max_length=300, blank=True)
+    # D8 (decision 132): when the company cancelled; its data goes 90 days later.
+    closed_at = models.DateTimeField(null=True, blank=True)
 
     # Operating defaults of F3 (decision 027), editable per company.
     application_validity_days = models.PositiveSmallIntegerField(default=15)

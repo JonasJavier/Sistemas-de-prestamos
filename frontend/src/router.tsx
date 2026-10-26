@@ -316,7 +316,7 @@ const subscriptionRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/ajustes/suscripcion',
   beforeLoad: ({ context }) => managerOnly(context),
-  component: SubscriptionPage,
+  component: withMe(SubscriptionPage),
 })
 
 const simulatorRoute = createRoute({

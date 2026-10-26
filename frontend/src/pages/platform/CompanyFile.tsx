@@ -279,6 +279,9 @@ export function CompanyFilePage() {
             {data.status_reason ? (
               <Alert tone={data.status === 'suspended' || closed ? 'warning' : 'info'}>
                 {data.status_reason}
+                {closed && data.closed_at
+                  ? ` Cancelada el ${day(data.closed_at.slice(0, 10))}; sus datos se borran a los 90 días (decisión 132).`
+                  : ''}
               </Alert>
             ) : null}
             {data.support ? (

@@ -173,6 +173,7 @@ class CompanyDetailSerializer(CompanySerializer):
             "address",
             "terms_version",
             "terms_accepted_at",
+            "closed_at",
             "usage",
             "managers",
             "payments",
@@ -287,10 +288,12 @@ class MyCompanySerializer(serializers.ModelSerializer):
     """What a company sees about itself in Ajustes - Suscripción (P83)."""
 
     subscription = SubscriptionSerializer(read_only=True)
+    purge_on = serializers.SerializerMethodField()
 
-    def to_representation(self, instance: Company) -> dict[str, Any]:
-        data = super().to_representation(instance)
-        return data
+    def get_purge_on(self, company: Company):
+        from apps.platform.cancellation import purge_on
+
+        return purge_on(company)
 
     class Meta:
         model = Company
@@ -302,6 +305,8 @@ class MyCompanySerializer(serializers.ModelSerializer):
             "status",
             "status_reason",
             "trial_ends_on",
+            "closed_at",
+            "purge_on",
             "subscription",
         ]
 
