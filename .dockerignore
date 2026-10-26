@@ -14,7 +14,9 @@ backend/.pytest_cache
 backend/.pytest-media
 backend/.ruff_cache
 backend/.mypy_cache
-docs
+# The site reads the manuals (decision 133); the rest of docs stays out.
+docs/*
+!docs/manual
 infra/production/.env
 infra/production/backups
 .git

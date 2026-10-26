@@ -18,6 +18,8 @@ ARG VITE_SENTRY_DSN=
 ARG APP_VERSION=dev
 RUN VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_APP_VERSION=$APP_VERSION pnpm -C frontend build
 COPY site site
+# The help centre reads the manuals from the repository (decision 133).
+COPY docs/manual docs/manual
 ARG PUBLIC_APP_URL=https://app.cobradia.com
 RUN PUBLIC_APP_URL=$PUBLIC_APP_URL pnpm -C site build
 
