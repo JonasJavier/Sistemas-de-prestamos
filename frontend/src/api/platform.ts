@@ -443,3 +443,16 @@ export function updateBankAccount(
 export function deleteBankAccount(id: string): Promise<void> {
   return api(`/api/v1/plataforma/cuentas-bancarias/${id}/`, { method: 'DELETE' })
 }
+
+/** D2 (decision 129): the manager's first steps, read from what the company did. */
+export interface FirstSteps {
+  steps: Record<'company' | 'branch' | 'product' | 'team' | 'cash' | 'loan', boolean>
+  done: number
+  total: number
+  customers: number
+  has_logo: boolean
+}
+
+export function getFirstSteps(): Promise<FirstSteps> {
+  return api('/api/v1/mi-empresa/primeros-pasos/')
+}

@@ -23,10 +23,11 @@ from rest_framework.views import APIView
 
 from apps.accounts import authz
 from apps.accounts import services as account_services
+from apps.accounts.api.permissions import is_company_manager
 from apps.accounts.models import Membership, User
 from apps.core.models import Company
 from apps.core.tenancy import company_context
-from apps.platform import limits, services, support, tasks
+from apps.platform import limits, onboarding, services, support, tasks
 from apps.platform.api.permissions import IsPlatformAdmin
 from apps.platform.api.serializers import (
     CompanyDetailSerializer,
@@ -425,3 +426,16 @@ class MyCompanyView(APIView):
         if company.trial_ends_on:
             data["trial_days_left"] = max((company.trial_ends_on - timezone.localdate()).days, 0)
         return Response(data)
+
+
+class FirstStepsView(APIView):
+    """D2 (decision 129): the manager's «Primeros pasos», computed from what
+    the company has really done."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        company_id = getattr(request.user, "company_id", None)
+        if company_id is None or not is_company_manager(request):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(onboarding.first_steps(Company.objects.get(pk=company_id)))

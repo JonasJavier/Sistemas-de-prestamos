@@ -63,7 +63,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 
 | # | Pantalla | Ruta | Contenido y acciones | Roles | Fase |
 | --- | --- | --- | --- | --- | --- |
-| P10 | Tablero | `/` | Varía según el rol (ver abajo) | Todos | 7; en la 1, una versión mínima |
+| P10 | Tablero | `/` | Varía según el rol (ver abajo). Para el gerente de una empresa nueva, la tarjeta **Primeros pasos** (129): seis pasos con su avance real y un botón a cada pantalla; se va al completarlos o al ocultarla | Todos | 7; en la 1, una versión mínima |
 | P11 | Avisos y autorizaciones | `/avisos` | Bandeja de avisos y de solicitudes de autorización: aprobar o rechazar con nota | Todos | 1 |
 
 **Qué muestra el tablero a cada rol:**

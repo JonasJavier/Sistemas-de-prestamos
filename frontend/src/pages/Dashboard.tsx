@@ -23,6 +23,7 @@ import {
   ShieldIcon,
   WalletIcon,
 } from '../components/icons'
+import { FirstStepsCard } from '../components/FirstSteps'
 import { Kpi } from '../components/Kpi'
 import { Alert, Figure, LoadError, Section, Texture } from '../components/ui'
 import { buttonClass } from '../components/classes'
@@ -922,6 +923,8 @@ export function DashboardPage({ me }: { me: Me }) {
           {data.status_reason || 'La empresa está suspendida: puedes consultar, pero no registrar.'}
         </Alert>
       ) : null}
+      {/* D2 (decision 129): the guide of a new company, for its managers, until done. */}
+      {me.is_manager && me.company_id ? <FirstStepsCard companyId={me.company_id} /> : null}
 
       <Today me={me} />
       <Board state={state} />

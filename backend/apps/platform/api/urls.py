@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.platform.api.views import (
     CompanyViewSet,
+    FirstStepsView,
     MyCompanyView,
     PlanViewSet,
     PublicPlansView,
@@ -34,6 +35,7 @@ router.register("plataforma/cuentas-bancarias", BankAccountViewSet, basename="pl
 urlpatterns = [
     path("registro/", RegistrationView.as_view(), name="company-registration"),
     path("mi-empresa/", MyCompanyView.as_view(), name="my-company"),
+    path("mi-empresa/primeros-pasos/", FirstStepsView.as_view(), name="first-steps"),
     path("planes/", PublicPlansView.as_view(), name="public-plans"),
     path("mi-empresa/pago/", CompanyPaymentView.as_view(), name="company-payment"),
     path("mi-empresa/pago/comprobantes/", CompanyProofView.as_view(), name="company-proof"),
