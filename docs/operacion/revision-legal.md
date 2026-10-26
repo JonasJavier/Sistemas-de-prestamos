@@ -65,7 +65,23 @@ Las plantillas se generan con los datos reales del expediente (`backend/apps/doc
 - **Ley 155-17:** los prestamistas con capital propio **no** están en la lista de sujetos obligados (arts. 32 y 33: sí lo están las casas de empeño, el factoraje, las cooperativas y los agentes de cambio). El Comité Nacional contra el Lavado puede incluirlos por reglamento (art. 32, párrafo I). Cobradía ya trae el reporte de transacciones en efectivo desde US$ 15,000 (art. 52) para quien lo necesite.
 - **Tasas:** no hay tope legal vigente en octubre de 2026. La sentencia **TC/0235/26** (05/05/2026) declaró inconstitucional la derogación de las sanciones a la usura y exhortó al Congreso; el proyecto de ley (07/05/2026) sigue en el Senado. Cobradía ya muestra el costo anual efectivo y tiene el tope configurable (`LEGAL_MAX_EFFECTIVE_ANNUAL_RATE`) para el día que salga la ley. **⚖️** Vigilar el Congreso.
 
-## 4. Qué queda abierto
+## 4. La marca: CobraDia existe, Cobradía se registra (decisión 128)
+
+El 25/10/2026 Jonas encontró **CobraDia** (cobrodia.online), de la agencia SonhoLab (Brasil): software de cobros diarios para Colombia, Perú, México y Brasil, nuevo (© 2026), en dólares, sin marca registrada y sin presencia en el país. El nombre suena igual y el rubro es el mismo, así que el riesgo es que registren primero en la ONAPI: en el país la marca es de quien la registra, no de quien la usa (Ley 20-00, sistema atributivo). Jonas se queda con Cobradía (tiene el .com) y la registra ya.
+
+## 5. Cómo registrar la marca en la ONAPI (persona física, sin abogado)
+
+Tasas oficiales de la ONAPI (página «Registro de marca denominativa», 2023, vigentes en 2026): solicitud **RD$ 5,720**, publicación **RD$ 1,210**, clase adicional **RD$ 4,110**; búsqueda de antecedentes **RD$ 600** (5 días laborables). Plazo de la ONAPI: certificado en no más de 3 meses si no hay oposición (45 días desde la publicación para que un tercero se oponga). Vigencia: 10 años, renovable.
+
+1. **Búsqueda de antecedentes** (RD$ 600): pedirla en línea en onapi.gov.do/siteServices (ESERPI) o en la sede (Av. de los Próceres 11, Los Jardines del Norte, 7:30 a 3:00). Confirma que nadie tenga «Cobradía», «Cobradia» o «CobraDia» en las clases 42, 9 y 36.
+2. **Solicitud de marca denominativa** en ESERPI (cuenta con la cédula): denominación **COBRADÍA**; tipo denominativa (solo la palabra, sin logo: protege el nombre en cualquier diseño); solicitante Jonas Javier Encarnación, cédula, domicilio, correo y teléfono; **clase 42** (Niza): «software como servicio (SaaS) para la administración de préstamos, cobros, caja y contabilidad; alojamiento de plataformas en línea». Opcional, **clase 9** (RD$ 4,110 más): «aplicaciones móviles descargables para la gestión de préstamos y cobros», si habrá app en las tiendas. Se paga con tarjeta en línea.
+3. **Examen de forma y publicación** (RD$ 1,210): la ONAPI publica la solicitud en su boletín; corren 45 días de oposición.
+4. **Certificado**: sin oposición, la ONAPI lo emite (en línea, por correo). Guardarlo con los documentos de la empresa; renovar a los 10 años.
+5. **Después:** usar «Cobradía®» en el sitio y la app, y vigilar el boletín de la ONAPI por si alguien pide un nombre parecido (la oposición se presenta en esos 45 días).
+
+**Redes sociales (25/10/2026):** @cobradia está tomado en Instagram (cuenta personal privada, 0 seguidores) y en X (cuenta sin actividad desde 2021); libre en YouTube, LinkedIn, GitHub y, al parecer, en Facebook. Se reserva **@cobradia.do** en Instagram, TikTok, Facebook y YouTube (y «Cobradía» como página de empresa en LinkedIn), con el correo hola@cobradia.com. Si más adelante se quiere @cobradia en Instagram, se puede pedir a Meta por la marca registrada (reclamo de usurpación de marca).
+
+## 6. Qué queda abierto
 
 - **⚖️ Abogado de verdad, una vez:** cuando haya 5–10 clientes, pagar una revisión de los cuatro contratos modelo y de los términos a un abogado colegiado (RD$ 15,000–30,000). Esta revisión le ahorra la mayor parte del trabajo.
 - **Jonas:** RNC y alta como emisor electrónico (§1), marca en la ONAPI cuando haya publicidad.
