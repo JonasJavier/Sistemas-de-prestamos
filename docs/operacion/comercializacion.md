@@ -68,7 +68,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 
 En orden recomendado (más impacto con menos esfuerzo primero). Todas 🤖, salvo el contrato con terceros donde se indica.
 
-- [ ] **D1. Importar la cartera desde la app** Hoy la migración es un comando de consola que corre el equipo de Cobradía, pero el sitio promete «cargar tus préstamos actuales desde el primer día». Una pantalla para subir las plantillas de Excel, ver el ensayo con los errores por fila y aplicarlo deja que cada financiera arranque sola.
+- [x] **D1. Importar la cartera desde la app** *(hecho el 26/10/2026, decisión 131)* Ajustes → Importar cartera: plantillas descargables, ensayo fila por fila sin guardar y «Aplicar» todo o nada, para clientes y para préstamos en curso. Los comandos de consola quedan sobre el mismo servicio.
 - [x] **D2. Asistente de primeros pasos** *(hecho el 26/10/2026, decisión 129)* La tarjeta «Primeros pasos» en el inicio del gerente: datos de la empresa, sucursal, productos, equipo, caja y primer préstamo, con el avance leído de lo que la empresa hizo de verdad; desaparece al completar los seis o al ocultarla.
 - [x] **D3. Pago de la suscripción desde la app** *(hecho el 25/10/2026, decisión 125; queda la pasarela con tarjeta para más adelante)* Datos bancarios y «subir comprobante de transferencia» que te avisa para confirmarlo; más adelante, cobro con tarjeta recurrente por una pasarela local (Azul o CardNet; 👤 contrato con el banco).
 - [ ] **D4. Recibo de la suscripción** PDF con tu RNC, el e-NCF (E31/E32) y el ITBIS desglosado de cada pago, desde Suscripción (depende de A8).

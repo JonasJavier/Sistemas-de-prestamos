@@ -173,7 +173,7 @@ Este documento es el inventario de **todas** las pantallas del sistema: qué mue
 | P79 | Alertas antifraude | `/ajustes/alertas` | Reglas y umbrales | G | 7 |
 | P80 | Mensajería | `/ajustes/mensajes` | Proveedor, plantillas y registro de envíos | G A | 9 |
 | P81 | Auditoría | `/ajustes/auditoria` | Visor con filtros por usuario, fecha, módulo y acción | G A Au | 1 |
-| P82 | Migración | `/ajustes/migracion` | Subir las plantillas de Excel, ver el reporte de errores, cuadre y confirmación | G A | 3 y 10 |
+| P82 | Importar cartera | `/ajustes/importar` | Descargar las plantillas de Excel (clientes y préstamos), subirlas llenas: ensayo fila por fila sin guardar y «Aplicar» cuando todas pasan, todo o nada (131) | G A | 3 y 10 |
 | P83 | Suscripción | `/ajustes/suscripcion` | Estado de la prueba o del plan, días restantes, uso contra los límites, los tres planes con sus funciones y precios (124: de `/api/v1/planes/`, mensual o anual), las cuentas para transferir con el número para copiar, «Activar» o «Renovar» que abre el envío del comprobante (plan, período, referencia y foto o PDF) y la lista de comprobantes enviados con su estado (125), y avisos de modo soporte activo (F19, 045 y 046). Una pantalla fuera del plan muestra qué plan la trae (`PlanUpsell`) | G A | 1 |
 
 ### Plataforma (solo el dueño de Cobradía)

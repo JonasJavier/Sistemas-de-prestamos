@@ -32,4 +32,4 @@ El gerente, el primer día, en este orden:
 4. **Ajustes · Usuarios:** invitar a cada persona con su rol y su sucursal. Cada una crea su contraseña desde el correo.
 5. **Cuentas y bancos:** el efectivo inicial y las cuentas bancarias, con su saldo de apertura.
 6. **Ajustes · Mensajería:** revisar los textos de los recordatorios y avisos; mandar un mensaje de prueba.
-7. **Cartera anterior:** si viene de otro sistema, el equipo de Cobradía la carga con las plantillas de migración (clientes y préstamos) y se cuadra antes de empezar a cobrar.
+7. **Cartera anterior:** si viene de otro sistema o de Excel, **Ajustes → Importar cartera**: descarga las dos plantillas, llena primero la de clientes y luego la de préstamos en curso, y súbelas. Cada subida es un ensayo que te dice qué fila falla y por qué; cuando todas pasan, «Aplicar» guarda todo. El capital pendiente de cada préstamo tiene que cuadrar al centavo con el sistema anterior. Si prefieres, el equipo de Cobradía lo hace contigo.

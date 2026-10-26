@@ -38,6 +38,7 @@ import {
   StoreIcon,
   TagIcon,
   TrendIcon,
+  UploadIcon,
   UserCogIcon,
   WalletIcon,
 } from '../icons'
@@ -172,6 +173,7 @@ export function navFor(me: Me): NavGroup[] {
         leaf('/ajustes/numeraciones', 'Numeraciones', <HashIcon className={sub} />),
         leaf('/ajustes/legales', 'Profesionales legales', <BriefcaseIcon className={sub} />),
         leaf('/ajustes/mensajes', 'Mensajería', <ChatIcon className={sub} />),
+        leaf('/ajustes/importar', 'Importar cartera', <UploadIcon className={sub} />),
         ...(hasRole(me, ACCESS.fraud)
           ? [leaf('/ajustes/alertas', 'Alertas antifraude', <ShieldIcon className={sub} />)]
           : []),

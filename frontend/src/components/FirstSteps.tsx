@@ -59,7 +59,7 @@ const STEPS: Step[] = [
   {
     key: 'loan',
     title: 'Registra tu primer préstamo',
-    hint: 'Crea el cliente, cotiza y desembolsa. Si vienes de otro sistema, escríbenos y cargamos tu cartera.',
+    hint: 'Crea el cliente, cotiza y desembolsa. Si vienes de otro sistema o de Excel, importa tu cartera desde Ajustes → Importar cartera.',
     to: (data) => (data.customers > 0 ? '/solicitudes/nueva' : '/clientes/nuevo'),
     action: 'Empezar',
   },

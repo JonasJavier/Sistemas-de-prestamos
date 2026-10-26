@@ -64,6 +64,10 @@ const LegalProfessionalsPage = lazyRouteComponent(
   () => import('./pages/LegalProfessionals'),
   'LegalProfessionalsPage',
 )
+const ImportPortfolioPage = lazyRouteComponent(
+  () => import('./pages/ImportPortfolio'),
+  'ImportPortfolioPage',
+)
 const FraudAlertsPage = lazyRouteComponent(() => import('./pages/FraudAlerts'), 'FraudAlertsPage')
 const CommissionsPage = lazyRouteComponent(() => import('./pages/Commissions'), 'CommissionsPage')
 const PortfolioReportPage = lazyRouteComponent(
@@ -517,6 +521,14 @@ const legalProfessionalsRoute = createRoute({
   component: LegalProfessionalsPage,
 })
 
+// D1 (decision 131): the portfolio import, for the manager.
+const importPortfolioRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/ajustes/importar',
+  beforeLoad: ({ context }) => managerOnly(context),
+  component: ImportPortfolioPage,
+})
+
 const scoresRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/reportes/clasificacion',
@@ -810,6 +822,7 @@ const routeTree = rootRoute.addChildren([
     messagesRoute,
     legalCaseRoute,
     legalProfessionalsRoute,
+    importPortfolioRoute,
     fraudAlertsRoute,
     commissionsRoute,
     fiscalRoute,

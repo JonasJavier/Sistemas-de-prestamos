@@ -307,6 +307,13 @@ export const BriefcaseIcon = (p: IconProps) => (
   </Svg>
 )
 
+/** Import of the portfolio (decision 131). */
+export const UploadIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 16V5m0 0-4 4m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+  </Svg>
+)
+
 export const ChatIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.4A7.5 7.5 0 1 1 20 11.5z" />
