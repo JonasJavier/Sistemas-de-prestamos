@@ -1,6 +1,6 @@
 # Material de ventas (C3)
 
-Lo que Jonas usa para vender Cobradía. Redactado por el responsable técnico el 26/10/2026 con los precios de la decisión 124 y las funciones de cada plan; **Jonas lo valida antes de usarlo con un prospecto**.
+Lo que Jonas usa para vender Cobradía. Redactado por el responsable técnico el 26/10/2026 con los precios de la decisión 124 y las funciones de cada plan; **validado por Jonas el 26/10/2026**; se vuelve a validar cuando cambien precios o planes.
 
 | Pieza | Para qué | Archivo |
 | --- | --- | --- |
