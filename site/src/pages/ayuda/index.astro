@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content'
+
+import Base from '../../layouts/Base.astro'
+import { CONTACT_EMAIL, SIGN_UP, TRIAL_DAYS } from '../../config'
+
+/** Guides by role, read from docs/manual (C1, decision 133). */
+const ORDER = ['gerente', 'supervisor', 'oficial', 'cajero', 'cobrador', 'contabilidad']
+const ROLES: Record<string, { title: string; text: string }> = {
+  gerente: { title: 'Gerente y Administrador', text: 'Aprueba, cuadra, cierra el mes y configura el sistema.' },
+  supervisor: { title: 'Supervisor', text: 'Sigue las rutas, aprueba cierres y autoriza correcciones.' },
+  oficial: { title: 'Oficial de crédito', text: 'Clientes, solicitudes, evaluación y desembolso.' },
+  cajero: { title: 'Cajero', text: 'Cobros, recibos, recepción de rutas y cuadre de caja.' },
+  cobrador: { title: 'Cobrador', text: 'Mi ruta en el celular, cobros en la calle y rendición.' },
+  contabilidad: { title: 'Contabilidad y auditoría', text: 'Libros, cierre de mes, 606 y 607, conciliación y auditoría.' },
+}
+const guides = (await getCollection('manual')).sort(
+  (a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id),
+)
+---
+
+<Base
+  title="Ayuda · Cobradía"
+  description="Guías cortas por rol para usar Cobradía: gerente, supervisor, oficial de crédito, cajero, cobrador y contabilidad."
+>
+  <article class="wrap legal help">
+    <h1>Ayuda</h1>
+    <p class="legal-date">Guías cortas por rol. Cada una dice qué hace esa persona en un día normal y dónde está cada cosa en el menú.</p>
+
+    <section class="help-grid">
+      {
+        guides.map((guide) => {
+          const role = ROLES[guide.id] ?? { title: guide.id, text: '' }
+          return (
+            <a class="card help-card" href={`/ayuda/${guide.id}/`}>
+              <h2>{role.title}</h2>
+              <p>{role.text}</p>
+              <span class="help-more">Leer la guía →</span>
+            </a>
+          )
+        })
+      }
+    </section>
+
+    <h2>Antes de empezar (todos)</h2>
+    <ul>
+      <li><strong>Entrar:</strong> con tu correo, tu contraseña (12 caracteres o más) y el código de 6 dígitos de tu app autenticadora. La primera vez, Cobradía te pide activarla en <strong>Mi cuenta</strong>; guarda los códigos de respaldo en un lugar seguro. También puedes entrar con una llave de acceso (la huella o el rostro de tu celular).</li>
+      <li><strong>Tu cuenta</strong> está en tu nombre, arriba a la derecha (en el celular, el círculo con tus iniciales): ahí están Mi cuenta, el tema claro u oscuro y Cerrar sesión.</li>
+      <li><strong>Buscar:</strong> la barra de arriba (Ctrl K) encuentra clientes por nombre, cédula o teléfono y préstamos por número.</li>
+      <li><strong>La campana</strong> avisa lo que te toca: autorizaciones, cierres por aprobar, promesas que vencen, alertas.</li>
+      <li><strong>Nada se borra:</strong> un pago equivocado se reversa con autorización y queda la huella de quién, cuándo y por qué.</li>
+    </ul>
+
+    <h2>Puesta en marcha de una financiera nueva</h2>
+    <p>
+      El inicio del gerente trae la guía <strong>Primeros pasos</strong> con el avance real: datos de la empresa, sucursal, productos, equipo, caja y primer préstamo. Si vienes de otro sistema o de Excel, <strong>Ajustes → Importar cartera</strong> carga tus clientes y tus préstamos en curso con dos plantillas; primero se ensaya sin guardar y, cuando todas las filas pasan, se aplica.
+    </p>
+
+    <h2>¿No encuentras algo?</h2>
+    <p>
+      Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Y si todavía no tienes cuenta,
+      <a href={SIGN_UP}>pruébalo gratis {TRIAL_DAYS} días</a>.
+    </p>
+  </article>
+</Base>

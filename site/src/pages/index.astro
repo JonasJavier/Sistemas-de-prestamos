@@ -171,26 +171,15 @@ const jsonLd = {
         </div>
         <p class="hero-note">Sin tarjeta y sin instalar nada. Lista en minutos.</p>
       </div>
-      <figure class="mock" aria-label="Ejemplo ilustrativo del tablero de Cobradía">
-        <div class="mock-head">
-          <strong>Hoy en tu cartera</strong>
-          <span>Ejemplo</span>
-        </div>
-        <div class="mock-stats">
-          <div class="mock-stat">
-            <small>Cartera activa</small>
-            <b>RD$ 4.85 M</b>
-          </div>
-          <div class="mock-stat">
-            <small>Cobrado hoy</small>
-            <b class="up">RD$ 182,400</b>
-          </div>
-        </div>
-        <ul class="mock-list">
-          <li><span>01-000231 · Cuota 4 de 12</span><span class="pill">Al día</span></li>
-          <li><span>01-000187 · Promesa para mañana</span><span class="pill pill-warn">3 días</span></li>
-          <li><span>02-000045 · Cobro en ruta</span><span class="pill">Pagado</span></li>
-        </ul>
+      <figure class="shot shot-hero">
+        <img
+          src="/capturas/inicio.png"
+          width="1280"
+          height="800"
+          alt="El inicio del gerente en Cobradía: lo cobrado hoy, los atrasos por tramo y los indicadores del mes"
+          loading="eager"
+          fetchpriority="high"
+        />
       </figure>
     </div>
   </section>
@@ -257,6 +246,33 @@ const jsonLd = {
           </p>
         </li>
       </ol>
+    </div>
+  </section>
+
+  <section class="section" id="pantallas">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Así se ve</h2>
+        <p>Capturas reales de la app, sin retoques: lo que verá tu equipo cada día.</p>
+      </div>
+      <div class="shots">
+        <figure class="shot">
+          <img src="/capturas/atrasos.png" width="1280" height="800" loading="lazy" alt="Atrasos por tramo: 1 a 7, 8 a 30, 31 a 60 días, con el capital en riesgo de cada uno" />
+          <figcaption>Atrasos por tramo, con el capital en riesgo y a quién se le cobra.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="/capturas/prestamos.png" width="1280" height="800" loading="lazy" alt="La lista de préstamos con su estado, su cuota y su atraso" />
+          <figcaption>Los préstamos con su estado, su próxima cuota y su atraso.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="/capturas/caja.png" width="1280" height="800" loading="lazy" alt="Mi caja: el esperado en caja, lo cobrado y el arqueo por denominación" />
+          <figcaption>La caja de la cajera: lo esperado, lo cobrado y el arqueo al cerrar.</figcaption>
+        </figure>
+        <figure class="shot shot-phone">
+          <img src="/capturas/ruta.png" width="390" height="844" loading="lazy" alt="Mi ruta en el celular del cobrador: la lista del día con Llamar, WhatsApp y Cobrar" />
+          <figcaption>Mi ruta, en el celular del cobrador.</figcaption>
+        </figure>
+      </div>
     </div>
   </section>
 
