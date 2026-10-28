@@ -4,6 +4,7 @@ import '@fontsource-variable/sora'
 import '../styles/site.css'
 
 import Brand from '../components/Brand.astro'
+import Icon from '../components/Icon.astro'
 import { CONTACT_EMAIL, SIGN_IN, SIGN_UP } from '../config'
 
 interface Props {
@@ -35,24 +36,48 @@ const year = new Date().getFullYear()
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
-    {jsonLd ? <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} /> : null}
+    {jsonLd ? (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    ) : null}
   </head>
   <body>
-    <a class="skip" href="#contenido">Saltar al contenido</a>
+    <a class="skip" href="#contenido">
+      Saltar al contenido
+    </a>
     <header class="topbar">
       <div class="wrap topbar-inner">
-        <a href="/" aria-label="Cobradía, inicio"><Brand /></a>
+        <a href="/" aria-label="Cobradía, inicio">
+          <Brand />
+        </a>
         <nav aria-label="Secciones" class="nav">
-          <a href="/#funciones">Funciones</a>
+          <a href="/#funciones">El producto</a>
           <a href="/#como-funciona">Cómo funciona</a>
           <a href="/#precios">Precios</a>
-          <a href="/#preguntas">Preguntas</a>
           <a href="/ayuda/">Ayuda</a>
         </nav>
         <div class="topbar-actions">
-          <a class="link-quiet" href={SIGN_IN}>Entrar</a>
-          <a class="btn btn-primary" href={SIGN_UP}>Prueba gratis</a>
+          <a class="link-quiet" href={SIGN_IN}>
+            Iniciar sesión
+          </a>
+          <a class="btn btn-primary" href={SIGN_UP}>
+            Prueba gratis <Icon name="arrow" />
+          </a>
         </div>
+        <details class="mobile-menu">
+          <summary aria-label="Menú de navegación">
+            <span></span>
+            <span></span>
+          </summary>
+          <nav aria-label="Navegación móvil">
+            <a href="/#funciones">El producto</a>
+            <a href="/#como-funciona">Cómo funciona</a>
+            <a href="/#precios">Precios</a>
+            <a href="/#preguntas">Preguntas frecuentes</a>
+            <a href="/ayuda/">Centro de ayuda</a>
+            <a href={SIGN_IN}>Iniciar sesión</a>
+            <a href={SIGN_UP}>Empieza gratis →</a>
+          </nav>
+        </details>
       </div>
     </header>
     <main id="contenido">
@@ -62,18 +87,62 @@ const year = new Date().getFullYear()
       <div class="wrap footer-inner">
         <div>
           <Brand tone="light" />
-          <p>Préstamos, cobros y caja para financieras dominicanas.</p>
+          <p>
+            Un nuevo día para tu financiera.
+            <br />
+            Hecho en República Dominicana.
+          </p>
         </div>
         <ul>
-          <li><a href={SIGN_UP}>Crear cuenta</a></li>
-          <li><a href={SIGN_IN}>Entrar</a></li>
-          <li><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
-          <li><a href="/ayuda/">Ayuda</a></li>
-          <li><a href="/terminos">Términos de servicio</a></li>
-          <li><a href="/privacidad">Aviso de privacidad</a></li>
+          <li>
+            <a href={SIGN_UP}>Crear cuenta</a>
+          </li>
+          <li>
+            <a href={SIGN_IN}>Entrar</a>
+          </li>
+          <li>
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          </li>
+          <li>
+            <a href="/ayuda/">Ayuda</a>
+          </li>
+          <li>
+            <a href="/terminos">Términos de servicio</a>
+          </li>
+          <li>
+            <a href="/privacidad">Aviso de privacidad</a>
+          </li>
         </ul>
       </div>
-      <div class="wrap footer-legal">© {year} Cobradía · cobradia.com</div>
+      <div class="wrap footer-legal">
+        <span>© {year} Cobradía. Todos los derechos reservados.</span>
+        <span>Tu cartera al día. Cada día.</span>
+      </div>
     </footer>
+    <script>
+      const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu')
+      menu?.querySelectorAll('a').forEach((link) =>
+        link.addEventListener('click', () => {
+          menu.open = false
+        }),
+      )
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && menu?.open) {
+          menu.open = false
+          menu.querySelector('summary')?.focus()
+        }
+      })
+      document.addEventListener('click', (event) => {
+        if (
+          menu?.open &&
+          event.target instanceof Node &&
+          !menu.contains(event.target)
+        )
+          menu.open = false
+      })
+      matchMedia('(min-width: 1000px)').addEventListener('change', (event) => {
+        if (event.matches && menu) menu.open = false
+      })
+    </script>
   </body>
 </html>

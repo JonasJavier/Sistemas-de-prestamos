@@ -7,4 +7,5 @@ export default defineConfig({
   trailingSlash: 'ignore',
   // Stylesheets as files: the CSP allows no inline styles (decision 102).
   build: { format: 'directory', inlineStylesheets: 'never' },
+  vite: { build: { assetsInlineLimit: 0 } },
 })
