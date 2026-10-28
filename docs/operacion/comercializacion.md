@@ -48,7 +48,7 @@ Con la fase A resuelta se puede vender a un primer cliente piloto. Con A y B, ab
 - [ ] **B2. Despliegue automático y CI** 👤🤖
   - 👤 Resolver la facturación de GitHub (desde el 10/10 la CI no arranca) y darle a la app de Railway acceso al repositorio privado.
   - 🤖 Pasar de `railway up` a despliegue automático: cada commit verde en `main` se publica solo.
-- [ ] **B3. Aceptación de las fases 4–9** 👤 Recorrer cobros y caja, cobranza, finanzas, reportes, renovación y vía legal, mensajes y portal, y decir «aprobado» o qué cambiar. 🤖 *Guion listo el 26/10/2026:* [guion de aceptación](guion-de-aceptacion.md), ocho bloques de 2 a 6 minutos sobre la demo local, con la casilla «aprobado / cambiar» en cada uno.
+- [ ] **B3. Aceptación de la app completa** 👤 Bloque por bloque, con la [bitácora de aceptación](bitacora-de-aceptacion.md) (desde el 27/10/2026). 🤖 *Guion listo el 26/10/2026:* [guion de aceptación](guion-de-aceptacion.md), ocho bloques de 2 a 6 minutos sobre la demo local, con la casilla «aprobado / cambiar» en cada uno.
 - [ ] **B4. Prueba en la calle** 👤🤖 Un cobrador real con su celular contra producción (HTTPS): la ruta con GPS, el cobro, el recibo en la impresora térmica de 58 mm y el cuadre de caja al final del día.
 - [ ] **B5. Primer cliente** 👤 Decidir si entra como proyecto pagado o como primer suscriptor (doc 10 §6), conseguir su cartera en las plantillas de migración y agendar la aceptación.
 - [ ] **B6. Dos ensayos de migración** 🤖 En staging, siguiendo «Ensayo de la migración» de la [lista de lanzamiento](lanzamiento.md): totales de cartera al centavo y `verificar_integridad` limpio.
