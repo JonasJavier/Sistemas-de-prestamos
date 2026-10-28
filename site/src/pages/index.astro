@@ -1,147 +1,64 @@
 ---
 import Base from '../layouts/Base.astro'
+import Icon from '../components/Icon.astro'
 import { CONTACT_EMAIL, SIGN_UP, TRIAL_DAYS } from '../config'
+import { PLANS, FAQ } from '../landing-content'
 
-const title = 'Cobradía · Sistema de préstamos y cobros para financieras en RD'
-const description =
-  'Administra préstamos, cobros, caja y contabilidad de tu financiera desde el navegador y el celular. ' +
-  `Hecho para República Dominicana. Prueba gratis ${TRIAL_DAYS} días, sin tarjeta.`
-
-/** One stroke icon per feature (24×24, currentColor). */
-const ICONS: Record<string, string> = {
-  solicitud: 'M9 4h6l1 2h3v14H5V6h3zM9 11h6M9 15h4',
-  caja: 'M3 7h18v12H3zM3 11h18M7 15h3',
-  ruta: 'M6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
-  mora: 'M12 8v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
-  libro: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7M8 11h7',
-  reportes: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
-  mensajes: 'M4 5h16v11H8l-4 4zM8 9h8M8 12h5',
-  portal: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
-  qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2',
-}
-
-const FEATURES = [
+const title = 'Cobradía · Tu financiera, en su mejor día'
+const description = `Préstamos, cobros y caja en un solo lugar. El sistema para financieras dominicanas que quieren trabajar con más control. Prueba gratis ${TRIAL_DAYS} días, sin tarjeta.`
+const views = [
   {
-    icon: 'solicitud',
-    title: 'Solicitudes y desembolsos',
-    text: 'Simula, evalúa y aprueba por montos según el rol. Al desembolsar se generan el pagaré y la tabla de pagos con el número definitivo del préstamo.',
+    id: 'inicio',
+    label: 'Tu panorama',
+    icon: 'chart',
+    caption:
+      'Lo cobrado, lo pendiente y lo que necesita tu atención. Todo a primera vista.',
+    alt: 'Inicio real del gerente: cobros del día, solicitudes y cierres por aprobar',
   },
   {
-    icon: 'caja',
-    title: 'Cobros y caja que cuadran',
-    text: 'Cobra varias cuotas a la vez, con mora calculada al centavo. Cada cajero cuadra su caja y los faltantes y sobrantes quedan registrados.',
+    id: 'prestamos',
+    label: 'Préstamos',
+    icon: 'loan',
+    caption:
+      'Cada préstamo, su estado y su próxima cuota. Una cartera que puedes seguir.',
+    alt: 'Lista real de préstamos con estados, cuotas y atrasos',
   },
   {
-    icon: 'ruta',
-    title: 'Mi ruta, en el celular',
-    text: 'Tus cobradores ven su ruta del día, cobran en la calle, anotan gestiones y promesas de pago, y el supervisor sigue el avance de cada ruta.',
+    id: 'caja',
+    label: 'Cobros y caja',
+    icon: 'wallet',
+    caption: 'Del cobro al cierre de caja, cada movimiento tiene su lugar.',
+    alt: 'Pantalla real de caja con cobros, saldo esperado y arqueo',
   },
   {
-    icon: 'mora',
-    title: 'Mora y cobranza',
-    text: 'Atrasos por antigüedad, avisos, renovaciones, reestructuraciones, castigo de cartera y seguimiento de los casos en la vía legal.',
-  },
-  {
-    icon: 'libro',
-    title: 'Contabilidad incluida',
-    text: 'Cada desembolso, cobro y gasto entra solo al libro diario. Cierres de mes, balanza, estado de resultados y balance general, siempre cuadrados.',
-  },
-  {
-    icon: 'reportes',
-    title: 'Reportes e indicadores',
-    text: 'Tablero con la salud de la cartera, reportes exportables a Excel y PDF, clasificación de clientes y comisiones de cobradores y oficiales.',
-  },
-  {
-    icon: 'mensajes',
-    title: 'Mensajes automáticos',
-    text: 'Recordatorios antes del vencimiento, avisos de atraso y confirmación de cada pago con su recibo, por correo, WhatsApp o SMS.',
-  },
-  {
-    icon: 'portal',
-    title: 'Portal para tus clientes',
-    text: 'Tus clientes consultan su saldo, su calendario, sus recibos y su estado de cuenta, con un código de acceso que les llega a ellos.',
-  },
-  {
-    icon: 'qr',
-    title: 'Documentos con QR',
-    text: 'Recibos, contratos y cartas llevan un código QR que cualquiera puede escanear para comprobar que son auténticos.',
+    id: 'atrasos',
+    label: 'Seguimiento',
+    icon: 'clock',
+    caption:
+      'Detecta los atrasos y prioriza las gestiones que tu cartera necesita.',
+    alt: 'Pantalla real de atrasos agrupados por antigüedad y capital en riesgo',
   },
 ]
-
-/** Decision 124: the three plans Jonas decided on 25/10/2026. */
-const PLANS = [
+const steps = [
   {
-    name: 'Esencial',
-    price: 990,
-    pitch: 'Para ordenar la cartera y la caja de la oficina.',
-    size: '1 sucursal · 3 usuarios · préstamos sin límite',
-    bullets: [
-      'Clientes, solicitudes y préstamos',
-      'Pagos con recibo impreso o por WhatsApp',
-      'Atrasos con mora automática',
-      'Caja: apertura, cierre y cuadre',
-      'Reportes de cartera y cobros del día',
-      'Portal del cliente y seguridad en dos pasos',
-    ],
+    title: 'Presta con claridad.',
+    icon: 'loan',
+    text: 'Del cliente al desembolso. Evalúa solicitudes, configura tus tasas y genera el calendario de pagos.',
+    detail: 'Clientes · Solicitudes · Préstamos',
   },
   {
-    name: 'Profesional',
-    price: 2290,
-    featured: true,
-    pitch: 'Para financieras con cobradores en la calle.',
-    size: '3 sucursales · 10 usuarios · préstamos sin límite',
-    bullets: [
-      'Todo lo de Esencial',
-      'Rutas con GPS y app del cobrador',
-      'Promesas, agenda y escalamiento',
-      'Recordatorios por WhatsApp, SMS y correo',
-      'Clasificación de clientes y antifraude',
-      'Gastos, reportes completos y exportaciones',
-    ],
+    title: 'Cobra con orden.',
+    icon: 'wallet',
+    text: 'Registra pagos, emite recibos y cierra cada caja con el detalle de lo que entró y lo que salió.',
+    detail: 'Cobros · Recibos · Caja',
   },
   {
-    name: 'Empresa',
-    price: 3690,
-    pitch: 'Para financieras con contabilidad propia.',
-    size: 'Sucursales y usuarios sin límite',
-    bullets: [
-      'Todo lo de Profesional',
-      'Contabilidad NIIF, 606 y 607',
-      'Comprobantes fiscales y cuentas por pagar',
-      'Bancos y conciliación bancaria',
-      'Comisiones y vía legal',
-      'Soporte prioritario y migración acompañada',
-    ],
+    title: 'Decide con información.',
+    icon: 'chart',
+    text: 'Consulta tu cartera, sigue los atrasos y encuentra lo que necesita atención antes de cerrar el día.',
+    detail: 'Reportes · Cobranza · Contabilidad',
   },
 ]
-
-const FAQ = [
-  {
-    q: '¿Necesito instalar algo?',
-    a: 'No. Cobradía funciona en el navegador de la computadora y del celular. Tus cobradores solo necesitan un teléfono con internet.',
-  },
-  {
-    q: '¿Puedo pasar los préstamos que ya tengo?',
-    a: 'Sí. Cargas cada préstamo en curso con su calendario original y los pagos que ya recibió, y desde ahí sigues cobrando en Cobradía.',
-  },
-  {
-    q: '¿Qué pasa cuando termina la prueba?',
-    a: `Durante ${TRIAL_DAYS} días usas todo sin pagar. Al terminar, tu cuenta queda en solo lectura hasta que actives tu suscripción: no pierdes ningún dato.`,
-  },
-  {
-    q: '¿Mis datos están seguros?',
-    a: 'Cada financiera tiene sus datos aislados de las demás. Todos los usuarios entran con verificación en dos pasos, cada rol ve solo lo que le toca y todo queda en la auditoría.',
-  },
-  {
-    q: '¿Sirve para varias sucursales?',
-    a: 'Sí. Manejas sucursales con su propia caja, sus horarios y sus usuarios, y ves la cartera completa o la de cada sucursal.',
-  },
-  {
-    q: '¿Está hecho para República Dominicana?',
-    a: 'Sí: pesos dominicanos, cédula y RNC validados, días feriados nacionales en los calendarios de pago y documentos en español.',
-  },
-]
-
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -156,215 +73,426 @@ const jsonLd = {
 ---
 
 <Base title={title} description={description} jsonLd={jsonLd}>
-  <section class="hero">
-    <div class="wrap hero-inner">
-      <div>
-        <span class="eyebrow">Para financieras dominicanas</span>
-        <h1>Tu cartera al día, <em>cada día.</em></h1>
-        <p class="hero-lead">
-          Préstamos, cobros, caja y contabilidad en un solo lugar. Cuotas, intereses y mora calculados
-          al centavo, y una caja que siempre cuadra con el libro.
-        </p>
-        <div class="hero-cta">
-          <a class="btn btn-gold" href={SIGN_UP}>Prueba gratis {TRIAL_DAYS} días</a>
-          <a class="btn btn-ghost" href="#funciones">Ver lo que hace</a>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-copy">
+      <a class="hero-badge" href="#pantallas">
+        <span class="status-dot"></span> El nuevo día de tu financiera{' '}
+        <Icon name="arrow" />
+      </a>
+      <h1 id="hero-title">
+        Menos pendientes.
+        <br />
+        <span>Más tranquilidad.</span>
+        <svg
+          class="sun-mark"
+          viewBox="0 0 80 80"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="40" cy="40" r="12" />
+          <path d="M40 3v15m0 44v15M3 40h15m44 0h15M14 14l11 11m30 30 11 11M14 66l11-11m30-30 11-11" />
+        </svg>
+      </h1>
+      <p class="hero-lead">
+        Tu cartera, tus cobros y tu equipo. Por fin, en el mismo lugar.
+        <br class="desktop-break" /> El sistema que le da claridad al día de tu
+        financiera.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href={SIGN_UP}>
+          Empieza tus {TRIAL_DAYS} días gratis <Icon name="arrow" />
+        </a>
+        <a class="btn btn-secondary" href="#pantallas">
+          <Icon name="play" /> Conoce Cobradía
+        </a>
+      </div>
+      <p class="hero-note">
+        <Icon name="check" /> Sin tarjeta <span>·</span> Sin instalaciones{' '}
+        <span>·</span> Hecho para RD
+      </p>
+    </div>
+    <div class="wrap product-wrap" id="pantallas">
+      <div class="product-stage">
+        <div class="stage-label">
+          <span class="status-dot"></span> TODO EN SU LUGAR{' '}
+          <span class="stage-number">01 — 04</span>
         </div>
-        <p class="hero-note">Sin tarjeta y sin instalar nada. Lista en minutos.</p>
+        <div class="product-window">
+          <div class="window-bar">
+            <div class="window-dots" aria-hidden="true">
+              <i></i>
+              <i></i>
+              <i></i>
+            </div>
+            <span>
+              <Icon name="lock" /> app.cobradia.com
+            </span>
+            <span class="window-demo">Vista de demostración</span>
+          </div>
+          <div class="product-views">
+            {views.map((view, index) => (
+              <figure
+                id={`panel-${view.id}`}
+                aria-labelledby={`tab-${view.id}`}
+                data-product-panel
+                hidden={index !== 0}
+                tabindex="0"
+              >
+                <img
+                  src={`/capturas/${view.id}.png`}
+                  width="1280"
+                  height="800"
+                  alt={view.alt}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={index === 0 ? 'high' : 'auto'}
+                />
+                <figcaption>{view.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+        <div class="product-seal" aria-hidden="true">
+          <span>
+            <Icon name="check" />
+          </span>
+          <div>
+            Un día más claro.<small>Una financiera bajo control.</small>
+          </div>
+        </div>
       </div>
-      <figure class="shot shot-hero">
-        <img
-          src="/capturas/inicio.png"
-          width="1280"
-          height="800"
-          alt="El inicio del gerente en Cobradía: lo cobrado hoy, los atrasos por tramo y los indicadores del mes"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </figure>
+      <div class="product-tabs" aria-label="Explora las pantallas de Cobradía">
+        {views.map((view, index) => (
+          <button
+            id={`tab-${view.id}`}
+            type="button"
+            data-product-tab
+            aria-controls={`panel-${view.id}`}
+            aria-pressed={index === 0}
+          >
+            <Icon name={view.icon} />
+            {view.label}
+          </button>
+        ))}
+      </div>
+      <p class="demo-note">
+        Capturas reales de Cobradía con datos de demostración.
+      </p>
     </div>
   </section>
 
-  <section class="section" id="funciones">
+  <section class="local-strip wrap" aria-label="Hecho para tu operación">
+    <p>
+      Nacido aquí.
+      <br />
+      <strong>Pensado para tu financiera.</strong>
+    </p>
+    <span>
+      <Icon name="globe" /> Pesos dominicanos
+    </span>
+    <span>
+      <Icon name="people" /> Cada persona, su rol
+    </span>
+    <span>
+      <Icon name="shield" /> Tus datos, protegidos
+    </span>
+  </section>
+
+  <section class="section workflow" id="funciones">
     <div class="wrap">
-      <div class="section-head">
-        <h2>Todo lo que tu financiera hace, en un solo sistema</h2>
+      <div class="section-heading reveal">
+        <div>
+          <span class="eyebrow">MENOS FRICCIÓN. MÁS DIRECCIÓN.</span>
+          <h2>
+            Todo conectado.
+            <br />
+            <span>Nada en el aire.</span>
+          </h2>
+        </div>
         <p>
-          Desde la solicitud hasta el último pago: sin hojas de cálculo, sin cuadres a mano y sin
-          perder de vista a ningún cliente.
+          Tu operación no debería vivir entre hojas de cálculo, mensajes y
+          libretas. Dale a cada parte de tu negocio un lugar para trabajar
+          mejor.
         </p>
       </div>
-      <div class="grid grid-3">
-        {
-          FEATURES.map((feature) => (
-            <article class="card">
-              <span class="icon" aria-hidden="true">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d={ICONS[feature.icon]} />
-                </svg>
+      <div class="workflow-grid">
+        {steps.map((step, index) => (
+          <article class="workflow-item reveal">
+            <div class="workflow-top">
+              <span class="feature-icon">
+                <Icon name={step.icon} />
               </span>
-              <h3>{feature.title}</h3>
-              <p>{feature.text}</p>
-            </article>
-          ))
-        }
+              <span class="step-number">0{index + 1}</span>
+            </div>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+            <span class="feature-detail">{step.detail}</span>
+          </article>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="section section-alt" id="como-funciona">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Empieza hoy mismo</h2>
-        <p>Tu financiera queda lista en tres pasos, sin llamadas ni contratos para probar.</p>
+  <section class="field-section" aria-labelledby="field-title">
+    <div class="wrap field-grid">
+      <div class="field-copy reveal">
+        <span class="eyebrow">DE LA OFICINA A LA CALLE</span>
+        <h2 id="field-title">
+          Tu equipo se mueve.
+          <br />
+          <span>El control va contigo.</span>
+        </h2>
+        <p>
+          La ruta del día en el celular del cobrador. El avance de la operación
+          en manos del supervisor. Todos trabajando sobre la misma información.
+        </p>
+        <ul class="checks">
+          <li>Rutas y clientes asignados a cada cobrador.</li>
+          <li>Cobros, recibos y promesas de pago en el lugar.</li>
+          <li>Seguimiento de gestiones desde la oficina.</li>
+        </ul>
+        <a class="text-link" href="/ayuda/cobrador/">
+          Conoce el día de un cobrador <Icon name="arrow" />
+        </a>
+        <small class="field-note">
+          Disponible desde el plan Profesional. Requiere internet.
+        </small>
       </div>
-      <ol class="steps">
-        <li class="card">
-          <h3>Registra tu financiera</h3>
-          <p>
-            Con tu correo y los datos de la empresa. Te llega la confirmación y empiezas tu prueba.
-          </p>
+      <div class="phone-scene reveal">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <span class="scene-label">
+          CERCA DE TUS CLIENTES.
+          <br />
+          AL DÍA CON TU EQUIPO.
+        </span>
+        <div class="phone-frame">
+          <div class="phone-camera" aria-hidden="true"></div>
+          <img
+            src="/capturas/ruta.png"
+            width="390"
+            height="844"
+            loading="lazy"
+            alt="Ruta real del cobrador en el celular, con clientes y acciones para llamar, escribir y cobrar"
+          />
+        </div>
+        <div class="route-note">
+          <span class="feature-icon">
+            <Icon name="route" />
+          </span>
+          <div>
+            Tu próxima parada.<small>Todo listo para seguir.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section start-section" id="como-funciona">
+    <div class="wrap start-grid">
+      <div class="reveal">
+        <span class="eyebrow">UN NUEVO COMIENZO, SIN COMPLICACIONES</span>
+        <h2>
+          Menos vueltas.
+          <br />
+          Más avance.
+        </h2>
+        <p class="section-intro">
+          Empieza con tu financiera como es hoy.
+          <br />
+          Cobradía te acompaña en lo que sigue.
+        </p>
+        <a class="text-link" href={SIGN_UP}>
+          Dale orden a tu día <Icon name="arrow" />
+        </a>
+      </div>
+      <ol class="onboarding">
+        <li class="reveal">
+          <span>01</span>
+          <div>
+            <h3>Crea tu cuenta</h3>
+            <p>
+              Registra tu empresa y empieza tu prueba gratis de {TRIAL_DAYS}{' '}
+              días.
+            </p>
+          </div>
         </li>
-        <li class="card">
-          <h3>Configura a tu manera</h3>
-          <p>
-            Sucursales, productos con sus tasas y moras, horarios y un usuario por persona con su
-            rol.
-          </p>
+        <li class="reveal">
+          <span>02</span>
+          <div>
+            <h3>Hazlo tuyo</h3>
+            <p>
+              Configura productos, sucursales y equipo. Si ya tienes cartera,
+              importa tus clientes y préstamos con nuestras plantillas.
+            </p>
+          </div>
         </li>
-        <li class="card">
-          <h3>Presta y cobra</h3>
-          <p>
-            Registra clientes, desembolsa y cobra en caja o en la calle. Los reportes se arman
-            solos.
-          </p>
+        <li class="reveal">
+          <span>03</span>
+          <div>
+            <h3>Empieza tu nuevo día</h3>
+            <p>
+              Desembolsa, cobra y sigue tu operación desde la computadora o el
+              celular.
+            </p>
+          </div>
         </li>
       </ol>
     </div>
   </section>
 
-  <section class="section" id="pantallas">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Así se ve</h2>
-        <p>Capturas reales de la app, sin retoques: lo que verá tu equipo cada día.</p>
+  <section class="security-section">
+    <div class="wrap security-inner">
+      <div class="security-heading reveal">
+        <Icon name="shield" />
+        <h2>
+          La confianza también
+          <br />
+          está en los detalles.
+        </h2>
       </div>
-      <div class="shots">
-        <figure class="shot">
-          <img src="/capturas/atrasos.png" width="1280" height="800" loading="lazy" alt="Atrasos por tramo: 1 a 7, 8 a 30, 31 a 60 días, con el capital en riesgo de cada uno" />
-          <figcaption>Atrasos por tramo, con el capital en riesgo y a quién se le cobra.</figcaption>
-        </figure>
-        <figure class="shot">
-          <img src="/capturas/prestamos.png" width="1280" height="800" loading="lazy" alt="La lista de préstamos con su estado, su cuota y su atraso" />
-          <figcaption>Los préstamos con su estado, su próxima cuota y su atraso.</figcaption>
-        </figure>
-        <figure class="shot">
-          <img src="/capturas/caja.png" width="1280" height="800" loading="lazy" alt="Mi caja: el esperado en caja, lo cobrado y el arqueo por denominación" />
-          <figcaption>La caja de la cajera: lo esperado, lo cobrado y el arqueo al cerrar.</figcaption>
-        </figure>
-        <figure class="shot shot-phone">
-          <img src="/capturas/ruta.png" width="390" height="844" loading="lazy" alt="Mi ruta en el celular del cobrador: la lista del día con Llamar, WhatsApp y Cobrar" />
-          <figcaption>Mi ruta, en el celular del cobrador.</figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap band">
-      <div>
-        <span class="eyebrow">Seguridad</span>
-        <h2>Tu información, protegida y bajo control</h2>
-        <p class="band-lead">
-          Cobradía está construido para manejar dinero: cada movimiento deja huella y nadie hace más
-          de lo que su rol le permite.
-        </p>
-      </div>
-      <ul class="checks">
-        <li>Los datos de cada financiera, aislados de las demás.</li>
-        <li>Verificación en dos pasos obligatoria para todos los usuarios.</li>
-        <li>Permisos por rol: cajero, cobrador, oficial, supervisor, gerente y más.</li>
-        <li>Reversos con autorización y castigos reconfirmados con el segundo paso.</li>
-        <li>Auditoría de cada acción y alertas cuando algo se sale de lo normal.</li>
-        <li>Cajeros y cobradores entran solo en el horario de su sucursal.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="precios">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Precios de lanzamiento</h2>
+      <div class="security-item reveal">
+        <Icon name="lock" />
+        <h3>Un espacio para tu empresa</h3>
         <p>
-          En pesos y sin ITBIS. Clientes y préstamos sin límite en todos los planes. Primero pruebas
-          todo {TRIAL_DAYS} días gratis, sin tarjeta.
+          Datos aislados y verificación en dos pasos para proteger cada acceso.
         </p>
+      </div>
+      <div class="security-item reveal">
+        <Icon name="people" />
+        <h3>Cada acción, en su lugar</h3>
+        <p>Permisos por rol y auditoría para saber quién hizo qué y cuándo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section pricing-section" id="precios">
+    <div class="wrap">
+      <div class="section-head centered reveal">
+        <span class="eyebrow">UN PLAN PARA TU PRÓXIMA ETAPA</span>
+        <h2>Crece a tu ritmo.</h2>
+        <p>Clientes y préstamos sin límite. Elige cómo quieres trabajar.</p>
+      </div>
+      <div
+        class="billing-toggle"
+        role="group"
+        aria-label="Período de facturación"
+      >
+        <button type="button" data-billing="monthly" aria-pressed="true">
+          Mensual
+        </button>
+        <button type="button" data-billing="annual" aria-pressed="false">
+          Anual <span>2 meses gratis</span>
+        </button>
       </div>
       <div class="plans">
-        {
-          PLANS.map((plan) => (
-            <div class={`card plan${plan.featured ? ' price-main' : ''}`}>
-              {plan.featured && <span class="plan-tag">Recomendado</span>}
+        {PLANS.map((plan) => (
+          <article
+            class:list={['plan', 'reveal', { 'plan-featured': plan.featured }]}
+          >
+            <div class="plan-heading">
               <h3>{plan.name}</h3>
-              <p class="plan-pitch">{plan.pitch}</p>
-              <div class="price-figure">
-                RD$ {plan.price.toLocaleString('es-DO')} <small>/ mes</small>
-              </div>
-              <p class="plan-year">
-                o RD$ {(plan.price * 10).toLocaleString('es-DO')} al año · 2 meses gratis
-              </p>
-              <p class="plan-size">{plan.size}</p>
-              <ul class="checks">
-                {plan.bullets.map((item) => <li>{item}</li>)}
-              </ul>
-              <div class="hero-cta">
-                <a class={`btn ${plan.featured ? 'btn-gold' : 'btn-primary'}`} href={SIGN_UP}>
-                  Empezar gratis
-                </a>
-              </div>
+              {plan.featured && (
+                <span class="plan-tag">Para dar el siguiente paso</span>
+              )}
             </div>
-          ))
-        }
+            <p class="plan-pitch">{plan.pitch}</p>
+            <div class="price-figure">
+              <span class="currency">RD$</span>{' '}
+              <span
+                data-price
+                data-monthly={plan.price}
+                data-annual={plan.price * 10}
+              >
+                {plan.price.toLocaleString('es-DO')}
+              </span>
+              <small data-price-period>/ mes</small>
+            </div>
+            <p
+              class="plan-billing"
+              data-price-description
+              data-monthly-copy={`O RD$ ${(plan.price * 10).toLocaleString('es-DO')} al año · 2 meses gratis`}
+              data-annual-copy="Pago anual completo · usas 12 meses y pagas 10"
+            >
+              O RD$ {(plan.price * 10).toLocaleString('es-DO')} al año · 2 meses
+              gratis
+            </p>
+            <a
+              class:list={[
+                'btn',
+                plan.featured ? 'btn-light' : 'btn-secondary',
+              ]}
+              href={SIGN_UP}
+            >
+              Empezar gratis <Icon name="arrow" />
+            </a>
+            <p class="plan-size">{plan.size}</p>
+            <ul class="checks">
+              {plan.bullets.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </div>
       <p class="plans-note">
-        Pago anual: pagas 10 meses y usas 12. Se paga por transferencia o depósito; escríbenos a{' '}
-        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> y activamos tu cuenta el mismo día.
+        Precios de lanzamiento, sin ITBIS. Todos los planes incluyen{' '}
+        {TRIAL_DAYS} días de prueba gratis.
+        <br />
+        Pago por transferencia o depósito.{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`}>
+          Te ayudamos a activar tu suscripción.
+        </a>
       </p>
+      <p class="sr-only" data-billing-status aria-live="polite"></p>
     </div>
   </section>
 
-  <section class="section" id="preguntas">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Preguntas frecuentes</h2>
+  <section class="section faq-section" id="preguntas">
+    <div class="wrap faq-grid">
+      <div class="reveal">
+        <span class="eyebrow">HABLEMOS CLARO</span>
+        <h2>
+          Es bueno
+          <br />
+          tener respuestas.
+        </h2>
+        <p class="section-intro">
+          Si te queda alguna duda,
+          <br />
+          <a href={`mailto:${CONTACT_EMAIL}`}>estamos a un mensaje.</a>
+        </p>
       </div>
       <div class="faq">
-        {
-          FAQ.map((item) => (
-            <details>
-              <summary>{item.q}</summary>
-              <p>{item.a}</p>
-            </details>
-          ))
-        }
+        {FAQ.map((item) => (
+          <details name="faq">
+            <summary>
+              {item.q}
+              <span aria-hidden="true">+</span>
+            </summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="wrap">
-    <div class="closing">
-      <h2>Ponle orden a tu cartera desde hoy</h2>
-      <p>Crea tu cuenta en minutos y prueba Cobradía con tus propios préstamos.</p>
-      <div class="hero-cta">
-        <a class="btn btn-gold" href={SIGN_UP}>Prueba gratis {TRIAL_DAYS} días</a>
-        <a class="btn btn-ghost" href={`mailto:${CONTACT_EMAIL}`}>Escríbenos</a>
-      </div>
+  <section class="closing-section">
+    <div class="wrap closing reveal">
+      <span class="eyebrow">EMPIEZA UNA NUEVA FORMA DE TRABAJAR</span>
+      <h2>
+        Tu próximo gran paso.
+        <br />
+        <span>Un día más tranquilo.</span>
+      </h2>
+      <p>Más claridad para tu financiera. Más tiempo para lo que sigue.</p>
+      <a class="btn btn-primary" href={SIGN_UP}>
+        Prueba Cobradía gratis <Icon name="arrow" />
+      </a>
+      <small>
+        {TRIAL_DAYS} días para conocerlo. Sin tarjeta. Sin compromiso.
+      </small>
+      <div class="closing-line" aria-hidden="true"></div>
     </div>
   </section>
+  <script src="../scripts/landing.ts"></script>
 </Base>
