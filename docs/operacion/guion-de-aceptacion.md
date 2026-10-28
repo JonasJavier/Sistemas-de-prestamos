@@ -1,6 +1,6 @@
-# Guion de aceptación (B3): fases 4 a 9 en 30 minutos
+# Guion de aceptación (B3): la app completa en 45 minutos
 
-**Para:** Jonas, dueño del producto. **Objetivo:** recorrer con tus propias manos lo que construyeron las fases 4 a 9 y decir, bloque por bloque, «aprobado» o «cambiar esto». No hace falta que pruebes todo: el guion elige una ruta corta por cada módulo, con datos ya cargados.
+**Para:** Jonas, dueño del producto. **Objetivo:** recorrer con tus propias manos toda la app, desde el registro hasta la cancelación, y decir, bloque por bloque, «aprobado» o «cambiar esto». El bloque 0 y el 9 van en producción con tu propia financiera de prueba; los bloques 1 a 8, en la demo local, que ya trae cartera, caja y usuarios. No hace falta que pruebes todo: el guion elige una ruta corta por cada módulo, con datos ya cargados.
 
 ## Antes de empezar (5 minutos, una sola vez)
 
@@ -48,6 +48,21 @@ Al final de cada bloque marca una de las dos:
 - **✏️ Cambiar:** qué viste y qué esperabas, en una línea. Con eso basta; yo lo convierto en trabajo.
 
 ---
+
+## Bloque 0 · Registro y puesta en marcha (en producción) · 10 minutos
+
+Este bloque se hace en **app.cobradia.com**, con un correo tuyo real, porque es lo que vive un cliente nuevo.
+
+1. En cobradia.com pulsa **Prueba gratis 15 días** y crea una financiera de prueba. Te llega el correo de confirmación; entra y activa la verificación en dos pasos con tu app autenticadora (guarda los códigos de respaldo). Prueba también **Entrar con llave de acceso** si tu celular lo permite.
+2. En el inicio aparece **Primeros pasos**. Síguelos en orden: datos de la empresa y logo, sucursal, productos (ajusta uno), invita a un usuario (otro correo tuyo), abre la caja y crea el primer préstamo. Cada paso se tacha solo al hacerlo.
+3. **Ajustes → Importar cartera:** descarga las dos plantillas, llena dos clientes y un préstamo en Excel (o mete un error a propósito), súbelas y mira el ensayo fila por fila; aplica cuando pase.
+4. **Suscripción:** mira la barra de la prueba, elige un plan, pulsa **Activar**, elige mensual o anual y sube una foto cualquiera como comprobante. Luego entra como **dueño** (tu cuenta de plataforma) y en la ficha de la empresa **confirma** o **rechaza** el comprobante; vuelve a la empresa y mira el aviso y el correo.
+5. **Suscripción → Descargar la copia completa:** abre el Excel y revisa que esté lo que cargaste. No canceles la suscripción de esta empresa todavía: eso va en el bloque 9.
+6. En tu **celular**, entra a app.cobradia.com como el usuario que invitaste con rol cobrador: en Mi ruta aparece «Lleva Cobradía en tu pantalla de inicio»; instálala y ábrela desde el ícono.
+
+**Qué buscas:** que una financiera que no te conoce pueda registrarse, arrancar y pagar sin hablar contigo.
+
+- [ ] ✅ Aprobado  · [ ] ✏️ Cambiar: ____________________
 
 ## Bloque 1 · Cobros y caja (fase 4) · 6 minutos
 
@@ -154,6 +169,14 @@ Al final de cada bloque marca una de las dos:
 1. **Empresas** (`/plataforma`): las financieras, su plan, los días de prueba que les quedan y los **comprobantes por confirmar**.
 2. Entra a **Financiera Modelo SRL**: extiende la prueba 7 días y mira su auditoría. Luego **Más → Modo soporte → Dar acceso de soporte → Entrar**: ves la empresa en solo lectura; **Salir del modo soporte** al terminar. Como el gerente de la empresa, en **Ajustes → Empresa** se ve ese acceso y el botón **Revocar ahora**.
 3. **Planes y cobros** (`/plataforma/planes`): los tres planes con sus precios y funciones, y tus cuentas bancarias para las transferencias.
+
+- [ ] ✅ Aprobado  · [ ] ✏️ Cambiar: ____________________
+
+## Bloque 9 · Cancelación, portal del dueño y sitio · 5 minutos
+
+1. En la financiera de prueba de producción (bloque 0), **Suscripción → Cancelar la suscripción**, con motivo y tu código. La cuenta queda en solo lectura con la fecha en que se borran los datos; llega el correo; como dueño ves la cancelación en su ficha y puedes **Reactivar**.
+2. En el **panel del dueño** (app.cobradia.com/plataforma): los indicadores del negocio (ingreso mensual recurrente, cobrado este mes, por vencer, cancelaciones), el ingreso por plan y la lista de empresas. Entra a una y prueba **Modo soporte**.
+3. En **cobradia.com**: la portada con las capturas reales, la sección «Así se ve», los precios con el anual, **Ayuda** con las guías por rol, **Términos** y **Privacidad**. Léelos como si fueras el cliente.
 
 - [ ] ✅ Aprobado  · [ ] ✏️ Cambiar: ____________________
 
